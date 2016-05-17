@@ -16,4 +16,5 @@ cache:
   directories:
     - pip_cache
 
+install: pip install -r requirements.txt requirements-dev.txt
 script: bin/travis/test_dispatch.sh $TEST_SUITE
