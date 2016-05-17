@@ -1,16 +1,20 @@
 # Config file for automatic testing at travis-ci.org
 # This file will be regenerated if you run travis_pypi_setup.py
 
+sudo: no
 language: python
 python: 2.7
 
 env:
-  - TOXENV=py27
+  global:
+    - PIP_DOWNLOAD_CACHE="pip_cache"
+  matrix:
+    - TEST_SUITE=lint
+    - TEST_SUITE=tests
 
-# command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
-install: pip install -U tox
+cache:
+  directories:
+    - pip_cache
 
-# command to run tests, e.g. python setup.py test
-script: tox
-
-
+install: pip install -r requirements.txt -r requirements-dev.txt
+script: bin/travis/test_dispatch.sh $TEST_SUITE
