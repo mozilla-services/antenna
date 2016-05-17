@@ -32,7 +32,7 @@ def test_parse_bool_error():
     '1',
 ])
 def test_parse_bool_true(data):
-    assert parse_bool(data) == True
+    assert parse_bool(data) is True
 
 
 @pytest.mark.parametrize('data', [
@@ -47,13 +47,18 @@ def test_parse_bool_true(data):
     '0',
 ])
 def test_parse_bool_false(data):
-    assert parse_bool(data) == False
+    assert parse_bool(data) is False
 
 
 def test_get_parser():
     assert get_parser(bool) == parse_bool
     assert get_parser(str) == str
-    foo = lambda val: val
+
+    # Note: I'd like to do this with a lambda, but flake8 has a bug where it
+    # complains about assigning lambdas to a varaible and doing "noqa" doesn't
+    # work.
+    def foo():
+        pass
     assert get_parser(foo) == foo
 
 
@@ -78,7 +83,6 @@ def test_ConfigOSEnv():
         assert cose.get('foo') == 'baz'
         os_environ_mock.__getitem__.assert_called_with('FOO')
 
-
     with mock.patch('os.environ') as os_environ_mock:
         os_environ_mock.__contains__.return_value = True
         os_environ_mock.__getitem__.return_value = 'baz'
@@ -95,7 +99,7 @@ def test_ConfigIniEnv(datadir):
 
 
 def test_config():
-    assert config('DOESNOTEXISTNOWAY') == None
+    assert config('DOESNOTEXISTNOWAY') is None
     with pytest.raises(ConfigurationError):
         config('DOESNOTEXISTNOWAY', raise_error=True)
     assert config('DOESNOTEXISTNOWAY', default='ohreally') == 'ohreally'
@@ -103,7 +107,7 @@ def test_config():
 
 def test_config_override():
     # Make sure the key doesn't exist
-    assert config('DOESNOTEXISTNOWAY') == None
+    assert config('DOESNOTEXISTNOWAY') is None
 
     # Try one override
     with config_override(DOESNOTEXISTNOWAY='bar'):

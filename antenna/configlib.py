@@ -36,7 +36,6 @@ instances of the same component with two different configurations.
 
 import inspect
 import os
-import urlparse
 from ConfigParser import SafeConfigParser as ConfigParser
 from functools import wraps
 
@@ -178,7 +177,7 @@ class ConfigManager(object):
 
         # Add .ini environment
         fn = os.environ.get('ANTENNA_INI', 'antenna.ini')
-        if not os.sep in fn:
+        if os.sep not in fn:
             fn = os.path.join(os.getcwd(), fn)
         if os.path.exists(fn):
             envs.append(ConfigIniEnv(fn))
@@ -222,7 +221,8 @@ class ConfigManager(object):
         # No value specified and no default, so raise an error to the user
         if raise_error:
             raise ConfigurationError(
-                '%s (%s) requires a value of type %s' % (key, namespace, parser)
+                '%s (%s) requires a value of type %s' % (
+                    key, namespace, parser)
             )
 
         # Otherwise return None
@@ -312,8 +312,8 @@ class ConfigOverride(object):
             for attr in class_or_fun.__dict__.keys():
                 prop = getattr(class_or_fun, attr)
                 if attr.startswith('test') and callable(prop):
-                    setattr(func_or_class, attr, self.decorate(prop))
-            return func_or_class
+                    setattr(class_or_fun, attr, self.decorate(prop))
+            return class_or_fun
 
         else:
             return self.decorate(class_or_fun)
