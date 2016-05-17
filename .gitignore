@@ -52,8 +52,11 @@ coverage.xml
 # Django stuff:
 *.log
 
-# Sphinx documentation
+# Sphinx-generated things
 docs/_build/
+docs/antenna.rst
+docs/modules.rst
 
 # PyBuilder
 target/
+
