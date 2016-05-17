@@ -11,26 +11,31 @@ Example of usage::
 
     from antenna.configlib import config
 
-    DEBUG = config('DEBUG', default=True, parser='bool')
+    DEBUG = config('DEBUG', default='True', parser=bool)
 
 
-This also makes it easy to do testing using the settings_override
-decorator::
+Things of note:
 
-    from antenna.configlib import settings_override
+1. The default value should always be a string that is parseable by the parser.
+2. The parser can be any function that takes a string value and returns a
+   parsed value.
 
-    @settings_override(FOO='bar', BAZ='bat')
+This module also makes it easy to do testing using the ``settings_override``
+class and function decorator::
+
+    from antenna.configlib import config_override
+
+    @config_override(FOO='bar', BAZ='bat')
     def test_this():
         ...
 
+``config_override`` also works as a context manager::
 
-Wait--what? Why'd write our own configuration library when there are so many
-out there?
+    from antenna.configlib import config_override
 
-I wanted one that was flexible, supported namespaces and it needed to be easy
-to test with. That meant it needed to work with overrides and it needed to
-compose nicely. I wanted something with namespaces so that I could have two
-instances of the same component with two different configurations.
+    def test_something():
+        with config_override(FOO='bar'):
+            ...
 
 """
 
@@ -179,6 +184,7 @@ class ConfigManager(object):
         fn = os.environ.get('ANTENNA_INI', 'antenna.ini')
         if os.sep not in fn:
             fn = os.path.join(os.getcwd(), fn)
+
         if os.path.exists(fn):
             envs.append(ConfigIniEnv(fn))
 
@@ -280,12 +286,15 @@ class ConfigOverride(object):
         self._cfg = cfg
 
     def push_config(self):
+        """Pushes self._cfg as a config layer onto the stack"""
         _CONFIG_OVERRIDE.append(self._cfg)
 
     def pop_config(self):
-        # Make sure it's not empty already because if it is, then we've done
-        # something horribly wrong.
-        assert _CONFIG_OVERRIDE
+        """Pops a config layer off
+
+        :raises IndexError: If there are no layers to pop off
+
+        """
         _CONFIG_OVERRIDE.pop()
 
     def __enter__(self):
