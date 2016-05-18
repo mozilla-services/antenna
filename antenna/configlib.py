@@ -32,6 +32,8 @@ error.
 
 If you specify a ``ANTENNA_INI`` environment variable with a path to your ini
 file, then that will be used. Otherwise, this only looks at the environment.
+Note that configuratino specified in the environment always takes precedence
+over configuration specified in the ini file.
 
 This module also makes it easy to do testing using the ``settings_override``
 class and function decorator::
