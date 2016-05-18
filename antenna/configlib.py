@@ -5,7 +5,7 @@ In order of precedence:
 
 1. settings overrides (usually only applies when running tests)
 2. process environment
-3. .ini file (specified by ANTENNA_INI environment variable)
+3. .ini file specified by ANTENNA_INI environment variable
 
 Example of usage::
 
@@ -19,6 +19,19 @@ Things of note:
 1. The default value should always be a string that is parseable by the parser.
 2. The parser can be any function that takes a string value and returns a
    parsed value.
+
+Example for secrets::
+
+    from antenna.configlib import config
+
+    SECRET_KEY = config('SECRET_KEY')
+
+
+If the ``SECRET_KEY`` is not provided, then this will raise a configuration
+error.
+
+If you specify a ``ANTENNA_INI`` environment variable with a path to your ini
+file, then that will be used. Otherwise, this only looks at the environment.
 
 This module also makes it easy to do testing using the ``settings_override``
 class and function decorator::
@@ -180,24 +193,30 @@ class ConfigManager(object):
         # Add OS environment
         envs.append(ConfigOSEnv())
 
-        # Add .ini environment
-        fn = os.environ.get('ANTENNA_INI', 'antenna.ini')
-        if os.sep not in fn:
-            fn = os.path.join(os.getcwd(), fn)
+        # Add .ini environment if they specify ANTENNA_INI in the environment
+        fn = os.environ.get('ANTENNA_INI')
+        if fn:
+            if os.sep not in fn:
+                fn = os.path.join(os.getcwd(), fn)
 
-        if os.path.exists(fn):
-            envs.append(ConfigIniEnv(fn))
+            if os.path.exists(fn):
+                envs.append(ConfigIniEnv(fn))
+            else:
+                raise ConfigurationError(
+                    '%s does not exist.' % fn
+                )
 
         return envs
 
     def __call__(self, key, namespace=None, default=NO_VALUE, parser=str,
-                 raise_error=False):
+                 raise_error=True):
         """Returns a parsed value from the environment
 
         :arg key: the key to look up
         :arg namespace: the namespace for the key--different environments
             use this differently
-        :arg default: the default value (if any)
+        :arg default: the default value (if any); must be a string that is
+            parseable by the parser
         :arg parser: the parser for converting this value to a Python object
         :arg raise_error: True if you want a lack of value to raise a
             ``ConfigurationError``
@@ -205,13 +224,18 @@ class ConfigManager(object):
         Examples::
 
             # Use the special bool parser
-            DEBUG = config('DEBUG', default=True, parser=bool)
+            DEBUG = config('DEBUG', default='True', parser=bool)
 
             from antenna.config_util import ListOf
             ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost',
                                    parser=ListOf(str))
 
         """
+        if not (default is NO_VALUE or isinstance(default, basestring)):
+            raise ConfigurationError(
+                'default value %r is not a string' % (default,)
+            )
+
         parser = get_parser(parser)
 
         # Go through environments in reverse order
@@ -227,7 +251,7 @@ class ConfigManager(object):
         # No value specified and no default, so raise an error to the user
         if raise_error:
             raise ConfigurationError(
-                '%s (%s) requires a value of type %s' % (
+                '%s (%s) requires a value parseable by %s' % (
                     key, namespace, parser)
             )
 

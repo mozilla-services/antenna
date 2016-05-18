@@ -9,6 +9,7 @@ from antenna.configlib import (
     ConfigDictEnv,
     ConfigIniEnv,
     ConfigOSEnv,
+    ConfigManager,
     ConfigurationError,
     get_parser,
     parse_bool,
@@ -98,8 +99,21 @@ def test_ConfigIniEnv(datadir):
     assert cie.get('foo', namespace='namespacebaz') == 'bat'
 
 
+def test_config_ini_file_does_not_exist():
+    with mock.patch('os.environ') as os_environ_mock:
+        os_environ_mock.__contains__.return_value = True
+        os_environ_mock.get.return_value = 'doesnotexist.ini'
+
+        with pytest.raises(ConfigurationError):
+            # Raises a configuration error because "doesnotexist.ini" is not a
+            # file that exists.
+            cfg = ConfigManager()
+
+
 def test_config():
-    assert config('DOESNOTEXISTNOWAY') is None
+    assert config('DOESNOTEXISTNOWAY', raise_error=False) is None
+    with pytest.raises(ConfigurationError):
+        config('DOESNOTEXISTNOWAY')
     with pytest.raises(ConfigurationError):
         config('DOESNOTEXISTNOWAY', raise_error=True)
     assert config('DOESNOTEXISTNOWAY', default='ohreally') == 'ohreally'
@@ -107,7 +121,7 @@ def test_config():
 
 def test_config_override():
     # Make sure the key doesn't exist
-    assert config('DOESNOTEXISTNOWAY') is None
+    assert config('DOESNOTEXISTNOWAY', raise_error=False) is None
 
     # Try one override
     with config_override(DOESNOTEXISTNOWAY='bar'):
@@ -117,3 +131,8 @@ def test_config_override():
     with config_override(DOESNOTEXISTNOWAY='bar'):
         with config_override(DOESNOTEXISTNOWAY='bat'):
             assert config('DOESNOTEXISTNOWAY') == 'bat'
+
+
+def test_default_must_be_string():
+    with pytest.raises(ConfigurationError):
+        assert config('DOESNOTEXIST', default=True)
