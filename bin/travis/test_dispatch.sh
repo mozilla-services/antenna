@@ -12,7 +12,7 @@ case $SUITE in
         ;;
 
     tests )
-        py.test
+        PYTHONPATH=. py.test
         ;;
 
     * )
