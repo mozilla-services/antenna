@@ -1,13 +1,16 @@
-===================================
-Welcome to Antenna's documentation!
-===================================
+====================
+Socorro Antenna docs
+====================
 
-Contents:
+.. include:: ../README.rst
+
+
+Contents
+========
 
 .. toctree::
    :maxdepth: 2
 
-   readme.rst
    dev.rst
    modules.rst
 
