@@ -16,7 +16,7 @@ Running
 Use this with gunicorn::
 
     gunicorn --workers=1 --worker-connections=4 --worker-class=gevent \
-        antenna.wsgi:app
+        antenna.wsgi:application
 
 
 It probably makes sense to use one process (``--workers=1``) that can handle
