@@ -42,7 +42,8 @@ Use this with gunicorn:
 
 .. code-block:: shell
 
-   $ ANTENNA_INI=settings_dev.ini gunicorn --workers=1 --worker-connections=4 \
+   $ ANTENNA_INI=settings_dev.ini gunicorn --workers=1 \
+        --worker-connections=4 \
         --worker-class=gevent \
         antenna.wsgi:application
 

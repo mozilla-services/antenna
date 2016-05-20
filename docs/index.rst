@@ -12,7 +12,7 @@ Contents
    :maxdepth: 2
 
    dev.rst
-   modules.rst
+   antenna.rst
 
 
 Indices and tables
