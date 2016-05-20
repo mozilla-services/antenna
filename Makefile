@@ -36,6 +36,7 @@ test:
 	py.test
 
 docs:
+	sphinx-apidoc -o docs/ antenna
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
 

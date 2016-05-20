@@ -54,8 +54,6 @@ coverage.xml
 
 # Sphinx-generated things
 docs/_build/
-docs/antenna.rst
-docs/modules.rst
 
 # PyBuilder
 target/
