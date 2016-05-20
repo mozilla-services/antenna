@@ -107,7 +107,7 @@ def test_config_ini_file_does_not_exist():
         with pytest.raises(ConfigurationError):
             # Raises a configuration error because "doesnotexist.ini" is not a
             # file that exists.
-            cfg = ConfigManager()
+            ConfigManager()
 
 
 def test_config():
