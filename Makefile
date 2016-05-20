@@ -36,9 +36,6 @@ test:
 	py.test
 
 docs:
-	rm -f docs/antenna.rst
-	rm -f docs/modules.rst
-	sphinx-apidoc -o docs/ antenna
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
 
