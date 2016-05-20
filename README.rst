@@ -70,3 +70,13 @@ Run this:
 .. code-block:: shell
 
    $ py.test
+
+
+Tests go in ``tests/``. Data required by tests goes in ``tests/data/``.
+
+We're using py.test_ for a test harness and test discovery. We use WebTest_ for
+testing the WSGI application and HTTP requests.
+
+.. _WebTest: http://webtest.pythonpaste.org/en/latest/index.html
+.. _py.test: http://pytest.org/
+
