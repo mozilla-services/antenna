@@ -1,20 +1,16 @@
 # Config file for automatic testing at travis-ci.org
 # This file will be regenerated if you run travis_pypi_setup.py
 
-sudo: no
+sudo: false
 language: python
 python: 2.7
 
+install:
+  - pip install tox
+
 env:
-  global:
-    - PIP_DOWNLOAD_CACHE="pip_cache"
-  matrix:
-    - TEST_SUITE="lint"
-    - TEST_SUITE="tests"
+  - TOX_ENV=flake8
+  - TOX_ENV=tests
 
-cache:
-  directories:
-    - pip_cache
-
-install: pip install -r requirements.txt -r requirements-dev.txt
-script: bin/travis/test_dispatch.sh $TEST_SUITE
+script:
+  - tox -e $TOX_ENV
