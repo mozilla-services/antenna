@@ -1,3 +1,6 @@
+# web.py is in the public domain; it can be used for whatever purpose with
+# absolutely no restrictions.
+
 # From web.py with minor fixes for Python 2.7 betterness.
 
 class Storage(dict):
