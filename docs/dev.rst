@@ -51,7 +51,5 @@ Tests go in ``tests/``. Data required by tests goes in ``tests/data/``.
 We're using py.test_ for a test harness and test discovery. We use WebTest_ for
 testing the WSGI application and HTTP requests.
 
-Use ``coverage
-
 .. _WebTest: http://webtest.pythonpaste.org/en/latest/index.html
 .. _py.test: http://pytest.org/
