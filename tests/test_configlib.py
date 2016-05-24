@@ -16,6 +16,7 @@ from antenna.configlib import (
     ConfigurationError,
     get_parser,
     parse_bool,
+    parse_class,
     ListOf,
 )
 
@@ -52,6 +53,19 @@ def test_parse_bool_true(data):
 ])
 def test_parse_bool_false(data):
     assert parse_bool(data) is False
+
+
+def test_parse_missing_class():
+    with pytest.raises(ImportError):
+        parse_class('doesnotexist.class')
+
+    with pytest.raises(ValueError):
+        parse_class('hashlib.doesnotexist')
+
+
+def test_parse_class():
+    from hashlib import md5
+    assert parse_class('hashlib.md5') == md5
 
 
 def test_get_parser():

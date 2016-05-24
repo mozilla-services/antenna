@@ -62,6 +62,7 @@ class and function decorator::
 
 """
 
+import importlib
 import inspect
 import os
 from ConfigParser import SafeConfigParser as ConfigParser
@@ -82,6 +83,11 @@ def parse_bool(val):
     Handles a series of values, but you should probably standardize on
     "true" and "false".
 
+    >>> parse_bool('y')
+    True
+    >>> parse_bool('FALSE')
+    False
+
     """
     true_vals = ('t', 'true', 'yes', 'y', '1')
     false_vals = ('f', 'false', 'no', 'n', '0')
@@ -93,6 +99,22 @@ def parse_bool(val):
         return False
 
     raise ValueError('%s is not a valid bool value' % val)
+
+
+def parse_class(val):
+    """Parses a string, imports the module and returns the class
+
+    >>> parse_class('hashlib.md5')
+
+    """
+    module, class_name = val.rsplit('.', 1)
+    module = importlib.import_module(module)
+    try:
+        return getattr(module, class_name)
+    except AttributeError:
+        raise ValueError('%s is not a valid member of %s' % (
+            class_name, module)
+        )
 
 
 def get_parser(parser):
