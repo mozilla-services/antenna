@@ -9,16 +9,26 @@ from functools import wraps
 
 import falcon
 
-from antenna.configlib import config
+from antenna.configlib import ConfigManager
 
 logger = logging.getLogger('gunicorn.error')
 
 
-def require_basic_auth(username, password):
+def require_basic_auth(fun):
     """Decorator for requiring HTTP basic auth
 
-    :arg username: the valid username to use
-    :arg password: the valid password to use
+    This is used in resources and requires the resource to have
+    ``is_valid_auth`` implemented.
+
+    Example::
+
+        class HealthCheckResource:
+            def is_valid_auth(self, username, password):
+                return (username, password) == ('foo', 'bar')
+
+            @require_basic_auth
+            def on_get(self, req, resp):
+                ...
 
     """
     def auth_error():
@@ -28,35 +38,34 @@ def require_basic_auth(username, password):
             ['Basic']
         )
 
-    def is_valid(given_username, given_password):
-        return (given_username, given_password) == (username, password)
+    @wraps(fun)
+    def view_fun(resource, req, resp, *args, **kwargs):
+        auth = req.auth
+        if not auth:
+            auth_error()
 
-    def decorate(fun):
-        @wraps(fun)
-        def view_fun(resource, req, resp, *args, **kwargs):
-            auth = req.auth
-            if not auth:
-                auth_error()
+        auth = auth.strip()
+        parts = auth.split(' ')
+        if len(parts) != 2 or parts[0].lower().strip() != 'basic':
+            auth_error()
 
-            auth = auth.strip()
-            parts = auth.split(' ')
-            if len(parts) != 2 or parts[0].lower().strip() != 'basic':
-                auth_error()
+        creds = base64.b64decode(parts[1]).split(':', 1)
+        if not resource.is_valid_auth(creds[0], creds[1]):
+            auth_error()
 
-            creds = base64.b64decode(parts[1]).split(':', 1)
-            if not is_valid(creds[0], creds[1]):
-                auth_error()
-
-            return fun(resource, req, resp, *args, **kwargs)
-        return view_fun
-    return decorate
+        return fun(resource, req, resp, *args, **kwargs)
+    return view_fun
 
 
 class HealthCheckResource(object):
-    @require_basic_auth(
-        username=config('USERNAME', namespace='healthcheck'),
-        password=config('PASSWORD', namespace='healthcheck'),
-    )
+    def __init__(self, config):
+        self.username = config('USERNAME', namespace='healthcheck')
+        self.password = config('PASSWORD', namespace='healthcheck')
+
+    def is_valid_auth(self, username, password):
+        return (username, password) == (self.username, self.password)
+
+    @require_basic_auth
     def on_get(self, req, resp):
         resp.content_type = 'application/json'
 
@@ -73,6 +82,7 @@ class HealthCheckResource(object):
 
 
 def get_app():
+    config = ConfigManager()
     app = falcon.API()
-    app.add_route('/api/v1/health', HealthCheckResource())
+    app.add_route('/api/v1/health', HealthCheckResource(config))
     return app

@@ -13,7 +13,9 @@ In order of precedence:
 
 Example of usage::
 
-    from antenna.configlib import config
+    from antenna.configlib import ConfigManager
+
+    config = ConfigManager()
 
     DEBUG = config('DEBUG', default='True', parser=bool)
 
@@ -28,7 +30,9 @@ Example for secrets::
 
     from antenna.configlib import config
 
-    SECRET_KEY = config('SECRET_KEY')
+    config = ConfigManager()
+
+SECRET_KEY = config('SECRET_KEY')
 
 
 If the ``SECRET_KEY`` is not provided, then this will raise a configuration
@@ -229,6 +233,8 @@ class ConfigManager(object):
 
         Examples::
 
+            config = ConfigManager()
+
             # Use the special bool parser
             DEBUG = config('DEBUG', default='True', parser=bool)
 
@@ -263,29 +269,6 @@ class ConfigManager(object):
 
         # Otherwise return None
         return
-
-
-class ConfigManagerWrapper(object):
-    """Wraps the config manager so it's easier to set the config
-
-    This prevents the problem where Python modules load "config"
-    into their name space and then you have to do weird things to
-    fix that. Instead, you call ``config.set_config(CM)`` and pass
-    in a new ConfigManager and you're all set.
-
-    """
-    def __init__(self):
-        self.config = ConfigManager()
-
-    def set_config(self, config):
-        self.config = config
-
-    def __call__(self, *args, **kwargs):
-        return self.config.__call__(*args, **kwargs)
-
-
-# Use this when you're doing config things
-config = ConfigManagerWrapper()
 
 
 class ConfigOverride(object):
