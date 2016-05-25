@@ -5,8 +5,8 @@
 # This is based on socorrolib's socorrolib/lib/ooid.py module.
 
 # OOID is "Our opaque ID"
-import datetime as dt
-import uuid as uu
+import uuid
+from datetime import datetime
 
 from antenna.lib.datetimeutil import utc_now, UTC
 
@@ -31,9 +31,9 @@ def create_new_ooid(timestamp=None, depth=None):
     if not depth:
         depth = DEFAULT_DEPTH
     assert depth <= 4 and depth >= 1
-    uuid = str(uu.uuid4())
+    id_ = str(uuid.uuid4())
     return "%s%d%02d%02d%02d" % (
-        uuid[:-7], depth, timestamp.year % 100, timestamp.month, timestamp.day
+        id_[:-7], depth, timestamp.year % 100, timestamp.month, timestamp.day
     )
 
 
@@ -84,7 +84,7 @@ def date_and_depth_from_ooid(ooid):
         depth = int(ooid[-7])
         if not depth:
             depth = OLD_HARD_DEPTH
-        return (dt.datetime(year, month, day, tzinfo=UTC), depth)
+        return (datetime(year, month, day, tzinfo=UTC), depth)
     except Exception:
         return None, None
     return None, None
