@@ -13,7 +13,9 @@ In order of precedence:
 
 Example of usage::
 
-    from antenna.configlib import config
+    from antenna.configlib import ConfigManager
+
+    config = ConfigManager()
 
     DEBUG = config('DEBUG', default='True', parser=bool)
 
@@ -27,6 +29,8 @@ Things of note:
 Example for secrets::
 
     from antenna.configlib import config
+
+    config = ConfigManager()
 
     SECRET_KEY = config('SECRET_KEY')
 
@@ -58,6 +62,7 @@ class and function decorator::
 
 """
 
+import importlib
 import inspect
 import os
 from ConfigParser import SafeConfigParser as ConfigParser
@@ -78,6 +83,11 @@ def parse_bool(val):
     Handles a series of values, but you should probably standardize on
     "true" and "false".
 
+    >>> parse_bool('y')
+    True
+    >>> parse_bool('FALSE')
+    False
+
     """
     true_vals = ('t', 'true', 'yes', 'y', '1')
     false_vals = ('f', 'false', 'no', 'n', '0')
@@ -89,6 +99,22 @@ def parse_bool(val):
         return False
 
     raise ValueError('%s is not a valid bool value' % val)
+
+
+def parse_class(val):
+    """Parses a string, imports the module and returns the class
+
+    >>> parse_class('hashlib.md5')
+
+    """
+    module, class_name = val.rsplit('.', 1)
+    module = importlib.import_module(module)
+    try:
+        return getattr(module, class_name)
+    except AttributeError:
+        raise ValueError('%s is not a valid member of %s' % (
+            class_name, module)
+        )
 
 
 def get_parser(parser):
@@ -229,6 +255,8 @@ class ConfigManager(object):
 
         Examples::
 
+            config = ConfigManager()
+
             # Use the special bool parser
             DEBUG = config('DEBUG', default='True', parser=bool)
 
@@ -263,29 +291,6 @@ class ConfigManager(object):
 
         # Otherwise return None
         return
-
-
-class ConfigManagerWrapper(object):
-    """Wraps the config manager so it's easier to set the config
-
-    This prevents the problem where Python modules load "config"
-    into their name space and then you have to do weird things to
-    fix that. Instead, you call ``config.set_config(CM)`` and pass
-    in a new ConfigManager and you're all set.
-
-    """
-    def __init__(self):
-        self.config = ConfigManager()
-
-    def set_config(self, config):
-        self.config = config
-
-    def __call__(self, *args, **kwargs):
-        return self.config.__call__(*args, **kwargs)
-
-
-# Use this when you're doing config things
-config = ConfigManagerWrapper()
 
 
 class ConfigOverride(object):

@@ -8,7 +8,6 @@ import mock
 import pytest
 
 from antenna.configlib import (
-    config,
     config_override,
     ConfigDictEnv,
     ConfigIniEnv,
@@ -17,6 +16,7 @@ from antenna.configlib import (
     ConfigurationError,
     get_parser,
     parse_bool,
+    parse_class,
     ListOf,
 )
 
@@ -53,6 +53,19 @@ def test_parse_bool_true(data):
 ])
 def test_parse_bool_false(data):
     assert parse_bool(data) is False
+
+
+def test_parse_missing_class():
+    with pytest.raises(ImportError):
+        parse_class('doesnotexist.class')
+
+    with pytest.raises(ValueError):
+        parse_class('hashlib.doesnotexist')
+
+
+def test_parse_class():
+    from hashlib import md5
+    assert parse_class('hashlib.md5') == md5
 
 
 def test_get_parser():
@@ -115,6 +128,8 @@ def test_config_ini_file_does_not_exist():
 
 
 def test_config():
+    config = ConfigManager()
+
     assert config('DOESNOTEXISTNOWAY', raise_error=False) is None
     with pytest.raises(ConfigurationError):
         config('DOESNOTEXISTNOWAY')
@@ -124,6 +139,8 @@ def test_config():
 
 
 def test_config_override():
+    config = ConfigManager()
+
     # Make sure the key doesn't exist
     assert config('DOESNOTEXISTNOWAY', raise_error=False) is None
 
@@ -138,5 +155,7 @@ def test_config_override():
 
 
 def test_default_must_be_string():
+    config = ConfigManager()
+
     with pytest.raises(ConfigurationError):
         assert config('DOESNOTEXIST', default=True)

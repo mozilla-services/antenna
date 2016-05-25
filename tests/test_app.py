@@ -22,7 +22,10 @@ def generate_basic_auth_token(username, password):
 
 class Test_required_basic_auth:
     class FakeResource(object):
-        @require_basic_auth('gooduser', 'goodpwd')
+        def is_valid_auth(self, username, password):
+            return (username, password) == ('gooduser', 'goodpwd')
+
+        @require_basic_auth
         def on_get(self, req, resp):
             return
 
