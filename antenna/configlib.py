@@ -32,7 +32,7 @@ Example for secrets::
 
     config = ConfigManager()
 
-SECRET_KEY = config('SECRET_KEY')
+    SECRET_KEY = config('SECRET_KEY')
 
 
 If the ``SECRET_KEY`` is not provided, then this will raise a configuration
