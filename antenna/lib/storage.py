@@ -3,6 +3,7 @@
 
 # From web.py with minor fixes for Python 2.7 betterness.
 
+
 class Storage(dict):
     """A Storage object is like a dictionary except `obj.foo` can be used in
     addition to `obj['foo']`.

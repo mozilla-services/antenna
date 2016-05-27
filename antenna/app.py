@@ -17,7 +17,7 @@ from antenna.configlib import ConfigManager, parse_class
 from antenna.lib.datetimeutil import utc_now
 from antenna.lib.ooid import create_new_ooid
 from antenna.lib.storage import Storage
-from antenna.throttler import ACCEPT, DEFER, DISCARD, IGNORE
+from antenna.throttler import DISCARD, IGNORE
 
 logger = logging.getLogger('gunicorn.error')
 
@@ -45,6 +45,7 @@ def require_basic_auth(fun):
             'Authentication required',
             ['Basic']
         )
+
     @wraps(fun)
     def view_fun(resource, req, resp, *args, **kwargs):
         auth = req.auth
@@ -139,7 +140,9 @@ class BreakpadSubmitterResource(object):
             # that in nginx-land.
             gzip_header = 16 + zlib.MAX_WBITS
             content_length = req.env.get(int('CONTENT_LENGTH'), 0)
-            data = zlib.decompress(req.stream.read(content_length), gzip_header)
+            data = zlib.decompress(
+                req.stream.read(content_length), gzip_header
+            )
             data = cStringIO.StringIO(data)
 
         else:
@@ -219,14 +222,16 @@ class BreakpadSubmitterResource(object):
             crash_id = raw_crash['uuid']
             logger.info('%s received with existing crash_id:', crash_id)
 
-        if ('legacy_processing' not in raw_crash
-            or not self.accept_submitted_legacy_processing
-        ):
+        if ('legacy_processing' not in raw_crash or
+                not self.accept_submitted_legacy_processing):
+
             raw_crash['legacy_processing'], raw_crash['throttle_rate'] = (
                 self.throttler.throttle(raw_crash)
             )
         else:
-            raw_crash['legacy_processing'] = legacy_processing
+            raw_crash['legacy_processing'] = int(
+                raw_crash['legacy_processing']
+            )
 
         if raw_crash['legacy_processing'] == DISCARD:
             logger.info('%s discarded', crash_id)
