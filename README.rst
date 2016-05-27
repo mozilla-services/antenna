@@ -1,13 +1,19 @@
-=============================
-Antenna: Socorro collector v2
-=============================
+====================================
+Antenna: Prototype Socorro collector
+====================================
 
-Socorro breakpad crash collector version 2.
+Prototype Socorro breakpad crash collector that uses gevent allowing it
+to all be in one process with non-blocking I/O.
 
 * Free software: Mozilla Public License version 2.0
 * Documentation: https://antenna.readthedocs.io/
 
-FIXME: In progress.
+Status
+======
+
+2016-05-27: The things I experimented with here seem viable, but I'm putting
+this on the back burner for now.
+
 
 Quickstart
 ==========
