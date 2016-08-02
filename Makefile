@@ -1,44 +1,81 @@
-.PHONY: clean-pyc clean-build docs clean
+DOCKERCOMPOSE = $(shell which docker-compose)
+
+default:
+	@echo "You need to specify a subcommand."
+	@exit 1
 
 help:
-	@echo "clean - remove all build, test, coverage and Python artifacts"
-	@echo "clean-build - remove build artifacts"
-	@echo "clean-pyc - remove Python file artifacts"
-	@echo "clean-test - remove test and coverage artifacts"
-	@echo "lint - check style with flake8"
-	@echo "test - run tests quickly with the default Python"
-	@echo "docs - generate Sphinx HTML documentation, including API docs"
-	@echo "install - install the package to the active Python's site-packages"
+	@echo "dev-like environment:"
+	@echo "   build      - build docker containers for dev"
+	@echo "   run        - docker-compose up the entire system for dev"
+	@echo ""
+	@echo "Mozilla prod-like environment:"
+	@echo "   build-prod - build docker containers for prod"
+	@echo "   run-prod   - docker-compose up the entire system for prod"
+	@echo ""
+	@echo "clean         - remove all build, test, coverage and Python artifacts"
+	@echo "lint          - check style with flake8"
+	@echo "test          - run tests"
+	@echo "test-coverage - run tests and generate coverage report in cover/"
+	@echo "docs          - generate Sphinx HTML documentation, including API docs"
 
-clean: clean-build clean-pyc clean-test
+# Prod configuration steps
+.docker-build-prod:
+	make build-prod
 
-clean-build:
-	rm -fr build/
-	rm -fr dist/
-	rm -fr .eggs/
-	find . -name '*.egg-info' -exec rm -fr {} +
+build-prod:
+	${DOCKERCOMPOSE} -f docker-compose-prod.yml build
+	touch .docker-build-prod
+
+run-prod: .docker-build-prod
+	${DOCKERCOMPOSE} -f docker-compose-prod.yml up
+
+# Dev configuration steps
+.docker-build:
+	make build
+
+build:
+	${DOCKERCOMPOSE} build
+	touch .docker-build
+
+run: .docker-build
+	${DOCKERCOMPOSE} up
+
+clean:
+	# python related things
+	-rm -rf build/
+	-rm -rf dist/
+	-rm -rf .eggs/
+	find . -name '*.egg-info' -exec rm -rf {} +
 	find . -name '*.egg' -exec rm -f {} +
-
-clean-pyc:
 	find . -name '*.pyc' -exec rm -f {} +
 	find . -name '*.pyo' -exec rm -f {} +
-	find . -name '*~' -exec rm -f {} +
-	find . -name '__pycache__' -exec rm -fr {} +
+	find . -name '__pycache__' -exec rm -rf {} +
 
-clean-test:
-	rm -f .coverage
-	rm -fr htmlcov/
+	# test related things
+	-rm -f .coverage
+	${DOCKERCOMPOSE} run web rm -rf cover
+
+	# docs files
+	-rm -rf docs/_build/
+
+	# state files
+	-rm .docker-build
+	-rm .docker-build-prod
 
 lint:
-	flake8 antenna tests
+	${DOCKERCOMPOSE} run web flake8 --statistics antenna
 
 test:
-	py.test
+	${DOCKERCOMPOSE} run web py.test
+
+test-coverage:
+	${DOCKERCOMPOSE} run web ./scripts/test.sh --with-coverage --cover-package=antenna --cover-inclusive --cover-html
 
 docs:
-	sphinx-apidoc -o docs/ antenna
-	$(MAKE) -C docs clean
-	$(MAKE) -C docs html
+	${DOCKERCOMPOSE} run web $(MAKE) -C docs/ clean
+	${DOCKERCOMPOSE} run web $(MAKE) -C docs/ html
+	${DOCKERCOMPOSE} run web find docs/_build/ -type d -exec 'chmod' '777' '{}' ';'
+	${DOCKERCOMPOSE} run web find docs/_build/ -type f -exec 'chmod' '666' '{}' ';'
 
-install: clean
-	python setup.py install
+.PHONY: default clean build docs lint run test test-coverage
