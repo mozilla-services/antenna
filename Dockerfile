@@ -1,28 +1,31 @@
-# Dockerfile for socorro-collector container
-FROM centos:centos7
+FROM python:2.7.12-slim
+
+WORKDIR /app/
+RUN groupadd --gid 1001 app && useradd -g app --uid 1001 --shell /usr/sbin/nologin app
+
+RUN apt-get update && apt-get install -y \
+    gcc apt-transport-https
+
+COPY ./requirements.txt /app/requirements.txt
+COPY requirements-dev.txt /app/requirements-dev.txt
+
+RUN pip install -U 'pip>=8' && \
+    pip install --upgrade --no-cache-dir -r requirements.txt
+
+# Install the app
+COPY . /app/
 
 # Set Python-related environment variables to reduce annoying-ness
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONDONTWRITEBYTECODE 1
+ENV PORT 8000
 
-EXPOSE 8000
+USER app
+EXPOSE $PORT
 
-# Install pip and get pip8
-RUN yum -y install epel-release \
-    && yum -y update \
-    && yum -y group install "Development Tools" \
-    && yum -y install python-devel python-pip
-COPY bin/pipstrap.py bin/pipstrap.py
-RUN ./bin/pipstrap.py
-
-# Install the app
-COPY . /app/
-WORKDIR /app/
-
-# Install everything--but do it in a way that busts the cache
-# if certain files change
-ADD requirements.txt /app/requirements.txt
-ADD requirements-dev.txt /app/requirements-dev.txt
-
-RUN pip install --require-hashes -r requirements-dev.txt \
-    && pip install -e .
+CMD ANTENNA_INI=settings_dev.ini gunicorn \
+    --workers=1 \
+    --worker-connections=4 \
+    --worker-class=gevent \
+    --bind localhost:${PORT} \
+    antenna.wsgi:application
