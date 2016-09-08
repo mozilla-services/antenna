@@ -1,4 +1,4 @@
-# docker-compose for antenna that creates a minimal collector.
+# docker-compose for antenna development.
 #
 # Note: Requires docker 1.10.0+ and docker-compose 1.6.0+.
 version: "2"
@@ -7,12 +7,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    environment:
+      - ANTENNA_INI=settings_dev.ini
     volumes:
       - .:/app
-      - devcrashes:/devcrashes
     ports:
       - "8000:8000"
-    command: ./bin/run_web.sh
-
-volumes:
-  devcrashes:
