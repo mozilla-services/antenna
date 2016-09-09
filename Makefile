@@ -5,30 +5,14 @@ default:
 	@exit 1
 
 help:
-	@echo "dev-like environment:"
-	@echo "   build      - build docker containers for dev"
-	@echo "   run        - docker-compose up the entire system for dev"
-	@echo ""
-	@echo "Mozilla prod-like environment:"
-	@echo "   build-prod - build docker containers for prod"
-	@echo "   run-prod   - docker-compose up the entire system for prod"
+	@echo "build         - build docker containers for dev"
+	@echo "run           - docker-compose up the entire system for dev"
 	@echo ""
 	@echo "clean         - remove all build, test, coverage and Python artifacts"
 	@echo "lint          - check style with flake8"
 	@echo "test          - run tests"
 	@echo "test-coverage - run tests and generate coverage report in cover/"
 	@echo "docs          - generate Sphinx HTML documentation, including API docs"
-
-# Prod configuration steps
-.docker-build-prod:
-	make build-prod
-
-build-prod:
-	${DOCKERCOMPOSE} -f docker-compose-prod.yml build
-	touch .docker-build-prod
-
-run-prod: .docker-build-prod
-	${DOCKERCOMPOSE} -f docker-compose-prod.yml up
 
 # Dev configuration steps
 .docker-build:
@@ -61,7 +45,6 @@ clean:
 
 	# state files
 	-rm .docker-build
-	-rm .docker-build-prod
 
 lint:
 	${DOCKERCOMPOSE} run web flake8 --statistics antenna

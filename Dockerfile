@@ -27,5 +27,5 @@ CMD ANTENNA_INI=settings_dev.ini gunicorn \
     --workers=1 \
     --worker-connections=4 \
     --worker-class=gevent \
-    --bind localhost:${PORT} \
+    --bind 0.0.0.0:$PORT \
     antenna.wsgi:application
