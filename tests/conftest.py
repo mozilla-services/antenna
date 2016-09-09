@@ -4,7 +4,13 @@
 
 import os
 import pytest
+import sys
 from webtest import TestApp
+
+# Add the parent directory to the sys.path so that it can import the antenna
+# code.
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+
 
 from antenna.app import get_app
 

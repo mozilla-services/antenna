@@ -23,7 +23,7 @@ setup(
     long_description=get_file('README.rst'),
     author="Will Kahn-Greene",
     author_email='willkg@mozilla.com',
-    url='https://github.com/willkg/antenna',
+    url='https://github.com/mozilla/antenna',
     packages=[
         'antenna',
     ],
