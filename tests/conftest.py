@@ -12,7 +12,7 @@ from webtest import TestApp
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 
-from antenna.app import get_app
+from antenna.app import get_app  # noqa
 
 
 @pytest.fixture
