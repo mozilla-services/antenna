@@ -2,14 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import base64
 import cgi
 import io
 import json
 import logging
 import time
 import zlib
-from functools import wraps
 
 from everett.manager import ConfigManager, ConfigOSEnv, parse_class
 import falcon
@@ -20,49 +18,6 @@ from antenna.lib.storage import Storage
 from antenna.throttler import DISCARD, IGNORE
 
 logger = logging.getLogger('gunicorn.error')
-
-
-def require_basic_auth(fun):
-    """Decorator for requiring HTTP basic auth
-
-    This is used in resources and requires the resource to have
-    ``is_valid_auth`` implemented.
-
-    Example::
-
-        class HealthCheckResource:
-            def is_valid_auth(self, username, password):
-                return (username, password) == ('foo', 'bar')
-
-            @require_basic_auth
-            def on_get(self, req, resp):
-                ...
-
-    """
-    def auth_error():
-        raise falcon.HTTPUnauthorized(
-            'Authentication required',
-            'Authentication required',
-            ['Basic']
-        )
-
-    @wraps(fun)
-    def view_fun(resource, req, resp, *args, **kwargs):
-        auth = req.auth
-        if not auth:
-            auth_error()
-
-        auth = auth.strip()
-        parts = auth.split(' ')
-        if len(parts) != 2 or parts[0].lower().strip() != 'basic':
-            auth_error()
-
-        creds = base64.b64decode(parts[1]).split(':', 1)
-        if not resource.is_valid_auth(creds[0], creds[1]):
-            auth_error()
-
-        return fun(resource, req, resp, *args, **kwargs)
-    return view_fun
 
 
 # FIXME: Figure out whether we need to implement this or nix it. For now, we're
@@ -143,7 +98,7 @@ class BreakpadSubmitterResource(object):
             data = zlib.decompress(
                 req.stream.read(content_length), gzip_header
             )
-            data = cStringIO.StringIO(data)
+            data = io.StringIO(data)
 
         else:
             data = req.stream
@@ -252,18 +207,13 @@ class BreakpadSubmitterResource(object):
         logger.info('%s accepted', crash_id)
 
         resp.status = falcon.HTTP_200
-        resp.data = 'CrashID=%s%s\n' % (self.dump_id_prefix, crash_id)
+        resp.body = 'CrashID=%s%s\n' % (self.dump_id_prefix, crash_id)
 
 
 class HealthCheckResource(object):
     def __init__(self, config):
-        self.username = config('USERNAME', namespace='healthcheck')
-        self.password = config('PASSWORD', namespace='healthcheck')
+        self.config = config
 
-    def is_valid_auth(self, username, password):
-        return (self.username, self.password) == (username, password)
-
-    @require_basic_auth
     def on_get(self, req, resp):
         resp.content_type = 'application/json'
 
@@ -274,7 +224,7 @@ class HealthCheckResource(object):
         # Once we know how everything is doing, we can determine the proper
         # status code. For now, 200 is fine.
         resp.status = falcon.HTTP_200
-        resp.data = json.dumps({
+        resp.body = json.dumps({
             'health': 'v1',
         })
 

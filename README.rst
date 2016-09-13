@@ -24,9 +24,6 @@ production, see `the manual on ReadTheDocs <https://antenna.readthedocs.io/>`_.
 
       $ git clone https://github.com/mozilla/antenna
 
-      - OR -
-
-      $ git clone https://github.com/<YOUR-FORK>/antenna
 
 2. Install docker and docker-compose
 
