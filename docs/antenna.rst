@@ -12,14 +12,6 @@ antenna.app module
     :undoc-members:
     :show-inheritance:
 
-antenna.configlib module
-------------------------
-
-.. automodule:: antenna.configlib
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 antenna.wsgi module
 -------------------
 

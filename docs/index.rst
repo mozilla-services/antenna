@@ -11,9 +11,14 @@ Contents
 .. toctree::
    :maxdepth: 2
 
-   dev.rst
-   antenna.rst
+   dev
+   antenna
 
+
+Project docs
+============
+
+   spec_v1
 
 Indices and tables
 ==================
@@ -21,4 +26,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
