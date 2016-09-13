@@ -16,6 +16,7 @@ from antenna.lib.datetimeutil import utc_now
 from antenna.lib.ooid import create_new_ooid
 from antenna.lib.storage import Storage
 from antenna.throttler import DISCARD, IGNORE
+from antenna.util import de_null
 
 logger = logging.getLogger('gunicorn.error')
 
@@ -71,24 +72,31 @@ class BreakpadSubmitterResource(object):
         self.crash_storage = self.crash_storage(config)
 
     def _process_fieldstorage(self, fs):
-        # Note: Copied from web.py.
-        if isinstance(fs, list):
+        """Recursively works through a field storage converting to Python structure"""
+        if isinstance(fs, dict):
+            return dict(
+                [(de_null(key), self._process_fieldstorage(fs[key])) for key in fs.keys()]
+            )
+        elif isinstance(fs, list):
             return [self._process_fieldstorage(x) for x in fs]
         elif fs.filename is None:
-            return fs.value
+            return de_null(fs.value)
         else:
-            return fs
+            return de_null(fs)
 
-    def _form_as_mapping(self, req):
-        """Extracts POST form data from request
+    def _extract_payload(self, req):
+        """Extracts payload from request; returns dict
 
-        This handles gzip compressed form post data, too.
+        Decompresses the payload if necessary. Converts from multipart form to
+        Python dict and returns that.
 
         :arg req: the WSGI request
 
-        :returns: Storage instance with the data
+        :returns: dict structure
 
         """
+        # Decompress payload if it's compressed
+        # FIXME: Move this section to middleware?
         if req.env.get('HTTP_CONTENT_ENCODING') == 'gzip':
             # If the content is gzipped, we pull it out and decompress it. We
             # have to do that here because nginx doesn't have a good way to do
@@ -103,99 +111,67 @@ class BreakpadSubmitterResource(object):
         else:
             data = req.stream
 
-        env = req.env.copy()
-        fs = cgi.FieldStorage(fp=data, environ=env, keep_blank_values=1)
-        form = Storage(
-            [(k, self._process_fieldstorage(fs[k])) for k in fs.keys()]
-        )
+        # Convert to FieldStorage and then to dict
+        fs = cgi.FieldStorage(fp=data, environ=req.env.copy(), keep_blank_values=1)
+        payload = self._process_fieldstorage(fs)
+
         # FIXME: In the original collector, this returned request querystring
         # data as well as request body data.
-        return form
 
-    @staticmethod
-    def _no_x00_character(value):
-        """Remove x00 characters
-
-        Note: We remove null characters because they are a hassle to deal with
-        during reporting and cause problems when sending to Postgres.
-
-        :arg value: a basestring with null characters in it
-
-        :returns: same type basestring with null characters removed
-
-        """
-        if isinstance(value, unicode) and u'\u0000' in value:
-            return u''.join(c for c in value if c != u'\u0000')
-        if isinstance(value, str) and '\x00' in value:
-            return ''.join(c for c in value if c != '\x00')
-        return value
-
-    def _get_raw_crash_from_form(self, req):
-        """Retrieves crash/dump data and fixes it
-
-        :arg req: the WSGI request
-
-        :returns: (raw_crash, dumps)
-
-        """
-        dumps = MemoryDumpsMapping()
-        raw_crash = {}
-        checksums = {}
-
-        for name, value in self._form_as_mapping(req).iteritems():
-            name = self._no_x00_character(name)
-            if isinstance(value, basestring):
-                if name != "dump_checksums":
-                    raw_crash[name] = self._no_x00_character(value)
-            elif hasattr(value, 'file') and hasattr(value, 'value'):
-                dumps[name] = value.value
-                checksums[name] = self.checksum_method(value.value).hexdigest()
-            elif isinstance(value, int):
-                raw_crash[name] = value
-            else:
-                raw_crash[name] = value.value
-        raw_crash['dump_checksums'] = checksums
-        return raw_crash, dumps
+        return payload
 
     def on_post(self, req, resp):
-        raw_crash, dumps = self._get_raw_crash_from_form(req)
+        # FIXME: verify HTTP content type header for post?
 
-        # Set the content-type now. That way we can drop out of this method
-        # whenever.
         resp.content_type = 'text/plain'
 
+        # Generate a crash id.
         current_timestamp = utc_now()
+        crash_id = create_new_ooid(current_timestamp)
+
+        # FIXME: Handle existing crash id case
+
+        # FIXME: Add the following to the crash report:
+        #
+        # * "timestamp" - current_timestamp.isoformat()
+        # * "submitted_timestamp" - current_timestamp in milliseconds (legacy--can we remove?)
+        # * "type_tag" - "bp"
+        # * "uuid" - crash id
+        # * "legacy_processing" - the throttle result enumeration int
+        # * "throttle_rate" - also from throttling
+
+        raw_crash, dumps = self._get_raw_crash_from_form(req)
+
         raw_crash['submitted_timestamp'] = current_timestamp.isoformat()
         # legacy - ought to be removed someday
         raw_crash['timestamp'] = time.time()
 
         if not self.accept_submitted_crash_id or 'uuid' not in raw_crash:
-            crash_id = create_new_ooid(current_timestamp)
             raw_crash['uuid'] = crash_id
             logger.info('%s received', crash_id)
         else:
             crash_id = raw_crash['uuid']
             logger.info('%s received with existing crash_id:', crash_id)
 
-        if ('legacy_processing' not in raw_crash or
-                not self.accept_submitted_legacy_processing):
+        # if ('legacy_processing' not in raw_crash or
+        #         not self.accept_submitted_legacy_processing):
 
-            raw_crash['legacy_processing'], raw_crash['throttle_rate'] = (
-                self.throttler.throttle(raw_crash)
-            )
-        else:
-            raw_crash['legacy_processing'] = int(
-                raw_crash['legacy_processing']
-            )
+        #     raw_crash['legacy_processing'], raw_crash['throttle_rate'] = (
+        #         self.throttler.throttle(raw_crash)
+        #     )
+        # else:
+        #     raw_crash['legacy_processing'] = int(
+        #         raw_crash['legacy_processing']
+        #     )
 
-        if raw_crash['legacy_processing'] == DISCARD:
-            logger.info('%s discarded', crash_id)
-            resp.data = 'Discarded=1\n'
-            return
-        if raw_crash['legacy_processing'] == IGNORE:
-            logger.info('%s ignored', crash_id)
-            resp.data = 'Unsupported=1\n'
-            return
+        # if raw_crash['legacy_processing'] == DISCARD:
+        #     logger.info('%s discarded', crash_id)
+        #     resp.data = 'Discarded=1\n'
+        #     return
+        # if raw_crash['legacy_processing'] == IGNORE:
+        #     logger.info('%s ignored', crash_id)
+        #     resp.data = 'Unsupported=1\n'
+        #     return
 
         raw_crash['type_tag'] = self.dump_id_prefix.strip('-')
 
@@ -204,7 +180,7 @@ class BreakpadSubmitterResource(object):
             dumps,
             crash_id
         )
-        logger.info('%s accepted', crash_id)
+        # logger.info('%s accepted', crash_id)
 
         resp.status = falcon.HTTP_200
         resp.body = 'CrashID=%s%s\n' % (self.dump_id_prefix, crash_id)
@@ -215,7 +191,7 @@ class HealthCheckResource(object):
         self.config = config
 
     def on_get(self, req, resp):
-        resp.content_type = 'application/json'
+        resp.content_type = 'application/json; charset=utf-8'
 
         # FIXME: This should query all the subsystems/components/whatever and
         # provide data from them. We need a registration system or something to
@@ -229,8 +205,10 @@ class HealthCheckResource(object):
         })
 
 
-def get_app():
-    config = ConfigManager([ConfigOSEnv()])
+def get_app(config=None):
+    """Returns AntennaAPI instance"""
+    if config is None:
+        config = ConfigManager([ConfigOSEnv()])
     app = falcon.API()
     app.add_route('/api/v1/health', HealthCheckResource(config))
     app.add_route('/submit', BreakpadSubmitterResource(config))
