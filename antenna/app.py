@@ -4,16 +4,16 @@
 
 import base64
 import cgi
-import cStringIO
+import io
 import json
 import logging
 import time
 import zlib
 from functools import wraps
 
+from everett.manager import ConfigManager, ConfigOSEnv, parse_class
 import falcon
 
-from antenna.configlib import ConfigManager, parse_class
 from antenna.lib.datetimeutil import utc_now
 from antenna.lib.ooid import create_new_ooid
 from antenna.lib.storage import Storage
@@ -280,7 +280,7 @@ class HealthCheckResource(object):
 
 
 def get_app():
-    config = ConfigManager()
+    config = ConfigManager([ConfigOSEnv()])
     app = falcon.API()
     app.add_route('/api/v1/health', HealthCheckResource(config))
     app.add_route('/submit', BreakpadSubmitterResource(config))
