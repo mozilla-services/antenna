@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import gzip
+import io
 import os.path
 
 import pytest
@@ -75,9 +77,36 @@ class TestBreakpadSubmitterResource:
         }
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
 
-    @pytest.mark.xfail(run=False, reason='write me')
     def test_extract_payload_compressed(self, datadir, config, request_generator):
-        pass
+        boundary, data = fetch_payload(datadir, 'socorrofake1.raw')
+        bio = io.BytesIO()
+        g = gzip.GzipFile(fileobj=bio, mode='w')
+        g.write(data.encode('utf-8'))
+        g.close()
+        data = bio.getbuffer()
+
+        req = request_generator(
+            method='POST',
+            path='/submit',
+            headers={
+                'Content-Encoding': 'gzip',
+                'Content-Type': 'multipart/form-data; boundary=' + boundary,
+            },
+            body=data,
+        )
+
+        bsp = BreakpadSubmitterResource(config)
+        expected_raw_crash = {
+            'ProductName': 'Test',
+            'Version': '1.0',
+            'dump_checksums': {
+                'upload_file_minidump': 'e19d5cd5af0378da05f63f891c7467af',
+            }
+        }
+        expected_dumps = {
+            'upload_file_minidump': b'abcd1234'
+        }
+        assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
 
     @pytest.mark.xfail(run=False, reason='write me')
     def test_existing_uuid(self):
