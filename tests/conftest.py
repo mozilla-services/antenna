@@ -6,7 +6,8 @@ import os
 import pytest
 import sys
 
-from everett.manager import ConfigManager
+from everett.manager import ConfigManager, ConfigDictEnv
+from falcon.request import Request, RequestOptions
 from falcon.testing.helpers import create_environ
 from falcon.testing.srmock import StartResponseMock
 from falcon.testing.test_case import Result
@@ -23,6 +24,40 @@ from antenna.app import get_app  # noqa
 @pytest.fixture
 def app():
     return get_app(ConfigManager([]))
+
+
+@pytest.fixture
+def config(request):
+    """Returns a ConfigManager instance primed with config vars
+
+    Specify the config vars you want it primed with on the class. For example::
+
+        class TestFoo:
+            config_vars = {
+                'SOME_VAR': 'some_val'
+            }
+
+            def test_foo(self, config):
+                ...
+
+    """
+    return ConfigManager([ConfigDictEnv(dict(request.cls.config_vars))])
+
+
+@pytest.fixture
+def request_generator():
+    def _request_generator(method, path, query_string=None, headers=None,
+                           body=None):
+        env = create_environ(
+            method=method,
+            path=path,
+            query_string=(query_string or ''),
+            headers=headers,
+            body=body,
+        )
+        return Request(env)
+
+    return _request_generator
 
 
 class Client:

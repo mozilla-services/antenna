@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import cgi
+import hashlib
 import io
 import json
 import logging
@@ -18,12 +19,8 @@ from antenna.lib.storage import Storage
 from antenna.throttler import DISCARD, IGNORE
 from antenna.util import de_null
 
+
 logger = logging.getLogger('gunicorn.error')
-
-
-# FIXME: Figure out whether we need to implement this or nix it. For now, we're
-# just going to define it as a synonym.
-MemoryDumpsMapping = dict
 
 
 class BreakpadSubmitterResource(object):
@@ -72,19 +69,47 @@ class BreakpadSubmitterResource(object):
         self.crash_storage = self.crash_storage(config)
 
     def _process_fieldstorage(self, fs):
-        """Recursively works through a field storage converting to Python structure"""
-        if isinstance(fs, dict):
-            return dict(
-                [(de_null(key), self._process_fieldstorage(fs[key])) for key in fs.keys()]
-            )
-        elif isinstance(fs, list):
-            return [self._process_fieldstorage(x) for x in fs]
-        elif fs.filename is None:
-            return de_null(fs.value)
-        else:
-            return de_null(fs)
+        """Recursively works through a field storage converting to Python structure
 
-    def _extract_payload(self, req):
+        FieldStorage can have a name, filename and a value. Thus we have the
+        following possibilities:
+
+        1. It's a FieldStorage with a name and a value.
+
+           This is a regular form key/val pair. The value can be a str or an
+           int.
+
+           Example:
+
+           * FieldStorage('ProductName', None, 'Test')
+
+        2. It's a FieldStorage with a name, filename and value.
+
+           This is a file. The value is bytes.
+
+           * FieldStorage('upload_file_minidump', 'fakecrash.dump', b'abcd1234\n')
+
+        3. It's a FieldStorage with name and filename as None, and the value is
+           a list of FieldStorage items.
+
+           * FieldStorage(None, None, [FieldStorage('ProductName', ...)...])
+
+        This method converts that into a structure of Python simple types.
+
+        """
+        if isinstance(fs, cgi.FieldStorage):
+            if fs.name is None and fs.filename is None:
+                return dict(
+                    [(key, self._process_fieldstorage(fs[key])) for key in fs]
+                )
+            else:
+                # Note: The old code never kept he filename around and this
+                # doesn't either.
+                return fs.value
+        else:
+            return fs
+
+    def extract_payload(self, req):
         """Extracts payload from request; returns dict
 
         Decompresses the payload if necessary. Converts from multipart form to
@@ -96,7 +121,7 @@ class BreakpadSubmitterResource(object):
 
         """
         # Decompress payload if it's compressed
-        # FIXME: Move this section to middleware?
+        # FIXME(willkg): Move this section to middleware?
         if req.env.get('HTTP_CONTENT_ENCODING') == 'gzip':
             # If the content is gzipped, we pull it out and decompress it. We
             # have to do that here because nginx doesn't have a good way to do
@@ -106,32 +131,50 @@ class BreakpadSubmitterResource(object):
             data = zlib.decompress(
                 req.stream.read(content_length), gzip_header
             )
-            data = io.StringIO(data)
+            data = io.BytesIO(data)
 
         else:
             data = req.stream
 
         # Convert to FieldStorage and then to dict
-        fs = cgi.FieldStorage(fp=data, environ=req.env.copy(), keep_blank_values=1)
+        fs = cgi.FieldStorage(fp=data, environ=req.env, keep_blank_values=1)
         payload = self._process_fieldstorage(fs)
 
-        # FIXME: In the original collector, this returned request querystring
-        # data as well as request body data.
+        # NOTE(willkg): In the original collector, this returned request
+        # querystring data as well as request body data, but we're not doing
+        # that because the query string just duplicates data in the payload.
 
-        return payload
+        raw_crash = {}
+        dumps = {}
+
+        # FIXME(willkg): I think this has extra stanzas it doesn't need.
+        for key, val in payload.items():
+            if isinstance(val, str):
+                if key != 'dump_checksums':
+                    raw_crash[key] = de_null(val)
+                else:
+                    print('OMG! not a string?')
+            elif isinstance(val, int):
+                print('INT')
+                raw_crash[key] = val
+
+            elif isinstance(val, bytes):
+                dumps[key] = val
+                checksum = hashlib.md5(val).hexdigest()
+                raw_crash.setdefault('dump_checksums', {})[key] = checksum
+
+            else:
+                print('ELSE CLAUSE')
+                raw_crash[key] = val.value
+
+        return raw_crash, dumps
 
     def on_post(self, req, resp):
-        # FIXME: verify HTTP content type header for post?
+        # FIXME(willkg): verify HTTP content type header for post?
 
         resp.content_type = 'text/plain'
 
-        # Generate a crash id.
-        current_timestamp = utc_now()
-        crash_id = create_new_ooid(current_timestamp)
-
-        # FIXME: Handle existing crash id case
-
-        # FIXME: Add the following to the crash report:
+        # FIXME(willkg): Add the following to the crash report:
         #
         # * "timestamp" - current_timestamp.isoformat()
         # * "submitted_timestamp" - current_timestamp in milliseconds (legacy--can we remove?)
@@ -140,38 +183,27 @@ class BreakpadSubmitterResource(object):
         # * "legacy_processing" - the throttle result enumeration int
         # * "throttle_rate" - also from throttling
 
-        raw_crash, dumps = self._get_raw_crash_from_form(req)
+        raw_crash, dumps = self.extract_payload(req)
 
+        current_timestamp = utc_now()
         raw_crash['submitted_timestamp'] = current_timestamp.isoformat()
-        # legacy - ought to be removed someday
+        # FIXME(willkg): Check to see if we can remove this.
         raw_crash['timestamp'] = time.time()
 
         if not self.accept_submitted_crash_id or 'uuid' not in raw_crash:
+            crash_id = create_new_ooid(current_timestamp)
             raw_crash['uuid'] = crash_id
             logger.info('%s received', crash_id)
         else:
             crash_id = raw_crash['uuid']
             logger.info('%s received with existing crash_id:', crash_id)
 
-        # if ('legacy_processing' not in raw_crash or
-        #         not self.accept_submitted_legacy_processing):
+        # NOTE(willkg): The old collector add "legacy_processing" and
+        # "throttle_rate" which come from throttling. The new collector doesn't
+        # throttle, so that gets added by the processor.
 
-        #     raw_crash['legacy_processing'], raw_crash['throttle_rate'] = (
-        #         self.throttler.throttle(raw_crash)
-        #     )
-        # else:
-        #     raw_crash['legacy_processing'] = int(
-        #         raw_crash['legacy_processing']
-        #     )
-
-        # if raw_crash['legacy_processing'] == DISCARD:
-        #     logger.info('%s discarded', crash_id)
-        #     resp.data = 'Discarded=1\n'
-        #     return
-        # if raw_crash['legacy_processing'] == IGNORE:
-        #     logger.info('%s ignored', crash_id)
-        #     resp.data = 'Unsupported=1\n'
-        #     return
+        # FIXME(willkg): The processor should only throttle *new* crashes
+        # and not crashes coming into the priority or reprocessing queues.
 
         raw_crash['type_tag'] = self.dump_id_prefix.strip('-')
 
