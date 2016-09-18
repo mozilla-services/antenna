@@ -79,6 +79,8 @@ class TestBreakpadSubmitterResource:
 
     def test_extract_payload_compressed(self, datadir, config, request_generator):
         boundary, data = fetch_payload(datadir, 'socorrofake1.raw')
+
+        # Compress the payload
         bio = io.BytesIO()
         g = gzip.GzipFile(fileobj=bio, mode='w')
         g.write(data.encode('utf-8'))
@@ -108,8 +110,23 @@ class TestBreakpadSubmitterResource:
         }
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
 
-    @pytest.mark.xfail(run=False, reason='write me')
-    def test_existing_uuid(self):
-        pass
+    def test_existing_uuid(self, datadir, client):
+        boundary, data = fetch_payload(datadir, 'socorrofake1_withuuid.raw')
+
+        result = client.post(
+            '/submit',
+            headers={
+                'Content-Type': 'multipart/form-data; boundary=' + boundary,
+            },
+            body=data
+        )
+        assert result.status_code == 200
+
+        # Extract the uuid from the response content and verify that it's in
+        # the original POST data
+        offset = len('CrashID=bp-')
+        crash_id = result.content.strip()[offset:]
+        crash_id = crash_id.decode('utf-8')
+        assert crash_id in str(data)
 
     # FIXME: test crash report shapes (multiple dumps? no dumps? what else is in there?)

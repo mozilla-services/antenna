@@ -16,8 +16,6 @@ import falcon
 
 from antenna.lib.datetimeutil import utc_now
 from antenna.lib.ooid import create_new_ooid
-from antenna.lib.storage import Storage
-from antenna.throttler import DISCARD, IGNORE
 from antenna.util import de_null
 
 
@@ -25,6 +23,7 @@ logger = logging.getLogger('gunicorn.error')
 
 
 class BreakpadSubmitterResource(RequiredConfigMixin):
+    """Handles incoming breakpad crash reports and saves to S3"""
     required_config = ConfigOptions()
     required_config.add_option(
         'dump_field', default='upload_file_minidump',
@@ -34,24 +33,6 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
     required_config.add_option(
         'dump_id_prefix', default='bp-',
         doc='the crash type prefix'
-    )
-
-    # FIXME(willkg): this should go away
-    required_config.add_option(
-        'accept_submitted_legacy_processing', default='False', parser=bool,
-        doc=(
-            'boolean telling the collector to use a legacy_processing flag '
-            'submitted with the crash'
-        )
-    )
-
-    # FIXME(willkg): i think we should nix this
-    required_config.add_option(
-        'accept_submitted_crash_id', default='False', parser=bool,
-        doc=(
-            'boolean telling the collector to use a crash_id provided in the '
-            'crash submission'
-        )
     )
 
     required_config.add_option(
@@ -65,7 +46,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         self.config = config.with_options(self)
         self.crashstorage = self.config('crashstorage_class')(config)
 
-    def _process_fieldstorage(self, fs):
+    def process_fieldstorage(self, fs):
         """Recursively works through a field storage converting to Python structure
 
         FieldStorage can have a name, filename and a value. Thus we have the
@@ -84,7 +65,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
            This is a file. The value is bytes.
 
-           * FieldStorage('upload_file_minidump', 'fakecrash.dump', b'abcd1234\n')
+           * FieldStorage('upload_file_minidump', 'fakecrash.dump', b'abcd1234')
 
         3. It's a FieldStorage with name and filename as None, and the value is
            a list of FieldStorage items.
@@ -97,24 +78,24 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         if isinstance(fs, cgi.FieldStorage):
             if fs.name is None and fs.filename is None:
                 return dict(
-                    [(key, self._process_fieldstorage(fs[key])) for key in fs]
+                    [(key, self.process_fieldstorage(fs[key])) for key in fs]
                 )
             else:
-                # Note: The old code never kept he filename around and this
+                # Note: The old code never kept the filename around and this
                 # doesn't either.
                 return fs.value
         else:
             return fs
 
     def extract_payload(self, req):
-        """Extracts payload from request; returns dict
+        """Parses the HTTP POST payload
 
-        Decompresses the payload if necessary. Converts from multipart form to
-        Python dict and returns that.
+        Decompresses the payload if necessary and then walks through the
+        payload converting from multipart/form-data to Python datatypes.
 
-        :arg req: the WSGI request
+        :arg req: a Falcon Request instance
 
-        :returns: dict structure
+        :returns: (raw_crash dict, dumps dict)
 
         """
         # Decompress payload if it's compressed
@@ -140,8 +121,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         # Convert to FieldStorage and then to dict
         fs = cgi.FieldStorage(fp=data, environ=request_env, keep_blank_values=1)
-        print(fs)
-        payload = self._process_fieldstorage(fs)
+        payload = self.process_fieldstorage(fs)
 
         # NOTE(willkg): In the original collector, this returned request
         # querystring data as well as request body data, but we're not doing
@@ -150,13 +130,15 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         raw_crash = {}
         dumps = {}
 
-        # FIXME(willkg): I think this has extra stanzas it doesn't need.
+        # FIXME(willkg): I think this has extra stanzas it doesn't need. Pretty
+        # sure payload items are either strings or bytes and that's it.
         for key, val in payload.items():
             if isinstance(val, str):
                 if key != 'dump_checksums':
                     raw_crash[key] = de_null(val)
                 else:
-                    print('OMG! not a string?')
+                    print('not a string?')
+
             elif isinstance(val, int):
                 print('INT')
                 raw_crash[key] = val
@@ -173,18 +155,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         return raw_crash, dumps
 
     def on_post(self, req, resp):
-        # FIXME(willkg): verify HTTP content type header for post?
-
         resp.content_type = 'text/plain'
-
-        # FIXME(willkg): Add the following to the crash report:
-        #
-        # * "timestamp" - current_timestamp.isoformat()
-        # * "submitted_timestamp" - current_timestamp in milliseconds (legacy--can we remove?)
-        # * "type_tag" - "bp"
-        # * "uuid" - crash id
-        # * "legacy_processing" - the throttle result enumeration int
-        # * "throttle_rate" - also from throttling
 
         raw_crash, dumps = self.extract_payload(req)
 
@@ -193,7 +164,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         # FIXME(willkg): Check to see if we can remove this.
         raw_crash['timestamp'] = time.time()
 
-        if not self.config('accept_submitted_crash_id') or 'uuid' not in raw_crash:
+        if 'uuid' not in raw_crash:
             crash_id = create_new_ooid(current_timestamp)
             raw_crash['uuid'] = crash_id
             logger.info('%s received', crash_id)
@@ -215,7 +186,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             dumps,
             crash_id
         )
-        # logger.info('%s accepted', crash_id)
+        logger.info('%s accepted', crash_id)
 
         resp.status = falcon.HTTP_200
         resp.body = 'CrashID=%s%s\n' % (self.config('dump_id_prefix'), crash_id)
