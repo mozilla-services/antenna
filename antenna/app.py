@@ -11,6 +11,7 @@ import time
 import zlib
 
 from everett.manager import ConfigManager, ConfigOSEnv, parse_class
+from everett.component import ConfigOptions, RequiredConfigMixin
 import falcon
 
 from antenna.lib.datetimeutil import utc_now
@@ -23,50 +24,46 @@ from antenna.util import de_null
 logger = logging.getLogger('gunicorn.error')
 
 
-class BreakpadSubmitterResource(object):
+class BreakpadSubmitterResource(RequiredConfigMixin):
+    required_config = ConfigOptions()
+    required_config.add_option(
+        'dump_field', default='upload_file_minidump',
+        doc='the name of the field in the POST data for dumps'
+    )
+
+    required_config.add_option(
+        'dump_id_prefix', default='bp-',
+        doc='the crash type prefix'
+    )
+
+    # FIXME(willkg): this should go away
+    required_config.add_option(
+        'accept_submitted_legacy_processing', default='False', parser=bool,
+        doc=(
+            'boolean telling the collector to use a legacy_processing flag '
+            'submitted with the crash'
+        )
+    )
+
+    # FIXME(willkg): i think we should nix this
+    required_config.add_option(
+        'accept_submitted_crash_id', default='False', parser=bool,
+        doc=(
+            'boolean telling the collector to use a crash_id provided in the '
+            'crash submission'
+        )
+    )
+
+    required_config.add_option(
+        'crashstorage_class',
+        default='antenna.external.boto.crashstorage.BotoS3CrashStorage',
+        parser=parse_class,
+        doc='the class in charge of storing crashes'
+    )
+
     def __init__(self, config):
-        # the default name for the main dump
-        self.dump_field = config(
-            'dump_field', default='upload_file_minidump'
-        )
-
-        # the prefix to return to the client in front of the OOID
-        self.dump_id_prefix = config(
-            'dump_id_prefix', default='bp-'
-        )
-
-        # a boolean telling the collector to use a legacy_processing flag
-        # submitted with the crash
-        self.accept_submitted_legacy_processing = config(
-            'accept_submitted_legacy_processing', default='False', parser=bool
-        )
-
-        # a boolean telling the collector to use a crash_id provided in the
-        # crash submission
-        self.accept_submitted_crash_id = config(
-            'accept_submitted_crash_id', default='False', parser=bool
-        )
-
-        # a reference to method that accepts a string and calculates a hash
-        # value
-        self.checksum_method = config(
-            'checksum_method', default='hashlib.md5', parser=parse_class
-        )
-
-        # class that implements the throttling action
-        self.throttler = config(
-            'throttler_class', default='antenna.throttler.Throttler',
-            parser=parse_class
-        )
-        self.throttler = self.throttler(config)
-
-        # source storage class
-        self.crash_storage = config(
-            'crashstorage_class',
-            default='antenna.external.boto.crashstorage.BotoS3CrashStorage',
-            parser=parse_class
-        )
-        self.crash_storage = self.crash_storage(config)
+        self.config = config.with_options(self)
+        self.crashstorage = self.config('crashstorage_class')(config)
 
     def _process_fieldstorage(self, fs):
         """Recursively works through a field storage converting to Python structure
@@ -190,7 +187,7 @@ class BreakpadSubmitterResource(object):
         # FIXME(willkg): Check to see if we can remove this.
         raw_crash['timestamp'] = time.time()
 
-        if not self.accept_submitted_crash_id or 'uuid' not in raw_crash:
+        if not self.config('accept_submitted_crash_id') or 'uuid' not in raw_crash:
             crash_id = create_new_ooid(current_timestamp)
             raw_crash['uuid'] = crash_id
             logger.info('%s received', crash_id)
@@ -205,9 +202,9 @@ class BreakpadSubmitterResource(object):
         # FIXME(willkg): The processor should only throttle *new* crashes
         # and not crashes coming into the priority or reprocessing queues.
 
-        raw_crash['type_tag'] = self.dump_id_prefix.strip('-')
+        raw_crash['type_tag'] = self.config('dump_id_prefix').strip('-')
 
-        self.crash_storage.save_raw_crash(
+        self.crashstorage.save_raw_crash(
             raw_crash,
             dumps,
             crash_id
@@ -215,7 +212,7 @@ class BreakpadSubmitterResource(object):
         # logger.info('%s accepted', crash_id)
 
         resp.status = falcon.HTTP_200
-        resp.body = 'CrashID=%s%s\n' % (self.dump_id_prefix, crash_id)
+        resp.body = 'CrashID=%s%s\n' % (self.config('dump_id_prefix'), crash_id)
 
 
 class HealthCheckResource(object):
