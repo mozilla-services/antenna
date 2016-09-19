@@ -18,6 +18,14 @@ class TestHealthCheckResource:
 
 
 def fetch_payload(datadir, fn):
+    """Retrieves a test payload from disk
+
+    :param datadir: directory the file is in
+    :param fn: the filename for the payload file
+
+    :returns: (boundary, data)
+
+    """
     with open(os.path.join(datadir, fn), 'r') as fp:
         data = fp.read()
 
@@ -27,14 +35,6 @@ def fetch_payload(datadir, fn):
     # the - at the beinning.
     boundary = data.splitlines()[0].strip()[2:]
     return boundary, data
-
-
-class FauxStorage:
-    def __init__(self, config):
-        self.stored = []
-
-    def save_raw_crash(self, *args, **kwargs):
-        self.stored.append((args, kwargs))
 
 
 class TestBreakpadSubmitterResource:
