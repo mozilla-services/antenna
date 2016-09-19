@@ -108,6 +108,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             data = zlib.decompress(
                 req.stream.read(content_length), gzip_header
             )
+
             # Stomp on the content length to correct it because we've changed
             # the payload size by decompressing it. We save the original value
             # in case we need to debug something later on.
@@ -118,7 +119,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         else:
             data = req.stream
 
-        # Convert to FieldStorage and then to dict
+        # Convert to FieldStorage and then to dict.
         fs = cgi.FieldStorage(fp=data, environ=req.env, keep_blank_values=1)
         payload = self.process_fieldstorage(fs)
 
@@ -139,9 +140,11 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
                 if key != 'dump_checksums':
                     raw_crash[key] = de_null(val)
                 else:
+                    # FIXME(willkg): unused?
                     assert False, 'string with key == dump_checksums'
 
             elif isinstance(val, int):
+                # FIXME(willkg): unused?
                 assert False, 'can be an int'
                 raw_crash[key] = val
 
@@ -151,6 +154,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
                 raw_crash.setdefault('dump_checksums', {})[key] = checksum
 
             else:
+                # FIXME(willkg): unused?
                 assert False, 'can be something other than str, int or bytes'
                 raw_crash[key] = val.value
 
@@ -201,9 +205,9 @@ class HealthCheckResource(object):
     def on_get(self, req, resp):
         resp.content_type = 'application/json; charset=utf-8'
 
-        # FIXME: This should query all the subsystems/components/whatever and
-        # provide data from them. We need a registration system or something to
-        # facilitate that programmatically.
+        # FIXME(willkg): This should query all the
+        # subsystems/components/whatever and provide data from them. We need a
+        # registration system or something to facilitate that programmatically.
         #
         # Once we know how everything is doing, we can determine the proper
         # status code. For now, 200 is fine.
