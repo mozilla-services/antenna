@@ -99,9 +99,6 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         """
         # Decompress payload if it's compressed
-        # FIXME(willkg): Move this section to middleware?
-        request_env = req.env.copy()
-
         if req.env.get('HTTP_CONTENT_ENCODING') == 'gzip':
             # If the content is gzipped, we pull it out and decompress it. We
             # have to do that here because nginx doesn't have a good way to do
@@ -112,15 +109,17 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
                 req.stream.read(content_length), gzip_header
             )
             # Stomp on the content length to correct it because we've changed
-            # the payload size by decompressing it.
-            request_env['CONTENT_LENGTH'] = len(data)
+            # the payload size by decompressing it. We save the original value
+            # in case we need to debug something later on.
+            req.env['ORIG_CONTENT_LENGTH'] = content_length
+            req.env['CONTENT_LENGTH'] = len(data)
 
             data = io.BytesIO(data)
         else:
             data = req.stream
 
         # Convert to FieldStorage and then to dict
-        fs = cgi.FieldStorage(fp=data, environ=request_env, keep_blank_values=1)
+        fs = cgi.FieldStorage(fp=data, environ=req.env, keep_blank_values=1)
         payload = self.process_fieldstorage(fs)
 
         # NOTE(willkg): In the original collector, this returned request
