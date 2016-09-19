@@ -47,7 +47,7 @@ clean:
 	-rm .docker-build
 
 lint:
-	${DOCKERCOMPOSE} run web flake8 --statistics antenna
+	${DOCKERCOMPOSE} run web flake8 --statistics antenna tests
 
 test:
 	${DOCKERCOMPOSE} run web py.test
