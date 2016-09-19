@@ -131,16 +131,19 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         dumps = {}
 
         # FIXME(willkg): I think this has extra stanzas it doesn't need. Pretty
-        # sure payload items are either strings or bytes and that's it.
+        # sure payload items are either strings or bytes and that's it. I threw
+        # some asserts in there that will fail immediately, so if we ever bump
+        # into it, we'll know. This should reveal itself in testing. If it
+        # never pops up, we can nix the sections.
         for key, val in payload.items():
             if isinstance(val, str):
                 if key != 'dump_checksums':
                     raw_crash[key] = de_null(val)
                 else:
-                    print('not a string?')
+                    assert False, 'string with key == dump_checksums'
 
             elif isinstance(val, int):
-                print('INT')
+                assert False, 'can be an int'
                 raw_crash[key] = val
 
             elif isinstance(val, bytes):
@@ -149,7 +152,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
                 raw_crash.setdefault('dump_checksums', {})[key] = checksum
 
             else:
-                print('ELSE CLAUSE')
+                assert False, 'can be something other than str, int or bytes'
                 raw_crash[key] = val.value
 
         return raw_crash, dumps
@@ -161,7 +164,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         current_timestamp = utc_now()
         raw_crash['submitted_timestamp'] = current_timestamp.isoformat()
-        # FIXME(willkg): Check to see if we can remove this.
+        # FIXME(willkg): Check the processor to see if we can remove this.
         raw_crash['timestamp'] = time.time()
 
         if 'uuid' not in raw_crash:
