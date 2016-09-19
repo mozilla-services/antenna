@@ -7,7 +7,7 @@ import pytest
 import sys
 
 from everett.manager import ConfigManager, ConfigDictEnv
-from falcon.request import Request, RequestOptions
+from falcon.request import Request
 from falcon.testing.helpers import create_environ
 from falcon.testing.srmock import StartResponseMock
 from falcon.testing.test_case import Result

@@ -6,8 +6,6 @@ import gzip
 import io
 import os.path
 
-import pytest
-
 from antenna.app import BreakpadSubmitterResource
 
 
