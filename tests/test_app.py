@@ -27,8 +27,9 @@ def fetch_payload(datadir, fn):
     with open(os.path.join(datadir, fn), 'r') as fp:
         data = fp.read()
 
-    # Fix newlines
-    data = data.replace('\n', '\r\n')
+    if '\r\n' not in data:
+        # If the payload doesn't have the right line endings, we fix that here.
+        data = data.replace('\n', '\r\n')
     # Figure out the boundary for this file. It's the first line minus two of
     # the - at the beinning.
     boundary = data.splitlines()[0].strip()[2:]
@@ -72,6 +73,32 @@ class TestBreakpadSubmitterResource:
         }
         expected_dumps = {
             'upload_file_minidump': b'abcd1234'
+        }
+        assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
+
+    def test_extract_payload_2_dumps(self, datadir, config, request_generator):
+        boundary, data = fetch_payload(datadir, 'socorrofake2.raw')
+        req = request_generator(
+            method='POST',
+            path='/submit',
+            headers={
+                'Content-Type': 'multipart/form-data; boundary=' + boundary,
+            },
+            body=data,
+        )
+
+        bsp = BreakpadSubmitterResource(config)
+        expected_raw_crash = {
+            'ProductName': 'Test',
+            'Version': '1',
+            'dump_checksums': {
+                'upload_file_minidump': '4f41243847da693a4f356c0486114bc6',
+                'upload_file_minidump_flash1': 'e19d5cd5af0378da05f63f891c7467af',
+            }
+        }
+        expected_dumps = {
+            'upload_file_minidump': b'deadbeef',
+            'upload_file_minidump_flash1': b'abcd1234'
         }
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
 

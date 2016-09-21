@@ -54,16 +54,17 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         1. It's a FieldStorage with a name and a value.
 
-           This is a regular form key/val pair. The value can be a str or an
-           int.
+           This is a regular form key/val pair. The value is a string.
 
            Example:
 
            * FieldStorage('ProductName', None, 'Test')
+           * FieldStorage('Version', None, '1')
 
         2. It's a FieldStorage with a name, filename and value.
 
-           This is a file. The value is bytes.
+           This is a file. The value is a bytes. We ignore the filename and only
+           capture the name and value.
 
            * FieldStorage('upload_file_minidump', 'fakecrash.dump', b'abcd1234')
 
@@ -81,8 +82,6 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
                     [(key, self.process_fieldstorage(fs[key])) for key in fs]
                 )
             else:
-                # Note: The old code never kept the filename around and this
-                # doesn't either.
                 return fs.value
         else:
             return fs
@@ -130,33 +129,29 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         raw_crash = {}
         dumps = {}
 
-        # FIXME(willkg): I think this has extra stanzas it doesn't need. Pretty
-        # sure payload items are either strings or bytes and that's it. I threw
-        # some asserts in there that will fail immediately, so if we ever bump
-        # into it, we'll know. This should reveal itself in testing. If it
-        # never pops up, we can nix the sections.
         for key, val in payload.items():
-            if isinstance(val, str):
-                if key != 'dump_checksums':
-                    raw_crash[key] = de_null(val)
-                else:
-                    # FIXME(willkg): unused?
-                    assert False, 'string with key == dump_checksums'
+            if key == 'dump_checksums':
+                # We don't want to pick up the dump_checksums from a raw
+                # crash that was re-submitted.
+                continue
 
-            elif isinstance(val, int):
-                # FIXME(willkg): unused?
-                assert False, 'can be an int'
-                raw_crash[key] = val
+            elif isinstance(val, str):
+                raw_crash[key] = de_null(val)
 
             elif isinstance(val, bytes):
+                # This is a dump, so we get a checksum and save the bits in the
+                # relevant places.
                 dumps[key] = val
                 checksum = hashlib.md5(val).hexdigest()
                 raw_crash.setdefault('dump_checksums', {})[key] = checksum
 
             else:
-                # FIXME(willkg): unused?
-                assert False, 'can be something other than str, int or bytes'
-                raw_crash[key] = val.value
+                # This should never happen. We don't want to raise an exception
+                # because that would disrupt crash collection, so we log it.
+                logger.error(
+                    'ERROR: Saw a value in a crash report that was not a str or bytes. %r %r',
+                    key, val
+                )
 
         return raw_crash, dumps
 
