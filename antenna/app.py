@@ -227,7 +227,7 @@ def get_app(config=None):
 
     basedir = config(
         'basedir',
-        default=os.path.abspath(os.path.dirname(__file__))
+        default=os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     )
 
     app = falcon.API()
