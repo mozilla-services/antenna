@@ -6,13 +6,29 @@ import gzip
 import io
 import os.path
 
+from everett.manager import config_override
+
 from antenna.app import BreakpadSubmitterResource
 
 
-class TestHealthCheckResource:
-    def test_good(self, client):
-        result = client.get('/api/v1/health')
-        assert result.json['health'] == 'v1'
+class TestHealthVersionResource:
+    def test_no_version(self, client):
+        result = client.get('/__version__')
+        assert result.content == b'{}'
+
+    def test_version(self, client, tmpdir):
+        with config_override(BASEDIR=str(tmpdir)):
+            # Rebuild the app to pick up the overridden configuration.
+            client.rebuild_app()
+
+            # NOTE(willkg): The actual version.json has other things in it,
+            # but our endpoint just spits out the file verbatim, so we
+            # can test with whatever.
+            version_path = tmpdir.join('/version.json')
+            version_path.write('{"commit": "ou812"}')
+
+            result = client.get('/__version__')
+            assert result.content == b'{"commit": "ou812"}'
 
 
 def fetch_payload(datadir, fn):
