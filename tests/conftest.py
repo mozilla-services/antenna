@@ -21,9 +21,13 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from antenna.app import get_app  # noqa
 
 
+def get_blank_app():
+    return get_app(ConfigManager([]))
+
+
 @pytest.fixture
 def app():
-    return get_app(ConfigManager([]))
+    return get_blank_app()
 
 
 @pytest.fixture
@@ -74,6 +78,15 @@ class Client:
     def __init__(self, app):
         self.app = app
 
+    def rebuild_app(self):
+        """Rebuilds the app
+
+        This is helpful if you've changed configuration and need to rebuild the
+        app so that components pick up the new configuration.
+
+        """
+        self.app = get_blank_app()
+
     def get(self, path, headers=None, **kwargs):
         return self._request(
             'GET', path=path, headers=headers, **kwargs
@@ -104,9 +117,9 @@ class Client:
 
 
 @pytest.fixture
-def client(app):
+def client():
     """Test client for the Antenna API"""
-    return Client(app)
+    return Client(get_blank_app())
 
 
 @pytest.fixture

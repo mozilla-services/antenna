@@ -5,8 +5,8 @@
 import cgi
 import hashlib
 import io
-import json
 import logging
+import os
 import time
 import zlib
 
@@ -193,30 +193,44 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         resp.body = 'CrashID=%s%s\n' % (self.config('dump_id_prefix'), crash_id)
 
 
-class HealthCheckResource(object):
-    def __init__(self, config):
+class HealthVersionResource(RequiredConfigMixin):
+    """Implements the ``/__version__`` endpoint"""
+    required_config = ConfigOptions()
+    required_config.add_option(
+        'repo_url',
+        default='https://github.com/mozilla/antenna',
+        doc='the url for the repository that this code is deployed from'
+    )
+
+    def __init__(self, config, basedir):
         self.config = config
+        self.basedir = basedir
 
     def on_get(self, req, resp):
-        resp.content_type = 'application/json; charset=utf-8'
+        try:
+            path = os.path.join(self.basedir, 'version.json')
+            with open(path, 'r') as fp:
+                commit_info = fp.read().strip()
+        except (IOError, OSError):
+            # FIXME(willkg): Log the error
+            commit_info = '{}'
 
-        # FIXME(willkg): This should query all the
-        # subsystems/components/whatever and provide data from them. We need a
-        # registration system or something to facilitate that programmatically.
-        #
-        # Once we know how everything is doing, we can determine the proper
-        # status code. For now, 200 is fine.
+        resp.content_type = 'application/json; charset=utf-8'
         resp.status = falcon.HTTP_200
-        resp.body = json.dumps({
-            'health': 'v1',
-        })
+        resp.body = commit_info
 
 
 def get_app(config=None):
     """Returns AntennaAPI instance"""
     if config is None:
         config = ConfigManager([ConfigOSEnv()])
+
+    basedir = config(
+        'basedir',
+        default=os.path.abspath(os.path.dirname(__file__))
+    )
+
     app = falcon.API()
-    app.add_route('/api/v1/health', HealthCheckResource(config))
+    app.add_route('/__version__', HealthVersionResource(config, basedir=basedir))
     app.add_route('/submit', BreakpadSubmitterResource(config))
     return app
