@@ -193,15 +193,8 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         resp.body = 'CrashID=%s%s\n' % (self.config('dump_id_prefix'), crash_id)
 
 
-class HealthVersionResource(RequiredConfigMixin):
+class HealthVersionResource:
     """Implements the ``/__version__`` endpoint"""
-    required_config = ConfigOptions()
-    required_config.add_option(
-        'repo_url',
-        default='https://github.com/mozilla/antenna',
-        doc='the url for the repository that this code is deployed from'
-    )
-
     def __init__(self, config, basedir):
         self.config = config
         self.basedir = basedir
