@@ -12,9 +12,15 @@ from antenna.app import BreakpadSubmitterResource
 
 
 class TestHealthVersionResource:
-    def test_no_version(self, client):
-        result = client.get('/__version__')
-        assert result.content == b'{}'
+    def test_no_version(self, client, tmpdir):
+        # Set basedir here to tmpdir which we *know* doesn't have a
+        # version.json in it.
+        with config_override(BASEDIR=str(tmpdir)):
+            # Rebuild the app to pick up the overridden configuration.
+            client.rebuild_app()
+
+            result = client.get('/__version__')
+            assert result.content == b'{}'
 
     def test_version(self, client, tmpdir):
         with config_override(BASEDIR=str(tmpdir)):
