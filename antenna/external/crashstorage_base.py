@@ -30,9 +30,11 @@ class NoOpCrashStorage(CrashStorageBase):
         self.crashes = []
 
     def add_crash(self, raw_crash, dumps, crash_id):
-        self.crashes.append(
-            (raw_crash, dumps, crash_id)
-        )
+        self.crashes.append({
+            'raw_crash': raw_crash,
+            'dumps': dumps,
+            'crash_id': crash_id
+        })
         # Nix all but the last 10 crashes
         self.crashes = self.crashes[-10:]
 
