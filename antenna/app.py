@@ -189,6 +189,9 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             elif isinstance(val, bytes):
                 # This is a dump, so we get a checksum and save the bits in the
                 # relevant places.
+
+                # FIXME(willkg): The dump name is essentially user-provided. We should
+                # sanitize it before proceeding.
                 dumps[key] = val
                 checksum = hashlib.md5(val).hexdigest()
                 raw_crash.setdefault('dump_checksums', {})[key] = checksum
@@ -218,6 +221,8 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             raw_crash['uuid'] = crash_id
             logger.info('%s received', crash_id)
         else:
+            # FIXME(willkg): This means the uuid is essentially user-provided.
+            # We should sanitize it before proceeding.
             crash_id = raw_crash['uuid']
             logger.info('%s received with existing crash_id:', crash_id)
 

@@ -116,3 +116,56 @@ My current thinking is that we've got the following rough options:
 Given that, I'm inclined to go the Python route. At some point it may prove to
 be an unenthusing decision, but I don't think the risks are high enough that
 it'll ever be a **wrong** decision.
+
+
+Crash reports
+=============
+
+Crash reports come in via ``/submit`` as an HTTP POST.
+
+They have a ``multipart/form-data`` content-type.
+
+The payload (HTTP POST request body) may or may not be compressed. If it's
+compressed, then we need to uncompress it.
+
+The payload has a bunch of key/val pairs and also one or more binary parts.
+
+Binary parts have XXX filename and XXX content-type.
+
+The crash_id and dump names are essentially user-provided data and affect things
+like filenames and s3 pseudo-filenames. They should get sanitized.
+
+Possible binary part names:
+
+* ``memory_report``
+* ``upload_file_minidump``
+* ``upload_file_minidump_browser``
+* ``upload_file_minidump_content``
+* ``upload_file_minidump_flash1``
+* ``upload_file_minidump_flash2``
+
+Some of these come from ``.dmp`` files on the client computer.
+
+Thus an HTTP POST something like this::
+
+    FIXME
+
+
+Which gets converted to a ``raw_crash`` like this::
+
+    FIXME
+
+
+Which ends up in S3 like this::
+
+    /v2/raw_crash/000/20160920/60db7156-3553-27e3-38900067-31a261ed
+
+        Raw crash in serialized in JSON.
+
+    /v1/dump_names/60db7156-3553-27e3-38900067-31a261ed
+
+        Map of dump_name to file name serialized in JSON.
+
+    /v1/upload_file_minidump_browser/60db7156-3553-27e3-38900067-31a261ed
+
+        Raw dumps.
