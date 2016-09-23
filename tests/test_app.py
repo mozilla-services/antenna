@@ -4,7 +4,6 @@
 
 import gzip
 import io
-import os.path
 
 from everett.manager import config_override
 
