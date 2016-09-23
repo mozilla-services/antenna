@@ -4,7 +4,6 @@
 
 import gzip
 import io
-import os.path
 
 from everett.manager import config_override
 
@@ -37,32 +36,11 @@ class TestHealthVersionResource:
             assert result.content == b'{"commit": "ou812"}'
 
 
-def fetch_payload(datadir, fn):
-    """Retrieves a test payload from disk
-
-    :param datadir: directory the file is in
-    :param fn: the filename for the payload file
-
-    :returns: (boundary, data)
-
-    """
-    with open(os.path.join(datadir, fn), 'r') as fp:
-        data = fp.read()
-
-    if '\r\n' not in data:
-        # If the payload doesn't have the right line endings, we fix that here.
-        data = data.replace('\n', '\r\n')
-    # Figure out the boundary for this file. It's the first line minus two of
-    # the - at the beinning.
-    boundary = data.splitlines()[0].strip()[2:]
-    return boundary, data
-
-
 class TestBreakpadSubmitterResource:
     config_vars = {}
 
-    def test_submit_crash_report_reply(self, datadir, client):
-        boundary, data = fetch_payload(datadir, 'socorrofake1.raw')
+    def test_submit_crash_report_reply(self, client, payload_generator):
+        boundary, data = payload_generator('socorrofake1.raw')
 
         result = client.post(
             '/submit',
@@ -74,8 +52,9 @@ class TestBreakpadSubmitterResource:
         assert result.status_code == 200
         assert result.content.startswith(b'CrashID=bp')
 
-    def test_extract_payload(self, datadir, config, request_generator):
-        boundary, data = fetch_payload(datadir, 'socorrofake1.raw')
+    def test_extract_payload(self, config, request_generator,
+                             payload_generator):
+        boundary, data = payload_generator('socorrofake1.raw')
         req = request_generator(
             method='POST',
             path='/submit',
@@ -98,8 +77,8 @@ class TestBreakpadSubmitterResource:
         }
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
 
-    def test_extract_payload_2_dumps(self, datadir, config, request_generator):
-        boundary, data = fetch_payload(datadir, 'socorrofake2.raw')
+    def test_extract_payload_2_dumps(self, config, request_generator, payload_generator):
+        boundary, data = payload_generator('socorrofake2.raw')
         req = request_generator(
             method='POST',
             path='/submit',
@@ -124,8 +103,8 @@ class TestBreakpadSubmitterResource:
         }
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
 
-    def test_extract_payload_compressed(self, datadir, config, request_generator):
-        boundary, data = fetch_payload(datadir, 'socorrofake1.raw')
+    def test_extract_payload_compressed(self, config, request_generator, payload_generator):
+        boundary, data = payload_generator('socorrofake1.raw')
 
         # Compress the payload
         bio = io.BytesIO()
@@ -157,8 +136,8 @@ class TestBreakpadSubmitterResource:
         }
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
 
-    def test_existing_uuid(self, datadir, client):
-        boundary, data = fetch_payload(datadir, 'socorrofake1_withuuid.raw')
+    def test_existing_uuid(self, client, payload_generator):
+        boundary, data = payload_generator('socorrofake1_withuuid.raw')
 
         result = client.post(
             '/submit',

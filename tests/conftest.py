@@ -64,6 +64,30 @@ def request_generator():
     return _request_generator
 
 
+@pytest.fixture
+def payload_generator(datadir):
+    """Pulls payload files from the tests/data/ directory, formats them and returns them"""
+    def _payload_generator(fn):
+        """Retrieves a test payload from disk
+
+        :param fn: the filename for the payload file
+
+        :returns: (boundary, data)
+
+        """
+        with open(os.path.join(datadir, fn), 'r') as fp:
+            data = fp.read()
+
+        if '\r\n' not in data:
+            # If the payload doesn't have the right line endings, we fix that here.
+            data = data.replace('\n', '\r\n')
+        # Figure out the boundary for this file. It's the first line minus two of
+        # the - at the beinning.
+        boundary = data.splitlines()[0].strip()[2:]
+        return boundary, data
+    return _payload_generator
+
+
 class Client:
     """Test client to ease testing with the Antenna API
 

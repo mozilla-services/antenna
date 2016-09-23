@@ -7,6 +7,7 @@ import hashlib
 import io
 import logging
 import os
+import logging.config
 import time
 import zlib
 
@@ -19,7 +20,54 @@ from antenna.lib.ooid import create_new_ooid
 from antenna.util import de_null
 
 
-logger = logging.getLogger('gunicorn.error')
+logger = logging.getLogger(__name__)
+
+
+_logging_initialized = False
+
+
+def setup_logging(config):
+    """Initializes Python logging configuration
+
+    NOTE(willkg): This causes some problems since it'll get initialized using
+    the first configuration it was given. Pretty sure that'll only happen when
+    running tests and we're not testing logging in tests. If that ever changes,
+    we'll need to revisit this.
+
+    """
+    global _logging_initialized
+    if _logging_initialized:
+        return
+
+    dc = {
+        'version': 1,
+        'disable_existing_loggers': True,
+        'formatters': {
+            'development': {
+                'format': '%(levelname)s %(asctime)s %(name)s %(message)s',
+            },
+        },
+        'handlers': {
+            'console': {
+                'level': 'DEBUG',
+                'class': 'logging.StreamHandler',
+                'formatter': 'development',
+            },
+        },
+        'root': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+        },
+        'loggers': {
+            'antenna': {
+                'propagate': False,
+                'handlers': ['console'],
+                'level': 'DEBUG',
+            },
+        },
+    }
+    logging.config.dictConfig(dc)
+    _logging_initialized = True
 
 
 class BreakpadSubmitterResource(RequiredConfigMixin):
@@ -37,7 +85,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
     required_config.add_option(
         'crashstorage_class',
-        default='antenna.external.boto.crashstorage.BotoS3CrashStorage',
+        default='antenna.external.crashstorage_base.NoOpCrashStorage',
         parser=parse_class,
         doc='the class in charge of storing crashes'
     )
@@ -217,6 +265,8 @@ def get_app(config=None):
     """Returns AntennaAPI instance"""
     if config is None:
         config = ConfigManager([ConfigOSEnv()])
+
+    setup_logging(config)
 
     basedir = config(
         'basedir',
