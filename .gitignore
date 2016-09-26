@@ -50,4 +50,5 @@ docs/_build/
 target/
 
 # Docker things
-.docker-build
+/.docker-build
+/fakes3_root/

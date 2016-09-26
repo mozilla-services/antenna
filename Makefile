@@ -1,4 +1,3 @@
-DCFILE ?= "docker-compose.yml"
 DC := $(shell which docker-compose)
 
 default:
@@ -9,7 +8,7 @@ help:
 	@echo "build         - build docker containers for dev"
 	@echo "run           - docker-compose up the entire system for dev"
 	@echo ""
-	@echo "shell         - open a shell in the web container"
+	@echo "shell         - open a shell in the base container"
 	@echo "clean         - remove all build, test, coverage and Python artifacts"
 	@echo "lint          - check style with flake8"
 	@echo "test          - run tests"
@@ -23,14 +22,14 @@ help:
 build:
 	${DC} build deploy-base
 	${DC} build dev-base
-	${DC} build web
+	${DC} build base
 	touch .docker-build
 
 run: .docker-build
 	${DC} up web
 
 shell: .docker-build
-	${DC} run web bash
+	${DC} run base bash
 
 clean:
 	# python related things
@@ -45,26 +44,27 @@ clean:
 
 	# test related things
 	-rm -f .coverage
-	${DC} run web rm -rf cover
+	${DC} run base rm -rf cover
 
 	# docs files
 	-rm -rf docs/_build/
 
 	# state files
 	-rm .docker-build
+	-rm -rf fakes3_root/
 
 lint: .docker-build
-	${DC} run web flake8 --statistics antenna tests/unittest/
+	${DC} run base flake8 --statistics antenna tests/unittest/
 
 test: .docker-build
-	${DC} run web py.test
+	${DC} run base py.test
 
 test-coverage: .docker-build
-	${DC} run web ./scripts/test.sh --with-coverage --cover-package=antenna --cover-inclusive --cover-html
+	${DC} run base py.test --with-coverage --cover-package=antenna --cover-inclusive --cover-html
 
 docs: .docker-build
 	-mkdir -p docs/_build/
 	chmod -R 777 docs/_build/
-	${DC} run web ./bin/build_docs.sh
+	${DC} run base ./bin/build_docs.sh
 
 .PHONY: default clean build docs lint run shell test test-coverage

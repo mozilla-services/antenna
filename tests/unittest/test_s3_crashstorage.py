@@ -1,0 +1,222 @@
+import io
+
+import botocore
+import pytest
+
+from antenna.mini_poster import multipart_encode
+
+
+class TestS3Mock:
+    def test_crash_storage(self, client, s3mock):
+        # .verify_configuration() calls HEAD on the bucket to verify it exists
+        # and the configuration is correct.
+        s3mock.add_step(
+            method='HEAD',
+            url='http://fakes3:4569/fakebucket',
+            resp=s3mock.fake_response(status_code=200)
+        )
+
+        # # We want to verify these files are saved in this specific order.
+        s3mock.add_step(
+            method='PUT',
+            url='http://fakes3:4569/fakebucket//v1/dump_names/de1bb258-cbbf-4589-a673-34f802160918',
+            body=b'["upload_file_minidump"]',
+            resp=s3mock.fake_response(status_code=200)
+        )
+        s3mock.add_step(
+            method='PUT',
+            url='http://fakes3:4569/fakebucket//v1/upload_file_minidump/de1bb258-cbbf-4589-a673-34f802160918',
+            body=b'abcd1234',
+            resp=s3mock.fake_response(status_code=200)
+        )
+        s3mock.add_step(
+            method='PUT',
+            url='http://fakes3:4569/fakebucket//v2/raw_crash/de1/20160918/de1bb258-cbbf-4589-a673-34f802160918',
+            # Not going to compare the body here because it's just the raw crash
+            resp=s3mock.fake_response(status_code=200)
+        )
+        data, headers = multipart_encode({
+            'uuid': 'de1bb258-cbbf-4589-a673-34f802160918',
+            'ProductName': 'Test',
+            'Version': '1.0',
+            'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
+        })
+
+        # Rebuild the app the test client is using with relevant configuration.
+        client.rebuild_app({
+            'CRASHSTORAGE_CLASS': 'antenna.external.s3.crashstorage.S3CrashStorage',
+            'CRASHSTORAGE_ENDPOINT_URL': 'http://fakes3:4569',
+            'CRASHSTORAGE_ACCESS_KEY': 'fakekey',
+            'CRASHSTORAGE_SECRET_ACCESS_KEY': 'fakesecretkey',
+            'CRASHSTORAGE_BUCKET_NAME': 'fakebucket',
+        })
+
+        result = client.post(
+            '/submit',
+            headers=headers,
+            body=data
+        )
+        client.join_app()
+
+        # Verify the collector returns a 200 status code and the crash id
+        # we fed it.
+        assert result.status_code == 200
+        assert result.content == b'CrashID=bp-de1bb258-cbbf-4589-a673-34f802160918\n'
+
+    def test_region_and_bucket_with_periods(self, client, s3mock):
+        # # .verify_configuration() calls HEAD on the bucket to verify it exists
+        # # and the configuration is correct.
+        s3mock.add_step(
+            method='HEAD',
+            url='https://s3-us-west-1.amazonaws.com/fakebucket.with.periods',
+            resp=s3mock.fake_response(status_code=200)
+        )
+
+        # We want to verify these files are saved in this specific order.
+        s3mock.add_step(
+            method='PUT',
+            url='https://s3-us-west-1.amazonaws.com/fakebucket.with.periods//v1/dump_names/de1bb258-cbbf-4589-a673-34f802160918',
+            body=b'["upload_file_minidump"]',
+            resp=s3mock.fake_response(status_code=200)
+        )
+        s3mock.add_step(
+            method='PUT',
+            url='https://s3-us-west-1.amazonaws.com/fakebucket.with.periods//v1/upload_file_minidump/de1bb258-cbbf-4589-a673-34f802160918',
+            body=b'abcd1234',
+            resp=s3mock.fake_response(status_code=200)
+        )
+        s3mock.add_step(
+            method='PUT',
+            url='https://s3-us-west-1.amazonaws.com/fakebucket.with.periods//v2/raw_crash/de1/20160918/de1bb258-cbbf-4589-a673-34f802160918',
+            # Not going to compare the body here because it's just the raw crash
+            resp=s3mock.fake_response(status_code=200)
+        )
+        data, headers = multipart_encode({
+            'uuid': 'de1bb258-cbbf-4589-a673-34f802160918',
+            'ProductName': 'Test',
+            'Version': '1.0',
+            'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
+        })
+
+        # Rebuild the app the test client is using with relevant configuration.
+        client.rebuild_app({
+            'CRASHSTORAGE_CLASS': 'antenna.external.s3.crashstorage.S3CrashStorage',
+            'CRASHSTORAGE_REGION': 'us-west-1',
+            'CRASHSTORAGE_ACCESS_KEY': 'fakekey',
+            'CRASHSTORAGE_SECRET_ACCESS_KEY': 'fakesecretkey',
+            'CRASHSTORAGE_BUCKET_NAME': 'fakebucket.with.periods',
+        })
+
+        result = client.post(
+            '/submit',
+            headers=headers,
+            body=data
+        )
+        client.join_app()
+
+        # Verify the collector returns a 200 status code and the crash id
+        # we fed it.
+        assert result.status_code == 200
+        assert result.content == b'CrashID=bp-de1bb258-cbbf-4589-a673-34f802160918\n'
+
+    def test_missing_bucket_halts_startup(self, client, s3mock):
+        # .verify_configuration() calls HEAD on the bucket to verify it exists
+        # and the configuration is correct. This fails for here.
+        s3mock.add_step(
+            method='HEAD',
+            url='http://fakes3:4569/fakebucket',
+            resp=s3mock.fake_response(status_code=404)
+        )
+
+        with pytest.raises(botocore.exceptions.ClientError) as excinfo:
+            # Rebuild the app the test client is using with relevant
+            # configuration. This calls .verify_configuration() which fails.
+            client.rebuild_app({
+                'CRASHSTORAGE_CLASS': 'antenna.external.s3.crashstorage.S3CrashStorage',
+                'CRASHSTORAGE_ENDPOINT_URL': 'http://fakes3:4569',
+                'CRASHSTORAGE_ACCESS_KEY': 'fakekey',
+                'CRASHSTORAGE_SECRET_ACCESS_KEY': 'fakesecretkey',
+                'CRASHSTORAGE_BUCKET_NAME': 'fakebucket',
+            })
+
+        assert 'An error occurred (404) when calling the HeadBucket operation: Not Found' in str(excinfo.value)
+
+    def test_retrying(self, client, s3mock, caplog):
+        # .verify_configuration() calls HEAD on the bucket to verify it exists
+        # and the configuration is correct.
+        s3mock.add_step(
+            method='HEAD',
+            url='http://fakes3:4569/fakebucket',
+            resp=s3mock.fake_response(status_code=200)
+        )
+
+        # Fail once with a 403, retry and then proceed.
+        s3mock.add_step(
+            method='PUT',
+            url='http://fakes3:4569/fakebucket//v1/dump_names/de1bb258-cbbf-4589-a673-34f802160918',
+            body=b'["upload_file_minidump"]',
+            resp=s3mock.fake_response(status_code=403)
+        )
+
+        # Proceed with saving files.
+        s3mock.add_step(
+            method='PUT',
+            url='http://fakes3:4569/fakebucket//v1/dump_names/de1bb258-cbbf-4589-a673-34f802160918',
+            body=b'["upload_file_minidump"]',
+            resp=s3mock.fake_response(status_code=200)
+        )
+        s3mock.add_step(
+            method='PUT',
+            url='http://fakes3:4569/fakebucket//v1/upload_file_minidump/de1bb258-cbbf-4589-a673-34f802160918',
+            body=b'abcd1234',
+            resp=s3mock.fake_response(status_code=200)
+        )
+        s3mock.add_step(
+            method='PUT',
+            url='http://fakes3:4569/fakebucket//v2/raw_crash/de1/20160918/de1bb258-cbbf-4589-a673-34f802160918',
+            # Not going to compare the body here because it's just the raw crash
+            resp=s3mock.fake_response(status_code=200)
+        )
+        data, headers = multipart_encode({
+            'uuid': 'de1bb258-cbbf-4589-a673-34f802160918',
+            'ProductName': 'Test',
+            'Version': '1.0',
+            'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
+        })
+
+        # Rebuild the app the test client is using with relevant configuration.
+        client.rebuild_app({
+            'CRASHSTORAGE_CLASS': 'antenna.external.s3.crashstorage.S3CrashStorage',
+            'CRASHSTORAGE_ENDPOINT_URL': 'http://fakes3:4569',
+            'CRASHSTORAGE_ACCESS_KEY': 'fakekey',
+            'CRASHSTORAGE_SECRET_ACCESS_KEY': 'fakesecretkey',
+            'CRASHSTORAGE_BUCKET_NAME': 'fakebucket',
+        })
+
+        result = client.post(
+            '/submit',
+            headers=headers,
+            body=data
+        )
+        client.join_app()
+
+        # Verify the collector returns a 200 status code and the crash id
+        # we fed it.
+        assert result.status_code == 200
+        assert result.content == b'CrashID=bp-de1bb258-cbbf-4589-a673-34f802160918\n'
+
+        # Find the ERROR log message the retry decorator threw in
+        for record in caplog.records:
+            if record.name == 'antenna.external.s3.connection' and record.levelname == 'ERROR':
+                # The message is a traceback with a bunch of stuff in it.
+                # We're only interested in certain parts, though, so we
+                # just make sure those parts are in the message.
+                assert 'antenna.external.s3.connection: retry attempt 0' in record.message
+                assert 'ClientError' in record.message
+                assert 'An error occurred (403) when calling the PutObject operation: Forbidden' in record.message
+
+        else:
+            assert Exception('Record not in logs')
+
+    # FIXME(willkg): Add test for bad region
+    # FIXME(willkg): Add test for invalid credentials

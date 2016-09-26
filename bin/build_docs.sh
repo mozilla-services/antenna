@@ -13,7 +13,7 @@ chmod -R 777 docs/_build/
 
 # Build the HTML docs
 make -C docs/ html
-+
+
 # Fix permissions
 find docs/_build/ -type d -exec 'chmod' '777' '{}' ';'
 find docs/_build/ -type f -exec 'chmod' '666' '{}' ';'

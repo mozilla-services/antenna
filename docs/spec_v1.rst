@@ -266,3 +266,57 @@ use.
 * boto3: https://github.com/boto/boto3
 
 Socorro uses boto2. I think we'll go with boto3 because it's the future.
+
+
+S3 and bucket names
+===================
+
+AWS Rules for bucket names:
+
+http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html
+
+Note that they do suggest using periods in bucket names in the rules.
+
+S3 REST requests:
+
+http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAPI.html
+
+Note, they talk about two styles:
+
+* "virtual hosted-style request" which is like
+  ``http://examplebucket.s3-us-west-2.amazonaws.com/puppy.jpg``
+* "path-style request" which is like
+  ``http://s3-us-west-2.amazonaws.com/examplebucket/puppy.jpg``
+
+Path-style requires that you use the region-specific endpoint. You'll get an
+HTTP 307 if you try to access a bucket that's not in US east if you use
+endpoints ``http://s3.amazonaws.com`` or an endpoint for a different region than
+where the bucket resides.
+
+In the page on virtual hosted-style requests:
+
+http://docs.aws.amazon.com/AmazonS3/latest/dev/VirtualHosting.html
+
+they say:
+
+    When using virtual hosted–style buckets with SSL, the SSL wild card
+    certificate only matches buckets that do not contain periods. To work around
+    this, use HTTP or write your own certificate verification logic.
+
+Socorro currently uses ``boto.s3.connect_to_region`` and
+``boto.s3.connection.OrdinaryCallingFormat``. Buckets are located in us-west-2.
+
+Boto3 changes the API around. Instead of calling it "calling_format", they call
+it "addressing_style".
+
+From that I conclude the following:
+
+1. In order to support the s3 buckets we currently have and use SSL, we need to
+   continue using path-style requests and specify the region.
+2. With boto3, this means specifying the ``region_name`` when creating the
+   session client. I'll have to figure out what the default for
+   ``addressing_style`` is and if it's not what we want, how to change it.
+3. In the future, we shouldn't use dotted names--it doesn't seem like a big
+   deal, but it'll probably make things easier.
+
+I think that covers the open questions we had for the s3 crash store in Antenna.
