@@ -13,10 +13,6 @@ MOCK_TIME = time.mktime(MOCK_DATETIME.timetuple())
 
 
 class TestCrashStorage:
-    config_vars = {
-        # FIXME: Set crash storage to noop
-    }
-
     @mock.patch('antenna.app.time')
     @mock.patch('antenna.app.utc_now')
     def test_flow(self, mock_utc_now, mock_time, client, payload_generator):
@@ -57,7 +53,8 @@ class TestCrashStorage:
                 'submitted_timestamp': '2011-09-06T00:00:00+00:00',
                 'timestamp': 1315267200.0,
                 'type_tag': 'bp',
-                'uuid': 'de1bb258-cbbf-4589-a673-34f802160918'}
+                'uuid': 'de1bb258-cbbf-4589-a673-34f802160918'
+            }
         )
         assert (
             crash['dumps'] ==
