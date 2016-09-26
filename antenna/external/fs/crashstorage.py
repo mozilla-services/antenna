@@ -55,9 +55,10 @@ class FSCrashStorage(RequiredConfigMixin):
     def __init__(self, config):
         self.config = config.with_options(self)
 
-        self.root = os.path.abspath(self.config('fs_root'))
-        # FIXME(willkg): We should probably do more to validate fs_root. Remove
-        # / at the end? Verify we can write files to it?
+        self.root = os.path.abspath(self.config('fs_root')).rstrip(os.sep)
+
+        # FIXME(willkg): We should probably do more to validate fs_root. Can we
+        # write files to it?
         if not os.path.isdir(self.root):
             os.makedirs(self.root)
 
@@ -76,6 +77,7 @@ class FSCrashStorage(RequiredConfigMixin):
         )
 
     def _get_dump_names_path(self, crash_id):
+        """Returns path for where the dump_names list should go"""
         return os.path.join(
             self.root,
             self._get_crash_date(crash_id),
@@ -84,6 +86,7 @@ class FSCrashStorage(RequiredConfigMixin):
         )
 
     def _get_dump_name_path(self, crash_id, dump_name):
+        """Returns path for a given dump"""
         return os.path.join(
             self.root,
             self._get_crash_date(crash_id),
@@ -101,8 +104,6 @@ class FSCrashStorage(RequiredConfigMixin):
         :arg crash_id: The crash id as a string.
 
         """
-        print((raw_crash, dumps.keys(), crash_id))
-
         files = {}
 
         # Add raw_crash to the list of files to save.
@@ -124,7 +125,13 @@ class FSCrashStorage(RequiredConfigMixin):
             # FIXME(willkg): What happens if there is something here already and
             # it's not a directory?
             if not os.path.exists(path):
-                os.makedirs(path)
+                try:
+                    os.makedirs(path)
+                except OSError:
+                    logger.exception('Threw exception while trying to make path %r', path)
+                    # FIXME(willkg): If we ever make this production-ready, we
+                    # need a better option here.
+                    continue
 
             # FIXME(willkg): This will stomp on existing crashes. Is that ok?
             # Should we detect and do something different somehow?
