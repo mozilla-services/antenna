@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-class BotoS3CrashStorage:
+class S3CrashStorage:
     def __init__(self, config):
         pass
 
