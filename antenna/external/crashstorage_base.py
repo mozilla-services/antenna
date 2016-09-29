@@ -46,6 +46,19 @@ class NoOpCrashStorage(CrashStorageBase):
         # Nix all but the last 10 crashes
         self.crashes = self.crashes[-10:]
 
+    def _truncate_raw_crash(self, raw_crash):
+        """Truncates a raw crash to something printable in a log"""
+        return sorted(raw_crash.items())[:10]
+
+    def _truncate_dumps(self, dumps):
+        """Truncates dumps information to something printable to a log"""
+        return sorted(dumps.keys())
+
     def save_raw_crash(self, raw_crash, dumps, crash_id):
-        logger.info('crash no-op: %s %s %s', crash_id, raw_crash, dumps.keys())
+        logger.info(
+            'crash no-op: %s %s %s',
+            crash_id,
+            self._truncate_raw_crash(raw_crash),
+            self._truncate_dumps(dumps)
+        )
         self.add_crash(raw_crash, dumps, crash_id)
