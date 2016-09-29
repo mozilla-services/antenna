@@ -6,7 +6,6 @@ import datetime
 import os
 import time
 
-from everett.manager import config_override
 import mock
 
 
@@ -33,21 +32,20 @@ class TestFSCrashStorage:
 
         boundary, data = payload_generator('socorrofake1_withuuid.raw')
 
-        with config_override(
-                BASEDIR=str(tmpdir),
-                FS_ROOT=str(tmpdir.join('antenna_crashes')),
-                CRASHSTORAGE_CLASS='antenna.external.fs.crashstorage.FSCrashStorage'
-        ):
-            # Rebuild the app to pick up the overridden configuration.
-            client.rebuild_app()
+        # Rebuild the app the test client is using with relevant configuration.
+        client.rebuild_app({
+            'BASEDIR': str(tmpdir),
+            'FS_ROOT': str(tmpdir.join('antenna_crashes')),
+            'CRASHSTORAGE_CLASS': 'antenna.external.fs.crashstorage.FSCrashStorage'
+        })
 
-            result = client.post(
-                '/submit',
-                headers={
-                    'Content-Type': 'multipart/form-data; boundary=' + boundary,
-                },
-                body=data
-            )
+        result = client.post(
+            '/submit',
+            headers={
+                'Content-Type': 'multipart/form-data; boundary=' + boundary,
+            },
+            body=data
+        )
 
         assert result.status_code == 200
 
