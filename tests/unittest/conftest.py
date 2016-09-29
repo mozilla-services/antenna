@@ -13,9 +13,11 @@ from falcon.testing.srmock import StartResponseMock
 from falcon.testing.test_case import Result
 import wsgiref.validate
 
-# Add the parent directory to the sys.path so that it can import the antenna
-# code.
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+from py.path import local
+
+# Add the parent parent directory to the sys.path so that it can import the
+# antenna code.
+sys.path.insert(0, str(local(__file__).dirpath().dirpath().dirpath()))
 
 
 from antenna.app import get_app  # noqa
