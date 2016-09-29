@@ -26,6 +26,56 @@ logger = logging.getLogger(__name__)
 _logging_initialized = False
 
 
+class AppConfig(RequiredConfigMixin):
+    """Application-level config
+
+    To pull out a config item, you can do this::
+
+        config = ConfigManager([ConfigOSEnv()])
+        app_config = AppConfig(config)
+
+        debug = app_config('debug')
+
+
+    To create a component with configuration, you can do this::
+
+        class SomeComponent(RequiredConfigMixin):
+            required_config = ConfigOptions()
+
+            def __init__(self, config):
+                self.config = config.with_options(self)
+
+        some_component = SomeComponent(app_config.config)
+
+
+    To pass application-level configuration to components, you should do it
+    through arguments like this::
+
+        class SomeComponent(RequiredConfigMixin):
+            required_config = ConfigOptions()
+
+            def __init__(self, config, debug):
+                self.config = config.with_options(self)
+                self.debug = debug
+
+        some_component = SomeComponent(app_config.config_manager, debug)
+
+    """
+    required_config = ConfigOptions()
+    required_config.add_option(
+        'basedir',
+        default=os.path.abspath(os.path.dirname(os.path.dirname(__file__))),
+        doc='The root directory for this application to find and store things.'
+    )
+
+    def __init__(self, config):
+        self.config_manager = config
+        self.config = config.with_options(self)
+
+    def __call__(self, key):
+        return self.config(key)
+
+
 def setup_logging(config):
     """Initializes Python logging configuration
 
@@ -272,13 +322,9 @@ def get_app(config=None):
         config = ConfigManager([ConfigOSEnv()])
 
     setup_logging(config)
-
-    basedir = config(
-        'basedir',
-        default=os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-    )
+    app_config = AppConfig(config)
 
     app = falcon.API()
-    app.add_route('/__version__', HealthVersionResource(config, basedir=basedir))
+    app.add_route('/__version__', HealthVersionResource(config, basedir=app_config('basedir')))
     app.add_route('/submit', BreakpadSubmitterResource(config))
     return app
