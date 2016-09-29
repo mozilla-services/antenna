@@ -23,13 +23,17 @@ sys.path.insert(0, str(local(__file__).dirpath().dirpath().dirpath()))
 from antenna.app import get_app  # noqa
 
 
-def get_blank_app():
-    return get_app(ConfigManager([]))
+def build_app(config=None):
+    if config is None:
+        config = []
+    else:
+        config = [ConfigDictEnv(config)]
+    return get_app(ConfigManager(config))
 
 
 @pytest.fixture
 def app():
-    return get_blank_app()
+    return build_app()
 
 
 @pytest.fixture
@@ -104,14 +108,18 @@ class Client:
     def __init__(self, app):
         self.app = app
 
-    def rebuild_app(self):
+    def rebuild_app(self, new_config=None):
         """Rebuilds the app
 
         This is helpful if you've changed configuration and need to rebuild the
         app so that components pick up the new configuration.
 
+        :arg new_config: dict of configuration to build the new app with
+
         """
-        self.app = get_blank_app()
+        if new_config is None:
+            new_config = {}
+        self.app = build_app(new_config)
 
     def get(self, path, headers=None, **kwargs):
         return self._request(
@@ -143,9 +151,22 @@ class Client:
 
 
 @pytest.fixture
-def client():
-    """Test client for the Antenna API"""
-    return Client(get_blank_app())
+def client(tmpdir):
+    """Test client for the Antenna API
+
+    This creates an app and a test client that uses that app to submit HTTP
+    GET/POST requests.
+
+    If you need it to use an app with a different configuration, you can
+    rebuild the app::
+
+        def test_foo(client, tmpdir):
+            client.rebuild_app({
+                'BASEDIR': str(tmpdir)
+            })
+
+    """
+    return Client(build_app())
 
 
 @pytest.fixture
