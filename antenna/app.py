@@ -319,7 +319,10 @@ class HealthVersionResource:
 def get_app(config=None):
     """Returns AntennaAPI instance"""
     if config is None:
-        config = ConfigManager([ConfigOSEnv()])
+        config = ConfigManager([
+            # Pull configuration from environment variables
+            ConfigOSEnv()
+        ])
 
     setup_logging(config)
     app_config = AppConfig(config)
