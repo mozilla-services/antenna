@@ -2,24 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import datetime
-import time
-
-import mock
-
-
-MOCK_DATETIME = datetime.datetime(2011, 9, 6, 0, 0, 0, tzinfo=datetime.timezone.utc)
-MOCK_TIME = time.mktime(MOCK_DATETIME.timetuple())
+from freezegun import freeze_time
 
 
 class TestCrashStorage:
-    @mock.patch('antenna.app.time')
-    @mock.patch('antenna.app.utc_now')
-    def test_flow(self, mock_utc_now, mock_time, client, payload_generator):
+    @freeze_time('2011-09-06 00:00:00', tz_offset=0)
+    def test_flow(self, client, payload_generator):
         """Verify posting a crash gets to crash storage in the right shape"""
-        mock_utc_now.return_value = MOCK_DATETIME
-        mock_time.time.return_value = MOCK_TIME
-
         boundary, data = payload_generator('socorrofake1_withuuid.raw')
 
         result = client.post(
