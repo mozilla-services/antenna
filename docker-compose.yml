@@ -7,8 +7,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    environment:
-      - ANTENNA_INI=settings_dev.ini
     volumes:
       - .:/app
     ports:
