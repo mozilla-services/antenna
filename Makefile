@@ -1,4 +1,5 @@
-DOCKERCOMPOSE = $(shell which docker-compose)
+DCFILE ?= "docker-compose.yml"
+DC := $(shell which docker-compose) -f ${DCFILE}
 
 default:
 	@echo "You need to specify a subcommand."
@@ -19,11 +20,11 @@ help:
 	make build
 
 build:
-	${DOCKERCOMPOSE} build
+	${DC} build
 	touch .docker-build
 
 run: .docker-build
-	${DOCKERCOMPOSE} up
+	${DC} up
 
 clean:
 	# python related things
@@ -38,7 +39,7 @@ clean:
 
 	# test related things
 	-rm -f .coverage
-	${DOCKERCOMPOSE} run web rm -rf cover
+	${DC} run web rm -rf cover
 
 	# docs files
 	-rm -rf docs/_build/
@@ -47,18 +48,18 @@ clean:
 	-rm .docker-build
 
 lint:
-	${DOCKERCOMPOSE} run web flake8 --statistics antenna tests/unittest/
+	${DC} run web flake8 --statistics antenna tests/unittest/
 
 test:
-	${DOCKERCOMPOSE} run web py.test
+	${DC} run web py.test
 
 test-coverage:
-	${DOCKERCOMPOSE} run web ./scripts/test.sh --with-coverage --cover-package=antenna --cover-inclusive --cover-html
+	${DC} run web ./scripts/test.sh --with-coverage --cover-package=antenna --cover-inclusive --cover-html
 
 docs:
-	${DOCKERCOMPOSE} run web $(MAKE) -C docs/ clean
-	${DOCKERCOMPOSE} run web $(MAKE) -C docs/ html
-	${DOCKERCOMPOSE} run web find docs/_build/ -type d -exec 'chmod' '777' '{}' ';'
-	${DOCKERCOMPOSE} run web find docs/_build/ -type f -exec 'chmod' '666' '{}' ';'
+	${DC} run web $(MAKE) -C docs/ clean
+	${DC} run web $(MAKE) -C docs/ html
+	${DC} run web find docs/_build/ -type d -exec 'chmod' '777' '{}' ';'
+	${DC} run web find docs/_build/ -type f -exec 'chmod' '666' '{}' ';'
 
 .PHONY: default clean build docs lint run test test-coverage
