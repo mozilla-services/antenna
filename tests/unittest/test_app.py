@@ -2,10 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import gzip
 import io
 
 from antenna.app import BreakpadSubmitterResource
+from antenna.mini_poster import multipart_encode
+from antenna.util import compress
 
 
 class TestHealthVersionResource:
@@ -37,28 +38,31 @@ class TestHealthVersionResource:
 class TestBreakpadSubmitterResource:
     config_vars = {}
 
-    def test_submit_crash_report_reply(self, client, payload_generator):
-        boundary, data = payload_generator('socorrofake1.raw')
+    def test_submit_crash_report_reply(self, client):
+        data, headers = multipart_encode({
+            'ProductName': 'Test',
+            'Version': '1.0',
+            'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
+        })
 
         result = client.post(
             '/submit',
-            headers={
-                'Content-Type': 'multipart/form-data; boundary=' + boundary,
-            },
-            body=data
+            headers=headers,
+            body=data,
         )
         assert result.status_code == 200
         assert result.content.startswith(b'CrashID=bp')
 
-    def test_extract_payload(self, config, request_generator,
-                             payload_generator):
-        boundary, data = payload_generator('socorrofake1.raw')
+    def test_extract_payload(self, config, request_generator):
+        data, headers = multipart_encode({
+            'ProductName': 'Test',
+            'Version': '1.0',
+            'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
+        })
         req = request_generator(
             method='POST',
             path='/submit',
-            headers={
-                'Content-Type': 'multipart/form-data; boundary=' + boundary,
-            },
+            headers=headers,
             body=data,
         )
 
@@ -75,14 +79,18 @@ class TestBreakpadSubmitterResource:
         }
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
 
-    def test_extract_payload_2_dumps(self, config, request_generator, payload_generator):
-        boundary, data = payload_generator('socorrofake2.raw')
+    def test_extract_payload_2_dumps(self, config, request_generator):
+        data, headers = multipart_encode({
+            'ProductName': 'Test',
+            'Version': '1',
+            'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'deadbeef')),
+            'upload_file_minidump_flash1': ('fakecrash2.dump', io.BytesIO(b'abcd1234')),
+        })
+
         req = request_generator(
             method='POST',
             path='/submit',
-            headers={
-                'Content-Type': 'multipart/form-data; boundary=' + boundary,
-            },
+            headers=headers,
             body=data,
         )
 
@@ -101,23 +109,20 @@ class TestBreakpadSubmitterResource:
         }
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
 
-    def test_extract_payload_compressed(self, config, request_generator, payload_generator):
-        boundary, data = payload_generator('socorrofake1.raw')
+    def test_extract_payload_compressed(self, config, request_generator):
+        data, headers = multipart_encode({
+            'ProductName': 'Test',
+            'Version': '1.0',
+            'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
+        })
 
-        # Compress the payload
-        bio = io.BytesIO()
-        g = gzip.GzipFile(fileobj=bio, mode='w')
-        g.write(data.encode('utf-8'))
-        g.close()
-        data = bio.getbuffer()
+        data = compress(data)
+        headers['Content-Encoding'] = 'gzip'
 
         req = request_generator(
             method='POST',
             path='/submit',
-            headers={
-                'Content-Encoding': 'gzip',
-                'Content-Type': 'multipart/form-data; boundary=' + boundary,
-            },
+            headers=headers,
             body=data,
         )
 
@@ -134,14 +139,17 @@ class TestBreakpadSubmitterResource:
         }
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
 
-    def test_existing_uuid(self, client, payload_generator):
-        boundary, data = payload_generator('socorrofake1_withuuid.raw')
+    def test_existing_uuid(self, client):
+        data, headers = multipart_encode({
+            'uuid': 'de1bb258-cbbf-4589-a673-34f802160918',
+            'ProductName': 'Test',
+            'Version': '1.0',
+            'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
+        })
 
         result = client.post(
             '/submit',
-            headers={
-                'Content-Type': 'multipart/form-data; boundary=' + boundary,
-            },
+            headers=headers,
             body=data
         )
         assert result.status_code == 200
