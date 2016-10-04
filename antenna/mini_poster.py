@@ -16,7 +16,30 @@ import uuid
 
 
 def multipart_encode(raw_crash, boundary=None):
-    """Takes a raw_crash as a Python dict and converts to a multi-part/form-data
+    """Takes a raw_crash as a Python dict and converts to a multipart/form-data
+
+    Here's an example ``raw_crash``::
+
+        {
+            'ProductName': 'Test',
+            'Version': '1.0',
+            'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
+        }
+
+    You can also pass in file pointers for files::
+
+        {
+            'ProductName': 'Test',
+            'Version': '1.0',
+            'upload_file_minidump': ('fakecrash.dump', open('crash.dmp', 'rb'))
+        }
+
+
+    This returns a tuple of two things:
+
+    1. a ``bytes`` object with the HTTP POST payload
+    2. a dict of headers with ``Content-Type`` and ``Content-Length`` in it
+
 
     :arg params: Python dict of name -> value pairs. Values must be either
          strings or a tuple of (filename, file-like objects with ``.read()``).
@@ -24,7 +47,7 @@ def multipart_encode(raw_crash, boundary=None):
     :arg boundary: The MIME boundary string to use. Otherwise this will be
         generated.
 
-    :returns: bytes of a multi-part/form-data (which is quite large)
+    :returns: tuple of (bytes, headers dict)
 
     """
     if boundary is None:

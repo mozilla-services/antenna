@@ -198,9 +198,6 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
                 # crash that was re-submitted.
                 continue
 
-            elif fs_item.type.startswith('text/plain'):
-                raw_crash[fs_item.name] = de_null(fs_item.value)
-
             elif fs_item.type.startswith('application/octet-stream') or isinstance(fs_item.value, bytes):
                 # This is a dump, so we get a checksum and save the bits in the
                 # relevant places.
@@ -212,12 +209,8 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
                 raw_crash.setdefault('dump_checksums', {})[fs_item.name] = checksum
 
             else:
-                # This should never happen. We don't want to raise an exception
-                # because that would disrupt crash collection, so we log it.
-                logger.error(
-                    'ERROR: Saw a value in a crash report that was not a str or bytes. %r %r %r',
-                    fs_item.name, fs_item.type_, fs_item.value
-                )
+                # This isn't a dump, so it's a key/val pair, so we add that.
+                raw_crash[fs_item.name] = de_null(fs_item.value)
 
         return raw_crash, dumps
 
