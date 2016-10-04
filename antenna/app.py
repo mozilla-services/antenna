@@ -144,51 +144,18 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         self.config = config.with_options(self)
         self.crashstorage = self.config('crashstorage_class')(config)
 
-    def process_fieldstorage(self, fs):
-        """Recursively works through a field storage converting to Python structure
-
-        FieldStorage can have a name, filename and a value. Thus we have the
-        following possibilities:
-
-        1. It's a FieldStorage with a name and a value.
-
-           This is a regular form key/val pair. The value is a string.
-
-           Example:
-
-           * FieldStorage('ProductName', None, 'Test')
-           * FieldStorage('Version', None, '1')
-
-        2. It's a FieldStorage with a name, filename and value.
-
-           This is a file. The value is a bytes. We ignore the filename and only
-           capture the name and value.
-
-           * FieldStorage('upload_file_minidump', 'fakecrash.dump', b'abcd1234')
-
-        3. It's a FieldStorage with name and filename as None, and the value is
-           a list of FieldStorage items.
-
-           * FieldStorage(None, None, [FieldStorage('ProductName', ...)...])
-
-        This method converts that into a structure of Python simple types.
-
-        """
-        if isinstance(fs, cgi.FieldStorage):
-            if fs.name is None and fs.filename is None:
-                return dict(
-                    [(key, self.process_fieldstorage(fs[key])) for key in fs]
-                )
-            else:
-                return fs.value
-        else:
-            return fs
-
     def extract_payload(self, req):
         """Parses the HTTP POST payload
 
         Decompresses the payload if necessary and then walks through the
-        payload converting from multipart/form-data to Python datatypes.
+        FieldStorage converting from multipart/form-data to Python datatypes.
+
+        Note: The FieldStorage is poorly documented (in my opinion). It has a
+        list attribute that is a list of FieldStorage items--one for each
+        key/val in the form. For attached files, the FieldStorage will have a
+        name, value and filename and the type should be
+        application/octet-stream. Thus we parse it looking for things of type
+        text/plain and application/octet-stream.
 
         :arg req: a Falcon Request instance
 
@@ -216,9 +183,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         else:
             data = req.stream
 
-        # Convert to FieldStorage and then to dict.
         fs = cgi.FieldStorage(fp=data, environ=req.env, keep_blank_values=1)
-        payload = self.process_fieldstorage(fs)
 
         # NOTE(willkg): In the original collector, this returned request
         # querystring data as well as request body data, but we're not doing
@@ -227,31 +192,31 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         raw_crash = {}
         dumps = {}
 
-        for key, val in payload.items():
-            if key == 'dump_checksums':
+        for fs_item in fs.list:
+            if fs_item.name == 'dump_checksums':
                 # We don't want to pick up the dump_checksums from a raw
                 # crash that was re-submitted.
                 continue
 
-            elif isinstance(val, str):
-                raw_crash[key] = de_null(val)
+            elif fs_item.type.startswith('text/plain'):
+                raw_crash[fs_item.name] = de_null(fs_item.value)
 
-            elif isinstance(val, bytes):
+            elif fs_item.type.startswith('application/octet-stream') or isinstance(fs_item.value, bytes):
                 # This is a dump, so we get a checksum and save the bits in the
                 # relevant places.
 
                 # FIXME(willkg): The dump name is essentially user-provided. We should
                 # sanitize it before proceeding.
-                dumps[key] = val
-                checksum = hashlib.md5(val).hexdigest()
-                raw_crash.setdefault('dump_checksums', {})[key] = checksum
+                dumps[fs_item.name] = fs_item.value
+                checksum = hashlib.md5(fs_item.value).hexdigest()
+                raw_crash.setdefault('dump_checksums', {})[fs_item.name] = checksum
 
             else:
                 # This should never happen. We don't want to raise an exception
                 # because that would disrupt crash collection, so we log it.
                 logger.error(
-                    'ERROR: Saw a value in a crash report that was not a str or bytes. %r %r',
-                    key, val
+                    'ERROR: Saw a value in a crash report that was not a str or bytes. %r %r %r',
+                    fs_item.name, fs_item.type_, fs_item.value
                 )
 
         return raw_crash, dumps
