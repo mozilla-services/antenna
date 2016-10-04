@@ -2,20 +2,27 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import io
+
 from freezegun import freeze_time
+
+from antenna.mini_poster import multipart_encode
 
 
 class TestCrashStorage:
     @freeze_time('2011-09-06 00:00:00', tz_offset=0)
-    def test_flow(self, client, payload_generator):
+    def test_flow(self, client):
         """Verify posting a crash gets to crash storage in the right shape"""
-        boundary, data = payload_generator('socorrofake1_withuuid.raw')
+        data, headers = multipart_encode({
+            'uuid': 'de1bb258-cbbf-4589-a673-34f802160918',
+            'ProductName': 'Test',
+            'Version': '1.0',
+            'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
+        })
 
         result = client.post(
             '/submit',
-            headers={
-                'Content-Type': 'multipart/form-data; boundary=' + boundary,
-            },
+            headers=headers,
             body=data
         )
         assert result.status_code == 200

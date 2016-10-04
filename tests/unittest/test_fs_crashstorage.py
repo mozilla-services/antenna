@@ -2,9 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import io
 import os
 
 from freezegun import freeze_time
+
+from antenna.mini_poster import multipart_encode
 
 
 def get_tree(path):
@@ -18,9 +21,14 @@ def get_tree(path):
 
 class TestFSCrashStorage:
     @freeze_time('2011-09-06 00:00:00', tz_offset=0)
-    def test_storage_files(self, client, payload_generator, tmpdir):
+    def test_storage_files(self, client, tmpdir):
         """Verify posting a crash gets to crash storage in the right shape"""
-        boundary, data = payload_generator('socorrofake1_withuuid.raw')
+        data, headers = multipart_encode({
+            'uuid': 'de1bb258-cbbf-4589-a673-34f802160918',
+            'ProductName': 'Test',
+            'Version': '1.0',
+            'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
+        })
 
         # Rebuild the app the test client is using with relevant configuration.
         client.rebuild_app({
@@ -31,9 +39,7 @@ class TestFSCrashStorage:
 
         result = client.post(
             '/submit',
-            headers={
-                'Content-Type': 'multipart/form-data; boundary=' + boundary,
-            },
+            headers=headers,
             body=data
         )
 
@@ -60,8 +66,6 @@ class TestFSCrashStorage:
         for fn in files:
             with open(fn, 'rb') as fp:
                 contents[nix_tmpdir(fn)] = fp.read()
-
-        print(contents)
 
         assert (
             contents['/antenna_crashes/20160918/raw_crash/de1bb258-cbbf-4589-a673-34f802160918.json'] ==
