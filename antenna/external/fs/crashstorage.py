@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import json
 import logging
 import os
 import os.path
@@ -137,3 +138,27 @@ class FSCrashStorage(RequiredConfigMixin):
             # Should we detect and do something different somehow?
             with open(fn, 'wb') as fp:
                 fp.write(contents)
+
+    def load_raw_crash(self, crash_id):
+        """Retrieves all the parts of a crash from the file system
+
+        :arg crash_id: The crash id as a string.
+
+        :returns: tuple of (raw_crash dict, dumps dict)
+
+        """
+        # Fetch raw_crash.
+        with open(self._get_raw_crash_path(crash_id), 'rb') as fp:
+            raw_crash = json.loads(fp.read().decode('utf-8'))
+
+        # Fetch dump names.
+        with open(self._get_dump_names_path(crash_id), 'rb') as fp:
+            dump_names = json.loads(fp.read().decode('utf-8'))
+
+        dumps = {}
+
+        for name in dump_names:
+            with open(self._get_dump_name_path(crash_id, name), 'rb') as fp:
+                dumps[name] = fp.read()
+
+        return raw_crash, dumps

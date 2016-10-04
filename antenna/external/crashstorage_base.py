@@ -25,6 +25,16 @@ class CrashStorageBase:
         """
         raise NotImplementedError
 
+    def load_raw_crash(self, crash_id):
+        """Loads and thaws out a raw crash
+
+        :arg crash_id: crash id of the crash as a string
+
+        :returns: tuple of (raw_crash dict, dumps dict)
+
+        """
+        raise NotImplementedError
+
 
 class NoOpCrashStorage(CrashStorageBase):
     """This is a no-op crash storage that logs crashes it would have stored

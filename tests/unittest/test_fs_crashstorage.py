@@ -5,8 +5,10 @@
 import io
 import os
 
+from everett.manager import ConfigManager, ConfigDictEnv
 from freezegun import freeze_time
 
+from antenna.external.fs.crashstorage import FSCrashStorage
 from antenna.mini_poster import multipart_encode
 
 
@@ -88,4 +90,61 @@ class TestFSCrashStorage:
         assert (
             contents['/antenna_crashes/20160918/upload_file_minidump/de1bb258-cbbf-4589-a673-34f802160918'] ==
             b'abcd1234'
+        )
+
+    @freeze_time('2011-09-06 00:00:00', tz_offset=0)
+    def test_load_files(self, client, tmpdir):
+        """Verify we can rebuild the crash from the fs"""
+        crash_id = 'de1bb258-cbbf-4589-a673-34f802160918'
+
+        data, headers = multipart_encode({
+            'uuid': crash_id,
+            'ProductName': 'Test',
+            'Version': '1.0',
+            'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
+        })
+
+        # Rebuild the app the test client is using with relevant configuration.
+        client.rebuild_app({
+            'BASEDIR': str(tmpdir),
+            'FS_ROOT': str(tmpdir.join('antenna_crashes')),
+            'CRASHSTORAGE_CLASS': 'antenna.external.fs.crashstorage.FSCrashStorage'
+        })
+
+        result = client.post(
+            '/submit',
+            headers=headers,
+            body=data
+        )
+
+        assert result.status_code == 200
+
+        config = ConfigManager([
+            ConfigDictEnv({
+                'FS_ROOT': str(tmpdir.join('antenna_crashes')),
+            })
+        ])
+
+        fscrashstore = FSCrashStorage(config)
+
+        raw_crash, dumps = fscrashstore.load_raw_crash(crash_id)
+
+        assert (
+            raw_crash ==
+            {
+                'uuid': crash_id,
+                'ProductName': 'Test',
+                'Version': '1.0',
+                'dump_checksums': {'upload_file_minidump': 'e19d5cd5af0378da05f63f891c7467af'},
+                'submitted_timestamp': '2011-09-06T00:00:00+00:00',
+                'timestamp': 1315267200.0,
+                'type_tag': 'bp',
+            }
+        )
+
+        assert (
+            dumps ==
+            {
+                'upload_file_minidump': b'abcd1234'
+            }
         )
