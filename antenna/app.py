@@ -16,8 +16,7 @@ from everett.component import ConfigOptions, RequiredConfigMixin
 import falcon
 
 from antenna.lib.datetimeutil import utc_now
-from antenna.lib.ooid import create_new_ooid
-from antenna.util import de_null
+from antenna.util import create_crash_id, de_null
 
 
 logger = logging.getLogger(__name__)
@@ -225,7 +224,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         raw_crash['timestamp'] = time.time()
 
         if 'uuid' not in raw_crash:
-            crash_id = create_new_ooid(current_timestamp)
+            crash_id = create_crash_id(current_timestamp)
             raw_crash['uuid'] = crash_id
             logger.info('%s received', crash_id)
         else:
