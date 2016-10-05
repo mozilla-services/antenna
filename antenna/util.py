@@ -8,7 +8,7 @@ import io
 import json
 import uuid
 
-from antenna.lib.datetimeutil import utc_now, UTC
+from antenna.datetimeutil import utc_now, UTC
 
 
 # NOTE(willkg): This is a hold-over from Socorro. I'm not really sure what the

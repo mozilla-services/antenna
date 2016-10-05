@@ -4,7 +4,7 @@
 
 # This is based on socorrolib's socorrolib/unittest/lib/test_datetimeutil.py.
 
-from antenna.lib import datetimeutil
+from antenna import datetimeutil
 
 
 UTC = datetimeutil.UTC
