@@ -9,7 +9,7 @@ import os.path
 
 from everett.component import ConfigOptions, RequiredConfigMixin
 
-from antenna.util import json_ordered_dumps
+from antenna.util import get_date_from_crash_id, json_ordered_dumps
 
 
 logger = logging.getLogger(__name__)
@@ -63,16 +63,11 @@ class FSCrashStorage(RequiredConfigMixin):
         if not os.path.isdir(self.root):
             os.makedirs(self.root)
 
-    def _get_crash_date(self, crash_id):
-        # NOTE(willkg): This assumes we're in the 21st century and that the last
-        # six characters of the crash_id are YYMMDD.
-        return '20' + crash_id[-6:]
-
     def _get_raw_crash_path(self, crash_id):
         """Returns path for where the raw crash should go"""
         return os.path.join(
             self.root,
-            self._get_crash_date(crash_id),
+            get_date_from_crash_id(crash_id),
             'raw_crash',
             crash_id + '.json'
         )
@@ -81,7 +76,7 @@ class FSCrashStorage(RequiredConfigMixin):
         """Returns path for where the dump_names list should go"""
         return os.path.join(
             self.root,
-            self._get_crash_date(crash_id),
+            get_date_from_crash_id(crash_id),
             'dump_names',
             crash_id + '.json'
         )
@@ -90,7 +85,7 @@ class FSCrashStorage(RequiredConfigMixin):
         """Returns path for a given dump"""
         return os.path.join(
             self.root,
-            self._get_crash_date(crash_id),
+            get_date_from_crash_id(crash_id),
             dump_name,
             crash_id
         )
