@@ -12,25 +12,125 @@ Requirements for v1 of antenna:
 
 1. handle incoming HTTP POST requests on ``/submit``
 
-   * Incoming HTTP POST requests can have compressed or uncompressed payloads,
-     but we're going to save them without looking at them at all.
+   * Handle gzip compressed HTTP POST request bodies.
+   * Parse ``multipart/form-data`` into a raw crash.
+   * Generate a crash id using the same scheme we're currently using.
+   * Add ``uuid``, ``dump_names``, ``timestamp`` and ``submit_timestamp`` fields
+     to raw crash.
 
-2. generate a crash id
-
-   * Use the same scheme we're currently using.
-
-3. return crash id to client
+2. return crash id to client
 
    * This ends the HTTP session, so we want to get to this point as soon as
      possible.
 
-4. upload crash report payload to S3
+3. upload crash report payload to S3
 
-   * We'll put the crash id in the pseudo-filename.
+   * Use the same S3 "directory" scheme we're currently using.
+   * Keep trying to save until all files are successfully saved.
    * We'll use SNS to alert something else that will notify the processor of the
      new item to process.
 
-5. support Ops Dockerflow status endpoints
+4. support Ops Dockerflow status endpoints
+
+   * ``/__version__``
+   * ``/__heartbeat__``
+   * ``/__lbheartbeat__``
+
+
+Crash reports and the current collector
+=======================================
+
+Crash reports come in via ``/submit`` as an HTTP POST.
+
+They have a ``multipart/form-data`` content-type.
+
+The payload (HTTP POST request body) may or may not be compressed. If it's
+compressed, then we need to uncompress it.
+
+The payload has a bunch of key/val pairs and also one or more binary parts.
+
+Binary parts have filenames related to the dump files on the client's machine and
+``application/octet-stream`` content-type.
+
+The uuid and dump names are user-provided data and affect things like filenames
+and s3 pseudo-filenames. They should get sanitized.
+
+Possible binary part names:
+
+* ``memory_report``
+* ``upload_file_minidump``
+* ``upload_file_minidump_browser``
+* ``upload_file_minidump_content``
+* ``upload_file_minidump_flash1``
+* ``upload_file_minidump_flash2``
+
+Some of these come from ``.dmp`` files on the client computer.
+
+Thus an HTTP POST something like this (long lines are wrapped for easier
+viewing)::
+
+    Content-Type: multipart/form-data; boundary=------------------------c4ae5238
+    f12b6c82
+
+    --------------------------c4ae5238f12b6c82
+    Content-Disposition: form-data; name="Add-ons"
+
+    ubufox%40ubuntu.com:3.2,%7B972ce4c6-7e08-4474-a285-3208198ce6fd%7D:48.0,loop
+    %40mozilla.org:1.4.3,e10srollout%40mozilla.org:1.0,firefox%40getpocket.com:1
+    .0.4,langpack-en-GB%40firefox.mozilla.org:48.0,langpack-en-ZA%40firefox.mozi
+    lla.org:48.0
+    --------------------------c4ae5238f12b6c82
+    Content-Disposition: form-data; name="AddonsShouldHaveBlockedE10s"
+
+    1
+    --------------------------c4ae5238f12b6c82
+    Content-Disposition: form-data; name="BuildID"
+
+    20160728203720
+    --------------------------c4ae5238f12b6c82
+    Content-Disposition: form-data; name="upload_file_minidump"; filename="6da34
+    99e-f6ae-22d6-1e1fdac8-16464a16.dmp"
+    Content-Type: application/octet-stream
+
+    <BINARY CONTENT>
+    --------------------------c4ae5238f12b6c82--
+
+    etc.
+
+    --------------------------c4ae5238f12b6c82--
+
+
+Which gets converted to a ``raw_crash`` like this::
+
+    {
+        'dump_checksums': {
+            'upload_file_minidump': 'e19d5cd5af0378da05f63f891c7467af'
+        },
+        'uuid': '00007bd0-2d1c-4865-af09-80bc02160513',
+        'submitted_timestamp': '2016-05-13T00:00:00+00:00',
+        'timestamp': 1315267200.0',
+        'type_tag': 'bp',
+        'Add-ons': '...',
+        'AddonsShouldHaveBlockedE10s': '1',
+        'BuildID': '20160728203720',
+        ...
+    }
+
+
+Which ends up in S3 like this::
+
+    /v2/raw_crash/000/20160513/00007bd0-2d1c-4865-af09-80bc02160513
+
+        Raw crash in serialized in JSON.
+
+    /v1/dump_names/00007bd0-2d1c-4865-af09-80bc02160513
+
+        Map of dump_name to file name serialized in JSON.
+
+    /v1/upload_file_minidump/00007bd0-2d1c-4865-af09-80bc02160513
+
+        Raw dumps.
+
 
 
 nginx vs. python thoughts
@@ -118,90 +218,51 @@ be an unenthusing decision, but I don't think the risks are high enough that
 it'll ever be a **wrong** decision.
 
 
-Crash reports
-=============
+gevent thoughts
+===============
 
-Crash reports come in via ``/submit`` as an HTTP POST.
+`Falcon <https://falconframework.org/>`_ lists "works great with async libraries
+like gevent" as a feature, so it should be fine.
 
-They have a ``multipart/form-data`` content-type.
+* http://falcon.readthedocs.io/en/stable/index.html?highlight=gevent#features
 
-The payload (HTTP POST request body) may or may not be compressed. If it's
-compressed, then we need to uncompress it.
+While looking into whether `boto supported Python 3's asyncio, I read several
+comments in their issue tracker from people who use boto with gevent without
+problems. Interestingly, the boto2 issue tracker has some open issues around
+gevent, but the boto3 issue tracker has none. From that anecdata, I think we're
+probably fine with boto.
 
-The payload has a bunch of key/val pairs and also one or more binary parts.
+* https://github.com/gevent/gevent/issues/535#issuecomment-162565389
+* https://github.com/boto/boto/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aopen%20gevent
+* https://github.com/boto/boto3/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aopen%20gevent
 
-Binary parts have filenames related to the dump files on the client's machine and
-``application/octet-stream`` content-type.
+I've heard reports that there are problems with New Relic and gevent, but
+nothing recent enough to discount the "it's probably fixed by now"
+possibilities. Combing their forums suggests some people have problems, but each
+one seems to be fixed or alleviated.
 
-The ``crash_id`` and dump names are essentially user-provided data and affect
-things like filenames and s3 pseudo-filenames. They should get sanitized.
+* https://discuss.newrelic.com/search?q=gevent
 
-Possible binary part names:
+I feel pretty confident that we'll be fine using gevent. A system test and a
+load test might tell us more.
 
-* ``memory_report``
-* ``upload_file_minidump``
-* ``upload_file_minidump_browser``
-* ``upload_file_minidump_content``
-* ``upload_file_minidump_flash1``
-* ``upload_file_minidump_flash2``
+Lonnen brought up this article from the Netflix blog where they had problems
+switching to async i/o with Zuul 2 which is Java-based:
 
-Some of these come from ``.dmp`` files on the client computer.
+http://techblog.netflix.com/2016/09/zuul-2-netflix-journey-to-asynchronous.html
 
-Thus an HTTP POST something like this::
-
-    Content-Type: multipart/form-data; boundary=------------------------c4ae5238f12b6c82
-
-    --------------------------c4ae5238f12b6c82
-    Content-Disposition: form-data; name="Add-ons"
-
-    ubufox%40ubuntu.com:3.2,%7B972ce4c6-7e08-4474-a285-3208198ce6fd%7D:48.0,loop%40mozilla.org:1.4.3,e10srollout%40mozilla.org:1.0,firefox%40getpocket.com:1.0.4,langpack-en-GB%40firefox.mozilla.org:48.0,langpack-en-ZA%40firefox.mozilla.org:48.0
-    --------------------------c4ae5238f12b6c82
-    Content-Disposition: form-data; name="AddonsShouldHaveBlockedE10s"
-
-    1
-    --------------------------c4ae5238f12b6c82
-    Content-Disposition: form-data; name="BuildID"
-
-    20160728203720
-    --------------------------c4ae5238f12b6c82
-    Content-Disposition: form-data; name="upload_file_minidump"; filename="6da3499e-f6ae-22d6-1e1fdac8-16464a16.dmp"
-    Content-Type: application/octet-stream
-
-    <BINARY CONTENT>
-    --------------------------c4ae5238f12b6c82--
-
-    etc.
-
-    --------------------------c4ae5238f12b6c82--
+There's a lot of big differences between their project and ours. Still, we
+should give some thought to alleviating the complexities of debugging
+event-driven code and making sure all the libs we use are gevent-friendly.
 
 
-Which gets converted to a ``raw_crash`` like this::
+boto2 vs. boto3
+===============
 
-    {
-        'dump_checksums': {
-            'upload_file_minidump': 'e19d5cd5af0378da05f63f891c7467af'
-        },
-        'uuid': '00007bd0-2d1c-4865-af09-80bc02160513',
-        'submitted_timestamp': '2016-05-13T00:00:00+00:00',
-        'timestamp': 1315267200.0',
-        'type_tag': 'bp',
-        'Add-ons': '...',
-        'AddonsShouldHaveBlockedE10s': '1',
-        'BuildID': '20160728203720',
-        ...
-    }
+According to the boto documentation, boto3 is stable and recommended for daily
+use.
 
+* boto2: http://boto.cloudhackers.com/en/latest/
+* boto3: https://github.com/boto/boto3
 
-Which ends up in S3 like this::
-
-    /v2/raw_crash/000/20160513/00007bd0-2d1c-4865-af09-80bc02160513
-
-        Raw crash in serialized in JSON.
-
-    /v1/dump_names/00007bd0-2d1c-4865-af09-80bc02160513
-
-        Map of dump_name to file name serialized in JSON.
-
-    /v1/upload_file_minidump/00007bd0-2d1c-4865-af09-80bc02160513
-
-        Raw dumps.
+Socorro uses boto2. I think we'll go with boto3 because it's the future.
