@@ -15,7 +15,7 @@ from everett.manager import ConfigManager, ConfigOSEnv, parse_class
 from everett.component import ConfigOptions, RequiredConfigMixin
 import falcon
 
-from antenna.lib.datetimeutil import utc_now
+from antenna.datetimeutil import utc_now
 from antenna.util import create_crash_id, de_null
 
 
