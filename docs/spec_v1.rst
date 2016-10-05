@@ -130,10 +130,11 @@ compressed, then we need to uncompress it.
 
 The payload has a bunch of key/val pairs and also one or more binary parts.
 
-Binary parts have XXX filename and XXX content-type.
+Binary parts have filenames related to the dump files on the client's machine and
+``application/octet-stream`` content-type.
 
-The crash_id and dump names are essentially user-provided data and affect things
-like filenames and s3 pseudo-filenames. They should get sanitized.
+The ``crash_id`` and dump names are essentially user-provided data and affect
+things like filenames and s3 pseudo-filenames. They should get sanitized.
 
 Possible binary part names:
 
@@ -148,24 +149,59 @@ Some of these come from ``.dmp`` files on the client computer.
 
 Thus an HTTP POST something like this::
 
-    FIXME
+    Content-Type: multipart/form-data; boundary=------------------------c4ae5238f12b6c82
+
+    --------------------------c4ae5238f12b6c82
+    Content-Disposition: form-data; name="Add-ons"
+
+    ubufox%40ubuntu.com:3.2,%7B972ce4c6-7e08-4474-a285-3208198ce6fd%7D:48.0,loop%40mozilla.org:1.4.3,e10srollout%40mozilla.org:1.0,firefox%40getpocket.com:1.0.4,langpack-en-GB%40firefox.mozilla.org:48.0,langpack-en-ZA%40firefox.mozilla.org:48.0
+    --------------------------c4ae5238f12b6c82
+    Content-Disposition: form-data; name="AddonsShouldHaveBlockedE10s"
+
+    1
+    --------------------------c4ae5238f12b6c82
+    Content-Disposition: form-data; name="BuildID"
+
+    20160728203720
+    --------------------------c4ae5238f12b6c82
+    Content-Disposition: form-data; name="upload_file_minidump"; filename="6da3499e-f6ae-22d6-1e1fdac8-16464a16.dmp"
+    Content-Type: application/octet-stream
+
+    <BINARY CONTENT>
+    --------------------------c4ae5238f12b6c82--
+
+    etc.
+
+    --------------------------c4ae5238f12b6c82--
 
 
 Which gets converted to a ``raw_crash`` like this::
 
-    FIXME
+    {
+        'dump_checksums': {
+            'upload_file_minidump': 'e19d5cd5af0378da05f63f891c7467af'
+        },
+        'uuid': '00007bd0-2d1c-4865-af09-80bc02160513',
+        'submitted_timestamp': '2016-05-13T00:00:00+00:00',
+        'timestamp': 1315267200.0',
+        'type_tag': 'bp',
+        'Add-ons': '...',
+        'AddonsShouldHaveBlockedE10s': '1',
+        'BuildID': '20160728203720',
+        ...
+    }
 
 
 Which ends up in S3 like this::
 
-    /v2/raw_crash/000/20160920/60db7156-3553-27e3-38900067-31a261ed
+    /v2/raw_crash/000/20160513/00007bd0-2d1c-4865-af09-80bc02160513
 
         Raw crash in serialized in JSON.
 
-    /v1/dump_names/60db7156-3553-27e3-38900067-31a261ed
+    /v1/dump_names/00007bd0-2d1c-4865-af09-80bc02160513
 
         Map of dump_name to file name serialized in JSON.
 
-    /v1/upload_file_minidump_browser/60db7156-3553-27e3-38900067-31a261ed
+    /v1/upload_file_minidump/00007bd0-2d1c-4865-af09-80bc02160513
 
         Raw dumps.
