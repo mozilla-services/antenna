@@ -5,7 +5,7 @@
 import io
 import os
 
-from everett.manager import ConfigManager, ConfigDictEnv
+from everett.manager import ConfigManager
 from freezegun import freeze_time
 
 from antenna.external.fs.crashstorage import FSCrashStorage
@@ -119,11 +119,9 @@ class TestFSCrashStorage:
 
         assert result.status_code == 200
 
-        config = ConfigManager([
-            ConfigDictEnv({
-                'FS_ROOT': str(tmpdir.join('antenna_crashes')),
-            })
-        ])
+        config = ConfigManager.from_dict({
+            'FS_ROOT': str(tmpdir.join('antenna_crashes')),
+        })
 
         fscrashstore = FSCrashStorage(config)
 
