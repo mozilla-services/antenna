@@ -6,7 +6,7 @@ import os
 import pytest
 import sys
 
-from everett.manager import ConfigManager, ConfigDictEnv
+from everett.manager import ConfigManager
 from falcon.request import Request
 from falcon.testing.helpers import create_environ
 from falcon.testing.srmock import StartResponseMock
@@ -25,10 +25,9 @@ from antenna.app import get_app  # noqa
 
 def build_app(config=None):
     if config is None:
-        config = []
-    else:
-        config = [ConfigDictEnv(config)]
-    return get_app(ConfigManager(config))
+        config = {}
+
+    return get_app(ConfigManager.from_dict(config))
 
 
 @pytest.fixture
@@ -51,7 +50,7 @@ def config(request):
                 ...
 
     """
-    return ConfigManager([ConfigDictEnv(dict(request.cls.config_vars))])
+    return ConfigManager.from_dict(dict(request.cls.config_vars))
 
 
 @pytest.fixture
