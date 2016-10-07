@@ -3,9 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from datetime import datetime
+from functools import wraps
 import gzip
 import io
 import json
+import time
 import uuid
 
 from antenna.datetimeutil import utc_now, UTC
@@ -65,7 +67,7 @@ def compress(multipart):
 def create_crash_id(timestamp=None):
     """Generates a crash id
 
-    :arg timestamp: a datetime or date to use in the crash id
+    :arg date/datetime timestamp: a datetime or date to use in the crash id
 
     :returns: crash id as str
 
@@ -82,8 +84,8 @@ def create_crash_id(timestamp=None):
 def get_date_from_crash_id(crash_id, as_datetime=False):
     """Retrieves the date from the crash id
 
-    :arg crash_id: the crash id as a str
-    :arg as_datetime: whether or not to return a datetime; defaults to False
+    :arg str crash_id: the crash id
+    :arg bool as_datetime: whether or not to return a datetime; defaults to False
         which means this returns a string
 
     :returns: string or datetime depending on ``as_datetime`` value
@@ -93,3 +95,117 @@ def get_date_from_crash_id(crash_id, as_datetime=False):
     if as_datetime:
         return datetime(int(s[:4]), int(s[4:6]), int(s[6:8]), tzinfo=UTC)
     return s
+
+
+class MaxAttemptsError(Exception):
+    """Maximum attempts error.
+
+    .. :py:attribute:: msg
+       message for the exception
+
+    .. :py:attribute:: return_value
+       The last return value for the function.
+
+    """
+    def __init__(self, msg, ret):
+        super().__init__(msg)
+        self.return_value = ret
+
+
+# Tuple of retry times in seconds in order of attempt.
+RETRY_TIMES = (
+    1,
+    5,
+    10,
+    30,
+    60,
+    2 * 60,
+)
+RETRY_TIMES_MAX_INDEX = len(RETRY_TIMES) - 1
+
+
+def retry(retryable_exceptions=Exception, retryable_return=None, max_attempts=10,
+          sleep_function=time.sleep, module_logger=None):
+    """Decorator for retrying with exponential wait and logging
+
+    Example with defaults::
+
+        @retry()
+        def some_thing_that_fails():
+            pass
+
+
+    Example with arguments::
+
+        import logging
+        logger = logging.getLogger(__name__)
+
+        @retry(
+            retryable_exceptions=[SocketTimeout, ConnectionError],
+            retryable_return=lambda resp: resp.status_code != 200,
+            module_logger=logger
+        )
+        def some_thing_that_does_connections():
+            pass
+
+
+    :arg exception/list retryable_exceptions:
+        Exception class or list of exception classes to catch and retry on.
+
+        Any exceptions not in this list will bubble up.
+
+        Defaults to ``Exception``.
+
+    :arg fun retryable_return:
+        A function that takes a function return and returns ``True`` to retry
+        or ``False`` to stop retrying.
+
+    :arg int/None max_attempts:
+        The maximum number of times this will retry. After max attempts, it'll
+        reraise the last exception in the case of an exception or raise a
+        ``MaxAttemptsError`` in the case of invalid return values.
+
+        If ``max_attempts`` is ``None``, this will try indefinitely.
+
+    :arg fun sleep_function:
+        Function that takes the current attempt number as an int and sleeps.
+
+    :arg logger/None module_logger:
+        If you want to log all the exceptions that are caught and retried,
+        then provide a logger.
+
+        Otherwise exceptions are silently ignored.
+
+    """
+    if isinstance(retryable_exceptions, type):
+        on_exception = (retryable_exceptions,)
+    else:
+        on_exception = tuple(retryable_exceptions)
+
+    def _retry_inner(fun):
+        @wraps(fun)
+        def _retry_fun(*args, **kwargs):
+            attempts = 0
+            while True:
+                try:
+                    ret = fun(*args, **kwargs)
+                    if retryable_return is None or not retryable_return(ret):
+                        return ret
+
+                    elif max_attempts is not None and attempts >= max_attempts:
+                        raise MaxAttemptsError(
+                            'Maximum retry attempts. Error return.', ret
+                        )
+
+                except on_exception:
+                    if module_logger is not None:
+                        module_logger.exception('retry attempt %s', attempts)
+
+                    if max_attempts is not None and attempts >= max_attempts:
+                        raise
+
+                sleep_function(RETRY_TIMES[min(attempts, RETRY_TIMES_MAX_INDEX)])
+                attempts += 1
+
+        return _retry_fun
+    return _retry_inner
