@@ -48,7 +48,7 @@ def test_crash_id_with_date():
     assert get_date_from_crash_id(crash_id) == '20161004'
 
 
-class Testretry:
+class Test_retry:
     """Tests for the retry decorator"""
     def test_retry(self):
         """Test that retry doesn't affect function return"""
