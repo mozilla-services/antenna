@@ -13,6 +13,7 @@ Contents
 
    dev
    antenna
+   modules
 
 
 Project docs

@@ -15,8 +15,8 @@
 import sys
 import os
 
-PATH = os.path.dirname(os.path.dirname(__file__))
-os.environ['ANTENNA_INI'] = os.path.join(PATH, 'settings_dev.ini')
+BASEDIR = os.path.dirname(os.path.dirname(__file__))
+sys.path.insert(0, BASEDIR)
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
