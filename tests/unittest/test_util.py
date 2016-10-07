@@ -9,8 +9,10 @@ import pytest
 
 from antenna.util import (
     create_crash_id,
-    get_date_from_crash_id,
     de_null,
+    get_date_from_crash_id,
+    retry,
+    MaxAttemptsError
 )
 
 
@@ -44,3 +46,125 @@ def test_crash_id_with_date():
     crash_id = create_crash_id(datetime(2016, 10, 4))
 
     assert get_date_from_crash_id(crash_id) == '20161004'
+
+
+class Test_retry:
+    """Tests for the retry decorator"""
+    def test_retry(self):
+        """Test that retry doesn't affect function return"""
+        @retry()
+        def some_thing():
+            return 1
+
+        assert some_thing() == 1
+
+    def test_retry_retryable_exceptions(self):
+        """Test retry retryable_exceptions arg does the right thing"""
+        sleeps = []
+
+        def fake_sleep(attempt):
+            sleeps.append(attempt)
+
+        # This will fail on the first attempt because Exception is not
+        # in the list of retryable exceptions.
+        @retry(retryable_exceptions=ValueError, sleep_function=fake_sleep)
+        def some_thing():
+            raise Exception
+
+        with pytest.raises(Exception):
+            some_thing()
+        assert len(sleeps) == 0
+
+        sleeps = []
+
+        # This will fail on the first attempt because Exception is not
+        # in the list of retryable exceptions.
+        @retry(retryable_exceptions=[ValueError, IndexError], sleep_function=fake_sleep)
+        def some_thing():
+            raise Exception
+
+        with pytest.raises(Exception):
+            some_thing()
+        assert len(sleeps) == 0
+
+        sleeps = []
+
+        # This will retry until the max attempts and then reraise the exception
+        @retry(retryable_exceptions=ValueError, max_attempts=10, sleep_function=fake_sleep)
+        def some_thing():
+            raise ValueError
+
+        with pytest.raises(ValueError):
+            some_thing()
+        assert len(sleeps) == 10
+
+    def test_retry_retryable_return(self):
+        """Tests retry retryable_return arg does the right thing"""
+        sleeps = []
+
+        def fake_sleep(attempt):
+            sleeps.append(attempt)
+
+        def is_not_200(ret):
+            return ret != 200
+
+        # Will keep retrying until max_attempts and then raise an error that includes
+        # the last function return
+        @retry(retryable_return=is_not_200, max_attempts=10, sleep_function=fake_sleep)
+        def some_thing():
+            return 404
+
+        with pytest.raises(MaxAttemptsError) as excinfo:
+            some_thing()
+
+        assert excinfo.value.return_value == 404
+        assert len(sleeps) == 10
+
+        sleeps = []
+
+        # Will succeed and not retry because the return value is fine
+        @retry(retryable_return=is_not_200, max_attempts=10, sleep_function=fake_sleep)
+        def some_thing():
+            return 200
+
+        some_thing()
+        assert len(sleeps) == 0
+
+    def test_retry_amounts(self):
+        sleeps = []
+
+        def fake_sleep(attempt):
+            sleeps.append(attempt)
+
+        @retry(sleep_function=fake_sleep)
+        def some_thing():
+            raise Exception
+
+        with pytest.raises(Exception):
+            some_thing()
+        # Builds up to 3 minutes and then keeps trying every 2 minutes.
+        assert sleeps == [1, 5, 10, 30, 60, 120, 120, 120, 120, 120]
+
+    def test_max_attempts(self):
+        sleeps = []
+
+        def fake_sleep(attempt):
+            sleeps.append(attempt)
+
+        @retry(sleep_function=fake_sleep)
+        def some_thing():
+            raise Exception
+
+        with pytest.raises(Exception):
+            some_thing()
+        assert len(sleeps) == 10
+
+        sleeps = []
+
+        @retry(max_attempts=5, sleep_function=fake_sleep)
+        def some_thing():
+            raise Exception
+
+        with pytest.raises(Exception):
+            some_thing()
+        assert len(sleeps) == 5

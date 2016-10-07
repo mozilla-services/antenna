@@ -12,6 +12,16 @@ antenna.app module
     :undoc-members:
     :show-inheritance:
 
+
+antenna.util module
+-------------------
+
+.. automodule:: antenna.util
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
 antenna.wsgi module
 -------------------
 
