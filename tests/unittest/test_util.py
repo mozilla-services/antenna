@@ -77,6 +77,18 @@ class Testretry:
 
         sleeps = []
 
+        # This will fail on the first attempt because Exception is not
+        # in the list of retryable exceptions.
+        @retry(retryable_exceptions=[ValueError, IndexError], sleep_function=fake_sleep)
+        def some_thing():
+            raise Exception
+
+        with pytest.raises(Exception):
+            some_thing()
+        assert len(sleeps) == 0
+
+        sleeps = []
+
         # This will retry until the max attempts and then reraise the exception
         @retry(retryable_exceptions=ValueError, max_attempts=10, sleep_function=fake_sleep)
         def some_thing():

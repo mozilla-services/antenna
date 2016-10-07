@@ -177,10 +177,8 @@ def retry(retryable_exceptions=Exception, retryable_return=None, max_attempts=10
         Otherwise exceptions are silently ignored.
 
     """
-    if isinstance(retryable_exceptions, type):
-        on_exception = (retryable_exceptions,)
-    else:
-        on_exception = tuple(retryable_exceptions)
+    if not isinstance(retryable_exceptions, type):
+        retryable_exceptions = tuple(retryable_exceptions)
 
     def _retry_inner(fun):
         @wraps(fun)
@@ -197,7 +195,7 @@ def retry(retryable_exceptions=Exception, retryable_return=None, max_attempts=10
                             'Maximum retry attempts. Error return.', ret
                         )
 
-                except on_exception:
+                except retryable_exceptions:
                     if module_logger is not None:
                         module_logger.exception('retry attempt %s', attempts)
 
