@@ -3,10 +3,28 @@
 # Note: Requires docker 1.10.0+ and docker-compose 1.6.0+.
 version: "2"
 services:
-  web:
+  # This builds an image of the deploy base. Then we extend that with
+  # dev-related things to do our dev-y stuff.
+  deploy-base:
     build:
       context: .
       dockerfile: Dockerfile
+    image: local/antenna_deploy_base
+
+  # This builds an image that extends Dockerfile with dev-related things.
+  dev-base:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: local/antenna_dev
+
+  # ------------------------------------------------------------------
+  # After this point is dev-related services.
+  # ------------------------------------------------------------------
+
+  # This is the base web-service.
+  web:
+    image: local/antenna_dev
     volumes:
       - .:/app
     ports:

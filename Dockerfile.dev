@@ -1,0 +1,10 @@
+FROM local/antenna_deploy_base
+
+# Switch to root to install stuff
+USER root
+
+# Install build essentials which includes make
+RUN apt-get install -y build-essential
+
+# Switch back to app user
+USER app
