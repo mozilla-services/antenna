@@ -1,5 +1,5 @@
 DCFILE ?= "docker-compose.yml"
-DC := $(shell which docker-compose) -f ${DCFILE}
+DC := $(shell which docker-compose)
 
 default:
 	@echo "You need to specify a subcommand."
@@ -20,7 +20,9 @@ help:
 	make build
 
 build:
-	${DC} build
+	${DC} build deploy-base
+	${DC} build dev-base
+	${DC} build web
 	touch .docker-build
 
 run: .docker-build
@@ -58,6 +60,8 @@ test-coverage:
 
 docs:
 	${DC} run web $(MAKE) -C docs/ clean
+	-mkdir -p docs/_build/
+	chmod -R 777 docs/_build/
 	${DC} run web $(MAKE) -C docs/ html
 	${DC} run web find docs/_build/ -type d -exec 'chmod' '777' '{}' ';'
 	${DC} run web find docs/_build/ -type f -exec 'chmod' '666' '{}' ';'
