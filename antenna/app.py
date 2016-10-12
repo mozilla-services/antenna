@@ -93,7 +93,8 @@ def setup_logging(config):
         'disable_existing_loggers': True,
         'formatters': {
             'development': {
-                'format': '%(levelname)s %(asctime)s %(name)s %(message)s',
+                'format': '[%(asctime)s] [%(levelname)s] %(name)s: %(message)s',
+                'datefmt': '%Y-%m-%d %H:%M:%s %z',
             },
         },
         'handlers': {
@@ -273,6 +274,13 @@ class HealthVersionResource:
         resp.body = commit_info
 
 
+def unhandled_exception_handler(ex, req, resp, params):
+    # Something unhandled happened. We want to log it so we know about it, but
+    # also return an HTTP 500.
+    logger.exception('Unhandled exception')
+    raise falcon.HTTPInternalServerError('Internal Server Error', 'Sorry--something unexpected happened.')
+
+
 def get_app(config=None):
     """Returns AntennaAPI instance"""
     if config is None:
@@ -285,6 +293,7 @@ def get_app(config=None):
     app_config = AppConfig(config)
 
     app = falcon.API()
+    app.add_error_handler(Exception, handler=unhandled_exception_handler)
     app.add_route('/__version__', HealthVersionResource(config, basedir=app_config('basedir')))
     app.add_route('/submit', BreakpadSubmitterResource(config))
     return app
