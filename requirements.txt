@@ -1,7 +1,7 @@
 # Production requirements
-everett==0.3 \
-    --hash=sha256:fb94ec627efacb2fd44a2eacaacc61d1f2fc9d7836479dd64408316cab1d2b2c \
-    --hash=sha256:9a30b351d79d575b12d5a1df671eebf60ec77b8f81acaa1d28833001f8f8a1f1
+everett==0.3.1 \
+    --hash=sha256:b0481647a79f1b89bce07a87e7dd06c22be4a6e2e3d3b3933ef41485e2c2f880 \
+    --hash=sha256:c1bde41af07c985c94776437379f1c246786861135b9a7c7017444aa0657ff4d
 falcon==1.0.0 --hash=sha256:0145eb7fc001fb943b8b8f797832ce45302cf7c1edc769e28e5bf0963a406403
 gevent==1.1.1 \
     --hash=sha256:327913740250934b826df6f9603feabfe224a1e40fd424c12e74aab1755ba179 \
