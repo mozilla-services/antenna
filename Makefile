@@ -26,7 +26,7 @@ build:
 	touch .docker-build
 
 run: .docker-build
-	${DC} up
+	${DC} up web
 
 clean:
 	# python related things
