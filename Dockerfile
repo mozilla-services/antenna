@@ -22,7 +22,7 @@ ENV PORT 8000
 USER app
 EXPOSE $PORT
 
-CMD ANTENNA_INI=settings_dev.ini gunicorn \
+CMD gunicorn \
     --workers=1 \
     --worker-connections=4 \
     --worker-class=gevent \
