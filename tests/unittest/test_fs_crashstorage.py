@@ -44,6 +44,7 @@ class TestFSCrashStorage:
             headers=headers,
             body=data
         )
+        client.join_app()
 
         assert result.status_code == 200
 
@@ -116,6 +117,7 @@ class TestFSCrashStorage:
             headers=headers,
             body=data
         )
+        client.join_app()
 
         assert result.status_code == 200
 
