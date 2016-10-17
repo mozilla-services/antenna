@@ -14,6 +14,7 @@ import zlib
 from everett.manager import ConfigManager, ConfigOSEnv, parse_class
 from everett.component import ConfigOptions, RequiredConfigMixin
 import falcon
+from gevent.pool import Pool
 
 from antenna.datetimeutil import utc_now
 from antenna.util import create_crash_id, de_null
@@ -144,6 +145,9 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         self.config = config.with_options(self)
         self.crashstorage = self.config('crashstorage_class')(config)
 
+        # Gevent pool for handling incoming crash reports
+        self.pipeline_pool = Pool()
+
     def extract_payload(self, req):
         """Parses the HTTP POST payload
 
@@ -232,7 +236,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             # FIXME(willkg): This means the uuid is essentially user-provided.
             # We should sanitize it before proceeding.
             crash_id = raw_crash['uuid']
-            logger.info('%s received with existing crash_id:', crash_id)
+            logger.info('%s received with existing crash_id', crash_id)
 
         # NOTE(willkg): The old collector add "legacy_processing" and
         # "throttle_rate" which come from throttling. The new collector doesn't
@@ -243,15 +247,37 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         raw_crash['type_tag'] = self.config('dump_id_prefix').strip('-')
 
+        self.pipeline_pool.spawn(
+            self.post_process,
+            raw_crash=raw_crash,
+            dumps=dumps,
+            crash_id=crash_id
+        )
+
+        logger.info('%s accepted', crash_id)
+
+        resp.status = falcon.HTTP_200
+        resp.body = 'CrashID=%s%s\n' % (self.config('dump_id_prefix'), crash_id)
+
+    # FIXME(willkg): Need a better name than "post_process"
+    def post_process(self, raw_crash, dumps, crash_id):
+        """Handles received crash and saves it"""
+        # Save the crash to crashstorage
         self.crashstorage.save_raw_crash(
             raw_crash,
             dumps,
             crash_id
         )
-        logger.info('%s accepted', crash_id)
+        logger.info('%s saved', crash_id)
 
-        resp.status = falcon.HTTP_200
-        resp.body = 'CrashID=%s%s\n' % (self.config('dump_id_prefix'), crash_id)
+    def join_pool(self):
+        """Joins the pool--use only in tests!
+
+        This is helpful for forcing everything to finish so that we can verify
+        outcomes in the test suite.
+
+        """
+        self.pipeline_pool.join()
 
 
 class HealthVersionResource:

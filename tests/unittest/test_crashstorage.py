@@ -25,14 +25,10 @@ class TestCrashStorage:
             headers=headers,
             body=data
         )
+        client.join_app()
         assert result.status_code == 200
 
-        # NOTE(willkg): We do this goofy thing to get the
-        # BreakpadSubmitterResource using internal Falcon API things. It's
-        # entirely possible that this will break when we upgrade Falcon, but
-        # there's no other way to get this without doing other crazier things
-        # and possibly breaking the time/space continuum.
-        bsr, method_map, params = client.app._router.find('/submit')
+        bsr = client.get_resource_by_url('/submit')
 
         # Now we've got the BreakpadSubmitterResource, so we can pull out the
         # crashstorage, verify there's only one crash in it and then verify the
