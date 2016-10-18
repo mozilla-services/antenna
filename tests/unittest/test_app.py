@@ -35,6 +35,12 @@ class TestHealthVersionResource:
         assert result.content == b'{"commit": "ou812"}'
 
 
+class TestHealthLBHeartbeatResource:
+    def test_lb_heartbeat(self, client):
+        resp = client.get('/__lbheartbeat__')
+        assert resp.status_code == 200
+
+
 class TestBreakpadSubmitterResource:
     config_vars = {}
 

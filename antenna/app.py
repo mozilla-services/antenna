@@ -300,6 +300,15 @@ class HealthVersionResource:
         resp.body = commit_info
 
 
+class HealthLBHeartbeatResource:
+    """Endpoint to let the load balancing know application health"""
+    def __init__(self, config):
+        self.config = config
+
+    def on_get(self, req, resp):
+        resp.status = falcon.HTTP_200
+
+
 def unhandled_exception_handler(ex, req, resp, params):
     # Something unhandled happened. We want to log it so we know about it, but
     # also return an HTTP 500.
@@ -338,5 +347,6 @@ def get_app(config=None):
     app = AntennaAPI(config)
     app.add_error_handler(Exception, handler=unhandled_exception_handler)
     app.add_route('breakpad', '/submit', BreakpadSubmitterResource(config))
-    app.add_route('version_hc', '/__version__', HealthVersionResource(config, basedir=app_config('basedir')))
+    app.add_route('healthcheck_version', '/__version__', HealthVersionResource(config, basedir=app_config('basedir')))
+    app.add_route('healthcheck_lb', '/__lbheartbeat__', HealthLBHeartbeatResource(config))
     return app
