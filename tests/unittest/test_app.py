@@ -9,7 +9,7 @@ from antenna.mini_poster import multipart_encode
 from antenna.util import compress
 
 
-class TestHealthVersionResource:
+class TestVersionResource:
     def test_no_version(self, client, tmpdir):
         # Set basedir here to tmpdir which we *know* doesn't have a
         # version.json in it.
@@ -35,10 +35,22 @@ class TestHealthVersionResource:
         assert result.content == b'{"commit": "ou812"}'
 
 
-class TestHealthLBHeartbeatResource:
+class TestLBHeartbeatResource:
     def test_lb_heartbeat(self, client):
         resp = client.get('/__lbheartbeat__')
         assert resp.status_code == 200
+
+
+class TestHeartbeatResource:
+    def test_heartbeat(self, client):
+        resp = client.get('/__heartbeat__')
+        assert resp.status_code == 200
+        # NOTE(willkg): This isn't mocked out, so it's entirely likely that
+        # this expected result will change over time.
+        assert (
+            resp.content ==
+            b'{"errors": [], "info": {"BreakpadSubmitterResource.queue_size": 0}}'
+        )
 
 
 class TestBreakpadSubmitterResource:

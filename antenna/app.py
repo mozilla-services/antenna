@@ -3,8 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import cgi
+from collections import OrderedDict
 import hashlib
 import io
+import json
 import logging
 import os
 import logging.config
@@ -148,6 +150,11 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         # Gevent pool for handling incoming crash reports
         self.pipeline_pool = Pool()
 
+    def check_health(self, state):
+        state.add_statsd(self, 'queue_size', len(self.pipeline_pool))
+        if hasattr(self.crashstorage, 'check_health'):
+            self.crashstorage.check_health(state)
+
     def extract_payload(self, req):
         """Parses the HTTP POST payload
 
@@ -280,7 +287,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         self.pipeline_pool.join()
 
 
-class HealthVersionResource:
+class VersionResource:
     """Implements the ``/__version__`` endpoint"""
     def __init__(self, config, basedir):
         self.config = config
@@ -300,13 +307,64 @@ class HealthVersionResource:
         resp.body = commit_info
 
 
-class HealthLBHeartbeatResource:
+class LBHeartbeatResource:
     """Endpoint to let the load balancing know application health"""
     def __init__(self, config):
         self.config = config
 
     def on_get(self, req, resp):
         resp.status = falcon.HTTP_200
+
+
+class HealthState:
+    def __init__(self):
+        self.errors = []
+        self.statsd = {}
+
+    def add_statsd(self, name, key, value):
+        if not isinstance(name, str):
+            name = name.__class__.__name__
+        self.statsd['%s.%s' % (name, key)] = value
+
+    def add_error(self, name, msg):
+        # Use an OrderedDict here so we can maintain key order when converting
+        # to JSON.
+        d = OrderedDict([('name', name), ('msg', msg)])
+        self.errors.append(d)
+
+    def is_healthy(self):
+        return len(self.errors) == 0
+
+    def to_dict(self):
+        return OrderedDict([
+            ('errors', self.errors),
+            ('info', self.statsd)
+        ])
+
+
+class HeartbeatResource:
+    def __init__(self, config, app):
+        self.config = config
+        self.antenna_app = app
+
+    def on_get(self, req, resp):
+        state = HealthState()
+
+        # So we're going to think of Antenna like a big object graph and
+        # traverse passing along the HealthState instance. Then, after
+        # traversing the object graph, we'll tally everything up and deliver
+        # the news.
+        for name, resource in self.antenna_app._all_resources.items():
+            if hasattr(resource, 'check_health'):
+                resource.check_health(state)
+
+        # FIXME(willkg): statsd things here
+
+        if state.is_healthy():
+            resp.status = falcon.HTTP_200
+        else:
+            resp.status = falcon.HTTP_503
+        resp.body = json.dumps(state.to_dict())
 
 
 def unhandled_exception_handler(ex, req, resp, params):
@@ -329,7 +387,7 @@ class AntennaAPI(falcon.API):
     def get_resource_by_name(self, name):
         return self._all_resources[name]
 
-    def get_all_resources(self):
+    def get_resources(self):
         return self._all_resources.values()
 
 
@@ -347,6 +405,7 @@ def get_app(config=None):
     app = AntennaAPI(config)
     app.add_error_handler(Exception, handler=unhandled_exception_handler)
     app.add_route('breakpad', '/submit', BreakpadSubmitterResource(config))
-    app.add_route('healthcheck_version', '/__version__', HealthVersionResource(config, basedir=app_config('basedir')))
-    app.add_route('healthcheck_lb', '/__lbheartbeat__', HealthLBHeartbeatResource(config))
+    app.add_route('version', '/__version__', VersionResource(config, basedir=app_config('basedir')))
+    app.add_route('heartbeat', '/__heartbeat__', HeartbeatResource(config, app))
+    app.add_route('lbheartbeat', '/__lbheartbeat__', LBHeartbeatResource(config))
     return app
