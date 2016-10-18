@@ -129,21 +129,6 @@ class Client:
             new_config = {}
         self.app = build_app(new_config)
 
-    def get_resource_by_url(self, url):
-        """Gets a resource instance given a url it maps to
-
-        For example::
-
-            client.get_resource_by_url('/submit')
-
-        """
-        # NOTE(willkg): We do this goofy thing to get the resources from the
-        # app using internal Falcon API things. It's entirely possible that
-        # this will break when we upgrade Falcon, but there's no other way to
-        # get this without adding more layers of things and possibly breaking the
-        # time/space continuum.
-        return self.app._router.find(url)[0]
-
     def join_app(self):
         """This goes through and calls join on all gevent pools in the app
 
@@ -160,7 +145,7 @@ class Client:
         """
         # FIXME(willkg): This is hard-coded for now. We can fix that later if
         # we add other pools to the system.
-        bsr = self.get_resource_by_url('/submit')
+        bsr = self.app.get_resource_by_name('breakpad')
         bsr.join_pool()
 
     def get(self, path, headers=None, **kwargs):

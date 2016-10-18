@@ -307,6 +307,23 @@ def unhandled_exception_handler(ex, req, resp, params):
     raise falcon.HTTPInternalServerError('Internal Server Error', 'Sorry--something unexpected happened.')
 
 
+class AntennaAPI(falcon.API):
+    def __init__(self, config):
+        super().__init__()
+        self.config = config
+        self._all_resources = {}
+
+    def add_route(self, name, uri_template, resource, *args, **kwargs):
+        self._all_resources[name] = resource
+        super().add_route(uri_template, resource, *args, **kwargs)
+
+    def get_resource_by_name(self, name):
+        return self._all_resources[name]
+
+    def get_all_resources(self):
+        return self._all_resources.values()
+
+
 def get_app(config=None):
     """Returns AntennaAPI instance"""
     if config is None:
@@ -318,8 +335,8 @@ def get_app(config=None):
     setup_logging(config)
     app_config = AppConfig(config)
 
-    app = falcon.API()
+    app = AntennaAPI(config)
     app.add_error_handler(Exception, handler=unhandled_exception_handler)
-    app.add_route('/__version__', HealthVersionResource(config, basedir=app_config('basedir')))
-    app.add_route('/submit', BreakpadSubmitterResource(config))
+    app.add_route('breakpad', '/submit', BreakpadSubmitterResource(config))
+    app.add_route('version_hc', '/__version__', HealthVersionResource(config, basedir=app_config('basedir')))
     return app

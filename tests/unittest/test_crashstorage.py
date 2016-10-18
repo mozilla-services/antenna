@@ -28,7 +28,7 @@ class TestCrashStorage:
         client.join_app()
         assert result.status_code == 200
 
-        bsr = client.get_resource_by_url('/submit')
+        bsr = client.app.get_resource_by_name('breakpad')
 
         # Now we've got the BreakpadSubmitterResource, so we can pull out the
         # crashstorage, verify there's only one crash in it and then verify the
