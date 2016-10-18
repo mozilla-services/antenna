@@ -181,7 +181,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             # the payload size by decompressing it. We save the original value
             # in case we need to debug something later on.
             req.env['ORIG_CONTENT_LENGTH'] = content_length
-            req.env['CONTENT_LENGTH'] = len(data)
+            req.env['CONTENT_LENGTH'] = str(len(data))
 
             data = io.BytesIO(data)
         else:

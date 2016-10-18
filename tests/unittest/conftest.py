@@ -7,6 +7,7 @@ import pytest
 import sys
 
 from everett.manager import ConfigManager
+import falcon
 from falcon.request import Request
 from falcon.testing.helpers import create_environ
 from falcon.testing.srmock import StartResponseMock
@@ -26,6 +27,14 @@ from antenna.app import get_app  # noqa
 def build_app(config=None):
     if config is None:
         config = {}
+
+    # Falcon 1.0 has a global variable that denotes whether it should wrap the
+    # wsgi stream or not. Every time we rebuild the app, we should set this to
+    # False. If we set it to True, it wraps the stream in a
+    # falcon.request_helpers.Body which breaks FieldStorage parsing and then we
+    # end up with empty crash reports. If we don't set it at all, then tests fail
+    # until a test runs which causes it to flip to False first.
+    falcon.request._maybe_wrap_wsgi_stream = False
 
     return get_app(ConfigManager.from_dict(config))
 
@@ -175,6 +184,8 @@ class Client:
         )
 
         resp = StartResponseMock()
+        # Wrap the app in a validator which will raise an assertion error if
+        # either side isn't speaking valid WSGI.
         validator = wsgiref.validate.validator(self.app)
         iterable = validator(env, resp)
 
