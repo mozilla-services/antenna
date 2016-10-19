@@ -13,7 +13,7 @@ import logging.config
 import time
 import zlib
 
-from everett.manager import ConfigManager, ConfigOSEnv, parse_class
+from everett.manager import ConfigManager, ConfigEnvFileEnv, ConfigOSEnv, parse_class
 from everett.component import ConfigOptions, RequiredConfigMixin
 import falcon
 from gevent.pool import Pool
@@ -130,12 +130,10 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         'dump_field', default='upload_file_minidump',
         doc='the name of the field in the POST data for dumps'
     )
-
     required_config.add_option(
         'dump_id_prefix', default='bp-',
         doc='the crash type prefix'
     )
-
     required_config.add_option(
         'crashstorage_class',
         default='antenna.external.crashstorage_base.NoOpCrashStorage',
@@ -269,6 +267,13 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
     # FIXME(willkg): Need a better name than "post_process"
     def post_process(self, raw_crash, dumps, crash_id):
         """Handles received crash and saves it"""
+
+        # FIXME(willkg): How to deal with errors here? The save_raw_crash should
+        # handle retrying, so if it bubbles up to this point, then it's an
+        # unretryable unhandleable error.
+        #
+        # We need to mark this node as unhealthy with the reason.
+
         # Save the crash to crashstorage
         self.crashstorage.save_raw_crash(
             raw_crash,
@@ -395,6 +400,8 @@ def get_app(config=None):
     """Returns AntennaAPI instance"""
     if config is None:
         config = ConfigManager([
+            # Pull configuration from env file specified as ANTENNA_ENV
+            ConfigEnvFileEnv(os.environ.get('ANTENNA_ENV')),
             # Pull configuration from environment variables
             ConfigOSEnv()
         ])

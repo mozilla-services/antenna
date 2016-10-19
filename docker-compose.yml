@@ -21,11 +21,28 @@ services:
   # ------------------------------------------------------------------
   # After this point is dev-related services.
   # ------------------------------------------------------------------
-
-  # This is the base web-service.
-  web:
+  base:
     image: local/antenna_dev
     volumes:
       - .:/app
+    environment:
+      - ANTENNA_ENV=${ANTENNA_ENV}
+
+  # This is the base web-service.
+  web:
+    extends:
+      service: base
     ports:
       - "8000:8000"
+    command: ./bin/run_web.sh
+    links:
+      - fakes3
+
+  # fakes3 service
+  # https://hub.docker.com/r/lphoward/fake-s3/
+  fakes3:
+    image: lphoward/fake-s3
+    ports:
+      - "4569:4569"
+    volumes:
+      - ./fakes3_root:/fakes3_root

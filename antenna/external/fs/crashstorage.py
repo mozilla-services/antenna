@@ -9,13 +9,14 @@ import os.path
 
 from everett.component import ConfigOptions, RequiredConfigMixin
 
+from antenna.external.crashstorage_base import CrashStorageBase
 from antenna.util import get_date_from_crash_id, json_ordered_dumps
 
 
 logger = logging.getLogger(__name__)
 
 
-class FSCrashStorage(RequiredConfigMixin):
+class FSCrashStorage(RequiredConfigMixin, CrashStorageBase):
     """Saves raw crash files to the file system
 
     This generates a tree something like this which mirrors what we do

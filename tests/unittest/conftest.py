@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os
 import pytest
 import sys
 
@@ -22,6 +21,8 @@ sys.path.insert(0, str(local(__file__).dirpath().dirpath().dirpath()))
 
 
 from antenna.app import get_app  # noqa
+from antenna.loggingmock import LoggingMock  # noqa
+from antenna.s3mock import S3Mock  # noqa
 
 
 def build_app(config=None):
@@ -76,30 +77,6 @@ def request_generator():
         return Request(env)
 
     return _request_generator
-
-
-@pytest.fixture
-def payload_generator(datadir):
-    """Pulls payload files from the tests/data/ directory, formats them and returns them"""
-    def _payload_generator(fn):
-        """Retrieves a test payload from disk
-
-        :param fn: the filename for the payload file
-
-        :returns: (boundary, data)
-
-        """
-        with open(os.path.join(datadir, fn), 'r') as fp:
-            data = fp.read()
-
-        if '\r\n' not in data:
-            # If the payload doesn't have the right line endings, we fix that here.
-            data = data.replace('\n', '\r\n')
-        # Figure out the boundary for this file. It's the first line minus two of
-        # the - at the beinning.
-        boundary = data.splitlines()[0].strip()[2:]
-        return boundary, data
-    return _payload_generator
 
 
 class Client:
@@ -180,7 +157,7 @@ class Client:
 
 
 @pytest.fixture
-def client(tmpdir):
+def client():
     """Test client for the Antenna API
 
     This creates an app and a test client that uses that app to submit HTTP
@@ -198,6 +175,49 @@ def client(tmpdir):
     return Client(build_app())
 
 
-@pytest.fixture
-def datadir():
-    return os.path.join(os.path.dirname(__file__), 'data')
+@pytest.yield_fixture
+def s3mock():
+    """Returns an s3mock context that lets you do S3-related tests
+
+    Usage::
+
+        def test_something(s3mock):
+            s3mock.add_step(
+                method='PUT',
+                url='...'
+                resp=s3mock.fake_response(status_code=200)
+            )
+
+    """
+    with S3Mock() as s3:
+        yield s3
+
+
+@pytest.yield_fixture
+def loggingmock(request):
+    """Returns a loggingmock context that lets you record logging messages
+
+    Usage::
+
+        def test_something(loggingmock):
+            # do stuff
+            assert loggingmock.has_record(
+                name='foo.bar',
+                level=logging.INFO,
+                msg_contains='some substring'
+            )
+
+
+    By default, this only looks at "antenna" messages. If you want something
+    else, define ``logging_names`` on the class::
+
+        class TestSomething:
+            logging_names = ['antenna', 'botocore']
+            def test_something(self, loggingmock):
+                # do stuff
+
+    """
+    logging_names = getattr(request.cls, 'logging_names', ['antenna'])
+
+    with LoggingMock(names=logging_names) as loggingmock:
+        yield loggingmock
