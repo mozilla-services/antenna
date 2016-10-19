@@ -14,11 +14,17 @@
 # Otherwise it's not going to use the gevent WSGI app and then you're not going
 # to be able to handle multiple network connections concurrently.
 
+# If you're having problems getting the app to start, add ``--preload`` to the
+# args list.
+
 gunicorn \
     --reload \
     --bind=0.0.0.0:8000 \
     --workers=1 \
     --worker-connections=1 \
     --worker-class=gevent \
+    --error-logfile=- \
+    --access-logfile=- \
+    --log-level=debug \
     antenna.wsgi:application \
     --log-file -

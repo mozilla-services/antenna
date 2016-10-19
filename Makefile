@@ -9,6 +9,7 @@ help:
 	@echo "build         - build docker containers for dev"
 	@echo "run           - docker-compose up the entire system for dev"
 	@echo ""
+	@echo "shell         - open a shell in the web container"
 	@echo "clean         - remove all build, test, coverage and Python artifacts"
 	@echo "lint          - check style with flake8"
 	@echo "test          - run tests"
@@ -27,6 +28,9 @@ build:
 
 run: .docker-build
 	${DC} up web
+
+shell: .docker-build
+	${DC} run web bash
 
 clean:
 	# python related things
@@ -49,21 +53,18 @@ clean:
 	# state files
 	-rm .docker-build
 
-lint:
+lint: .docker-build
 	${DC} run web flake8 --statistics antenna tests/unittest/
 
-test:
+test: .docker-build
 	${DC} run web py.test
 
-test-coverage:
+test-coverage: .docker-build
 	${DC} run web ./scripts/test.sh --with-coverage --cover-package=antenna --cover-inclusive --cover-html
 
-docs:
-	${DC} run web $(MAKE) -C docs/ clean
+docs: .docker-build
 	-mkdir -p docs/_build/
 	chmod -R 777 docs/_build/
-	${DC} run web $(MAKE) -C docs/ html
-	${DC} run web find docs/_build/ -type d -exec 'chmod' '777' '{}' ';'
-	${DC} run web find docs/_build/ -type f -exec 'chmod' '666' '{}' ';'
+	${DC} run web ./bin/build_docs.sh
 
-.PHONY: default clean build docs lint run test test-coverage
+.PHONY: default clean build docs lint run shell test test-coverage
