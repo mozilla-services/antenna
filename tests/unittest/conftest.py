@@ -21,6 +21,7 @@ sys.path.insert(0, str(local(__file__).dirpath().dirpath().dirpath()))
 
 
 from antenna.app import get_app  # noqa
+from antenna.loggingmock import LoggingMock  # noqa
 from antenna.s3mock import S3Mock  # noqa
 
 
@@ -190,3 +191,33 @@ def s3mock():
     """
     with S3Mock() as s3:
         yield s3
+
+
+@pytest.yield_fixture
+def loggingmock(request):
+    """Returns a loggingmock context that lets you record logging messages
+
+    Usage::
+
+        def test_something(loggingmock):
+            # do stuff
+            assert loggingmock.has_record(
+                name='foo.bar',
+                level=logging.INFO,
+                msg_contains='some substring'
+            )
+
+
+    By default, this only looks at "antenna" messages. If you want something
+    else, define ``logging_names`` on the class::
+
+        class TestSomething:
+            logging_names = ['antenna', 'botocore']
+            def test_something(self, loggingmock):
+                # do stuff
+
+    """
+    logging_names = getattr(request.cls, 'logging_names', ['antenna'])
+
+    with LoggingMock(names=logging_names) as loggingmock:
+        yield loggingmock

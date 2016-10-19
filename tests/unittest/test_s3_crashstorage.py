@@ -139,9 +139,16 @@ class TestS3Mock:
                 'CRASHSTORAGE_BUCKET_NAME': 'fakebucket',
             })
 
-        assert 'An error occurred (404) when calling the HeadBucket operation: Not Found' in str(excinfo.value)
+        assert (
+            'An error occurred (404) when calling the HeadBucket operation: Not Found'
+            in str(excinfo.value)
+        )
 
-    def test_retrying(self, client, s3mock, caplog):
+
+class TestS3MockLogging:
+    logging_names = ['antenna']
+
+    def test_retrying(self, client, s3mock, loggingmock):
         # .verify_configuration() calls HEAD on the bucket to verify it exists
         # and the configuration is correct.
         s3mock.add_step(
@@ -205,18 +212,15 @@ class TestS3Mock:
         assert result.status_code == 200
         assert result.content == b'CrashID=bp-de1bb258-cbbf-4589-a673-34f802160918\n'
 
-        # Find the ERROR log message the retry decorator threw in
-        for record in caplog.records:
-            if record.name == 'antenna.external.s3.connection' and record.levelname == 'ERROR':
-                # The message is a traceback with a bunch of stuff in it.
-                # We're only interested in certain parts, though, so we
-                # just make sure those parts are in the message.
-                assert 'antenna.external.s3.connection: retry attempt 0' in record.message
-                assert 'ClientError' in record.message
-                assert 'An error occurred (403) when calling the PutObject operation: Forbidden' in record.message
+        for record in loggingmock.get_records():
+            print((record.name, record.levelname, record.message))
 
-        else:
-            assert Exception('Record not in logs')
+        # Verify the retry decorator logged something
+        assert loggingmock.has_record(
+            name='antenna.external.s3.connection',
+            levelname='ERROR',
+            msg_contains='retry attempt 0'
+        )
 
     # FIXME(willkg): Add test for bad region
     # FIXME(willkg): Add test for invalid credentials
