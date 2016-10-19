@@ -75,16 +75,17 @@ class S3Connection(RequiredConfigMixin):
         )
     )
 
-    def __init__(self, config):
+    def __init__(self, config, no_verify=False):
         self.config = config.with_options(self)
         self.bucket = self.config('bucket_name')
         self.client = self._build_client()
 
-        # This will throw an exception on startup if things aren't right. The
-        # thinking being that it's better to crash at startup rather than get
-        # into a state where we're handling incoming crashes but can't do
-        # anything with them.
-        self.verify_configuration()
+        if not no_verify:
+            # This will throw an exception on startup if things aren't right. The
+            # thinking being that it's better to crash at startup rather than get
+            # into a state where we're handling incoming crashes but can't do
+            # anything with them.
+            self.verify_configuration()
 
     def _build_client(self):
         session = boto3.session.Session(
@@ -110,6 +111,10 @@ class S3Connection(RequiredConfigMixin):
         # either need to orphan a gazillion files or we'd also need DELETE
         # permission.
         self.client.head_bucket(Bucket=self.bucket)
+
+    def _create_bucket(self):
+        # NOTE(willkg): Don't use this except with fakes3 and dev environments.
+        self.client.create_bucket(Bucket=self.bucket)
 
     def check_health(self, state):
         try:
