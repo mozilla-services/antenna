@@ -35,8 +35,8 @@ class TestFSCrashStorage:
         # Rebuild the app the test client is using with relevant configuration.
         client.rebuild_app({
             'BASEDIR': str(tmpdir),
-            'FS_ROOT': str(tmpdir.join('antenna_crashes')),
-            'CRASHSTORAGE_CLASS': 'antenna.external.fs.crashstorage.FSCrashStorage'
+            'CRASHSTORAGE_CLASS': 'antenna.external.fs.crashstorage.FSCrashStorage',
+            'CRASHSTORAGE_FS_ROOT': str(tmpdir.join('antenna_crashes')),
         })
 
         result = client.post(
@@ -108,8 +108,8 @@ class TestFSCrashStorage:
         # Rebuild the app the test client is using with relevant configuration.
         client.rebuild_app({
             'BASEDIR': str(tmpdir),
-            'FS_ROOT': str(tmpdir.join('antenna_crashes')),
-            'CRASHSTORAGE_CLASS': 'antenna.external.fs.crashstorage.FSCrashStorage'
+            'CRASHSTORAGE_CLASS': 'antenna.external.fs.crashstorage.FSCrashStorage',
+            'CRASHSTORAGE_FS_ROOT': str(tmpdir.join('antenna_crashes')),
         })
 
         result = client.post(

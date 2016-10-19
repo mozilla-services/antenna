@@ -145,7 +145,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
     def __init__(self, config):
         self.config = config.with_options(self)
-        self.crashstorage = self.config('crashstorage_class')(config)
+        self.crashstorage = self.config('crashstorage_class')(config.with_namespace('crashstorage'))
 
         # Gevent pool for handling incoming crash reports
         self.pipeline_pool = Pool()
