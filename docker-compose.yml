@@ -21,17 +21,20 @@ services:
   # ------------------------------------------------------------------
   # After this point is dev-related services.
   # ------------------------------------------------------------------
+
+  # Base container is used for development tasks like tests, linting, coverage
+  # and building docs.
   base:
     image: local/antenna_dev
     volumes:
       - .:/app
-    environment:
-      - ANTENNA_ENV=${ANTENNA_ENV}
 
-  # This is the base web-service.
+  # Web container is a prod-like fully-functioning Antenna container.
   web:
     extends:
       service: base
+    environment:
+      - ANTENNA_ENV=${ANTENNA_ENV}
     ports:
       - "8000:8000"
     command: ./bin/run_web.sh

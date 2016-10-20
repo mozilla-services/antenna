@@ -1,3 +1,4 @@
+ANTENNA_ENV ?= "prod.env"
 DC := $(shell which docker-compose)
 
 default:
@@ -26,7 +27,7 @@ build:
 	touch .docker-build
 
 run: .docker-build
-	${DC} up web
+	ANTENNA_ENV=${ANTENNA_ENV} ${DC} up web
 
 shell: .docker-build
 	${DC} run base bash
