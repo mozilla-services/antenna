@@ -123,6 +123,16 @@ def setup_logging(config):
     _logging_initialized = True
 
 
+class HomePageResource:
+    def __init__(self, config):
+        pass
+
+    def on_get(self, req, resp):
+        resp.content_type = 'text/html'
+        resp.status = falcon.HTTP_200
+        resp.body = '<html><body><p>I am Antenna.</p></body></html>'
+
+
 class BreakpadSubmitterResource(RequiredConfigMixin):
     """Handles incoming breakpad crash reports and saves to S3"""
     required_config = ConfigOptions()
@@ -411,6 +421,7 @@ def get_app(config=None):
 
     app = AntennaAPI(config)
     app.add_error_handler(Exception, handler=unhandled_exception_handler)
+    app.add_route('homepage', '/', HomePageResource(config))
     app.add_route('breakpad', '/submit', BreakpadSubmitterResource(config))
     app.add_route('version', '/__version__', VersionResource(config, basedir=app_config('basedir')))
     app.add_route('heartbeat', '/__heartbeat__', HeartbeatResource(config, app))
