@@ -9,6 +9,12 @@ from antenna.mini_poster import multipart_encode
 from antenna.util import compress
 
 
+class TestHomePageResource:
+    def test_home_page(self, client):
+        result = client.get('/')
+        assert result.status_code == 200
+
+
 class TestVersionResource:
     def test_no_version(self, client, tmpdir):
         # Set basedir here to tmpdir which we *know* doesn't have a
