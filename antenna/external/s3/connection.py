@@ -20,7 +20,11 @@ logger = logging.getLogger(__name__)
 class S3Connection(RequiredConfigMixin):
     """Connection object for S3
 
-    Several notes about this connection object.
+    When configuring this connection object, you can do one of two things:
+
+    1. provide ``ACCESS_KEY`` and ``SECRET_ACCESS_KEY`` in the configuration
+    2. use one of the other methods described in the boto3 docs
+       http://boto3.readthedocs.io/en/latest/guide/configuration.html#configuring-credentials
 
     When Antenna starts up, ``S3Connection`` will call ``HEAD`` on the bucket
     verifying the bucket exists, the endpoint url is good, it's accessible and
@@ -44,11 +48,13 @@ class S3Connection(RequiredConfigMixin):
     required_config = ConfigOptions()
     required_config.add_option(
         'access_key',
+        default='',
         alternate_keys=['root:s3_access_key'],
         doc='AWS S3 access key'
     )
     required_config.add_option(
         'secret_access_key',
+        default='',
         alternate_keys=['root:s3_secret_access_key'],
         doc='AWS S3 secret access key'
     )
@@ -88,10 +94,16 @@ class S3Connection(RequiredConfigMixin):
             self.verify_configuration()
 
     def _build_client(self):
-        session = boto3.session.Session(
-            aws_access_key_id=self.config('access_key'),
-            aws_secret_access_key=self.config('secret_access_key'),
-        )
+        # Either they provided ACCESS_KEY and SECRET_ACCESS_KEY in which case
+        # we use those, or they didn't in which case boto3 pulls credentials
+        # from one of a myriad of other places.
+        # http://boto3.readthedocs.io/en/latest/guide/configuration.html#configuring-credentials
+        session_kwargs = {}
+        if self.config('access_key') and self.config('secret_access_key'):
+            session_kwargs['aws_access_key_id'] = self.config('access_key')
+            session_kwargs['aws_secret_access_key'] = self.config('secret_access_key')
+        session = boto3.session.Session(**session_kwargs)
+
         kwargs = {
             'service_name': 's3',
             'region_name': self.config('region'),
@@ -99,7 +111,6 @@ class S3Connection(RequiredConfigMixin):
             # our bucket names and use SSL.
             'config': Config(s3={'addressing_style': 'path'})
         }
-
         if self.config('endpoint_url'):
             kwargs['endpoint_url'] = self.config('endpoint_url')
 
