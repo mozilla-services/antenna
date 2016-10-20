@@ -46,7 +46,7 @@ def main(args):
     # Build configuration object just like we do in Antenna.
     config = ConfigManager([
         # Pull configuration from env file specified as ANTENNA_ENV
-        ConfigEnvFileEnv(os.environ.get('ANTENNA_ENV')),
+        ConfigEnvFileEnv([os.environ.get('ANTENNA_ENV')]),
         # Pull configuration from environment variables
         ConfigOSEnv()
     ])
