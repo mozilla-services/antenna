@@ -9,6 +9,12 @@ from antenna.mini_poster import multipart_encode
 from antenna.util import compress
 
 
+class Test404:
+    def test_404(self, client):
+        result = client.get('/foo')
+        assert result.status_code == 404
+
+
 class TestHomePageResource:
     def test_home_page(self, client):
         result = client.get('/')
