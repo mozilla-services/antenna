@@ -16,6 +16,7 @@ import zlib
 from everett.manager import ConfigManager, ConfigEnvFileEnv, ConfigOSEnv, parse_class
 from everett.component import ConfigOptions, RequiredConfigMixin
 import falcon
+from falcon.http_error import HTTPError
 from gevent.pool import Pool
 
 from antenna.datetimeutil import utc_now
@@ -382,18 +383,21 @@ class HeartbeatResource:
         resp.body = json.dumps(state.to_dict())
 
 
-def unhandled_exception_handler(ex, req, resp, params):
-    # Something unhandled happened. We want to log it so we know about it, but
-    # also return an HTTP 500.
-    logger.exception('Unhandled exception')
-    raise falcon.HTTPInternalServerError('Internal Server Error', 'Sorry--something unexpected happened.')
-
-
 class AntennaAPI(falcon.API):
     def __init__(self, config):
         super().__init__()
         self.config = config
         self._all_resources = {}
+
+    def unhandled_exception_handler(self, ex, req, resp, params):
+        # FIXME(willkg): Falcon 1.1 makes error handling better, so we should rewrite
+        # this then.
+
+        if not isinstance(ex, HTTPError):
+            # Something unhandled happened. We want to log it so we know about it and
+            # then let falcon do it's thing.
+            logger.exception('Unhandled exception')
+        raise
 
     def add_route(self, name, uri_template, resource, *args, **kwargs):
         self._all_resources[name] = resource
@@ -420,7 +424,8 @@ def get_app(config=None):
     app_config = AppConfig(config)
 
     app = AntennaAPI(config)
-    app.add_error_handler(Exception, handler=unhandled_exception_handler)
+    app.add_error_handler(Exception, handler=app.unhandled_exception_handler)
+
     app.add_route('homepage', '/', HomePageResource(config))
     app.add_route('breakpad', '/submit', BreakpadSubmitterResource(config))
     app.add_route('version', '/__version__', VersionResource(config, basedir=app_config('basedir')))
