@@ -5,6 +5,7 @@
 import contextlib
 
 import sys
+from unittest import mock
 
 from everett.manager import ConfigManager
 import falcon
@@ -22,7 +23,7 @@ import wsgiref.validate
 sys.path.insert(0, str(local(__file__).dirpath().dirpath().dirpath()))
 
 
-from antenna.app import get_app  # noqa
+from antenna.app import get_app, setup_logging  # noqa
 from antenna.loggingmock import LoggingMock  # noqa
 from antenna.s3mock import S3Mock  # noqa
 
@@ -211,9 +212,10 @@ def loggingmock():
                 )
 
 
-    You can also specify logger names to mock::
+    You can specify names, too::
 
-            with loggingmock(['antenna']) as lm:
+        def test_something(loggingmock):
+            with loggingmock(['antenna', 'botocore']) as lm:
                 # do stuff
                 assert lm.has_record(
                     name='foo.bar',
@@ -227,3 +229,23 @@ def loggingmock():
         with LoggingMock(names=names) as loggingmock:
             yield loggingmock
     return _loggingmock
+
+
+@pytest.fixture
+def randommock():
+    """Returns a contextmanager that mocks random.random() at a specific value
+
+    Usage::
+
+        def test_something(randommock):
+            with randommock(0.55):
+                # test stuff...
+
+    """
+    @contextlib.contextmanager
+    def _randommock(value):
+        with mock.patch('random.random') as mock_random:
+            mock_random.return_value = value
+            yield
+
+    return _randommock

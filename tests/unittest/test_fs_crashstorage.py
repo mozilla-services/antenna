@@ -35,6 +35,7 @@ class TestFSCrashStorage:
         # Rebuild the app the test client is using with relevant configuration.
         client.rebuild_app({
             'BASEDIR': str(tmpdir),
+            'THROTTLE_RULES': 'antenna.throttler.accept_all',
             'CRASHSTORAGE_CLASS': 'antenna.external.fs.crashstorage.FSCrashStorage',
             'CRASHSTORAGE_FS_ROOT': str(tmpdir.join('antenna_crashes')),
         })
@@ -76,6 +77,8 @@ class TestFSCrashStorage:
                 b'{"ProductName": "Test", ' +
                 b'"Version": "1.0", ' +
                 b'"dump_checksums": {"upload_file_minidump": "e19d5cd5af0378da05f63f891c7467af"}, ' +
+                b'"legacy_processing": 0, ' +
+                b'"percentage": 100, ' +
                 b'"submitted_timestamp": "2011-09-06T00:00:00+00:00", ' +
                 b'"timestamp": 1315267200.0, ' +
                 b'"type_tag": "bp", ' +
@@ -108,6 +111,7 @@ class TestFSCrashStorage:
         # Rebuild the app the test client is using with relevant configuration.
         client.rebuild_app({
             'BASEDIR': str(tmpdir),
+            'THROTTLE_RULES': 'antenna.throttler.accept_all',
             'CRASHSTORAGE_CLASS': 'antenna.external.fs.crashstorage.FSCrashStorage',
             'CRASHSTORAGE_FS_ROOT': str(tmpdir.join('antenna_crashes')),
         })
@@ -136,6 +140,8 @@ class TestFSCrashStorage:
                 'ProductName': 'Test',
                 'Version': '1.0',
                 'dump_checksums': {'upload_file_minidump': 'e19d5cd5af0378da05f63f891c7467af'},
+                'legacy_processing': 0,
+                'percentage': 100,
                 'submitted_timestamp': '2011-09-06T00:00:00+00:00',
                 'timestamp': 1315267200.0,
                 'type_tag': 'bp',

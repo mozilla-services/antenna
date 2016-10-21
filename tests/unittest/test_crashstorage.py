@@ -13,6 +13,10 @@ class TestCrashStorage:
     @freeze_time('2011-09-06 00:00:00', tz_offset=0)
     def test_flow(self, client):
         """Verify posting a crash gets to crash storage in the right shape"""
+        client.rebuild_app({
+            'THROTTLE_RULES': 'antenna.throttler.accept_all'
+        })
+
         data, headers = multipart_encode({
             'uuid': 'de1bb258-cbbf-4589-a673-34f802160918',
             'ProductName': 'Test',
@@ -42,6 +46,8 @@ class TestCrashStorage:
                 'ProductName': 'Test',
                 'Version': '1.0',
                 'dump_checksums': {'upload_file_minidump': 'e19d5cd5af0378da05f63f891c7467af'},
+                'legacy_processing': 0,
+                'percentage': 100,
                 'submitted_timestamp': '2011-09-06T00:00:00+00:00',
                 'timestamp': 1315267200.0,
                 'type_tag': 'bp',
