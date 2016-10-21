@@ -212,9 +212,6 @@ class TestS3MockLogging:
         assert result.status_code == 200
         assert result.content == b'CrashID=bp-de1bb258-cbbf-4589-a673-34f802160918\n'
 
-        for record in loggingmock.get_records():
-            print((record.name, record.levelname, record.message))
-
         # Verify the retry decorator logged something
         assert loggingmock.has_record(
             name='antenna.external.s3.connection',
