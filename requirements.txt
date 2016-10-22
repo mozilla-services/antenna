@@ -198,6 +198,11 @@ PyYAML==3.12 \
     --hash=sha256:0c507b7f74b3d2dd4d1322ec8a94794927305ab4cebbe89cc47fe5e81541e6e8 \
     --hash=sha256:b4c423ab23291d3945ac61346feeb9a0dc4184999ede5e7c43e1ffb975130ae6 \
     --hash=sha256:5ac82e411044fb129bae5cfbeb3ba626acb2af31a8d17d175004b70862a741a7
+requests==2.11.1 \
+    --hash=sha256:545c4855cd9d7c12671444326337013766f4eea6068c3f0307fb2dc2696d580e \
+    --hash=sha256:5acf980358283faba0b897c73959cecf8b841205bb4b2ad3ef545f46eae1a133
+requests-futures==0.9.7 \
+    --hash=sha256:a9ca2c3480b6fac29ec5de59c146742e2ab2b60f8c68581766094edb52ea7bad
 snowballstemmer==1.2.1 --hash=sha256:9f3bcd3c401c3e862ec0ebe6d2c069ebc012ce142cce209c098ccb5b09136e89
 Sphinx==1.4.8 \
     --hash=sha256:c715b714228bd135a41b33ff91e5f41ac434ceb6e98a86447687a2177e7486b9 \
@@ -209,8 +214,3 @@ sphinx-rtd-theme==0.1.9 \
 virtualenv==15.0.1 --hash=sha256:13ce1079910a6bc60e2ce1d79813a99f30b2fd1e571427fcde1fabb0ff4c436c
 xmltodict==0.10.2 \
     --hash=sha256:fc518ccf9adbbb917a2ddcb386be852ae6dd36935e1e8b9a3e760201abfdbf77
-requests==2.11.1 \
-    --hash=sha256:545c4855cd9d7c12671444326337013766f4eea6068c3f0307fb2dc2696d580e \
-    --hash=sha256:5acf980358283faba0b897c73959cecf8b841205bb4b2ad3ef545f46eae1a133
-requests-futures==0.9.7 \
-    --hash=sha256:a9ca2c3480b6fac29ec5de59c146742e2ab2b60f8c68581766094edb52ea7bad
