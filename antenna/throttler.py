@@ -15,7 +15,9 @@ logger = logging.getLogger(__name__)
 
 ACCEPT = 0   # save and process
 DEFER = 1    # save but don't process
-REJECT = 2   # tell client to go away and not come back
+REJECT = 2   # throw the crash away
+
+REGEXP_TYPE = type(re.compile(''))
 
 
 def parse_attribute(val):
@@ -42,7 +44,8 @@ class Throttler(RequiredConfigMixin):
         THROTTLE_RULES=antenna.throttler.accept_all
 
 
-    To set up a rule set, put it in a ``myruleset.py`` Python file like this::
+    To set up a rule set, put it in a Python file and define the rule set
+    there. For example, you could have file ``myruleset.py`` with this in it::
 
         from antenna.throttler import Rule
 
@@ -74,7 +77,6 @@ class Throttler(RequiredConfigMixin):
 
     def throttle(self, crash_id, raw_crash):
         """Go through rule set to ACCEPT, REJECT or DEFER"""
-        logger.info('INFO!')
         for rule in self.rule_set:
             match = rule.match(raw_crash)
 
@@ -95,16 +97,16 @@ class Throttler(RequiredConfigMixin):
         return REJECT, 0
 
 
-REGEXP_TYPE = type(re.compile(''))
-
-
 class Rule:
     """Defines a single rule"""
+    RULE_NAME_RE = re.compile(r'^[a-z0-9_]+$', re.I)
+
     def __init__(self, rule_name, key, condition, percentage):
         """Creates a Rule
 
         :arg str rule_name: The friendly name for the rule. We use this for
-            logging and statsd.
+            logging and statsd. Rule names must contain only alphanumeric
+            characters and underscores.
 
         :arg str key: The key in the raw crash to look at. ``*`` to look at the
             whole crash.
@@ -129,6 +131,9 @@ class Rule:
         self.key = key
         self.condition = self._to_handler(condition)
         self.percentage = percentage
+
+        if not self.RULE_NAME_RE.match(self.rule_name):
+            raise ValueError('%r is not a valid rule name' % self.rule_name)
 
     def __repr__(self):
         return self.rule_name

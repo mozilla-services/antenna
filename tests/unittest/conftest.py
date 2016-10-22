@@ -23,7 +23,7 @@ import wsgiref.validate
 sys.path.insert(0, str(local(__file__).dirpath().dirpath().dirpath()))
 
 
-from antenna.app import get_app, setup_logging  # noqa
+from antenna.app import get_app  # noqa
 from antenna.loggingmock import LoggingMock  # noqa
 from antenna.s3mock import S3Mock  # noqa
 

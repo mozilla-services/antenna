@@ -5,11 +5,16 @@
 import re
 
 from everett.manager import ConfigManager
+import pytest
 
 from antenna.throttler import Rule, Throttler, ACCEPT, DEFER, REJECT
 
 
 class TestRule:
+    def test_invalid_rule_name(self):
+        with pytest.raises(ValueError):
+            Rule('o m g!', '*', lambda x: True, 100)
+
     def test_star(self):
         def is_crash(thing):
             return isinstance(thing, dict)
@@ -79,8 +84,6 @@ class Testaccept_all:
 
 
 class Testmozilla_rules:
-    # NOTE(willkg): This is a rewrite of existing throttler tests in Socorro.
-
     def test_hangid(self, loggingmock):
         raw_crash = {
             'ProductName': 'FireSquid',
@@ -103,15 +106,164 @@ class Testmozilla_rules:
                 msg_contains='has_hangid_and_browser'
             )
 
-    def test_comments(self):
+    def test_comments(self, loggingmock):
         raw_crash = {
             'ProductName': 'Test',
             'Comments': 'foo bar baz'
         }
 
-        throttler = Throttler(ConfigManager.from_dict({}))
-        answer, percent = throttler.throttle('11234', raw_crash)
+        with loggingmock(['antenna']) as lm:
+            throttler = Throttler(ConfigManager.from_dict({}))
+            answer, percent = throttler.throttle('11234', raw_crash)
 
-        # Reject anything with a HangId and ProcessType = 'browser'
-        assert answer is ACCEPT
-        assert percent is 100
+            assert answer is ACCEPT
+            assert percent is 100
+
+            assert lm.has_record(
+                name='antenna.throttler',
+                levelname='DEBUG',
+                msg_contains='has_comments'
+            )
+
+    @pytest.mark.parametrize('channel', [
+        'aurora',
+        'beta',
+        'esr'
+    ])
+    def test_is_alpha_beta_esr(self, channel, loggingmock):
+        raw_crash = {
+            'ProductName': 'Test',
+            'ReleaseChannel': channel
+        }
+
+        with loggingmock(['antenna']) as lm:
+            throttler = Throttler(ConfigManager.from_dict({}))
+            answer, percent = throttler.throttle('11234', raw_crash)
+
+            assert answer is ACCEPT
+            assert percent is 100
+
+            assert lm.has_record(
+                name='antenna.throttler',
+                levelname='DEBUG',
+                msg_contains='is_alpha_beta_esr'
+            )
+
+    @pytest.mark.parametrize('channel', [
+        'nightly',
+        'nightlyfoo'
+    ])
+    def test_is_nightly(self, channel, loggingmock):
+        raw_crash = {
+            'ProductName': 'Test',
+            'ReleaseChannel': channel
+        }
+        with loggingmock(['antenna']) as lm:
+            throttler = Throttler(ConfigManager.from_dict({}))
+            answer, percent = throttler.throttle('11234', raw_crash)
+
+            assert answer is ACCEPT
+            assert percent is 100
+
+            assert lm.has_record(
+                name='antenna.throttler',
+                levelname='DEBUG',
+                msg_contains='is_nightly'
+            )
+
+    def test_is_firefox(self, randommock, loggingmock):
+        with randommock(0.09):
+            raw_crash = {
+                'ProductName': 'Firefox',
+            }
+            with loggingmock(['antenna']) as lm:
+                throttler = Throttler(ConfigManager.from_dict({}))
+                answer, percent = throttler.throttle('11234', raw_crash)
+
+                assert answer is ACCEPT
+                assert percent is 10
+
+                assert lm.has_record(
+                    name='antenna.throttler',
+                    levelname='DEBUG',
+                    msg_contains='is_firefox'
+                )
+
+        with randommock(0.9):
+            raw_crash = {
+                'ProductName': 'Firefox',
+            }
+            with loggingmock(['antenna']) as lm:
+                throttler = Throttler(ConfigManager.from_dict({}))
+                answer, percent = throttler.throttle('11234', raw_crash)
+
+                assert answer is DEFER
+                assert percent is 10
+
+                assert lm.has_record(
+                    name='antenna.throttler',
+                    levelname='DEBUG',
+                    msg_contains='is_firefox'
+                )
+
+    def test_is_fennec(self, loggingmock):
+        raw_crash = {
+            'ProductName': 'Fennec'
+        }
+        with loggingmock(['antenna']) as lm:
+            throttler = Throttler(ConfigManager.from_dict({}))
+            answer, percent = throttler.throttle('11234', raw_crash)
+
+            assert answer is ACCEPT
+            assert percent is 100
+
+            assert lm.has_record(
+                name='antenna.throttler',
+                levelname='DEBUG',
+                msg_contains='is_fennec'
+            )
+
+    @pytest.mark.parametrize('version', [
+        '35.0a',
+        '35.0b',
+        '35.0A',
+        '35.0.0a'
+    ])
+    def test_is_version_alpha_beta_special(self, version, loggingmock):
+        raw_crash = {
+            'ProductName': 'Test',
+            'Version': version
+        }
+        with loggingmock(['antenna']) as lm:
+            throttler = Throttler(ConfigManager.from_dict({}))
+            answer, percent = throttler.throttle('11234', raw_crash)
+
+            assert answer is ACCEPT
+            assert percent is 100
+
+            assert lm.has_record(
+                name='antenna.throttler',
+                levelname='DEBUG',
+                msg_contains='is_version_alpha_beta_special'
+            )
+
+    @pytest.mark.parametrize('product', [
+        'Thunderbird',
+        'Seamonkey'
+    ])
+    def test_is_thunderbird_seamonkey(self, product, loggingmock):
+        raw_crash = {
+            'ProductName': product
+        }
+        with loggingmock(['antenna']) as lm:
+            throttler = Throttler(ConfigManager.from_dict({}))
+            answer, percent = throttler.throttle('11234', raw_crash)
+
+            assert answer is ACCEPT
+            assert percent is 100
+
+            assert lm.has_record(
+                name='antenna.throttler',
+                levelname='DEBUG',
+                msg_contains='is_thunderbird_seamonkey'
+            )
