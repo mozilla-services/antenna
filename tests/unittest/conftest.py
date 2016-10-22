@@ -2,7 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import pytest
+import contextlib
+
 import sys
 
 from everett.manager import ConfigManager
@@ -11,9 +12,10 @@ from falcon.request import Request
 from falcon.testing.helpers import create_environ
 from falcon.testing.srmock import StartResponseMock
 from falcon.testing.test_case import Result
+from py.path import local
+import pytest
 import wsgiref.validate
 
-from py.path import local
 
 # Add the parent parent directory to the sys.path so that it can import the
 # antenna code.
@@ -193,31 +195,35 @@ def s3mock():
         yield s3
 
 
-@pytest.yield_fixture
-def loggingmock(request):
-    """Returns a loggingmock context that lets you record logging messages
+@pytest.fixture
+def loggingmock():
+    """Returns a loggingmock that builds a logging mock context to record logged records
 
     Usage::
 
         def test_something(loggingmock):
-            # do stuff
-            assert loggingmock.has_record(
-                name='foo.bar',
-                level=logging.INFO,
-                msg_contains='some substring'
-            )
-
-
-    By default, this only looks at "antenna" messages. If you want something
-    else, define ``logging_names`` on the class::
-
-        class TestSomething:
-            logging_names = ['antenna', 'botocore']
-            def test_something(self, loggingmock):
+            with loggingmock() as lm:
                 # do stuff
+                assert lm.has_record(
+                    name='foo.bar',
+                    level=logging.INFO,
+                    msg_contains='some substring'
+                )
+
+
+    You can also specify logger names to mock::
+
+            with loggingmock(['antenna']) as lm:
+                # do stuff
+                assert lm.has_record(
+                    name='foo.bar',
+                    level=logging.INFO,
+                    msg_contains='some substring'
+                )
 
     """
-    logging_names = getattr(request.cls, 'logging_names', ['antenna'])
-
-    with LoggingMock(names=logging_names) as loggingmock:
-        yield loggingmock
+    @contextlib.contextmanager
+    def _loggingmock(names=None):
+        with LoggingMock(names=names) as loggingmock:
+            yield loggingmock
+    return _loggingmock

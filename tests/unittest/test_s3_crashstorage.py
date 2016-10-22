@@ -200,24 +200,25 @@ class TestS3MockLogging:
             'CRASHSTORAGE_BUCKET_NAME': 'fakebucket',
         })
 
-        result = client.post(
-            '/submit',
-            headers=headers,
-            body=data
-        )
-        client.join_app()
+        with loggingmock(['antenna']) as lm:
+            result = client.post(
+                '/submit',
+                headers=headers,
+                body=data
+            )
+            client.join_app()
 
-        # Verify the collector returns a 200 status code and the crash id
-        # we fed it.
-        assert result.status_code == 200
-        assert result.content == b'CrashID=bp-de1bb258-cbbf-4589-a673-34f802160918\n'
+            # Verify the collector returns a 200 status code and the crash id
+            # we fed it.
+            assert result.status_code == 200
+            assert result.content == b'CrashID=bp-de1bb258-cbbf-4589-a673-34f802160918\n'
 
-        # Verify the retry decorator logged something
-        assert loggingmock.has_record(
-            name='antenna.external.s3.connection',
-            levelname='ERROR',
-            msg_contains='retry attempt 0'
-        )
+            # Verify the retry decorator logged something
+            assert lm.has_record(
+                name='antenna.external.s3.connection',
+                levelname='ERROR',
+                msg_contains='retry attempt 0'
+            )
 
     # FIXME(willkg): Add test for bad region
     # FIXME(willkg): Add test for invalid credentials
