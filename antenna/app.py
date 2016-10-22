@@ -21,6 +21,7 @@ from gevent.pool import Pool
 
 from antenna.datetimeutil import utc_now
 from antenna.util import create_crash_id, de_null
+from antenna.throttler import Throttler, REJECT
 
 
 logger = logging.getLogger(__name__)
@@ -160,6 +161,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
     def __init__(self, config):
         self.config = config.with_options(self)
         self.crashstorage = self.config('crashstorage_class')(config.with_namespace('crashstorage'))
+        self.throttler = Throttler(config)
 
         # Gevent pool for handling incoming crash reports
         self.pipeline_pool = Pool()
@@ -259,14 +261,25 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             crash_id = raw_crash['uuid']
             logger.info('%s received with existing crash_id', crash_id)
 
-        # NOTE(willkg): The old collector add "legacy_processing" and
-        # "throttle_rate" which come from throttling. The new collector doesn't
-        # throttle, so that gets added by the processor.
-
-        # FIXME(willkg): The processor should only throttle *new* crashes
-        # and not crashes coming into the priority or reprocessing queues.
-
         raw_crash['type_tag'] = self.config('dump_id_prefix').strip('-')
+
+        # FIXME(willkg): This means that legacy_processing and percentage
+        # are user-provided. We should sanitize them.
+
+        # If we don't have throttle results for this crash, then get them.
+        if 'legacy_processing' not in raw_crash:
+            result, percentage = self.throttler.throttle(crash_id, raw_crash)
+
+            # Add throttle results to raw_crash
+            raw_crash['legacy_processing'] = result
+            raw_crash['percentage'] = percentage
+
+        # If we should reject this crash, give it a boot to the head.
+        if raw_crash['legacy_processing'] is REJECT:
+            logger.info('%s rejected', crash_id)
+            resp.status = falcon.HTTP_200
+            resp.body = 'Discarded=1'
+            return
 
         self.pipeline_pool.spawn(
             self.post_process,
@@ -284,11 +297,13 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
     def post_process(self, raw_crash, dumps, crash_id):
         """Handles received crash and saves it"""
 
+        # FIXME(willkg): How do we tell pigeon whether to process this crash or
+        # not? How can we tell pigeon in a way that doesn't require pigeon to
+        # pull the crash from s3?
+
         # FIXME(willkg): How to deal with errors here? The save_raw_crash should
         # handle retrying, so if it bubbles up to this point, then it's an
         # unretryable unhandleable error.
-        #
-        # We need to mark this node as unhealthy with the reason.
 
         # Save the crash to crashstorage
         self.crashstorage.save_raw_crash(
