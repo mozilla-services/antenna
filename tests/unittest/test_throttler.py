@@ -75,12 +75,7 @@ class Testaccept_all:
             'THROTTLE_RULES': 'antenna.throttler.accept_all'
         }))
 
-        answer, percent = throttler.throttle(
-            '11234',
-            {'ProductName': 'Test'}
-        )
-
-        assert answer is ACCEPT
+        assert throttler.throttle('11234', {'ProductName': 'Test'}) == (ACCEPT, 100)
 
 
 class Testmozilla_rules:
@@ -94,11 +89,9 @@ class Testmozilla_rules:
 
         with loggingmock(['antenna']) as lm:
             throttler = Throttler(ConfigManager.from_dict({}))
-            answer, percent = throttler.throttle('11234', raw_crash)
 
             # Reject anything with a HangId and ProcessType = 'browser'
-            assert answer is REJECT
-            assert percent is None
+            assert throttler.throttle('11234', raw_crash) == (REJECT, None)
 
             assert lm.has_record(
                 name='antenna.throttler',
@@ -114,10 +107,8 @@ class Testmozilla_rules:
 
         with loggingmock(['antenna']) as lm:
             throttler = Throttler(ConfigManager.from_dict({}))
-            answer, percent = throttler.throttle('11234', raw_crash)
 
-            assert answer is ACCEPT
-            assert percent is 100
+            assert throttler.throttle('11234', raw_crash) == (ACCEPT, 100)
 
             assert lm.has_record(
                 name='antenna.throttler',
@@ -138,10 +129,8 @@ class Testmozilla_rules:
 
         with loggingmock(['antenna']) as lm:
             throttler = Throttler(ConfigManager.from_dict({}))
-            answer, percent = throttler.throttle('11234', raw_crash)
 
-            assert answer is ACCEPT
-            assert percent is 100
+            assert throttler.throttle('11234', raw_crash) == (ACCEPT, 100)
 
             assert lm.has_record(
                 name='antenna.throttler',
@@ -160,10 +149,8 @@ class Testmozilla_rules:
         }
         with loggingmock(['antenna']) as lm:
             throttler = Throttler(ConfigManager.from_dict({}))
-            answer, percent = throttler.throttle('11234', raw_crash)
 
-            assert answer is ACCEPT
-            assert percent is 100
+            assert throttler.throttle('11234', raw_crash) == (ACCEPT, 100)
 
             assert lm.has_record(
                 name='antenna.throttler',
@@ -178,10 +165,8 @@ class Testmozilla_rules:
             }
             with loggingmock(['antenna']) as lm:
                 throttler = Throttler(ConfigManager.from_dict({}))
-                answer, percent = throttler.throttle('11234', raw_crash)
 
-                assert answer is ACCEPT
-                assert percent is 10
+                assert throttler.throttle('11234', raw_crash) == (ACCEPT, 10)
 
                 assert lm.has_record(
                     name='antenna.throttler',
@@ -195,10 +180,8 @@ class Testmozilla_rules:
             }
             with loggingmock(['antenna']) as lm:
                 throttler = Throttler(ConfigManager.from_dict({}))
-                answer, percent = throttler.throttle('11234', raw_crash)
 
-                assert answer is DEFER
-                assert percent is 10
+                assert throttler.throttle('11234', raw_crash) == (DEFER, 10)
 
                 assert lm.has_record(
                     name='antenna.throttler',
@@ -212,10 +195,8 @@ class Testmozilla_rules:
         }
         with loggingmock(['antenna']) as lm:
             throttler = Throttler(ConfigManager.from_dict({}))
-            answer, percent = throttler.throttle('11234', raw_crash)
 
-            assert answer is ACCEPT
-            assert percent is 100
+            assert throttler.throttle('11234', raw_crash) == (ACCEPT, 100)
 
             assert lm.has_record(
                 name='antenna.throttler',
@@ -236,10 +217,8 @@ class Testmozilla_rules:
         }
         with loggingmock(['antenna']) as lm:
             throttler = Throttler(ConfigManager.from_dict({}))
-            answer, percent = throttler.throttle('11234', raw_crash)
 
-            assert answer is ACCEPT
-            assert percent is 100
+            assert throttler.throttle('11234', raw_crash) == (ACCEPT, 100)
 
             assert lm.has_record(
                 name='antenna.throttler',
@@ -257,10 +236,8 @@ class Testmozilla_rules:
         }
         with loggingmock(['antenna']) as lm:
             throttler = Throttler(ConfigManager.from_dict({}))
-            answer, percent = throttler.throttle('11234', raw_crash)
 
-            assert answer is ACCEPT
-            assert percent is 100
+            assert throttler.throttle('11234', raw_crash) == (ACCEPT, 100)
 
             assert lm.has_record(
                 name='antenna.throttler',
