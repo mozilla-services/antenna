@@ -29,6 +29,51 @@ logger = logging.getLogger(__name__)
 _logging_initialized = False
 
 
+def setup_logging(logging_level):
+    """initializes Python logging configuration
+
+    NOTE(willkg): This causes some problems since it'll get initialized using
+    the first configuration it was given. Pretty sure that'll only happen when
+    running tests and we're not testing logging in tests. If that ever changes,
+    we'll need to revisit this.
+
+    """
+    global _logging_initialized
+    if _logging_initialized:
+        return
+
+    dc = {
+        'version': 1,
+        'disable_existing_loggers': True,
+        'formatters': {
+            'development': {
+                'format': '[%(asctime)s] [%(levelname)s] %(name)s: %(message)s',
+                'datefmt': '%Y-%m-%d %H:%M:%S %z',
+            },
+        },
+        'handlers': {
+            'console': {
+                'level': 'DEBUG',
+                'class': 'logging.StreamHandler',
+                'formatter': 'development',
+            },
+        },
+        'root': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+        },
+        'loggers': {
+            'antenna': {
+                'propagate': False,
+                'handlers': ['console'],
+                'level': logging_level,
+            },
+        },
+    }
+    logging.config.dictConfig(dc)
+    _logging_initialized = True
+
+
 class AppConfig(RequiredConfigMixin):
     """Application-level config
 
@@ -70,6 +115,11 @@ class AppConfig(RequiredConfigMixin):
         default=os.path.abspath(os.path.dirname(os.path.dirname(__file__))),
         doc='The root directory for this application to find and store things.'
     )
+    required_config.add_option(
+        'logging_level',
+        default='DEBUG',
+        doc='The logging level to use. DEBUG, INFO, WARNING, ERROR or CRITICAL'
+    )
 
     def __init__(self, config):
         self.config_manager = config
@@ -77,51 +127,6 @@ class AppConfig(RequiredConfigMixin):
 
     def __call__(self, key):
         return self.config(key)
-
-
-def setup_logging(config):
-    """Initializes Python logging configuration
-
-    NOTE(willkg): This causes some problems since it'll get initialized using
-    the first configuration it was given. Pretty sure that'll only happen when
-    running tests and we're not testing logging in tests. If that ever changes,
-    we'll need to revisit this.
-
-    """
-    global _logging_initialized
-    if _logging_initialized:
-        return
-
-    dc = {
-        'version': 1,
-        'disable_existing_loggers': True,
-        'formatters': {
-            'development': {
-                'format': '[%(asctime)s] [%(levelname)s] %(name)s: %(message)s',
-                'datefmt': '%Y-%m-%d %H:%M:%S %z',
-            },
-        },
-        'handlers': {
-            'console': {
-                'level': 'DEBUG',
-                'class': 'logging.StreamHandler',
-                'formatter': 'development',
-            },
-        },
-        'root': {
-            'handlers': ['console'],
-            'level': 'WARNING',
-        },
-        'loggers': {
-            'antenna': {
-                'propagate': False,
-                'handlers': ['console'],
-                'level': 'DEBUG',
-            },
-        },
-    }
-    logging.config.dictConfig(dc)
-    _logging_initialized = True
 
 
 class HomePageResource:
@@ -420,8 +425,8 @@ def get_app(config=None):
             ConfigOSEnv()
         ])
 
-    setup_logging(config)
     app_config = AppConfig(config)
+    setup_logging(app_config('logging_level'))
 
     app = AntennaAPI(config)
     app.add_error_handler(Exception, handler=app.unhandled_exception_handler)

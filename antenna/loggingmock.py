@@ -24,6 +24,9 @@ class LoggingMock(logging.Handler):
         self.records.append(record)
 
     def install_handler(self):
+        if self.names is None:
+            self.names = [None]
+
         for name in self.names:
             logger = logging.getLogger(name)
             logger.addHandler(self)
@@ -34,6 +37,7 @@ class LoggingMock(logging.Handler):
             logger.removeHandler(self)
 
     def __enter__(self):
+        self.records = []
         self.install_handler()
         return self
 
@@ -68,6 +72,14 @@ class LoggingMock(logging.Handler):
 
     def get_records(self):
         return self.records
+
+    def print_records(self):
+        records = self.get_records()
+        if records:
+            for record in records:
+                print((record.name, record.levelname, record.message))
+        else:
+            print('NO RECORDS')
 
     def clear(self):
         self.records = []
