@@ -9,6 +9,8 @@ import re
 
 from everett.component import ConfigOptions, RequiredConfigMixin
 
+from antenna import metrics
+
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +76,7 @@ class Throttler(RequiredConfigMixin):
     def __init__(self, config):
         self.config = config.with_options(self)
         self.rule_set = self.config('throttle_rules')
+        self.mymetrics = metrics.get_metrics(self)
 
     def throttle(self, crash_id, raw_crash):
         """Go through rule set to ACCEPT, REJECT or DEFER"""
@@ -81,6 +84,8 @@ class Throttler(RequiredConfigMixin):
             match = rule.match(raw_crash)
 
             if match:
+                self.mymetrics.incr('match_%s' % rule.rule_name)
+
                 logger.debug('%s: matched by %s', crash_id, rule.rule_name)
 
                 if rule.percentage is None:

@@ -23,9 +23,17 @@ import wsgiref.validate
 sys.path.insert(0, str(local(__file__).dirpath().dirpath().dirpath()))
 
 
-from antenna.app import get_app  # noqa
+from antenna import metrics  # noqa
+from antenna.app import get_app, setup_logging, setup_metrics  # noqa
 from antenna.loggingmock import LoggingMock  # noqa
+from antenna.metrics import MetricsMock  # noqa
 from antenna.s3mock import S3Mock  # noqa
+
+
+def pytest_runtest_setup():
+    # Make sure we set up logging and metrics to sane default values.
+    setup_logging('DEBUG')
+    setup_metrics(metrics.LoggingMetrics, ConfigManager.from_dict({}))
 
 
 def build_app(config=None):
@@ -229,6 +237,27 @@ def loggingmock():
         with LoggingMock(names=names) as loggingmock:
             yield loggingmock
     return _loggingmock
+
+
+@pytest.fixture
+def metricsmock():
+    """Returns a metricsmock that builds a metrics mock context to record metrics records
+
+    Usage::
+
+        def test_something(metricsmock):
+            with metricsmock as mm:
+                # do stuff
+                assert mm.has_record(
+                    key='some.key',
+                    kwargs_contains={
+                        'something': 1
+                    }
+                )
+
+
+    """
+    return MetricsMock()
 
 
 @pytest.fixture

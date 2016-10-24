@@ -76,8 +76,11 @@ production, see docs_.
    The ``fakes3`` container will store data in ``./fakes3_root``, so you can
    verify it there.
 
+   The ``statsd`` container has Graphite, too. You can view the statsd data via
+   Graphite in your web browser `<http://localhost:9000>`_.
+
    When you're done with the process, hit CTRL-C to gracefully kill the docker
-   container.
+   web container.
 
    If you want to run with a different Antenna configuration, put the
    configuration in an env file and then set ``ANTENNA_ENV``. For example:
