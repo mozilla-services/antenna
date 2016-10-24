@@ -16,6 +16,7 @@ class LoggingMock(logging.Handler):
         super().__init__(level=1)
         self.names = names
         self.records = []
+        self._old_handlers = None
 
     def filter(self, record):
         return True
@@ -26,15 +27,17 @@ class LoggingMock(logging.Handler):
     def install_handler(self):
         if self.names is None:
             self.names = [None]
-
+        self._old_handlers = {}
         for name in self.names:
             logger = logging.getLogger(name)
-            logger.addHandler(self)
+            self._old_handlers[name] = logger.handlers
+            logger.handlers = [self]
 
     def uninstall_handler(self):
         for name in self.names:
             logger = logging.getLogger(name)
-            logger.removeHandler(self)
+            logger.handlers = self._old_handlers[name]
+        self._old_handlers = None
 
     def __enter__(self):
         self.records = []
@@ -64,7 +67,7 @@ class LoggingMock(logging.Handler):
             if (
                     match_name(record.name) and
                     match_levelname(record.levelname) and
-                    match_message(record.message)
+                    match_message(record.getMessage())
             ):
                 return True
 
@@ -77,7 +80,7 @@ class LoggingMock(logging.Handler):
         records = self.get_records()
         if records:
             for record in records:
-                print((record.name, record.levelname, record.message))
+                print((record.name, record.levelname, record.getMessage()))
         else:
             print('NO RECORDS')
 
