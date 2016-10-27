@@ -27,6 +27,7 @@ from antenna.util import create_crash_id, de_null
 
 
 logger = logging.getLogger(__name__)
+mymetrics = metrics.get_metrics(__name__)
 
 
 def setup_logging(logging_level):
@@ -256,6 +257,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         return raw_crash, dumps
 
+    @mymetrics.timer_decorator('BreakpadSubmitterResource.on_post.time')
     def on_post(self, req, resp):
         resp.content_type = 'text/plain'
 

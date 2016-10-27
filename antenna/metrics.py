@@ -101,14 +101,14 @@ class DogStatsdMetrics(RequiredConfigMixin):
     def get_client(self, host, port, namespace):
         return DogStatsd(host=host, port=port, namespace=namespace)
 
-    def incr(self, stat, count=1):
-        self.client.increment(stat=stat, count=count)
+    def incr(self, stat, value=1):
+        self.client.increment(metric=stat, value=value)
 
     def gauge(self, stat, value):
-        self.client.gauge(stat=stat, value=value)
+        self.client.gauge(metric=stat, value=value)
 
-    def timing(self, stat, delta):
-        self.client.timing(stat=stat, delta=delta)
+    def timing(self, stat, value):
+        self.client.timing(metric=stat, value=value)
 
 
 def metrics_configure(metrics_class, config):
@@ -178,21 +178,21 @@ class MetricsInterface:
     def _full_stat(self, stat):
         return self.name + '.' + stat
 
-    def incr(self, stat, count=1):
-        """Increment a stat by count"""
-        _metrics_impl.incr(self._full_stat(stat), count=count)
+    def incr(self, stat, value=1):
+        """Increment a stat by value"""
+        _metrics_impl.incr(self._full_stat(stat), value=value)
 
     def gauge(self, stat, value):
         """Set a gauge stat as value"""
         _metrics_impl.gauge(self._full_stat(stat), value=value)
 
-    def timing(self, stat, delta):
+    def timing(self, stat, value):
         """Send timing information
 
-        Note: delta is in ms.
+        Note: value is in ms.
 
         """
-        _metrics_impl.timing(self._full_stat(stat), delta=delta)
+        _metrics_impl.timing(self._full_stat(stat), value=value)
 
     @contextlib.contextmanager
     def timer(self, stat):

@@ -29,49 +29,49 @@ class TestMetricsMock:
             # Test fun_name match
             key1_metrics = mm.filter_metrics(
                 stat='foobar.key1',
-                kwargs_contains={'count': 1}
+                kwargs_contains={'value': 1}
             )
             assert len(key1_metrics) == 1
 
             key1_metrics = mm.filter_metrics(
                 fun_name='incr',
                 stat='foobar.key1',
-                kwargs_contains={'count': 1}
+                kwargs_contains={'value': 1}
             )
             assert len(key1_metrics) == 1
 
             key1_metrics = mm.filter_metrics(
                 fun_name='timing',
                 stat='foobar.key1',
-                kwargs_contains={'delta': 1}
+                kwargs_contains={'value': 1}
             )
             assert len(key1_metrics) == 0
 
             # Test key match
             key1_metrics = mm.filter_metrics(
                 fun_name='incr',
-                kwargs_contains={'count': 1}
+                kwargs_contains={'value': 1}
             )
             assert len(key1_metrics) == 1
 
             key1_metrics = mm.filter_metrics(
                 fun_name='incr',
                 stat='foobar.key1',
-                kwargs_contains={'count': 1}
+                kwargs_contains={'value': 1}
             )
             assert len(key1_metrics) == 1
 
             key1_metrics = mm.filter_metrics(
                 fun_name='incr',
                 stat='foobar.key1',
-                kwargs_contains={'count': 1}
+                kwargs_contains={'value': 1}
             )
             assert len(key1_metrics) == 1
 
             key1_metrics = mm.filter_metrics(
                 fun_name='incr',
                 stat='foobar.key2',
-                kwargs_contains={'count': 1}
+                kwargs_contains={'value': 1}
             )
             assert len(key1_metrics) == 0
 
@@ -85,14 +85,14 @@ class TestMetricsMock:
             key1_metrics = mm.filter_metrics(
                 fun_name='incr',
                 stat='foobar.key1',
-                kwargs_contains={'count': 1}
+                kwargs_contains={'value': 1}
             )
             assert len(key1_metrics) == 1
 
             key1_metrics = mm.filter_metrics(
                 fun_name='incr',
                 stat='foobar.key1',
-                kwargs_contains={'count': 5}
+                kwargs_contains={'value': 5}
             )
             assert len(key1_metrics) == 0
 
@@ -109,17 +109,13 @@ class TestMetricsMock:
             assert mm.has_metric(
                 fun_name='incr',
                 stat='foobar.key1',
-                kwargs_contains={
-                    'count': 1
-                }
+                kwargs_contains={'value': 1}
             )
 
             assert not mm.has_metric(
                 fun_name='incr',
                 stat='foobar.key1',
-                kwargs_contains={
-                    'count': 5
-                }
+                kwargs_contains={'value': 5}
             )
 
 
@@ -187,7 +183,7 @@ class TestMetricsInterface:
                 name='antenna.metrics',
                 levelname='INFO',
                 msg_contains=[
-                    'LoggingMetrics.timing', 'foobar.key1', '\'delta\': 15000.0'
+                    'LoggingMetrics.timing', 'foobar.key1', '\'value\': 15000.0'
                 ]
             )
 
@@ -203,7 +199,7 @@ class TestDogStatsdMetrics:
 
         with patch.object(metrics._metrics_impl.client, 'increment') as mock_incr:
             mymetrics.incr('key1')
-            mock_incr.assert_called_with(stat='foobar.key1', count=1)
+            mock_incr.assert_called_with(metric='foobar.key1', value=1)
 
     def test_timing(self):
         metrics.metrics_configure(metrics.DogStatsdMetrics, ConfigManager.from_dict({}))
@@ -211,7 +207,7 @@ class TestDogStatsdMetrics:
 
         with patch.object(metrics._metrics_impl.client, 'timing') as mock_timing:
             mymetrics.timing('key1', 1000)
-            mock_timing.assert_called_with(stat='foobar.key1', delta=1000)
+            mock_timing.assert_called_with(metric='foobar.key1', value=1000)
 
     def test_gauge(self):
         metrics.metrics_configure(metrics.DogStatsdMetrics, ConfigManager.from_dict({}))
@@ -219,4 +215,4 @@ class TestDogStatsdMetrics:
 
         with patch.object(metrics._metrics_impl.client, 'gauge') as mock_gauge:
             mymetrics.gauge('key1', 5)
-            mock_gauge.assert_called_with(stat='foobar.key1', value=5)
+            mock_gauge.assert_called_with(metric='foobar.key1', value=5)

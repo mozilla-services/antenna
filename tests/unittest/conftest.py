@@ -241,7 +241,7 @@ def loggingmock():
 
 @pytest.fixture
 def metricsmock():
-    """Returns a metricsmock that builds a metrics mock context to record metrics records
+    """Returns MetricsMock that a context to record metrics records
 
     Usage::
 
@@ -249,12 +249,11 @@ def metricsmock():
             with metricsmock as mm:
                 # do stuff
                 assert mm.has_record(
-                    key='some.key',
+                    stat='some.stat',
                     kwargs_contains={
                         'something': 1
                     }
                 )
-
 
     """
     return MetricsMock()
