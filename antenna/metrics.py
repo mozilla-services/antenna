@@ -26,7 +26,6 @@ is whatever module that class is defined in.
 
 """
 
-import collections
 import contextlib
 from functools import wraps
 import logging
