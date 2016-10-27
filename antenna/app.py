@@ -4,6 +4,7 @@
 
 import cgi
 from collections import OrderedDict
+from functools import wraps
 import hashlib
 import io
 import json
@@ -73,6 +74,18 @@ def setup_logging(logging_level):
     }
     logging.config.dictConfig(dc)
     _logging_initialized = True
+
+
+def log_unhandled(fun):
+    @wraps(fun)
+    def _log_unhandled(*args, **kwargs):
+        try:
+            return fun(*args, **kwargs)
+        except Exception:
+            logger.exception('UNHANDLED EXCEPTION!')
+            raise
+
+    return _log_unhandled
 
 
 class AppConfig(RequiredConfigMixin):
@@ -430,6 +443,7 @@ class AntennaAPI(falcon.API):
         return self._all_resources.values()
 
 
+@log_unhandled
 def get_app(config=None):
     """Returns AntennaAPI instance"""
     if config is None:
