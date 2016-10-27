@@ -23,7 +23,7 @@ from gevent.pool import Pool
 from antenna import metrics
 from antenna.datetimeutil import utc_now
 from antenna.throttler import Throttler, ACCEPT, DEFER, REJECT
-from antenna.util import create_crash_id, de_null
+from antenna.util import create_crash_id, de_null, LogConfigMixin
 
 
 logger = logging.getLogger(__name__)
@@ -81,7 +81,7 @@ def log_unhandled(fun):
     return _log_unhandled
 
 
-class AppConfig(RequiredConfigMixin):
+class AppConfig(RequiredConfigMixin, LogConfigMixin):
     """Application-level config
 
     To pull out a config item, you can do this::
@@ -152,7 +152,7 @@ class HomePageResource:
         resp.body = '<html><body><p>I am Antenna.</p></body></html>'
 
 
-class BreakpadSubmitterResource(RequiredConfigMixin):
+class BreakpadSubmitterResource(RequiredConfigMixin, LogConfigMixin):
     """Handles incoming breakpad crash reports and saves to S3"""
     required_config = ConfigOptions()
     required_config.add_option(
@@ -179,6 +179,11 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         self.pipeline_pool = Pool()
 
         self.mymetrics = metrics.get_metrics(self)
+
+    def log_config(self, logger, with_namespace=None):
+        super().log_config(logger, with_namespace)
+        self.throttler.log_config(logger, with_namespace)
+        self.crashstorage.log_config(logger, with_namespace='crashstorage')
 
     def check_health(self, state):
         state.add_statsd(self, 'queue_size', len(self.pipeline_pool))
@@ -456,6 +461,11 @@ class AntennaAPI(falcon.API):
     def get_resources(self):
         return self._all_resources.values()
 
+    def log_config(self, logger):
+        for res in self.get_resources():
+            if hasattr(res, 'log_config'):
+                res.log_config(logger)
+
 
 @log_unhandled
 def get_app(config=None):
@@ -472,6 +482,8 @@ def get_app(config=None):
     setup_logging(app_config('logging_level'))
     setup_metrics(app_config('metrics_class'), config)
 
+    app_config.log_config(logger)
+
     app = AntennaAPI(config)
     app.add_error_handler(Exception, handler=app.unhandled_exception_handler)
 
@@ -480,4 +492,6 @@ def get_app(config=None):
     app.add_route('version', '/__version__', VersionResource(config, basedir=app_config('basedir')))
     app.add_route('heartbeat', '/__heartbeat__', HeartbeatResource(config, app))
     app.add_route('lbheartbeat', '/__lbheartbeat__', LBHeartbeatResource(config))
+
+    app.log_config(logger)
     return app

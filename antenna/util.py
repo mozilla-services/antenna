@@ -207,3 +207,37 @@ def retry(retryable_exceptions=Exception, retryable_return=None, max_attempts=10
 
         return _retry_fun
     return _retry_inner
+
+
+class LogConfigMixin:
+    """Adds config logging to the component
+
+    This prints out the complete component configuration including default
+    values.
+
+    For keys with the word "secret" in them, it'll print ``******`` instead of
+    the actual value. In this way, you explicitly state which keys are secret
+    and should never get printed. That's a good habit to be in anyhow.
+
+    """
+    def log_config(self, logger, with_namespace=None):
+        if with_namespace is None:
+            namespace = ''
+        elif isinstance(with_namespace, str):
+            namespace = with_namespace
+        else:
+            namespace = '_'.join(with_namespace)
+
+        for opt in self.__class__.get_required_config():
+            is_secret = 'secret' in opt.key.lower()
+
+            val = self.config(opt.key, raw_value=True)
+            if namespace:
+                namespaced_key = '%s_%s' % (namespace, opt.key)
+            else:
+                namespaced_key = opt.key
+            namespaced_key = namespaced_key.upper()
+            if is_secret:
+                logger.info('%s=*****' % namespaced_key)
+            else:
+                logger.info('%s=%s' % (namespaced_key, val))

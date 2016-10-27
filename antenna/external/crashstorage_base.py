@@ -4,13 +4,22 @@
 
 import logging
 
+from everett.component import ConfigOptions, RequiredConfigMixin
+
+from antenna.util import LogConfigMixin
+
 
 logger = logging.getLogger(__name__)
 
 
-class CrashStorageBase:
+class CrashStorageBase(RequiredConfigMixin, LogConfigMixin):
     """Crash storage base class"""
+    required_config = ConfigOptions()
+
     def __init__(self, config):
+        self.config = config.with_options(self)
+
+    def log_config(self, logger, with_namespace):
         pass
 
     def save_raw_crash(self, raw_crash, dumps, crash_id):
