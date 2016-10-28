@@ -4,24 +4,24 @@
 
 import io
 
+from everett.manager import ConfigManager
+
 from antenna.app import BreakpadSubmitterResource
 from antenna.mini_poster import multipart_encode
 from antenna.util import compress
 
 
-class Test404:
+class TestBasic:
     def test_404(self, client):
         result = client.get('/foo')
         assert result.status_code == 404
 
-
-class TestHomePageResource:
     def test_home_page(self, client):
         result = client.get('/')
         assert result.status_code == 200
 
 
-class TestVersionResource:
+class TestHealthChecks:
     def test_no_version(self, client, tmpdir):
         # Set basedir here to tmpdir which we *know* doesn't have a
         # version.json in it.
@@ -46,14 +46,10 @@ class TestVersionResource:
         result = client.get('/__version__')
         assert result.content == b'{"commit": "ou812"}'
 
-
-class TestLBHeartbeatResource:
     def test_lb_heartbeat(self, client):
         resp = client.get('/__lbheartbeat__')
         assert resp.status_code == 200
 
-
-class TestHeartbeatResource:
     def test_heartbeat(self, client):
         resp = client.get('/__heartbeat__')
         assert resp.status_code == 200
@@ -66,7 +62,7 @@ class TestHeartbeatResource:
 
 
 class TestBreakpadSubmitterResource:
-    config_vars = {}
+    empty_config = ConfigManager.from_dict({})
 
     def test_submit_crash_report_reply(self, client):
         data, headers = multipart_encode({
@@ -83,7 +79,7 @@ class TestBreakpadSubmitterResource:
         assert result.status_code == 200
         assert result.content.startswith(b'CrashID=bp')
 
-    def test_extract_payload(self, config, request_generator):
+    def test_extract_payload(self, request_generator):
         data, headers = multipart_encode({
             'ProductName': 'Test',
             'Version': '1.0',
@@ -96,7 +92,7 @@ class TestBreakpadSubmitterResource:
             body=data,
         )
 
-        bsp = BreakpadSubmitterResource(config)
+        bsp = BreakpadSubmitterResource(self.empty_config)
         expected_raw_crash = {
             'ProductName': 'Test',
             'Version': '1.0',
@@ -109,7 +105,7 @@ class TestBreakpadSubmitterResource:
         }
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
 
-    def test_extract_payload_2_dumps(self, config, request_generator):
+    def test_extract_payload_2_dumps(self, request_generator):
         data, headers = multipart_encode({
             'ProductName': 'Test',
             'Version': '1',
@@ -124,7 +120,7 @@ class TestBreakpadSubmitterResource:
             body=data,
         )
 
-        bsp = BreakpadSubmitterResource(config)
+        bsp = BreakpadSubmitterResource(self.empty_config)
         expected_raw_crash = {
             'ProductName': 'Test',
             'Version': '1',
@@ -139,7 +135,7 @@ class TestBreakpadSubmitterResource:
         }
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
 
-    def test_extract_payload_compressed(self, config, request_generator):
+    def test_extract_payload_compressed(self, request_generator):
         data, headers = multipart_encode({
             'ProductName': 'Test',
             'Version': '1.0',
@@ -156,7 +152,7 @@ class TestBreakpadSubmitterResource:
             body=data,
         )
 
-        bsp = BreakpadSubmitterResource(config)
+        bsp = BreakpadSubmitterResource(self.empty_config)
         expected_raw_crash = {
             'ProductName': 'Test',
             'Version': '1.0',

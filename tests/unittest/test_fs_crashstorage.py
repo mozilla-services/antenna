@@ -148,9 +148,4 @@ class TestFSCrashStorage:
             }
         )
 
-        assert (
-            dumps ==
-            {
-                'upload_file_minidump': b'abcd1234'
-            }
-        )
+        assert dumps == {'upload_file_minidump': b'abcd1234'}

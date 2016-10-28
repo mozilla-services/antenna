@@ -142,6 +142,7 @@ class AppConfig(RequiredConfigMixin, LogConfigMixin):
 
 
 class HomePageResource:
+    """Shows something at /"""
     def __init__(self, config):
         pass
 
@@ -366,7 +367,7 @@ class VersionResource:
             with open(path, 'r') as fp:
                 commit_info = fp.read().strip()
         except (IOError, OSError):
-            # FIXME(willkg): Log the error
+            logging.error('Exception thrown when retrieving version.json', exc_info=True)
             commit_info = '{}'
 
         resp.content_type = 'application/json; charset=utf-8'
@@ -384,6 +385,7 @@ class LBHeartbeatResource:
 
 
 class HealthState:
+    """Object representing health of system"""
     def __init__(self):
         self.errors = []
         self.statsd = {}
@@ -412,6 +414,7 @@ class HealthState:
 
 
 class HeartbeatResource:
+    """Handles /__heartbeat__"""
     def __init__(self, config, app):
         self.config = config
         self.antenna_app = app
