@@ -66,28 +66,29 @@ class TestS3Mock:
     def test_region_and_bucket_with_periods(self, client, s3mock):
         # # .verify_configuration() calls HEAD on the bucket to verify it exists
         # # and the configuration is correct.
+        ROOT = 'https://s3-us-west-1.amazonaws.com/'
         s3mock.add_step(
             method='HEAD',
-            url='https://s3-us-west-1.amazonaws.com/fakebucket.with.periods',
+            url=ROOT + 'fakebucket.with.periods',
             resp=s3mock.fake_response(status_code=200)
         )
 
         # We want to verify these files are saved in this specific order.
         s3mock.add_step(
             method='PUT',
-            url='https://s3-us-west-1.amazonaws.com/fakebucket.with.periods//v1/dump_names/de1bb258-cbbf-4589-a673-34f802160918',
+            url=ROOT + 'fakebucket.with.periods//v1/dump_names/de1bb258-cbbf-4589-a673-34f802160918',
             body=b'["upload_file_minidump"]',
             resp=s3mock.fake_response(status_code=200)
         )
         s3mock.add_step(
             method='PUT',
-            url='https://s3-us-west-1.amazonaws.com/fakebucket.with.periods//v1/upload_file_minidump/de1bb258-cbbf-4589-a673-34f802160918',
+            url=ROOT + 'fakebucket.with.periods//v1/upload_file_minidump/de1bb258-cbbf-4589-a673-34f802160918',
             body=b'abcd1234',
             resp=s3mock.fake_response(status_code=200)
         )
         s3mock.add_step(
             method='PUT',
-            url='https://s3-us-west-1.amazonaws.com/fakebucket.with.periods//v2/raw_crash/de1/20160918/de1bb258-cbbf-4589-a673-34f802160918',
+            url=ROOT + 'fakebucket.with.periods//v2/raw_crash/de1/20160918/de1bb258-cbbf-4589-a673-34f802160918',
             # Not going to compare the body here because it's just the raw crash
             resp=s3mock.fake_response(status_code=200)
         )
@@ -149,18 +150,20 @@ class TestS3MockLogging:
     logging_names = ['antenna']
 
     def test_retrying(self, client, s3mock, loggingmock):
+        ROOT = 'http://fakes3:4569/'
+
         # .verify_configuration() calls HEAD on the bucket to verify it exists
         # and the configuration is correct.
         s3mock.add_step(
             method='HEAD',
-            url='http://fakes3:4569/fakebucket',
+            url=ROOT + 'fakebucket',
             resp=s3mock.fake_response(status_code=200)
         )
 
         # Fail once with a 403, retry and then proceed.
         s3mock.add_step(
             method='PUT',
-            url='http://fakes3:4569/fakebucket//v1/dump_names/de1bb258-cbbf-4589-a673-34f802160918',
+            url=ROOT + 'fakebucket//v1/dump_names/de1bb258-cbbf-4589-a673-34f802160918',
             body=b'["upload_file_minidump"]',
             resp=s3mock.fake_response(status_code=403)
         )
@@ -168,19 +171,19 @@ class TestS3MockLogging:
         # Proceed with saving files.
         s3mock.add_step(
             method='PUT',
-            url='http://fakes3:4569/fakebucket//v1/dump_names/de1bb258-cbbf-4589-a673-34f802160918',
+            url=ROOT + 'fakebucket//v1/dump_names/de1bb258-cbbf-4589-a673-34f802160918',
             body=b'["upload_file_minidump"]',
             resp=s3mock.fake_response(status_code=200)
         )
         s3mock.add_step(
             method='PUT',
-            url='http://fakes3:4569/fakebucket//v1/upload_file_minidump/de1bb258-cbbf-4589-a673-34f802160918',
+            url=ROOT + 'fakebucket//v1/upload_file_minidump/de1bb258-cbbf-4589-a673-34f802160918',
             body=b'abcd1234',
             resp=s3mock.fake_response(status_code=200)
         )
         s3mock.add_step(
             method='PUT',
-            url='http://fakes3:4569/fakebucket//v2/raw_crash/de1/20160918/de1bb258-cbbf-4589-a673-34f802160918',
+            url=ROOT + 'fakebucket//v2/raw_crash/de1/20160918/de1bb258-cbbf-4589-a673-34f802160918',
             # Not going to compare the body here because it's just the raw crash
             resp=s3mock.fake_response(status_code=200)
         )

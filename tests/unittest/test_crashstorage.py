@@ -54,10 +54,5 @@ class TestCrashStorage:
                 'uuid': 'de1bb258-cbbf-4589-a673-34f802160918'
             }
         )
-        assert (
-            crash['dumps'] ==
-            {
-                'upload_file_minidump': b'abcd1234'
-            }
-        )
+        assert crash['dumps'] == {'upload_file_minidump': b'abcd1234'}
         assert crash['crash_id'] == 'de1bb258-cbbf-4589-a673-34f802160918'

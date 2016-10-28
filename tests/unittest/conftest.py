@@ -52,30 +52,8 @@ def build_app(config=None):
 
 
 @pytest.fixture
-def app():
-    return build_app()
-
-
-@pytest.fixture
-def config(request):
-    """Returns a ConfigManager instance primed with config vars
-
-    Specify the config vars you want it primed with on the class. For example::
-
-        class TestFoo:
-            config_vars = {
-                'SOME_VAR': 'some_val'
-            }
-
-            def test_foo(self, config):
-                ...
-
-    """
-    return ConfigManager.from_dict(dict(request.cls.config_vars))
-
-
-@pytest.fixture
 def request_generator():
+    """Returns a Falcon Request generator"""
     def _request_generator(method, path, query_string=None, headers=None,
                            body=None):
         env = create_environ(
@@ -137,14 +115,10 @@ class Client:
         bsr.join_pool()
 
     def get(self, path, headers=None, **kwargs):
-        return self._request(
-            'GET', path=path, headers=headers, **kwargs
-        )
+        return self._request('GET', path=path, headers=headers, **kwargs)
 
     def post(self, path, headers=None, body=None, **kwargs):
-        return self._request(
-            'POST', path=path, headers=headers, body=body, **kwargs
-        )
+        return self._request('POST', path=path, headers=headers, body=body, **kwargs)
 
     def _request(self, method, path, query_string=None, headers=None,
                  body=None, **kwargs):
