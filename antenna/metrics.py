@@ -249,13 +249,13 @@ def get_metrics(thing, extra=''):
     :arg str extra: Any extra bits to add to the end of the key.
 
     """
-    if type(thing) == type:
-        # It's a class, so the name is the module + class
-        thing = '%s.%s' % (thing.__module__, thing.__name__)
-    elif isinstance(thing, str):
-        pass
-    else:
-        thing = '%s.%s' % (thing.__class__.__module__, thing.__class__.__name__)
+    if not isinstance(thing, str):
+        # If it's not a str, it's either a class or an instance. Handle
+        # accordingly.
+        if type(thing) == type:
+            thing = '%s.%s' % (thing.__module__, thing.__name__)
+        else:
+            thing = '%s.%s' % (thing.__class__.__module__, thing.__class__.__name__)
 
     if extra:
         thing = '%s.%s' % (thing, extra)
