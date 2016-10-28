@@ -44,7 +44,7 @@ class TestS3Mock:
 
         # Rebuild the app the test client is using with relevant configuration.
         client.rebuild_app({
-            'CRASHSTORAGE_CLASS': 'antenna.external.s3.crashstorage.S3CrashStorage',
+            'CRASHSTORAGE_CLASS': 'antenna.ext.s3.crashstorage.S3CrashStorage',
             'CRASHSTORAGE_ENDPOINT_URL': 'http://fakes3:4569',
             'CRASHSTORAGE_ACCESS_KEY': 'fakekey',
             'CRASHSTORAGE_SECRET_ACCESS_KEY': 'fakesecretkey',
@@ -100,7 +100,7 @@ class TestS3Mock:
 
         # Rebuild the app the test client is using with relevant configuration.
         client.rebuild_app({
-            'CRASHSTORAGE_CLASS': 'antenna.external.s3.crashstorage.S3CrashStorage',
+            'CRASHSTORAGE_CLASS': 'antenna.ext.s3.crashstorage.S3CrashStorage',
             'CRASHSTORAGE_REGION': 'us-west-1',
             'CRASHSTORAGE_ACCESS_KEY': 'fakekey',
             'CRASHSTORAGE_SECRET_ACCESS_KEY': 'fakesecretkey',
@@ -132,7 +132,7 @@ class TestS3Mock:
             # Rebuild the app the test client is using with relevant
             # configuration. This calls .verify_configuration() which fails.
             client.rebuild_app({
-                'CRASHSTORAGE_CLASS': 'antenna.external.s3.crashstorage.S3CrashStorage',
+                'CRASHSTORAGE_CLASS': 'antenna.ext.s3.crashstorage.S3CrashStorage',
                 'CRASHSTORAGE_ENDPOINT_URL': 'http://fakes3:4569',
                 'CRASHSTORAGE_ACCESS_KEY': 'fakekey',
                 'CRASHSTORAGE_SECRET_ACCESS_KEY': 'fakesecretkey',
@@ -193,7 +193,7 @@ class TestS3MockLogging:
 
         # Rebuild the app the test client is using with relevant configuration.
         client.rebuild_app({
-            'CRASHSTORAGE_CLASS': 'antenna.external.s3.crashstorage.S3CrashStorage',
+            'CRASHSTORAGE_CLASS': 'antenna.ext.s3.crashstorage.S3CrashStorage',
             'CRASHSTORAGE_ENDPOINT_URL': 'http://fakes3:4569',
             'CRASHSTORAGE_ACCESS_KEY': 'fakekey',
             'CRASHSTORAGE_SECRET_ACCESS_KEY': 'fakesecretkey',
@@ -215,7 +215,7 @@ class TestS3MockLogging:
 
             # Verify the retry decorator logged something
             assert lm.has_record(
-                name='antenna.external.s3.connection',
+                name='antenna.ext.s3.connection',
                 levelname='ERROR',
                 msg_contains='retry attempt 0'
             )

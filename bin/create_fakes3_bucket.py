@@ -39,7 +39,7 @@ from everett.manager import ConfigManager, ConfigEnvFileEnv, ConfigOSEnv
 
 sys.path.insert(0, os.getcwd())  # noqa
 
-from antenna.external.s3.connection import S3Connection
+from antenna.ext.s3.connection import S3Connection
 
 
 def main(args):

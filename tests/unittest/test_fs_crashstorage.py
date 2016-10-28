@@ -8,7 +8,7 @@ import os
 from everett.manager import ConfigManager
 from freezegun import freeze_time
 
-from antenna.external.fs.crashstorage import FSCrashStorage
+from antenna.ext.fs.crashstorage import FSCrashStorage
 from antenna.mini_poster import multipart_encode
 
 
@@ -36,7 +36,7 @@ class TestFSCrashStorage:
         client.rebuild_app({
             'BASEDIR': str(tmpdir),
             'THROTTLE_RULES': 'antenna.throttler.accept_all',
-            'CRASHSTORAGE_CLASS': 'antenna.external.fs.crashstorage.FSCrashStorage',
+            'CRASHSTORAGE_CLASS': 'antenna.ext.fs.crashstorage.FSCrashStorage',
             'CRASHSTORAGE_FS_ROOT': str(tmpdir.join('antenna_crashes')),
         })
 
@@ -112,7 +112,7 @@ class TestFSCrashStorage:
         client.rebuild_app({
             'BASEDIR': str(tmpdir),
             'THROTTLE_RULES': 'antenna.throttler.accept_all',
-            'CRASHSTORAGE_CLASS': 'antenna.external.fs.crashstorage.FSCrashStorage',
+            'CRASHSTORAGE_CLASS': 'antenna.ext.fs.crashstorage.FSCrashStorage',
             'CRASHSTORAGE_FS_ROOT': str(tmpdir.join('antenna_crashes')),
         })
 

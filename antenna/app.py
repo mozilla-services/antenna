@@ -164,7 +164,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin, LogConfigMixin):
     )
     required_config.add_option(
         'crashstorage_class',
-        default='antenna.external.crashstorage_base.NoOpCrashStorage',
+        default='antenna.ext.crashstorage_base.NoOpCrashStorage',
         parser=parse_class,
         doc='the class in charge of storing crashes'
     )
