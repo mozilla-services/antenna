@@ -7,7 +7,7 @@ import logging
 from everett.component import ConfigOptions
 from everett.manager import parse_class
 
-from antenna.external.crashstorage_base import CrashStorageBase
+from antenna.ext.crashstorage_base import CrashStorageBase
 from antenna.util import get_date_from_crash_id, json_ordered_dumps
 
 
@@ -32,7 +32,7 @@ class S3CrashStorage(CrashStorageBase):
     required_config = ConfigOptions()
     required_config.add_option(
         'connection_class',
-        default='antenna.external.s3.connection.S3Connection',
+        default='antenna.ext.s3.connection.S3Connection',
         parser=parse_class,
         doc='S3 connection class to use'
     )
