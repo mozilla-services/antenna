@@ -10,6 +10,7 @@ import re
 from everett.component import ConfigOptions, RequiredConfigMixin
 
 from antenna import metrics
+from antenna.util import LogConfigMixin
 
 
 logger = logging.getLogger(__name__)
@@ -34,7 +35,7 @@ def parse_attribute(val):
         )
 
 
-class Throttler(RequiredConfigMixin):
+class Throttler(RequiredConfigMixin, LogConfigMixin):
     """Accepts/rejects incoming crashes based on specified rule set
 
     The throttler can throttle incoming crashes using the content of the crash.

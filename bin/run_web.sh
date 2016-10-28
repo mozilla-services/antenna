@@ -25,6 +25,5 @@ gunicorn \
     --worker-class=gevent \
     --error-logfile=- \
     --access-logfile=- \
-    --log-level=debug \
     antenna.wsgi:application \
     --log-file -

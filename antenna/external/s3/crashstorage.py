@@ -4,7 +4,7 @@
 
 import logging
 
-from everett.component import ConfigOptions, RequiredConfigMixin
+from everett.component import ConfigOptions
 from everett.manager import parse_class
 
 from antenna.external.crashstorage_base import CrashStorageBase
@@ -14,7 +14,7 @@ from antenna.util import get_date_from_crash_id, json_ordered_dumps
 logger = logging.getLogger(__name__)
 
 
-class S3CrashStorage(RequiredConfigMixin, CrashStorageBase):
+class S3CrashStorage(CrashStorageBase):
     """Saves raw crash files to S3
 
     This will save raw crash files to S3 in a pseudo-tree something like this:
@@ -40,6 +40,10 @@ class S3CrashStorage(RequiredConfigMixin, CrashStorageBase):
     def __init__(self, config):
         self.config = config.with_options(self)
         self.conn = self.config('connection_class')(config)
+
+    def log_config(self, logger, with_namespace=None):
+        super().log_config(logger, with_namespace)
+        self.conn.log_config(logger, with_namespace)
 
     def check_health(self, state):
         self.conn.check_health(state)
