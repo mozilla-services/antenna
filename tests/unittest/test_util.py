@@ -12,8 +12,16 @@ from antenna.util import (
     de_null,
     get_date_from_crash_id,
     retry,
-    MaxAttemptsError
+    MaxAttemptsError,
+    utc_now
 )
+
+
+def test_utc_now():
+    res = utc_now()
+    assert res.strftime('%Z') == 'UTC'
+    assert res.strftime('%z') == '+0000'
+    assert res.tzinfo
 
 
 @pytest.mark.parametrize('data,expected', [

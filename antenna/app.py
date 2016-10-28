@@ -21,9 +21,8 @@ from falcon.http_error import HTTPError
 from gevent.pool import Pool
 
 from antenna import metrics
-from antenna.datetimeutil import utc_now
 from antenna.throttler import Throttler, ACCEPT, DEFER, REJECT
-from antenna.util import create_crash_id, de_null, LogConfigMixin
+from antenna.util import create_crash_id, de_null, LogConfigMixin, utc_now
 
 
 logger = logging.getLogger(__name__)
