@@ -390,11 +390,13 @@ class HealthState:
         self.statsd = {}
 
     def add_statsd(self, name, key, value):
+        """Adds a key -> value gauge"""
         if not isinstance(name, str):
             name = name.__class__.__name__
         self.statsd['%s.%s' % (name, key)] = value
 
     def add_error(self, name, msg):
+        """Adds an error"""
         # Use an OrderedDict here so we can maintain key order when converting
         # to JSON.
         d = OrderedDict([('name', name), ('msg', msg)])
@@ -426,7 +428,9 @@ class HeartbeatResource:
             if hasattr(resource, 'check_health'):
                 resource.check_health(state)
 
-        # FIXME(willkg): statsd things here
+        # Go through and call gauge for each statsd item.
+        for k, v in state.statsd.items():
+            mymetrics.gauge(k, v)
 
         if state.is_healthy():
             resp.status = falcon.HTTP_200
