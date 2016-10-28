@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from datetime import datetime
+import datetime
 from functools import wraps
 import gzip
 import io
@@ -10,12 +10,36 @@ import json
 import time
 import uuid
 
-from antenna.datetimeutil import utc_now, UTC
+import isodate
 
+
+UTC = isodate.UTC
 
 # NOTE(willkg): This is a hold-over from Socorro. I'm not really sure what the
 # depth does or whether we still need it.
 DEFAULT_DEPTH = 2
+
+
+def utc_now():
+    """Return a timezone aware datetime instance in UTC timezone
+
+    This funciton is mainly for convenience. Compare:
+
+        >>> from antenna.util import utc_now
+        >>> utc_now()
+        datetime.datetime(2012, 1, 5, 16, 42, 13, 639834,
+          tzinfo=<isodate.tzinfo.Utc object at 0x101475210>)
+
+    Versus:
+
+        >>> import datetime
+        >>> from antenna.util import UTC
+        >>> datetime.datetime.now(UTC)
+        datetime.datetime(2012, 1, 5, 16, 42, 13, 639834,
+          tzinfo=<isodate.tzinfo.Utc object at 0x101475210>)
+
+    """
+    return datetime.datetime.now(UTC)
 
 
 def de_null(value):
@@ -93,7 +117,7 @@ def get_date_from_crash_id(crash_id, as_datetime=False):
     """
     s = '20' + crash_id[-6:]
     if as_datetime:
-        return datetime(int(s[:4]), int(s[4:6]), int(s[6:8]), tzinfo=UTC)
+        return datetime.datetime(int(s[:4]), int(s[4:6]), int(s[6:8]), tzinfo=UTC)
     return s
 
 
