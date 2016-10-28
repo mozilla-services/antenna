@@ -40,6 +40,7 @@ services:
     command: ./bin/run_web.sh
     links:
       - fakes3
+      - statsd
 
   # fakes3 service
   # https://hub.docker.com/r/lphoward/fake-s3/
@@ -49,3 +50,13 @@ services:
       - "4569:4569"
     volumes:
       - ./fakes3_root:/fakes3_root
+
+  statsd:
+    # https://hub.docker.com/r/hopsoft/graphite-statsd/
+    image: hopsoft/graphite-statsd
+    ports:
+      - "9000:80"
+      - "2003-2004:2003-2004"
+      - "2023-2024:2023-2024"
+      - "8125:8125/udp"
+      - "8126:8126"

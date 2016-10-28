@@ -20,30 +20,18 @@ import falcon
 from falcon.http_error import HTTPError
 from gevent.pool import Pool
 
+from antenna import metrics
 from antenna.datetimeutil import utc_now
+from antenna.throttler import Throttler, ACCEPT, DEFER, REJECT
 from antenna.util import create_crash_id, de_null
-from antenna.throttler import Throttler, REJECT
 
 
 logger = logging.getLogger(__name__)
-
-
-_logging_initialized = False
+mymetrics = metrics.get_metrics(__name__)
 
 
 def setup_logging(logging_level):
-    """initializes Python logging configuration
-
-    NOTE(willkg): This causes some problems since it'll get initialized using
-    the first configuration it was given. Pretty sure that'll only happen when
-    running tests and we're not testing logging in tests. If that ever changes,
-    we'll need to revisit this.
-
-    """
-    global _logging_initialized
-    if _logging_initialized:
-        return
-
+    """Initializes Python logging configuration"""
     dc = {
         'version': 1,
         'disable_existing_loggers': True,
@@ -73,7 +61,12 @@ def setup_logging(logging_level):
         },
     }
     logging.config.dictConfig(dc)
-    _logging_initialized = True
+
+
+def setup_metrics(metrics_class, config):
+    """Initializes the metrics system"""
+    logger.info('Setting up metrics: %s', metrics_class)
+    metrics.metrics_configure(metrics_class, config)
 
 
 def log_unhandled(fun):
@@ -134,6 +127,12 @@ class AppConfig(RequiredConfigMixin):
         default='DEBUG',
         doc='The logging level to use. DEBUG, INFO, WARNING, ERROR or CRITICAL'
     )
+    required_config.add_option(
+        'metrics_class',
+        default='antenna.metrics.LoggingMetrics',
+        doc='Metrics client to use',
+        parser=parse_class
+    )
 
     def __init__(self, config):
         self.config_manager = config
@@ -179,6 +178,8 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         # Gevent pool for handling incoming crash reports
         self.pipeline_pool = Pool()
 
+        self.mymetrics = metrics.get_metrics(self)
+
     def check_health(self, state):
         state.add_statsd(self, 'queue_size', len(self.pipeline_pool))
         if hasattr(self.crashstorage, 'check_health'):
@@ -204,6 +205,8 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         """
         # Decompress payload if it's compressed
         if req.env.get('HTTP_CONTENT_ENCODING') == 'gzip':
+            self.mymetrics.incr('gzipped_crash')
+
             # If the content is gzipped, we pull it out and decompress it. We
             # have to do that here because nginx doesn't have a good way to do
             # that in nginx-land.
@@ -254,10 +257,13 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         return raw_crash, dumps
 
+    @mymetrics.timer_decorator('BreakpadSubmitterResource.on_post.time')
     def on_post(self, req, resp):
         resp.content_type = 'text/plain'
 
         raw_crash, dumps = self.extract_payload(req)
+
+        self.mymetrics.incr('incoming_crash')
 
         current_timestamp = utc_now()
         raw_crash['submitted_timestamp'] = current_timestamp.isoformat()
@@ -287,8 +293,16 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             raw_crash['legacy_processing'] = result
             raw_crash['percentage'] = percentage
 
-        # If we should reject this crash, give it a boot to the head.
-        if raw_crash['legacy_processing'] is REJECT:
+        if raw_crash['legacy_processing'] is ACCEPT:
+            self.mymetrics.incr('accept')
+
+        elif raw_crash['legacy_processing'] is DEFER:
+            self.mymetrics.incr('defer')
+
+        elif raw_crash['legacy_processing'] is REJECT:
+            # Reject the crash and end processing.
+            self.mymetrics.incr('reject')
+
             logger.info('%s rejected', crash_id)
             resp.status = falcon.HTTP_200
             resp.body = 'Discarded=1'
@@ -456,6 +470,7 @@ def get_app(config=None):
 
     app_config = AppConfig(config)
     setup_logging(app_config('logging_level'))
+    setup_metrics(app_config('metrics_class'), config)
 
     app = AntennaAPI(config)
     app.add_error_handler(Exception, handler=app.unhandled_exception_handler)
