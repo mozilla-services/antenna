@@ -167,7 +167,7 @@ class TestBreakpadSubmitterResource:
 
     def test_existing_uuid(self, client):
         data, headers = multipart_encode({
-            'uuid': 'de1bb258-cbbf-4589-a673-34f802160918',
+            'uuid': 'de1bb258-cbbf-4589-a673-34f800160918',
             'ProductName': 'Test',
             'Version': '1.0',
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))

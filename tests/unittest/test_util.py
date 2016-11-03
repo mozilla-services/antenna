@@ -11,6 +11,7 @@ from antenna.util import (
     create_crash_id,
     de_null,
     get_date_from_crash_id,
+    get_throttle_from_crash_id,
     retry,
     MaxAttemptsError,
     utc_now
@@ -47,6 +48,15 @@ def test_crash_id():
 
     assert get_date_from_crash_id(crash_id) == '20110906'
     assert get_date_from_crash_id(crash_id, as_datetime=True).strftime('%Y%m%d') == '20110906'
+
+    # Defaults to 1
+    assert get_throttle_from_crash_id(crash_id) == 1
+
+
+def test_crash_id_with_throttle():
+    crash_id = create_crash_id(throttle_result=0)
+
+    assert get_throttle_from_crash_id(crash_id) == 0
 
 
 def test_crash_id_with_date():
