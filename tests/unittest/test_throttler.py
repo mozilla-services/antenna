@@ -62,11 +62,11 @@ class TestRule:
 
         with randommock(0.45):
             # Below the percentage line, so ACCEPT!
-            assert throttler.throttle('11234', {'ProductName': 'test'}) == (ACCEPT, 50)
+            assert throttler.throttle({'ProductName': 'test'}) == (ACCEPT, 'test', 50)
 
         with randommock(0.55):
             # Above the percentage line, so DEFER!
-            assert throttler.throttle('11234', {'ProductName': 'test'}) == (DEFER, 50)
+            assert throttler.throttle({'ProductName': 'test'}) == (DEFER, 'test', 50)
 
 
 class Testaccept_all:
@@ -75,11 +75,11 @@ class Testaccept_all:
             'THROTTLE_RULES': 'antenna.throttler.accept_all'
         }))
 
-        assert throttler.throttle('11234', {'ProductName': 'Test'}) == (ACCEPT, 100)
+        assert throttler.throttle({'ProductName': 'Test'}) == (ACCEPT, 'accept_everything', 100)
 
 
 class Testmozilla_rules:
-    def test_hangid(self, loggingmock):
+    def test_hangid(self):
         raw_crash = {
             'ProductName': 'FireSquid',
             'Version': '99',
@@ -87,122 +87,69 @@ class Testmozilla_rules:
             'HangID': 'xyz'
         }
 
-        with loggingmock(['antenna']) as lm:
-            throttler = Throttler(ConfigManager.from_dict({}))
+        throttler = Throttler(ConfigManager.from_dict({}))
+        assert throttler.throttle(raw_crash) == (REJECT, 'has_hangid_and_browser', None)
 
-            # Reject anything with a HangId and ProcessType = 'browser'
-            assert throttler.throttle('11234', raw_crash) == (REJECT, None)
-
-            assert lm.has_record(
-                name='antenna.throttler',
-                levelname='DEBUG',
-                msg_contains='has_hangid_and_browser'
-            )
-
-    def test_comments(self, loggingmock):
+    def test_comments(self):
         raw_crash = {
             'ProductName': 'Test',
             'Comments': 'foo bar baz'
         }
 
-        with loggingmock(['antenna']) as lm:
-            throttler = Throttler(ConfigManager.from_dict({}))
-
-            assert throttler.throttle('11234', raw_crash) == (ACCEPT, 100)
-
-            assert lm.has_record(
-                name='antenna.throttler',
-                levelname='DEBUG',
-                msg_contains='has_comments'
-            )
+        throttler = Throttler(ConfigManager.from_dict({}))
+        assert throttler.throttle(raw_crash) == (ACCEPT, 'has_comments', 100)
 
     @pytest.mark.parametrize('channel', [
         'aurora',
         'beta',
         'esr'
     ])
-    def test_is_alpha_beta_esr(self, channel, loggingmock):
+    def test_is_alpha_beta_esr(self, channel):
         raw_crash = {
             'ProductName': 'Test',
             'ReleaseChannel': channel
         }
 
-        with loggingmock(['antenna']) as lm:
-            throttler = Throttler(ConfigManager.from_dict({}))
-
-            assert throttler.throttle('11234', raw_crash) == (ACCEPT, 100)
-
-            assert lm.has_record(
-                name='antenna.throttler',
-                levelname='DEBUG',
-                msg_contains='is_alpha_beta_esr'
-            )
+        throttler = Throttler(ConfigManager.from_dict({}))
+        assert throttler.throttle(raw_crash) == (ACCEPT, 'is_alpha_beta_esr', 100)
 
     @pytest.mark.parametrize('channel', [
         'nightly',
         'nightlyfoo'
     ])
-    def test_is_nightly(self, channel, loggingmock):
+    def test_is_nightly(self, channel):
         raw_crash = {
             'ProductName': 'Test',
             'ReleaseChannel': channel
         }
-        with loggingmock(['antenna']) as lm:
-            throttler = Throttler(ConfigManager.from_dict({}))
 
-            assert throttler.throttle('11234', raw_crash) == (ACCEPT, 100)
+        throttler = Throttler(ConfigManager.from_dict({}))
+        assert throttler.throttle(raw_crash) == (ACCEPT, 'is_nightly', 100)
 
-            assert lm.has_record(
-                name='antenna.throttler',
-                levelname='DEBUG',
-                msg_contains='is_nightly'
-            )
-
-    def test_is_firefox(self, randommock, loggingmock):
+    def test_is_firefox(self, randommock):
         with randommock(0.09):
             raw_crash = {
                 'ProductName': 'Firefox',
             }
-            with loggingmock(['antenna']) as lm:
-                throttler = Throttler(ConfigManager.from_dict({}))
 
-                assert throttler.throttle('11234', raw_crash) == (ACCEPT, 10)
-
-                assert lm.has_record(
-                    name='antenna.throttler',
-                    levelname='DEBUG',
-                    msg_contains='is_firefox'
-                )
+            throttler = Throttler(ConfigManager.from_dict({}))
+            assert throttler.throttle(raw_crash) == (ACCEPT, 'is_firefox_desktop', 10)
 
         with randommock(0.9):
             raw_crash = {
                 'ProductName': 'Firefox',
             }
-            with loggingmock(['antenna']) as lm:
-                throttler = Throttler(ConfigManager.from_dict({}))
 
-                assert throttler.throttle('11234', raw_crash) == (DEFER, 10)
+            throttler = Throttler(ConfigManager.from_dict({}))
+            assert throttler.throttle(raw_crash) == (DEFER, 'is_firefox_desktop', 10)
 
-                assert lm.has_record(
-                    name='antenna.throttler',
-                    levelname='DEBUG',
-                    msg_contains='is_firefox'
-                )
-
-    def test_is_fennec(self, loggingmock):
+    def test_is_fennec(self):
         raw_crash = {
             'ProductName': 'Fennec'
         }
-        with loggingmock(['antenna']) as lm:
-            throttler = Throttler(ConfigManager.from_dict({}))
 
-            assert throttler.throttle('11234', raw_crash) == (ACCEPT, 100)
-
-            assert lm.has_record(
-                name='antenna.throttler',
-                levelname='DEBUG',
-                msg_contains='is_fennec'
-            )
+        throttler = Throttler(ConfigManager.from_dict({}))
+        assert throttler.throttle(raw_crash) == (ACCEPT, 'is_fennec', 100)
 
     @pytest.mark.parametrize('version', [
         '35.0a',
@@ -210,37 +157,23 @@ class Testmozilla_rules:
         '35.0A',
         '35.0.0a'
     ])
-    def test_is_version_alpha_beta_special(self, version, loggingmock):
+    def test_is_version_alpha_beta_special(self, version):
         raw_crash = {
             'ProductName': 'Test',
             'Version': version
         }
-        with loggingmock(['antenna']) as lm:
-            throttler = Throttler(ConfigManager.from_dict({}))
 
-            assert throttler.throttle('11234', raw_crash) == (ACCEPT, 100)
-
-            assert lm.has_record(
-                name='antenna.throttler',
-                levelname='DEBUG',
-                msg_contains='is_version_alpha_beta_special'
-            )
+        throttler = Throttler(ConfigManager.from_dict({}))
+        assert throttler.throttle(raw_crash) == (ACCEPT, 'is_version_alpha_beta_special', 100)
 
     @pytest.mark.parametrize('product', [
         'Thunderbird',
         'Seamonkey'
     ])
-    def test_is_thunderbird_seamonkey(self, product, loggingmock):
+    def test_is_thunderbird_seamonkey(self, product):
         raw_crash = {
             'ProductName': product
         }
-        with loggingmock(['antenna']) as lm:
-            throttler = Throttler(ConfigManager.from_dict({}))
 
-            assert throttler.throttle('11234', raw_crash) == (ACCEPT, 100)
-
-            assert lm.has_record(
-                name='antenna.throttler',
-                levelname='DEBUG',
-                msg_contains='is_thunderbird_seamonkey'
-            )
+        throttler = Throttler(ConfigManager.from_dict({}))
+        assert throttler.throttle(raw_crash) == (ACCEPT, 'is_thunderbird_seamonkey', 100)

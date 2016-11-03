@@ -21,8 +21,19 @@ from falcon.http_error import HTTPError
 from gevent.pool import Pool
 
 from antenna import metrics
-from antenna.throttler import Throttler, ACCEPT, DEFER, REJECT
-from antenna.util import create_crash_id, de_null, LogConfigMixin, utc_now
+from antenna.throttler import (
+    Throttler,
+    ACCEPT,
+    DEFER,
+    REJECT,
+    RESULT_TO_TEXT,
+)
+from antenna.util import (
+    create_crash_id,
+    de_null,
+    LogConfigMixin,
+    utc_now,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -262,6 +273,27 @@ class BreakpadSubmitterResource(RequiredConfigMixin, LogConfigMixin):
 
         return raw_crash, dumps
 
+    def get_throttle_result(self, raw_crash):
+        # FIXME(willkg): This means that legacy_processing and percentage
+        # are user-provided. We should sanitize them.
+
+        # If we don't have throttle results for this crash, then get them.
+        if 'legacy_processing' in raw_crash and 'percentage' in raw_crash:
+            return (
+                raw_crash['legacy_processing'],
+                'dontknow',
+                raw_crash['percentage']
+            )
+
+        # Run the throttler
+        result, rule_name, percentage = self.throttler.throttle(raw_crash)
+
+        # Add the results to the raw_crash
+        raw_crash['legacy_processing'] = result
+        raw_crash['percentage'] = percentage
+
+        return result, rule_name, percentage
+
     @mymetrics.timer_decorator('BreakpadSubmitterResource.on_post.time')
     def on_post(self, req, resp):
         resp.content_type = 'text/plain'
@@ -275,28 +307,23 @@ class BreakpadSubmitterResource(RequiredConfigMixin, LogConfigMixin):
         # FIXME(willkg): Check the processor to see if we can remove this.
         raw_crash['timestamp'] = time.time()
 
-        if 'uuid' not in raw_crash:
-            crash_id = create_crash_id(current_timestamp)
-            raw_crash['uuid'] = crash_id
-            logger.info('%s received', crash_id)
-        else:
+        result, rule_name, percentage = self.get_throttle_result(raw_crash)
+
+        if 'uuid' in raw_crash:
             # FIXME(willkg): This means the uuid is essentially user-provided.
             # We should sanitize it before proceeding.
             crash_id = raw_crash['uuid']
             logger.info('%s received with existing crash_id', crash_id)
 
+        else:
+            crash_id = create_crash_id(timestamp=current_timestamp, throttle_result=result)
+            raw_crash['uuid'] = crash_id
+            logger.info('%s received', crash_id)
+
         raw_crash['type_tag'] = self.config('dump_id_prefix').strip('-')
 
-        # FIXME(willkg): This means that legacy_processing and percentage
-        # are user-provided. We should sanitize them.
-
-        # If we don't have throttle results for this crash, then get them.
-        if 'legacy_processing' not in raw_crash:
-            result, percentage = self.throttler.throttle(crash_id, raw_crash)
-
-            # Add throttle results to raw_crash
-            raw_crash['legacy_processing'] = result
-            raw_crash['percentage'] = percentage
+        # Log the throttle result
+        logger.debug('%s: matched by %s; returned %s', crash_id, rule_name, RESULT_TO_TEXT[result])
 
         if raw_crash['legacy_processing'] is ACCEPT:
             self.mymetrics.incr('accept')
