@@ -5,6 +5,7 @@
 import io
 
 from everett.manager import ConfigManager
+import pytest
 
 from antenna.app import BreakpadSubmitterResource
 from antenna.mini_poster import multipart_encode
@@ -166,8 +167,9 @@ class TestBreakpadSubmitterResource:
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
 
     def test_existing_uuid(self, client):
+        crash_id = 'de1bb258-cbbf-4589-a673-34f800160918'
         data, headers = multipart_encode({
-            'uuid': 'de1bb258-cbbf-4589-a673-34f800160918',
+            'uuid': crash_id,
             'ProductName': 'Test',
             'Version': '1.0',
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
@@ -180,11 +182,101 @@ class TestBreakpadSubmitterResource:
         )
         assert result.status_code == 200
 
-        # Extract the uuid from the response content and verify that it's in
-        # the original POST data
-        offset = len('CrashID=bp-')
-        crash_id = result.content.strip()[offset:]
-        crash_id = crash_id.decode('utf-8')
-        assert crash_id in str(data)
+        # Extract the uuid from the response content and verify that it's the
+        # crash id we sent
+        assert result.content.decode('utf-8') == 'CrashID=bp-%s\n' % crash_id
+
+    def test_legacy_processing(self, client, loggingmock):
+        crash_id = 'de1bb258-cbbf-4589-a673-34f800160918'
+        data, headers = multipart_encode({
+            'uuid': crash_id,
+            'ProductName': 'Test',
+            'Version': '1.0',
+            'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234')),
+
+            'legacy_processing': '0',  # ACCEPT
+            'percentage': '100',
+        })
+
+        with loggingmock(['antenna']) as lm:
+            result = client.post(
+                '/submit',
+                headers=headers,
+                body=data
+            )
+            assert result.status_code == 200
+
+            assert lm.has_record(
+                name='antenna.app',
+                levelname='INFO',
+                msg_contains='%s: matched by ALREADY_THROTTLED; returned ACCEPT' % crash_id
+            )
+
+    @pytest.mark.parametrize('legacy,percentage', [
+        # One of the two is a non-int
+        ('foo', 'bar'),
+        ('0', 'bar'),
+        ('foo', '100'),
+
+        # legacy_processing is not a valid value
+        ('1000', '100'),
+
+        # percentage is not valid
+        ('0', '1000')
+    ])
+    def test_legacy_processing_bad_values(self, legacy, percentage, client, loggingmock):
+        crash_id = 'de1bb258-cbbf-4589-a673-34f800160918'
+        data, headers = multipart_encode({
+            'uuid': crash_id,
+            'ProductName': 'Test',
+            'Version': '1.0',
+            'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234')),
+
+            # These are invalid values for legacy_processing and percentage
+            'legacy_processing': legacy,
+            'percentage': percentage
+        })
+
+        with loggingmock(['antenna']) as lm:
+            result = client.post(
+                '/submit',
+                headers=headers,
+                body=data
+            )
+            assert result.status_code == 200
+
+            # Verify it didn't match with ALREADY_THROTTLED and instead matched
+            # with a rule indicating it went through throttling.
+            assert lm.has_record(
+                name='antenna.app',
+                levelname='INFO',
+                msg_contains='%s: matched by is_thunderbird_seamonkey; returned ACCEPT' % crash_id
+            )
+
+    def test_throttleable(self, client, loggingmock):
+        crash_id = 'de1bb258-cbbf-4589-a673-34f800160918'
+        data, headers = multipart_encode({
+            'uuid': crash_id,
+            'ProductName': 'Test',
+            'Version': '1.0',
+            'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234')),
+
+            'Throttleable': '0'
+        })
+
+        with loggingmock(['antenna']) as lm:
+            result = client.post(
+                '/submit',
+                headers=headers,
+                body=data
+            )
+            assert result.status_code == 200
+
+            # Verify it got matched as a THROTTLEABLE_0
+            assert lm.has_record(
+                name='antenna.app',
+                levelname='INFO',
+                msg_contains='%s: matched by THROTTLEABLE_0; returned ACCEPT' % crash_id
+            )
 
     # FIXME: test crash report shapes (multiple dumps? no dumps? what else is in there?)

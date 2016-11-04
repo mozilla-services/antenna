@@ -107,7 +107,7 @@ class Throttler(RequiredConfigMixin, LogConfigMixin):
                 return response, rule.rule_name, rule.percentage
 
         # None of the rules matched, so we reject
-        return REJECT, 'outofrules', 0
+        return REJECT, 'NO_MATCH', 0
 
 
 class Rule:

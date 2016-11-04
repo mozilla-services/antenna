@@ -274,21 +274,59 @@ class BreakpadSubmitterResource(RequiredConfigMixin, LogConfigMixin):
         return raw_crash, dumps
 
     def get_throttle_result(self, raw_crash):
-        # FIXME(willkg): This means that legacy_processing and percentage
-        # are user-provided. We should sanitize them.
+        """Given a raw_crash, figures out the throttling
 
-        # If we don't have throttle results for this crash, then get them.
+        If the raw_crash contains throttling information already, it returns
+        that. If it doesn't, then this will apply throttling and return the
+        results of that.
+
+        A rule name of ``ALREADY_THROTTLED`` indicates that the raw_crash was
+        previously throttled and we're re-using that data.
+
+        A rule name of ``THROTTLEABLE_0`` indicates that the raw_crash was
+        marked to not be throttled.
+
+        :arg dict raw_crash: the raw crash to throttle
+
+        :returns tuple: ``(result, rule_name, percentage)``
+
+        """
+        # If we have throttle results for this crash, return those.
         if 'legacy_processing' in raw_crash and 'percentage' in raw_crash:
-            return (
-                raw_crash['legacy_processing'],
-                'dontknow',
-                raw_crash['percentage']
-            )
+            try:
+                result = int(raw_crash['legacy_processing'])
+                if result not in (ACCEPT, DEFER):
+                    raise ValueError('Result is not a valid value: %r', result)
 
-        # Run the throttler
-        result, rule_name, percentage = self.throttler.throttle(raw_crash)
+                percentage = int(raw_crash['percentage'])
+                if not (0 <= percentage <= 100):
+                    raise ValueError('Percentage is not a valid value: %r', result)
 
-        # Add the results to the raw_crash
+                return (
+                    result,
+                    'ALREADY_THROTTLED',
+                    percentage
+                )
+
+            except ValueError:
+                # If we've gotten a ValueError, it means one or both of the
+                # values is bad and we should ignore it and move forward.
+                self.mymetrics.incr('throttle.bad_throttle_values')
+
+        if raw_crash.get('Throttleable', None) == '0':
+            # If the raw crash has ``Throttleable=0``, then we accept the
+            # crash.
+            self.mymetrics.incr('throttleable_0')
+            result = ACCEPT
+            rule_name = 'THROTTLEABLE_0'
+            percentage = 100
+
+        else:
+            # At this stage, nothing has given us a throttle answer, so we
+            # throttle the crash.
+            result, rule_name, percentage = self.throttler.throttle(raw_crash)
+
+        # Save the results in the raw_crash itself
         raw_crash['legacy_processing'] = result
         raw_crash['percentage'] = percentage
 
@@ -307,6 +345,9 @@ class BreakpadSubmitterResource(RequiredConfigMixin, LogConfigMixin):
         # FIXME(willkg): Check the processor to see if we can remove this.
         raw_crash['timestamp'] = time.time()
 
+        # We throttle first because throttling affects generation of new crash
+        # ids and we want to do all our logging with the correct crash id to
+        # make it easier to follow crashes through Antenna.
         result, rule_name, percentage = self.get_throttle_result(raw_crash)
 
         if 'uuid' in raw_crash:
@@ -323,17 +364,17 @@ class BreakpadSubmitterResource(RequiredConfigMixin, LogConfigMixin):
         raw_crash['type_tag'] = self.config('dump_id_prefix').strip('-')
 
         # Log the throttle result
-        logger.debug('%s: matched by %s; returned %s', crash_id, rule_name, RESULT_TO_TEXT[result])
+        logger.info('%s: matched by %s; returned %s', crash_id, rule_name, RESULT_TO_TEXT[result])
 
         if raw_crash['legacy_processing'] is ACCEPT:
-            self.mymetrics.incr('accept')
+            self.mymetrics.incr('throttle.accept')
 
         elif raw_crash['legacy_processing'] is DEFER:
-            self.mymetrics.incr('defer')
+            self.mymetrics.incr('throttle.defer')
 
         elif raw_crash['legacy_processing'] is REJECT:
             # Reject the crash and end processing.
-            self.mymetrics.incr('reject')
+            self.mymetrics.incr('throttle.reject')
 
             logger.info('%s rejected', crash_id)
             resp.status = falcon.HTTP_200
@@ -341,7 +382,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin, LogConfigMixin):
             return
 
         self.pipeline_pool.spawn(
-            self.post_process,
+            self.save_crash_to_storage,
             raw_crash=raw_crash,
             dumps=dumps,
             crash_id=crash_id
@@ -352,13 +393,8 @@ class BreakpadSubmitterResource(RequiredConfigMixin, LogConfigMixin):
         resp.status = falcon.HTTP_200
         resp.body = 'CrashID=%s%s\n' % (self.config('dump_id_prefix'), crash_id)
 
-    # FIXME(willkg): Need a better name than "post_process"
-    def post_process(self, raw_crash, dumps, crash_id):
-        """Handles received crash and saves it"""
-
-        # FIXME(willkg): How do we tell pigeon whether to process this crash or
-        # not? How can we tell pigeon in a way that doesn't require pigeon to
-        # pull the crash from s3?
+    def save_crash_to_storage(self, raw_crash, dumps, crash_id):
+        """Saves the crash to storage"""
 
         # FIXME(willkg): How to deal with errors here? The save_raw_crash should
         # handle retrying, so if it bubbles up to this point, then it's an
@@ -375,8 +411,9 @@ class BreakpadSubmitterResource(RequiredConfigMixin, LogConfigMixin):
     def join_pool(self):
         """Joins the pool--use only in tests!
 
-        This is helpful for forcing everything to finish so that we can verify
-        outcomes in the test suite.
+        This is helpful for forcing all the coroutines to complete so that we
+        can verify outcomes in the test suite for work that might cross
+        coroutines.
 
         """
         self.pipeline_pool.join()
