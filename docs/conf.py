@@ -13,10 +13,10 @@
 # serve to show the default.
 
 import sys
-import os
+from pathlib import Path
 
-BASEDIR = os.path.dirname(os.path.dirname(__file__))
-sys.path.insert(0, BASEDIR)
+BASEDIR = Path(__file__).parent.parent
+sys.path.insert(0, str(BASEDIR))
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -33,6 +33,7 @@ sys.path.insert(0, BASEDIR)
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'everett.sphinx_autoconfig',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -159,7 +160,13 @@ html_static_path = ['_static']
 #html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-#html_sidebars = {}
+html_sidebars = {
+    '**': [
+        'globaltoc.html',
+        'relations.html',
+        'searchbox.html',
+    ]
+}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.

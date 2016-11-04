@@ -50,10 +50,12 @@ def _change_metrics(new_impl):
     _metrics_impl = new_impl
 
 
-class LoggingMetrics:
-    """Metrics implementation that logs the values"""
+class LoggingMetrics(RequiredConfigMixin):
+    """Metrics implementation that logs the values."""
+    required_config = ConfigOptions()
+
     def __init__(self, config):
-        pass
+        self.config = config.with_options(self)
 
     def _log(self, fun_name, stat, kwargs):
         logger.info('LoggingMetrics.%s: %s %s', fun_name, stat, kwargs)
@@ -69,7 +71,7 @@ class LoggingMetrics:
 
 
 class DogStatsdMetrics(RequiredConfigMixin):
-    """Uses the datadog DogStatsd client for statsd pings"""
+    """Uses the Datadog DogStatsd client for statsd pings."""
     required_config = ConfigOptions()
     required_config.add_option(
         'statsd_host',

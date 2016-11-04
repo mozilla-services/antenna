@@ -43,13 +43,25 @@ To run the tests, run this:
 
 .. code-block:: shell
 
-   $ py.test
+   $ make test
 
 
 Tests go in ``tests/``. Data required by tests goes in ``tests/data/``.
 
-We're using py.test_ for a test harness and test discovery. We use WebTest_ for
-testing the WSGI application and HTTP requests.
+If you need to run specific tests or pass in different arguments, you can run
+bash in the base container and then run ``py.test`` with whatever args you
+want. For example:
 
-.. _WebTest: http://webtest.pythonpaste.org/en/latest/index.html
+.. code-block:: shell
+
+   $ make shell
+   app@...$ py.test
+
+   <pytest output>
+
+   app@...$ py.test tests/unittest/test_crashstorage.py
+
+
+We're using py.test_ for a test harness and test discovery.
+
 .. _py.test: http://pytest.org/

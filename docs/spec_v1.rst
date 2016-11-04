@@ -2,7 +2,7 @@
 Project specification: v1
 =========================
 
-..contents::
+.. contents::
 
 
 Requirements
@@ -10,31 +10,48 @@ Requirements
 
 Requirements for v1 of antenna:
 
-1. handle incoming HTTP POST requests on ``/submit``
+1. Handle incoming HTTP POST requests on ``/submit``
 
    * Handle gzip compressed HTTP POST request bodies.
    * Parse ``multipart/form-data`` into a raw crash.
-   * Generate a crash id using the same scheme we're currently using.
-   * Add ``uuid``, ``dump_names``, ``timestamp`` and ``submit_timestamp`` fields
-     to raw crash.
 
-2. return crash id to client
+2. Throttle the crash
+
+   * Examine the crash and apply throttling rules to it.
+   * Rejected crashes get dropped.
+
+3. Generate a crash id
+
+   * Generate a crash id using the same scheme we're currently using.
+
+4. Add collector-generated bits to the crash report.
+
+   * Add ``uuid``, ``dump_names``, ``timestamp``, ``submit_timestamp``,
+     ``legacy_processing`` and ``percentage`` fields to raw crash.
+
+5. Return crash id to client
 
    * This ends the HTTP session, so we want to get to this point as soon as
      possible.
 
-3. upload crash report payload to S3
+6. Upload crash report files to S3
 
    * Use the same S3 "directory" scheme we're currently using.
    * Keep trying to save until all files are successfully saved.
    * We'll use SNS to alert something else that will notify the processor of the
      new item to process.
 
-4. support Ops Dockerflow status endpoints
+7. Support Ops Dockerflow status endpoints
 
    * ``/__version__``
    * ``/__heartbeat__``
    * ``/__lbheartbeat__``
+
+8. Support Ops logging requirements
+
+   * FIXME: link?
+
+9. Support Ops statsd for metrics
 
 
 Crash reports and the current collector
@@ -132,9 +149,33 @@ Which ends up in S3 like this::
         Raw dumps.
 
 
+Throttling
+==========
+
+We were thinking of moving throttling to the processor, but in the interests of
+reducing the amount of work on other parts of Socorro that we'd have to land in
+lockstep with migrating to Antenna, we're going to keep the throttler in Antenna
+for now.
+
+We should take the existing throttler code, clean it up and use that verbatim.
+
+One thing we're going to change is that we're not going to specify throttling
+rules in configuration. Instead, we'll specify a Python dotted path to the
+variable holding the throttling rules which will be defined as Python code. That
+makes it wayyyyyy easier to write, review, verify correctness and maintain over
+time.
+
+
+Metrics
+=======
+
+
+
+Research and decisions
+======================
 
 nginx vs. python thoughts
-=========================
+-------------------------
 
 The current collector has a web process that:
 
@@ -219,14 +260,14 @@ it'll ever be a **wrong** decision.
 
 
 gevent thoughts
-===============
+---------------
 
 `Falcon <https://falconframework.org/>`_ lists "works great with async libraries
 like gevent" as a feature, so it should be fine.
 
 * http://falcon.readthedocs.io/en/stable/index.html?highlight=gevent#features
 
-While looking into whether `boto supported Python 3's asyncio, I read several
+While looking into whether boto supported Python 3's asyncio, I read several
 comments in their issue tracker from people who use boto with gevent without
 problems. Interestingly, the boto2 issue tracker has some open issues around
 gevent, but the boto3 issue tracker has none. From that anecdata, I think we're
@@ -257,7 +298,7 @@ event-driven code and making sure all the libs we use are gevent-friendly.
 
 
 boto2 vs. boto3
-===============
+---------------
 
 According to the boto documentation, boto3 is stable and recommended for daily
 use.
@@ -269,7 +310,7 @@ Socorro uses boto2. I think we'll go with boto3 because it's the future.
 
 
 S3 and bucket names
-===================
+-------------------
 
 AWS Rules for bucket names:
 

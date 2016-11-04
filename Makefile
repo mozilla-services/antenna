@@ -21,16 +21,16 @@ help:
 	make build
 
 build:
-	${DC} build deploy-base
-	${DC} build dev-base
-	${DC} build base
+	ANTENNA_ENV=empty.env ${DC} build deploy-base
+	ANTENNA_ENV=empty.env ${DC} build dev-base
+	ANTENNA_ENV=empty.env ${DC} build base
 	touch .docker-build
 
 run: .docker-build
 	ANTENNA_ENV=${ANTENNA_ENV} ${DC} up web
 
 shell: .docker-build
-	${DC} run base bash
+	ANTENNA_ENV=empty.env ${DC} run base bash
 
 clean:
 	# python related things
@@ -45,7 +45,7 @@ clean:
 
 	# test related things
 	-rm -f .coverage
-	${DC} run base rm -rf cover
+	ANTENNA_ENV=empty.env ${DC} run base rm -rf cover
 
 	# docs files
 	-rm -rf docs/_build/
@@ -55,17 +55,15 @@ clean:
 	-rm -rf fakes3_root/
 
 lint: .docker-build
-	${DC} run base flake8 --statistics antenna tests/unittest/
+	ANTENNA_ENV=empty.env ${DC} run base flake8 --statistics antenna tests/unittest/
 
 test: .docker-build
-	${DC} run base py.test
+	ANTENNA_ENV=empty.env ${DC} run base py.test
 
 test-coverage: .docker-build
-	${DC} run base py.test --with-coverage --cover-package=antenna --cover-inclusive --cover-html
+	ANTENNA_ENV=empty.env ${DC} run base py.test --with-coverage --cover-package=antenna --cover-inclusive --cover-html
 
 docs: .docker-build
-	-mkdir -p docs/_build/
-	chmod -R 777 docs/_build/
-	${DC} run base ./bin/build_docs.sh
+	ANTENNA_ENV=empty.env ${DC} run base ./bin/build_docs.sh
 
 .PHONY: default clean build docs lint run shell test test-coverage

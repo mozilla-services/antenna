@@ -35,7 +35,33 @@ mymetrics = metrics.get_metrics(__name__)
 
 
 class BreakpadSubmitterResource(RequiredConfigMixin, LogConfigMixin):
-    """Handles incoming breakpad crash reports and saves to S3"""
+    """Handles incoming breakpad crash reports and saves to crashstorage
+
+    This handles incoming HTTP POST requests containing breakpad-style crash
+    reports in multipart/form-data format.
+
+    It can handle compressed or uncompressed POST payloads.
+
+    It parses the payload from the HTTP POST request, runs it through the
+    throttler with the specified rules, generates a crash_id, returns the
+    crash_id to the HTTP client and then saves the crash using the configured
+    crashstorage class.
+
+    .. Note::
+
+       From when a crash comes in to when it's saved by the crashstorage class,
+       the crash is entirely in memory. Keep that in mind when figuring out
+       how to scale your Antenna nodes.
+
+
+    The most important configuration bit here is choosing the crashstorage
+    class.
+
+    For example::
+
+        CRASHSTORAGE_CLASS=antenna.ext.s3.crashstorage.S3CrashStorage
+
+    """
     required_config = ConfigOptions()
     required_config.add_option(
         'dump_field', default='upload_file_minidump',

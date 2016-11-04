@@ -2,23 +2,25 @@
 Socorro Antenna docs
 ====================
 
-.. include:: ../README.rst
-
 
 Contents
 ========
 
+User docs:
+
 .. toctree::
    :maxdepth: 2
 
+   readme
+   configuration
+   breakpad_reporting
+
+
+Project docs:
+
+.. toctree::
+
    dev
-   antenna
-   modules
-
-
-Project docs
-============
-
    spec_v1
 
 Indices and tables
