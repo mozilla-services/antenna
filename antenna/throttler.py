@@ -20,6 +20,12 @@ ACCEPT = 0   # save and process
 DEFER = 1    # save but don't process
 REJECT = 2   # throw the crash away
 
+RESULT_TO_TEXT = {
+    0: 'ACCEPT',
+    1: 'DEFER',
+    2: 'REJECT'
+}
+
 REGEXP_TYPE = type(re.compile(''))
 
 
@@ -79,28 +85,29 @@ class Throttler(RequiredConfigMixin, LogConfigMixin):
         self.rule_set = self.config('throttle_rules')
         self.mymetrics = metrics.get_metrics(self)
 
-    def throttle(self, crash_id, raw_crash):
-        """Go through rule set to ACCEPT, REJECT or DEFER"""
+    def throttle(self, raw_crash):
+        """Go through rule set to ACCEPT, REJECT or DEFER
+
+        :arg raw_crash: the crash to throttle
+
+        :returns tuple: ``(result, rule_name, percentage)``
+
+        """
         for rule in self.rule_set:
             match = rule.match(raw_crash)
 
             if match:
                 self.mymetrics.incr('match_%s' % rule.rule_name)
 
-                logger.debug('%s: matched by %s', crash_id, rule.rule_name)
-
                 if rule.percentage is None:
-                    logger.debug('%s: percentage is None: rejecting', crash_id)
-                    return REJECT, None
+                    return REJECT, rule.rule_name, None
 
                 random_number = random.random() * 100.0
                 response = DEFER if random_number > rule.percentage else ACCEPT
-                return response, rule.percentage
-
-        logger.debug('%s: out of rules: rejected', crash_id)
+                return response, rule.rule_name, rule.percentage
 
         # None of the rules matched, so we reject
-        return REJECT, 0
+        return REJECT, 'NO_MATCH', 0
 
 
 class Rule:

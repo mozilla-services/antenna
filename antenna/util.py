@@ -15,10 +15,6 @@ import isodate
 
 UTC = isodate.UTC
 
-# NOTE(willkg): This is a hold-over from Socorro. I'm not really sure what the
-# depth does or whether we still need it.
-DEFAULT_DEPTH = 2
-
 
 def utc_now():
     """Return a timezone aware datetime instance in UTC timezone
@@ -88,21 +84,45 @@ def compress(multipart):
     return bio.getbuffer()
 
 
-def create_crash_id(timestamp=None):
+def create_crash_id(timestamp=None, throttle_result=1):
     """Generates a crash id
 
+    Crash ids have the following format::
+
+        de1bb258-cbbf-4589-a673-34f800160918
+                                     ^^^^^^^
+                                     ||____|
+                                     |  yymmdd
+                                     |
+                                     throttle_result
+
+    The ``throttle_result`` should be either 0 (accept) or 1 (defer).
+
     :arg date/datetime timestamp: a datetime or date to use in the crash id
+    :arg int throttle_result: the throttle result to encode; defaults to 1
+        which is DEFER
 
     :returns: crash id as str
 
     """
     if timestamp is None:
         timestamp = utc_now().date()
-    depth = DEFAULT_DEPTH
+
     id_ = str(uuid.uuid4())
     return "%s%d%02d%02d%02d" % (
-        id_[:-7], depth, timestamp.year % 100, timestamp.month, timestamp.day
+        id_[:-7], throttle_result, timestamp.year % 100, timestamp.month, timestamp.day
     )
+
+
+def get_throttle_from_crash_id(crash_id):
+    """Retrieve the throttle instruction from the crash_id
+
+    :arg str crash_id: the crash id
+
+    :returns: int
+
+    """
+    return int(crash_id[-7])
 
 
 def get_date_from_crash_id(crash_id, as_datetime=False):

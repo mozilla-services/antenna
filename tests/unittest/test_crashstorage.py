@@ -18,7 +18,7 @@ class TestCrashStorage:
         })
 
         data, headers = multipart_encode({
-            'uuid': 'de1bb258-cbbf-4589-a673-34f802160918',
+            'uuid': 'de1bb258-cbbf-4589-a673-34f800160918',
             'ProductName': 'Test',
             'Version': '1.0',
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
@@ -51,8 +51,8 @@ class TestCrashStorage:
                 'submitted_timestamp': '2011-09-06T00:00:00+00:00',
                 'timestamp': 1315267200.0,
                 'type_tag': 'bp',
-                'uuid': 'de1bb258-cbbf-4589-a673-34f802160918'
+                'uuid': 'de1bb258-cbbf-4589-a673-34f800160918'
             }
         )
         assert crash['dumps'] == {'upload_file_minidump': b'abcd1234'}
-        assert crash['crash_id'] == 'de1bb258-cbbf-4589-a673-34f802160918'
+        assert crash['crash_id'] == 'de1bb258-cbbf-4589-a673-34f800160918'

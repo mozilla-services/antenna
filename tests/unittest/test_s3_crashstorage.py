@@ -19,24 +19,24 @@ class TestS3Mock:
         # # We want to verify these files are saved in this specific order.
         s3mock.add_step(
             method='PUT',
-            url='http://fakes3:4569/fakebucket//v1/dump_names/de1bb258-cbbf-4589-a673-34f802160918',
+            url='http://fakes3:4569/fakebucket//v1/dump_names/de1bb258-cbbf-4589-a673-34f800160918',
             body=b'["upload_file_minidump"]',
             resp=s3mock.fake_response(status_code=200)
         )
         s3mock.add_step(
             method='PUT',
-            url='http://fakes3:4569/fakebucket//v1/upload_file_minidump/de1bb258-cbbf-4589-a673-34f802160918',
+            url='http://fakes3:4569/fakebucket//v1/upload_file_minidump/de1bb258-cbbf-4589-a673-34f800160918',
             body=b'abcd1234',
             resp=s3mock.fake_response(status_code=200)
         )
         s3mock.add_step(
             method='PUT',
-            url='http://fakes3:4569/fakebucket//v2/raw_crash/de1/20160918/de1bb258-cbbf-4589-a673-34f802160918',
+            url='http://fakes3:4569/fakebucket//v2/raw_crash/de1/20160918/de1bb258-cbbf-4589-a673-34f800160918',
             # Not going to compare the body here because it's just the raw crash
             resp=s3mock.fake_response(status_code=200)
         )
         data, headers = multipart_encode({
-            'uuid': 'de1bb258-cbbf-4589-a673-34f802160918',
+            'uuid': 'de1bb258-cbbf-4589-a673-34f800160918',
             'ProductName': 'Test',
             'Version': '1.0',
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
@@ -61,7 +61,7 @@ class TestS3Mock:
         # Verify the collector returns a 200 status code and the crash id
         # we fed it.
         assert result.status_code == 200
-        assert result.content == b'CrashID=bp-de1bb258-cbbf-4589-a673-34f802160918\n'
+        assert result.content == b'CrashID=bp-de1bb258-cbbf-4589-a673-34f800160918\n'
 
     def test_region_and_bucket_with_periods(self, client, s3mock):
         # # .verify_configuration() calls HEAD on the bucket to verify it exists
@@ -76,24 +76,24 @@ class TestS3Mock:
         # We want to verify these files are saved in this specific order.
         s3mock.add_step(
             method='PUT',
-            url=ROOT + 'fakebucket.with.periods//v1/dump_names/de1bb258-cbbf-4589-a673-34f802160918',
+            url=ROOT + 'fakebucket.with.periods//v1/dump_names/de1bb258-cbbf-4589-a673-34f800160918',
             body=b'["upload_file_minidump"]',
             resp=s3mock.fake_response(status_code=200)
         )
         s3mock.add_step(
             method='PUT',
-            url=ROOT + 'fakebucket.with.periods//v1/upload_file_minidump/de1bb258-cbbf-4589-a673-34f802160918',
+            url=ROOT + 'fakebucket.with.periods//v1/upload_file_minidump/de1bb258-cbbf-4589-a673-34f800160918',
             body=b'abcd1234',
             resp=s3mock.fake_response(status_code=200)
         )
         s3mock.add_step(
             method='PUT',
-            url=ROOT + 'fakebucket.with.periods//v2/raw_crash/de1/20160918/de1bb258-cbbf-4589-a673-34f802160918',
+            url=ROOT + 'fakebucket.with.periods//v2/raw_crash/de1/20160918/de1bb258-cbbf-4589-a673-34f800160918',
             # Not going to compare the body here because it's just the raw crash
             resp=s3mock.fake_response(status_code=200)
         )
         data, headers = multipart_encode({
-            'uuid': 'de1bb258-cbbf-4589-a673-34f802160918',
+            'uuid': 'de1bb258-cbbf-4589-a673-34f800160918',
             'ProductName': 'Test',
             'Version': '1.0',
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
@@ -118,7 +118,7 @@ class TestS3Mock:
         # Verify the collector returns a 200 status code and the crash id
         # we fed it.
         assert result.status_code == 200
-        assert result.content == b'CrashID=bp-de1bb258-cbbf-4589-a673-34f802160918\n'
+        assert result.content == b'CrashID=bp-de1bb258-cbbf-4589-a673-34f800160918\n'
 
     def test_missing_bucket_halts_startup(self, client, s3mock):
         # .verify_configuration() calls HEAD on the bucket to verify it exists
@@ -163,7 +163,7 @@ class TestS3MockLogging:
         # Fail once with a 403, retry and then proceed.
         s3mock.add_step(
             method='PUT',
-            url=ROOT + 'fakebucket//v1/dump_names/de1bb258-cbbf-4589-a673-34f802160918',
+            url=ROOT + 'fakebucket//v1/dump_names/de1bb258-cbbf-4589-a673-34f800160918',
             body=b'["upload_file_minidump"]',
             resp=s3mock.fake_response(status_code=403)
         )
@@ -171,24 +171,24 @@ class TestS3MockLogging:
         # Proceed with saving files.
         s3mock.add_step(
             method='PUT',
-            url=ROOT + 'fakebucket//v1/dump_names/de1bb258-cbbf-4589-a673-34f802160918',
+            url=ROOT + 'fakebucket//v1/dump_names/de1bb258-cbbf-4589-a673-34f800160918',
             body=b'["upload_file_minidump"]',
             resp=s3mock.fake_response(status_code=200)
         )
         s3mock.add_step(
             method='PUT',
-            url=ROOT + 'fakebucket//v1/upload_file_minidump/de1bb258-cbbf-4589-a673-34f802160918',
+            url=ROOT + 'fakebucket//v1/upload_file_minidump/de1bb258-cbbf-4589-a673-34f800160918',
             body=b'abcd1234',
             resp=s3mock.fake_response(status_code=200)
         )
         s3mock.add_step(
             method='PUT',
-            url=ROOT + 'fakebucket//v2/raw_crash/de1/20160918/de1bb258-cbbf-4589-a673-34f802160918',
+            url=ROOT + 'fakebucket//v2/raw_crash/de1/20160918/de1bb258-cbbf-4589-a673-34f800160918',
             # Not going to compare the body here because it's just the raw crash
             resp=s3mock.fake_response(status_code=200)
         )
         data, headers = multipart_encode({
-            'uuid': 'de1bb258-cbbf-4589-a673-34f802160918',
+            'uuid': 'de1bb258-cbbf-4589-a673-34f800160918',
             'ProductName': 'Test',
             'Version': '1.0',
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
@@ -214,7 +214,7 @@ class TestS3MockLogging:
             # Verify the collector returns a 200 status code and the crash id
             # we fed it.
             assert result.status_code == 200
-            assert result.content == b'CrashID=bp-de1bb258-cbbf-4589-a673-34f802160918\n'
+            assert result.content == b'CrashID=bp-de1bb258-cbbf-4589-a673-34f800160918\n'
 
             # Verify the retry decorator logged something
             assert lm.has_record(

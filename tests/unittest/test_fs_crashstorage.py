@@ -26,7 +26,7 @@ class TestFSCrashStorage:
     def test_storage_files(self, client, tmpdir):
         """Verify posting a crash gets to crash storage in the right shape"""
         data, headers = multipart_encode({
-            'uuid': 'de1bb258-cbbf-4589-a673-34f802160918',
+            'uuid': 'de1bb258-cbbf-4589-a673-34f800160918',
             'ProductName': 'Test',
             'Version': '1.0',
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
@@ -60,9 +60,9 @@ class TestFSCrashStorage:
         assert (
             sorted([nix_tmpdir(fn) for fn in files]) ==
             sorted([
-                '/antenna_crashes/20160918/raw_crash/de1bb258-cbbf-4589-a673-34f802160918.json',
-                '/antenna_crashes/20160918/dump_names/de1bb258-cbbf-4589-a673-34f802160918.json',
-                '/antenna_crashes/20160918/upload_file_minidump/de1bb258-cbbf-4589-a673-34f802160918',
+                '/antenna_crashes/20160918/raw_crash/de1bb258-cbbf-4589-a673-34f800160918.json',
+                '/antenna_crashes/20160918/dump_names/de1bb258-cbbf-4589-a673-34f800160918.json',
+                '/antenna_crashes/20160918/upload_file_minidump/de1bb258-cbbf-4589-a673-34f800160918',
             ])
         )
 
@@ -72,7 +72,7 @@ class TestFSCrashStorage:
                 contents[nix_tmpdir(fn)] = fp.read()
 
         assert (
-            contents['/antenna_crashes/20160918/raw_crash/de1bb258-cbbf-4589-a673-34f802160918.json'] ==
+            contents['/antenna_crashes/20160918/raw_crash/de1bb258-cbbf-4589-a673-34f800160918.json'] ==
             (
                 b'{"ProductName": "Test", ' +
                 b'"Version": "1.0", ' +
@@ -82,24 +82,24 @@ class TestFSCrashStorage:
                 b'"submitted_timestamp": "2011-09-06T00:00:00+00:00", ' +
                 b'"timestamp": 1315267200.0, ' +
                 b'"type_tag": "bp", ' +
-                b'"uuid": "de1bb258-cbbf-4589-a673-34f802160918"}'
+                b'"uuid": "de1bb258-cbbf-4589-a673-34f800160918"}'
             )
         )
 
         assert (
-            contents['/antenna_crashes/20160918/dump_names/de1bb258-cbbf-4589-a673-34f802160918.json'] ==
+            contents['/antenna_crashes/20160918/dump_names/de1bb258-cbbf-4589-a673-34f800160918.json'] ==
             b'["upload_file_minidump"]'
         )
 
         assert (
-            contents['/antenna_crashes/20160918/upload_file_minidump/de1bb258-cbbf-4589-a673-34f802160918'] ==
+            contents['/antenna_crashes/20160918/upload_file_minidump/de1bb258-cbbf-4589-a673-34f800160918'] ==
             b'abcd1234'
         )
 
     @freeze_time('2011-09-06 00:00:00', tz_offset=0)
     def test_load_files(self, client, tmpdir):
         """Verify we can rebuild the crash from the fs"""
-        crash_id = 'de1bb258-cbbf-4589-a673-34f802160918'
+        crash_id = 'de1bb258-cbbf-4589-a673-34f800160918'
 
         data, headers = multipart_encode({
             'uuid': crash_id,
