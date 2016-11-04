@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import contextlib
+from pathlib import Path
 
 import sys
 from unittest import mock
@@ -13,14 +14,14 @@ from falcon.request import Request
 from falcon.testing.helpers import create_environ
 from falcon.testing.srmock import StartResponseMock
 from falcon.testing.test_case import Result
-from py.path import local
 import pytest
 import wsgiref.validate
 
 
 # Add the parent parent directory to the sys.path so that it can import the
 # antenna code.
-sys.path.insert(0, str(local(__file__).dirpath().dirpath().dirpath()))
+REPO_ROOT = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(REPO_ROOT))
 
 
 from antenna import metrics  # noqa
@@ -115,9 +116,11 @@ class Client:
         bsr.join_pool()
 
     def get(self, path, headers=None, **kwargs):
+        """Performs a fake HTTP GET request"""
         return self._request('GET', path=path, headers=headers, **kwargs)
 
     def post(self, path, headers=None, body=None, **kwargs):
+        """Performs a fake HTTP POST request"""
         return self._request('POST', path=path, headers=headers, body=body, **kwargs)
 
     def _request(self, method, path, query_string=None, headers=None,

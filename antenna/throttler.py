@@ -102,8 +102,10 @@ class Throttler(RequiredConfigMixin, LogConfigMixin):
                 if rule.percentage is None:
                     return REJECT, rule.rule_name, None
 
-                random_number = random.random() * 100.0
-                response = DEFER if random_number > rule.percentage else ACCEPT
+                if (random.random() * 100.0) > rule.percentage:
+                    response = DEFER
+                else:
+                    response = ACCEPT
                 return response, rule.rule_name, rule.percentage
 
         # None of the rules matched, so we reject
@@ -177,40 +179,81 @@ class Rule:
         return False
 
 
-def match_all(crash):
+def always_match(crash):
+    """Rule condition that always returns true"""
     return True
 
 
 accept_all = [
     # Accept everything
-    Rule('accept_everything', '*', match_all, 100)
+    Rule('accept_everything', '*', always_match, 100)
 ]
 
 
 mozilla_rules = [
     # Drop browser side of all multi-submission hang crashes
-    Rule('has_hangid_and_browser', '*', lambda d: 'HangID' in d and d.get('ProcessType', 'browser') == 'browser', None),
+    Rule(
+        rule_name='has_hangid_and_browser',
+        key='*',
+        condition=lambda d: 'HangID' in d and d.get('ProcessType', 'browser') == 'browser',
+        percentage=None
+    ),
 
     # 100% of crashes that have a comment
-    Rule('has_comments', 'Comments', match_all, 100),
+    Rule(
+        rule_name='has_comments',
+        key='Comments',
+        condition=always_match,
+        percentage=100
+    ),
 
     # 100% of all ReleaseChannel=aurora, beta, esr channels
-    Rule('is_alpha_beta_esr', 'ReleaseChannel', lambda x: x in ('aurora', 'beta', 'esr'), 100),
+    Rule(
+        rule_name='is_alpha_beta_esr',
+        key='ReleaseChannel',
+        condition=lambda x: x in ('aurora', 'beta', 'esr'),
+        percentage=100
+    ),
 
     # 100% of all ReleaseChannel=nightly
-    Rule('is_nightly', 'ReleaseChannel', lambda x: x.startswith('nightly'), 100),
+    Rule(
+        rule_name='is_nightly',
+        key='ReleaseChannel',
+        condition=lambda x: x.startswith('nightly'),
+        percentage=100
+    ),
 
     # 10% of ProductName=Firefox
-    Rule('is_firefox_desktop', 'ProductName', 'Firefox', 10),
+    Rule(
+        rule_name='is_firefox_desktop',
+        key='ProductName',
+        condition='Firefox',
+        percentage=10
+    ),
 
     # 100% of PrductName=Fennec
-    Rule('is_fennec', 'ProductName', 'Fennec', 100),
+    Rule(
+        rule_name='is_fennec',
+        key='ProductName',
+        condition='Fennec',
+        percentage=100
+    ),
 
     # 100% of all Version=alpha, beta or special
-    Rule('is_version_alpha_beta_special', 'Version', re.compile(r'\..*?[a-zA-Z]+'), 100),
+    Rule(
+        rule_name='is_version_alpha_beta_special',
+        key='Version',
+        condition=re.compile(r'\..*?[a-zA-Z]+'),
+        percentage=100
+    ),
 
     # 100% of ProductName=Thunderbird & SeaMonkey
-    Rule('is_thunderbird_seamonkey', 'ProductName', lambda x: x[0] in 'TSC', 100),
+    Rule(
+        rule_name='is_thunderbird_seamonkey',
+        key='ProductName',
+        condition=lambda x: x[0] in 'TSC',
+        percentage=100
+    ),
 
     # Reject everything else
 ]

@@ -490,7 +490,7 @@ class HeartbeatResource:
         # traverse passing along the HealthState instance. Then, after
         # traversing the object graph, we'll tally everything up and deliver
         # the news.
-        for name, resource in self.antenna_app._all_resources.items():
+        for resource in self.antenna_app.get_resources():
             if hasattr(resource, 'check_health'):
                 resource.check_health(state)
 
@@ -522,13 +522,30 @@ class AntennaAPI(falcon.API):
         raise
 
     def add_route(self, name, uri_template, resource, *args, **kwargs):
+        """Adds specified Falcon route
+
+        :arg str name: friendly name for this route; use alphanumeric characters
+
+        :arg str url_template: Falcon url template for this route
+
+        :arg obj resource: Falcon resource to handl this route
+
+        """
         self._all_resources[name] = resource
         super().add_route(uri_template, resource, *args, **kwargs)
 
     def get_resource_by_name(self, name):
+        """Returns the registered resource with specified name
+
+        :arg str name: the name of the resource to get
+
+        :raises KeyError: if there is no resource by that name
+
+        """
         return self._all_resources[name]
 
     def get_resources(self):
+        """Returns a list of registered resources"""
         return self._all_resources.values()
 
     def log_config(self, logger):
