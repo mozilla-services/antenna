@@ -18,17 +18,18 @@ import pytest
 import wsgiref.validate
 
 
-# Add the parent parent directory to the sys.path so that it can import the
-# antenna code.
+# Add repository root so we can import Antenna.
 REPO_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
+# Add testlib so we can import testlib modules.
+sys.path.insert(0, str(REPO_ROOT / 'tests'))
 
 from antenna import metrics  # noqa
 from antenna.app import get_app, setup_logging, setup_metrics  # noqa
-from antenna.loggingmock import LoggingMock  # noqa
 from antenna.metrics import MetricsMock  # noqa
-from antenna.s3mock import S3Mock  # noqa
+from testlib.loggingmock import LoggingMock  # noqa
+from testlib.s3mock import S3Mock  # noqa
 
 
 def pytest_runtest_setup():
