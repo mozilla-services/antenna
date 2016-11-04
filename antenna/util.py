@@ -273,15 +273,15 @@ class LogConfigMixin:
             namespace = '_'.join(with_namespace)
 
         for opt in self.__class__.get_required_config():
-            is_secret = 'secret' in opt.key.lower()
-
             val = self.config(opt.key, raw_value=True)
+
             if namespace:
                 namespaced_key = '%s_%s' % (namespace, opt.key)
             else:
                 namespaced_key = opt.key
             namespaced_key = namespaced_key.upper()
-            if is_secret:
+
+            if 'secret' in opt.key.lower():
                 logger.info('%s=*****' % namespaced_key)
             else:
                 logger.info('%s=%s' % (namespaced_key, val))

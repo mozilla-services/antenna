@@ -1,0 +1,43 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+class TestHealthChecks:
+    def test_no_version(self, client, tmpdir):
+        # Set basedir here to tmpdir which we *know* doesn't have a
+        # version.json in it.
+        client.rebuild_app({
+            'BASEDIR': str(tmpdir)
+        })
+
+        result = client.get('/__version__')
+        assert result.content == b'{}'
+
+    def test_version(self, client, tmpdir):
+        client.rebuild_app({
+            'BASEDIR': str(tmpdir)
+        })
+
+        # NOTE(willkg): The actual version.json has other things in it,
+        # but our endpoint just spits out the file verbatim, so we
+        # can test with whatever.
+        version_path = tmpdir.join('/version.json')
+        version_path.write('{"commit": "ou812"}')
+
+        result = client.get('/__version__')
+        assert result.content == b'{"commit": "ou812"}'
+
+    def test_lb_heartbeat(self, client):
+        resp = client.get('/__lbheartbeat__')
+        assert resp.status_code == 200
+
+    def test_heartbeat(self, client):
+        resp = client.get('/__heartbeat__')
+        assert resp.status_code == 200
+        # NOTE(willkg): This isn't mocked out, so it's entirely likely that
+        # this expected result will change over time.
+        assert (
+            resp.content ==
+            b'{"errors": [], "info": {"BreakpadSubmitterResource.queue_size": 0}}'
+        )
