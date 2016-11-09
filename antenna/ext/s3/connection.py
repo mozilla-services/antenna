@@ -28,7 +28,8 @@ class S3Connection(RequiredConfigMixin, LogConfigMixin):
 
     When Antenna starts up, ``S3Connection`` will call ``HEAD`` on the bucket
     verifying the bucket exists, the endpoint url is good, it's accessible and
-    the credentials are valid.
+    the credentials are valid. This means that the credentials you use must have
+    "list" permissions on the bucket.
 
     If that fails, then this will raise an error and will halt startup.
 
