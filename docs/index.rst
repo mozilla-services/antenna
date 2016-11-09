@@ -2,6 +2,8 @@
 Socorro Antenna docs
 ====================
 
+.. include:: ../README.rst
+
 
 Contents
 ========
@@ -11,7 +13,6 @@ User docs:
 .. toctree::
    :maxdepth: 2
 
-   readme
    configuration
    breakpad_reporting
 
