@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class S3Connection(RequiredConfigMixin, LogConfigMixin):
-    """Connection object for S3
+    """Connection object for S3.
 
     When configuring this connection object, you can do one of two things:
 

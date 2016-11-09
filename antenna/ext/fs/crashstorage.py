@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class FSCrashStorage(CrashStorageBase):
-    """Saves raw crash files to the file system
+    """Saves raw crash files to the file system.
 
     This generates a tree something like this which mirrors what we do
     on S3:

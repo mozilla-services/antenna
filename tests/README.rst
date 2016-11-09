@@ -10,6 +10,10 @@ on setting up and running those tests.
 Subdirectories
 ==============
 
+**tests/data/**
+
+    Data to make it easier to test a local instance.
+
 **tests/unittest/**
 
     These are written in Python, use py.test as the test runner and are run

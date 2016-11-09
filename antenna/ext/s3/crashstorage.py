@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class S3CrashStorage(CrashStorageBase):
-    """Saves raw crash files to S3
+    """Saves raw crash files to S3.
 
     This will save raw crash files to S3 in a pseudo-tree something like this:
 
@@ -27,6 +27,11 @@ class S3CrashStorage(CrashStorageBase):
                    <CRASHID>
                <DUMPNAME>/
                    <CRASHID>
+           v2/
+               raw_crash/
+                   <ENTROPY>/
+                       <YYYYMMDD>/
+                           <CRASHID>
 
     """
     required_config = ConfigOptions()

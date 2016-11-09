@@ -50,10 +50,12 @@ def _change_metrics(new_impl):
     _metrics_impl = new_impl
 
 
-class LoggingMetrics:
-    """Metrics implementation that logs the values"""
+class LoggingMetrics(RequiredConfigMixin):
+    """Metrics implementation that logs the values."""
+    required_config = ConfigOptions()
+
     def __init__(self, config):
-        pass
+        self.config = config.with_options(self)
 
     def _log(self, fun_name, stat, kwargs):
         logger.info('LoggingMetrics.%s: %s %s', fun_name, stat, kwargs)
@@ -69,7 +71,7 @@ class LoggingMetrics:
 
 
 class DogStatsdMetrics(RequiredConfigMixin):
-    """Uses the datadog DogStatsd client for statsd pings"""
+    """Uses the Datadog DogStatsd client for statsd pings."""
     required_config = ConfigOptions()
     required_config.add_option(
         'statsd_host',
@@ -264,7 +266,11 @@ def get_metrics(thing, extra=''):
 
 
 class MetricsMock:
-    """Mock for recording metrics events and testing them"""
+    """Mock for recording metrics events and testing them
+
+    FIXME: Add docstring
+
+    """
     def __init__(self):
         self.records = []
         self._old_impl = None
@@ -293,9 +299,11 @@ class MetricsMock:
         self._old_impl = None
 
     def get_metrics(self):
+        """Returns set of collected metrics records"""
         return self.records
 
     def filter_metrics(self, fun_name=None, stat=None, kwargs_contains=None):
+        """Filters collected metircs records for ones that match specified criteria"""
         def match_fun_name(record_fun_name):
             return fun_name is None or fun_name == record_fun_name
 
@@ -319,6 +327,7 @@ class MetricsMock:
         ]
 
     def has_metric(self, fun_name=None, stat=None, kwargs_contains=None):
+        """Returns True/False regarding whether collected metrics match specified criteria"""
         return bool(
             self.filter_metrics(
                 fun_name=fun_name,
@@ -328,5 +337,6 @@ class MetricsMock:
         )
 
     def print_metrics(self):
+        """Prints all the collected metrics"""
         for record in self.get_metrics():
             print(record)

@@ -48,8 +48,9 @@ class CrashStorageBase(RequiredConfigMixin, LogConfigMixin):
 class NoOpCrashStorage(CrashStorageBase):
     """This is a no-op crash storage that logs crashes it would have stored
 
-    It keeps track of the last 10 crashes in ``.crashes`` with the most
-    recently stored crash at the end of the list.
+    It keeps track of the last 10 crashes in ``.crashes`` instance attribute
+    with the most recently stored crash at the end of the list. This helps
+    when writing unit tests for Antenna.
 
     """
     def __init__(self, config):
