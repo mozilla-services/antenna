@@ -149,6 +149,44 @@ Which ends up in S3 like this::
         Raw dumps.
 
 
+Crash ids
+=========
+
+The Socorro collector generates crash ids that look like this::
+
+    de1bb258-cbbf-4589-a673-34f800160918
+                                 ^^^^^^^
+                                 ||____|
+                                 |  yymmdd
+                                 |
+                                 depth
+
+
+The "depth" is used by FSRadixTreeStorage to figure out how many
+octet directories to use. That's the only place depth is used and Mozilla
+doesn't use FSRadixTreeStorage or any of its subclasses after the collector.
+
+Antenna will (ab)use this character to encode the throttle result so that
+the lambda function listening to S3 save events knows which crashes to
+put in the processing queue just by looking at the crash id. Thus a crash
+id in Antenna looks like this::
+
+    de1bb258-cbbf-4589-a673-34f800160918
+                                 ^^^^^^^
+                                 ||____|
+                                 |  yymmdd
+                                 |
+                                 throttle result
+
+
+where "throttle result" is either 0 for ACCEPT (save and process) or 1
+for DEFER (save).
+
+One side benefit of this is that we can list the contents of a directory
+in the bucket and know which crashes were slated for processing and which
+ones weren't by looking at the crash id.
+
+
 Throttling
 ==========
 
