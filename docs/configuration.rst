@@ -9,7 +9,7 @@ Introduction
 ============
 
 Configuration Antenna is not too hard. You have some basic choices to make. You
-codify the configuratino into an env file. Then set ``ANTENNA_ENV`` environment
+codify the configuration into an env file. Then set ``ANTENNA_ENV`` environment
 variable to the path to the env file and you're done.
 
 Here's an example. This uses Datadog installed on the EC2 node for metrics and
