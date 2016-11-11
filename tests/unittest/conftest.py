@@ -81,8 +81,14 @@ class AntennaTestClient(TestClient):
         """
         # FIXME(willkg): This is hard-coded for now. We can fix that later if
         # we add other pools to the system.
-        bsr = self.app.get_resource_by_name('breakpad')
+        bsr = self.get_resource_by_name('breakpad')
         bsr.join_pool()
+
+    def get_resource_by_name(self, name):
+        """Retrieves the Falcon API resource by name"""
+        # NOTE(willkg): The "app" here is a middleware which should have an
+        # .application attribute which is the actual AntennaAPI that we want.
+        return self.app.application.get_resource_by_name(name)
 
 
 @pytest.fixture

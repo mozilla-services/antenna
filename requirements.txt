@@ -1,6 +1,9 @@
 # Production requirements
 configobj==5.0.6 \
     --hash=sha256:a2f5650770e1c87fb335af19a9b7eb73fc05ccf22144eb68db7d00cd2bcb0902
+contextlib2==0.5.4 \
+    --hash=sha256:399f659f2a8b5d5d529f132e1136fc404fbbc28e34e4618c5c92bd595be9b162 \
+    --hash=sha256:710626cde569f51a87f216ff757fe60f5cd13ae8f8114706590510cd5649ce88
 datadog==0.14.0 \
     --hash=sha256:239b6f549ff357d11f16a6d7549bba4039a80f635dadbd616d6abb46df4bf764
 decorator==4.0.10 \
@@ -76,6 +79,9 @@ isodate==0.5.4 --hash=sha256:42105c41d037246dc1987e36d96f3752ffd5c0c24834dd12e4f
 python-mimeparse==1.6.0 \
     --hash=sha256:76e4b03d700a641fd7761d3cd4fdbbdcd787eade1ebfac43f877016328334f78 \
     --hash=sha256:a295f03ff20341491bfe4717a39cd0a8cc9afad619ba44b77e86b0ab8a2b8282
+raven==5.31.0 \
+    --hash=sha256:d5fb3f54af217209110f1d931798f46627a5d9e84768bddaa224f27b82ab3d7d \
+    --hash=sha256:9f06a22083b3ff25a8203b1bf5907df4eb8f74ad8575d61a4a023bde456c5cff
 simplejson==3.9.0 \
     --hash=sha256:2b59c8b5c647ca1acdb7e8708fb31b8752905880f4b1a8f5b2003576fff85944 \
     --hash=sha256:b67392710365511b301cf304d2b5bf5c77a87d32da6dcdc0f23b8f0cdfca551c \
