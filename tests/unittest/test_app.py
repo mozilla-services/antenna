@@ -5,9 +5,9 @@
 
 class TestBasic:
     def test_404(self, client):
-        result = client.get('/foo')
+        result = client.simulate_get('/foo')
         assert result.status_code == 404
 
     def test_home_page(self, client):
-        result = client.get('/')
+        result = client.simulate_get('/')
         assert result.status_code == 200

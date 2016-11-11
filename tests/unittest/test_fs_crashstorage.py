@@ -40,7 +40,7 @@ class TestFSCrashStorage:
             'CRASHSTORAGE_FS_ROOT': str(tmpdir.join('antenna_crashes')),
         })
 
-        result = client.post(
+        result = client.simulate_post(
             '/submit',
             headers=headers,
             body=data
@@ -116,7 +116,7 @@ class TestFSCrashStorage:
             'CRASHSTORAGE_FS_ROOT': str(tmpdir.join('antenna_crashes')),
         })
 
-        result = client.post(
+        result = client.simulate_post(
             '/submit',
             headers=headers,
             body=data

@@ -124,10 +124,8 @@ class BreakpadSubmitterResource(RequiredConfigMixin, LogConfigMixin):
             # have to do that here because nginx doesn't have a good way to do
             # that in nginx-land.
             gzip_header = 16 + zlib.MAX_WBITS
-            content_length = int(req.env.get('CONTENT_LENGTH', 0))
-            data = zlib.decompress(
-                req.stream.read(content_length), gzip_header
-            )
+            content_length = req.content_length or 0
+            data = zlib.decompress(req.stream.read(content_length), gzip_header)
 
             # Stomp on the content length to correct it because we've changed
             # the payload size by decompressing it. We save the original value
@@ -137,7 +135,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin, LogConfigMixin):
 
             data = io.BytesIO(data)
         else:
-            data = req.stream
+            data = io.BytesIO(req.stream.read(req.content_length or 0))
 
         fs = cgi.FieldStorage(fp=data, environ=req.env, keep_blank_values=1)
 
@@ -199,11 +197,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin, LogConfigMixin):
                 if not (0 <= percentage <= 100):
                     raise ValueError('Percentage is not a valid value: %r', result)
 
-                return (
-                    result,
-                    'ALREADY_THROTTLED',
-                    percentage
-                )
+                return result, 'ALREADY_THROTTLED', percentage
 
             except ValueError:
                 # If we've gotten a ValueError, it means one or both of the

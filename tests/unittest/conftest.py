@@ -4,18 +4,14 @@
 
 import contextlib
 from pathlib import Path
-
 import sys
 from unittest import mock
 
 from everett.manager import ConfigManager
-import falcon
 from falcon.request import Request
 from falcon.testing.helpers import create_environ
-from falcon.testing.srmock import StartResponseMock
-from falcon.testing.test_case import Result
+from falcon.testing.client import TestClient
 import pytest
-import wsgiref.validate
 
 
 # Add repository root so we can import Antenna.
@@ -38,26 +34,10 @@ def pytest_runtest_setup():
     setup_metrics(metrics.LoggingMetrics, ConfigManager.from_dict({}))
 
 
-def build_app(config=None):
-    if config is None:
-        config = {}
-
-    # Falcon 1.0 has a global variable that denotes whether it should wrap the
-    # wsgi stream or not. Every time we rebuild the app, we should set this to
-    # False. If we set it to True, it wraps the stream in a
-    # falcon.request_helpers.Body which breaks FieldStorage parsing and then we
-    # end up with empty crash reports. If we don't set it at all, then tests fail
-    # until a test runs which causes it to flip to False first.
-    falcon.request._maybe_wrap_wsgi_stream = False
-
-    return get_app(ConfigManager.from_dict(config))
-
-
 @pytest.fixture
 def request_generator():
     """Returns a Falcon Request generator"""
-    def _request_generator(method, path, query_string=None, headers=None,
-                           body=None):
+    def _request_generator(method, path, query_string=None, headers=None, body=None):
         env = create_environ(
             method=method,
             path=path,
@@ -70,20 +50,8 @@ def request_generator():
     return _request_generator
 
 
-class Client:
-    """Test client to ease testing with the Antenna API
-
-    .. Note::
-
-       Falcon 1.0 has test infrastructure that's interesting, but is
-       unittest-based and does some weird things that I found difficult to work
-       around. A future version of Falcon will have better things so we can
-       probably rip all this out when we upgrade.
-
-    """
-    def __init__(self, app):
-        self.app = app
-
+class AntennaTestClient(TestClient):
+    """Test client to ease testing with Antenna API"""
     def rebuild_app(self, new_config=None):
         """Rebuilds the app
 
@@ -95,7 +63,7 @@ class Client:
         """
         if new_config is None:
             new_config = {}
-        self.app = build_app(new_config)
+        self.app = get_app(ConfigManager.from_dict(new_config))
 
     def join_app(self):
         """This goes through and calls join on all gevent pools in the app
@@ -116,34 +84,6 @@ class Client:
         bsr = self.app.get_resource_by_name('breakpad')
         bsr.join_pool()
 
-    def get(self, path, headers=None, **kwargs):
-        """Performs a fake HTTP GET request"""
-        return self._request('GET', path=path, headers=headers, **kwargs)
-
-    def post(self, path, headers=None, body=None, **kwargs):
-        """Performs a fake HTTP POST request"""
-        return self._request('POST', path=path, headers=headers, body=body, **kwargs)
-
-    def _request(self, method, path, query_string=None, headers=None,
-                 body=None, **kwargs):
-        env = create_environ(
-            method=method,
-            path=path,
-            query_string=(query_string or ''),
-            headers=headers,
-            body=body,
-        )
-
-        resp = StartResponseMock()
-        # Wrap the app in a validator which will raise an assertion error if
-        # either side isn't speaking valid WSGI.
-        validator = wsgiref.validate.validator(self.app)
-        iterable = validator(env, resp)
-
-        result = Result(iterable, resp.status, resp.headers)
-
-        return result
-
 
 @pytest.fixture
 def client():
@@ -161,7 +101,7 @@ def client():
             })
 
     """
-    return Client(build_app())
+    return AntennaTestClient(get_app(ConfigManager.from_dict({})))
 
 
 @pytest.yield_fixture
