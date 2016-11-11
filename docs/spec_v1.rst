@@ -297,6 +297,52 @@ be an unenthusing decision, but I don't think the risks are high enough that
 it'll ever be a **wrong** decision.
 
 
+WSGI framework thoughts
+-----------------------
+
+We wanted to use a framework with the following properties:
+
+1. good usage, well maintained, good docs
+2. minimal magic
+3. minimal dependencies
+4. no db
+5. easy to write tests against
+6. works well with gunicorn and gevent
+
+
+I spent a few days looking at CherryPy, Flask, Bottle and Falcon. I wrote
+prototypes in all of them that used gunicorn and gevent.
+
+Here's my unscientific hand-wavey summaries:
+
+* CherryPy
+
+  We were using it already, so I figured it was worth looking at. It's nice, but
+  there's a lot of it and I decided I liked Falcon better.
+
+* Flask
+
+  It's well used, I'm familiar with it, we use it in other places at Mozilla.
+  But it includes Jinja2 and a ton of other dependencies and there's some magic
+  (thread-local vars, etc).
+
+* Bottle
+
+  I didn't like Bottle at all. It's in one massive file and just didn't appeal
+  to me at all.
+
+* Falcon
+
+  Falcon had all the properties I was looking for. It's nice and was easy to
+  implement the things I wanted to in the prototype.
+
+
+I decided to go with Falcon.
+
+We should write the code in such a way that if we decide to switch to something
+else, it's not a complete rewrite.
+
+
 gevent thoughts
 ---------------
 
