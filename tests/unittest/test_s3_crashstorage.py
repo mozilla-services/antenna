@@ -51,7 +51,7 @@ class TestS3Mock:
             'CRASHSTORAGE_BUCKET_NAME': 'fakebucket',
         })
 
-        result = client.post(
+        result = client.simulate_post(
             '/submit',
             headers=headers,
             body=data
@@ -108,7 +108,7 @@ class TestS3Mock:
             'CRASHSTORAGE_BUCKET_NAME': 'fakebucket.with.periods',
         })
 
-        result = client.post(
+        result = client.simulate_post(
             '/submit',
             headers=headers,
             body=data
@@ -204,7 +204,7 @@ class TestS3MockLogging:
         })
 
         with loggingmock(['antenna']) as lm:
-            result = client.post(
+            result = client.simulate_post(
                 '/submit',
                 headers=headers,
                 body=data

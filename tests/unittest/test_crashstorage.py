@@ -24,7 +24,7 @@ class TestCrashStorage:
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
         })
 
-        result = client.post(
+        result = client.simulate_post(
             '/submit',
             headers=headers,
             body=data

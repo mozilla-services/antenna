@@ -11,7 +11,7 @@ class TestHealthChecks:
             'BASEDIR': str(tmpdir)
         })
 
-        result = client.get('/__version__')
+        result = client.simulate_get('/__version__')
         assert result.content == b'{}'
 
     def test_version(self, client, tmpdir):
@@ -25,15 +25,15 @@ class TestHealthChecks:
         version_path = tmpdir.join('/version.json')
         version_path.write('{"commit": "ou812"}')
 
-        result = client.get('/__version__')
+        result = client.simulate_get('/__version__')
         assert result.content == b'{"commit": "ou812"}'
 
     def test_lb_heartbeat(self, client):
-        resp = client.get('/__lbheartbeat__')
+        resp = client.simulate_get('/__lbheartbeat__')
         assert resp.status_code == 200
 
     def test_heartbeat(self, client):
-        resp = client.get('/__heartbeat__')
+        resp = client.simulate_get('/__heartbeat__')
         assert resp.status_code == 200
         # NOTE(willkg): This isn't mocked out, so it's entirely likely that
         # this expected result will change over time.

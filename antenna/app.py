@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from functools import wraps
 import logging
 import os
 import logging.config
@@ -60,18 +59,6 @@ def setup_metrics(metrics_class, config):
     """Initializes the metrics system"""
     logger.info('Setting up metrics: %s', metrics_class)
     metrics.metrics_configure(metrics_class, config)
-
-
-def log_unhandled(fun):
-    @wraps(fun)
-    def _log_unhandled(*args, **kwargs):
-        try:
-            return fun(*args, **kwargs)
-        except Exception:
-            logger.exception('UNHANDLED EXCEPTION!')
-            raise
-
-    return _log_unhandled
 
 
 class AppConfig(RequiredConfigMixin, LogConfigMixin):
@@ -195,31 +182,35 @@ class AntennaAPI(falcon.API):
                 res.log_config(logger)
 
 
-@log_unhandled
 def get_app(config=None):
     """Returns AntennaAPI instance"""
-    if config is None:
-        config = ConfigManager([
-            # Pull configuration from env file specified as ANTENNA_ENV
-            ConfigEnvFileEnv([os.environ.get('ANTENNA_ENV')]),
-            # Pull configuration from environment variables
-            ConfigOSEnv()
-        ])
+    try:
+        if config is None:
+            config = ConfigManager([
+                # Pull configuration from env file specified as ANTENNA_ENV
+                ConfigEnvFileEnv([os.environ.get('ANTENNA_ENV')]),
+                # Pull configuration from environment variables
+                ConfigOSEnv()
+            ])
 
-    app_config = AppConfig(config)
-    setup_logging(app_config('logging_level'))
-    setup_metrics(app_config('metrics_class'), config)
+        app_config = AppConfig(config)
+        setup_logging(app_config('logging_level'))
+        setup_metrics(app_config('metrics_class'), config)
 
-    app_config.log_config(logger)
+        app_config.log_config(logger)
 
-    app = AntennaAPI(config)
-    app.add_error_handler(Exception, handler=app.unhandled_exception_handler)
+        app = AntennaAPI(config)
+        app.add_error_handler(Exception, handler=app.unhandled_exception_handler)
 
-    app.add_route('homepage', '/', HomePageResource(config))
-    app.add_route('breakpad', '/submit', BreakpadSubmitterResource(config))
-    app.add_route('version', '/__version__', VersionResource(config, basedir=app_config('basedir')))
-    app.add_route('heartbeat', '/__heartbeat__', HeartbeatResource(config, app))
-    app.add_route('lbheartbeat', '/__lbheartbeat__', LBHeartbeatResource(config))
+        app.add_route('homepage', '/', HomePageResource(config))
+        app.add_route('breakpad', '/submit', BreakpadSubmitterResource(config))
+        app.add_route('version', '/__version__', VersionResource(config, basedir=app_config('basedir')))
+        app.add_route('heartbeat', '/__heartbeat__', HeartbeatResource(config, app))
+        app.add_route('lbheartbeat', '/__lbheartbeat__', LBHeartbeatResource(config))
 
-    app.log_config(logger)
-    return app
+        app.log_config(logger)
+        return app
+
+    except Exception:
+        logger.exception('Unhandled startup exception')
+        raise

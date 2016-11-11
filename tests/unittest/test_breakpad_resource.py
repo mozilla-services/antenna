@@ -22,7 +22,7 @@ class TestBreakpadSubmitterResource:
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
         })
 
-        result = client.post(
+        result = client.simulate_post(
             '/submit',
             headers=headers,
             body=data,
@@ -125,7 +125,7 @@ class TestBreakpadSubmitterResource:
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
         })
 
-        result = client.post(
+        result = client.simulate_post(
             '/submit',
             headers=headers,
             body=data
@@ -149,7 +149,7 @@ class TestBreakpadSubmitterResource:
         })
 
         with loggingmock(['antenna']) as lm:
-            result = client.post(
+            result = client.simulate_post(
                 '/submit',
                 headers=headers,
                 body=data
@@ -188,7 +188,7 @@ class TestBreakpadSubmitterResource:
         })
 
         with loggingmock(['antenna']) as lm:
-            result = client.post(
+            result = client.simulate_post(
                 '/submit',
                 headers=headers,
                 body=data
@@ -215,7 +215,7 @@ class TestBreakpadSubmitterResource:
         })
 
         with loggingmock(['antenna']) as lm:
-            result = client.post(
+            result = client.simulate_post(
                 '/submit',
                 headers=headers,
                 body=data
