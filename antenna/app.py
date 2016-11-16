@@ -116,7 +116,7 @@ class AppConfig(RequiredConfigMixin, LogConfigMixin):
         parser=parse_class
     )
     required_config.add_option(
-        'sentry_dsn',
+        'secret_sentry_dsn',
         default='',
         doc=(
             'Sentry DSN to use. See https://docs.sentry.io/quickstart/#configure-the-dsn '
@@ -233,10 +233,10 @@ def get_app(config=None):
         app.log_config(logger)
 
         # Wrap the app in some kind of unhandled exception notification mechanism
-        if app_config('sentry_dsn'):
+        if app_config('secret_sentry_dsn'):
             # Build a Sentry client
             client = Client(
-                dsn=app_config('sentry_dsn'),
+                dsn=app_config('secret_sentry_dsn'),
                 include_paths=['antenna'],
             )
             # Then wrap the app in a Sentry middleware thing
