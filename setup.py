@@ -19,9 +19,9 @@ def get_file(fn):
 setup(
     name='antenna',
     version='0.1.0',
-    description="Collector v2 for Socorro",
+    description='Breakpad crash report collector',
     long_description=get_file('README.rst'),
-    author="Will Kahn-Greene",
+    author='Will Kahn-Greene',
     author_email='willkg@mozilla.com',
     url='https://github.com/mozilla/antenna',
     packages=[
@@ -31,11 +31,11 @@ setup(
         'antenna': 'antenna'
     },
     include_package_data=True,
-    license="MPLv2",
+    license='MPLv2',
     zip_safe=False,
     keywords='breakpad crash',
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',
         'Natural Language :: English',
