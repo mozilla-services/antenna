@@ -21,8 +21,8 @@ setup(
     version='0.1.0',
     description='Breakpad crash report collector',
     long_description=get_file('README.rst'),
-    author='Will Kahn-Greene',
-    author_email='willkg@mozilla.com',
+    author='Socorro Team',
+    author_email='socorro-dev@mozilla.com',
     url='https://github.com/mozilla/antenna',
     packages=[
         'antenna',
