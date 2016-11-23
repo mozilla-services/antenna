@@ -133,11 +133,8 @@ Things to know about the HTTP POST response:
 
 1. The HTTP POST response status code should be HTTP 200 if everything was fine.
 
-2. Content-type for HTTP POST response.
-
-   TODO: Figure out whether we return a content-type now and if not, whether we
-   should nix the content-type or whether we should set it to something. Maybe
-   ``text/plain``? Maybe ``application/x-www-form-urlencoded``?
+2. Content-type for HTTP POST response can be anything, but ``text/plain`` is
+   probably prudent.
 
 3. HTTP POST response body should look like this::
 
@@ -163,3 +160,26 @@ development instance. There are a few options:
    https://developer.mozilla.org/en-US/docs/Environment_variables_affecting_crash_reporting
 
    Particularly ``MOZ_CRASHREPORTER_URL``.
+
+4. On Linux, you can crash processes using ``kill``::
+
+       kill -ABRT $(pidof firefox)
+
+
+You can capture a raw HTTP POST this way:
+
+1. Run ``nc -l localhost 8000 > http_post.raw`` in one terminal
+
+2. Run ``MOZ_CRASHREPORTER_URL=http://localhost:8000/submit firefox`` in a second terminal
+
+3. Run ``ps -aef``, find the firefox process id and then do ``kill -ABRT <PID>`` in a
+   third terminal
+
+4. The Firefox process will crash and the crash report dialog will pop up. Make sure
+   to submit the crash, then click on "Quit Firefox" button
+
+   That will send the crash to ``nc`` which will pipe it to the file.
+
+5. Wait 30 seconds, then close the crash dialog window.
+
+   You should have a raw HTTP POST in ``http_post.raw``.
