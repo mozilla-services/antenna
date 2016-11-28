@@ -46,9 +46,12 @@ class S3CrashStorage(CrashStorageBase):
         self.config = config.with_options(self)
         self.conn = self.config('connection_class')(config)
 
-    def log_config(self, logger, with_namespace=None):
-        super().log_config(logger, with_namespace)
-        self.conn.log_config(logger, with_namespace)
+    def get_runtime_config(self, namespace=None):
+        for item in super().get_runtime_config(namespace):
+            yield item
+
+        for item in self.conn.get_runtime_config(namespace):
+            yield item
 
     def check_health(self, state):
         self.conn.check_health(state)

@@ -17,7 +17,6 @@ from raven.middleware import Sentry
 from antenna import metrics
 from antenna.breakpad_resource import BreakpadSubmitterResource
 from antenna.health_resource import HeartbeatResource, LBHeartbeatResource, VersionResource
-from antenna.util import LogConfigMixin
 
 
 logger = logging.getLogger(__name__)
@@ -63,7 +62,23 @@ def setup_metrics(metrics_class, config):
     metrics.metrics_configure(metrics_class, config)
 
 
-class AppConfig(RequiredConfigMixin, LogConfigMixin):
+def log_config(logger, component):
+    for namespace, key, val, opt in component.get_runtime_config():
+        if namespace:
+            namespaced_key = '%s_%s' % ('_'.join(namespace), key)
+        else:
+            namespaced_key = key
+
+        namespaced_key = namespaced_key.upper()
+
+        if 'secret' in opt.key.lower():
+            msg = '%s=*****' % namespaced_key
+        else:
+            msg = '%s=%s' % (namespaced_key, val)
+        logger.info(msg)
+
+
+class AppConfig(RequiredConfigMixin):
     """Application-level config
 
     To pull out a config item, you can do this::
@@ -177,10 +192,11 @@ class AntennaAPI(falcon.API):
         """Returns a list of registered resources"""
         return self._all_resources.values()
 
-    def log_config(self, logger):
+    def get_runtime_config(self, namespace=None):
         for res in self.get_resources():
-            if hasattr(res, 'log_config'):
-                res.log_config(logger)
+            if hasattr(res, 'get_runtime_config'):
+                for item in res.get_runtime_config(namespace):
+                    yield item
 
 
 class WSGILoggingMiddleware(object):
@@ -220,7 +236,11 @@ def get_app(config=None):
         setup_logging(app_config('logging_level'))
         setup_metrics(app_config('metrics_class'), config)
 
-        app_config.log_config(logger)
+        log_config(logger, app_config)
+        # FIXME(willkg): This is a little gross, but it's a component and we
+        # want to log the configuration, but it's "internal" to the metrics
+        # module.
+        log_config(logger, metrics._metrics_impl)
 
         app = AntennaAPI(config)
 
@@ -230,7 +250,7 @@ def get_app(config=None):
         app.add_route('heartbeat', '/__heartbeat__', HeartbeatResource(config, app))
         app.add_route('lbheartbeat', '/__lbheartbeat__', LBHeartbeatResource(config))
 
-        app.log_config(logger)
+        log_config(logger, app)
 
         # Wrap the app in some kind of unhandled exception notification mechanism
         if app_config('secret_sentry_dsn'):

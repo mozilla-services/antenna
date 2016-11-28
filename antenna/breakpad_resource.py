@@ -25,7 +25,6 @@ from antenna.throttler import (
 from antenna.util import (
     create_crash_id,
     de_null,
-    LogConfigMixin,
     utc_now,
 )
 
@@ -34,7 +33,7 @@ logger = logging.getLogger(__name__)
 mymetrics = metrics.get_metrics(__name__)
 
 
-class BreakpadSubmitterResource(RequiredConfigMixin, LogConfigMixin):
+class BreakpadSubmitterResource(RequiredConfigMixin):
     """Handles incoming breakpad crash reports and saves to crashstorage
 
     This handles incoming HTTP POST requests containing breakpad-style crash
@@ -88,10 +87,15 @@ class BreakpadSubmitterResource(RequiredConfigMixin, LogConfigMixin):
 
         self.mymetrics = metrics.get_metrics(self)
 
-    def log_config(self, logger, with_namespace=None):
-        super().log_config(logger, with_namespace)
-        self.throttler.log_config(logger, with_namespace)
-        self.crashstorage.log_config(logger, with_namespace='crashstorage')
+    def get_runtime_config(self, namespace=None):
+        for item in super().get_runtime_config():
+            yield item
+
+        for item in self.throttler.get_runtime_config():
+            yield item
+
+        for item in self.crashstorage.get_runtime_config(['crashstorage']):
+            yield item
 
     def check_health(self, state):
         state.add_statsd(self, 'queue_size', len(self.pipeline_pool))
