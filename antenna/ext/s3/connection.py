@@ -11,13 +11,13 @@ from botocore.client import ClientError, Config
 from everett.component import ConfigOptions, RequiredConfigMixin
 import gevent
 
-from antenna.util import LogConfigMixin, retry
+from antenna.util import retry
 
 
 logger = logging.getLogger(__name__)
 
 
-class S3Connection(RequiredConfigMixin, LogConfigMixin):
+class S3Connection(RequiredConfigMixin):
     """Connection object for S3.
 
     When configuring this connection object, you can do one of two things:
