@@ -7,6 +7,7 @@ import json
 import logging
 from pathlib import Path
 
+from everett.component import RequiredConfigMixin
 import falcon
 
 from antenna import metrics
@@ -14,6 +15,16 @@ from antenna import metrics
 
 logger = logging.getLogger(__name__)
 mymetrics = metrics.get_metrics(__name__)
+
+
+class BrokenResource(RequiredConfigMixin):
+    """Implements the ``/__broken__`` endpoint"""
+    def __init__(self, config):
+        self.config = config
+
+    def on_get(self, req, resp):
+        # This is intentional breakage
+        raise Exception('intentional exception')
 
 
 class VersionResource:

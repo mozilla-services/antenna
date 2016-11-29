@@ -41,3 +41,7 @@ class TestHealthChecks:
             resp.content ==
             b'{"errors": [], "info": {"BreakpadSubmitterResource.queue_size": 0}}'
         )
+
+    def test_broken(self, client):
+        resp = client.simulate_get('/__broken__')
+        assert resp.status_code == 500
