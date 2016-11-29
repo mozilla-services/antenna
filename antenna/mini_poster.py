@@ -117,8 +117,8 @@ def post_crash(url, raw_crash, dumps, compressed=False):
     :returns: The requests Response instance.
 
     """
-    crash_data = {}
-    crash_data.update(raw_crash)
+    crash_data = dict(raw_crash)
+
     if dumps:
         for name, contents in dumps.items():
             if isinstance(contents, six.text_type):
