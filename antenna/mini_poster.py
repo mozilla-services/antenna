@@ -136,11 +136,11 @@ def post_crash(url, raw_crash, dumps, compressed=False):
     if dumps:
         for name, contents in dumps.items():
             if isinstance(contents, six.text_type):
-                contents = io.BytesIO(contents.encode('utf-8'))
+                contents = contents.encode('utf-8')
             elif isinstance(contents, six.binary_type):
-                contents = io.BytesIO(contents)
+                contents = contents
             else:
-                contents = io.ByteIO(six.text_type(contents).encode('utf-8'))
+                contents = six.text_type(contents).encode('utf-8')
             crash_data[name] = ('fakecrash.dump', io.BytesIO(contents))
 
     payload, headers = multipart_encode(raw_crash)
