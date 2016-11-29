@@ -16,7 +16,12 @@ from raven.middleware import Sentry
 
 from antenna import metrics
 from antenna.breakpad_resource import BreakpadSubmitterResource
-from antenna.health_resource import HeartbeatResource, LBHeartbeatResource, VersionResource
+from antenna.health_resource import (
+    BrokenResource,
+    HeartbeatResource,
+    LBHeartbeatResource,
+    VersionResource,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -249,6 +254,7 @@ def get_app(config=None):
         app.add_route('version', '/__version__', VersionResource(config, basedir=app_config('basedir')))
         app.add_route('heartbeat', '/__heartbeat__', HeartbeatResource(config, app))
         app.add_route('lbheartbeat', '/__lbheartbeat__', LBHeartbeatResource(config))
+        app.add_route('broken', '/__broken__', BrokenResource(config))
 
         log_config(logger, app)
 
