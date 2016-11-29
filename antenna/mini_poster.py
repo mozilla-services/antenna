@@ -8,11 +8,23 @@ inspired by poster <https://bitbucket.org/chrisatlee/poster>.
 The API is similar, but the implementation consists of just the bits that we
 wanted in Antenna.
 
+Further, this module can be executed::
+
+    python -m antenna.mini_poster [URL]
+
+This will send a minimal fake crash to the specified URL or
+``http://localhost:8000/submit``.
+
 """
 
 from email.header import Header
 import io
 import uuid
+
+import requests
+import six
+
+from antenna.util import compress
 
 
 def multipart_encode(raw_crash, boundary=None):
@@ -90,3 +102,73 @@ def multipart_encode(raw_crash, boundary=None):
     headers['Content-Length'] = str(len(output))
 
     return output, headers
+
+
+def post_crash(url, raw_crash, dumps, compressed=False):
+    """Posts a crash to specified url
+
+    .. Note:: This is not full-featured. It's for testing purposes only.
+
+    :arg str url: The url to post to.
+    :arg dict raw_crash: The raw crash metadata.
+    :arg dict dumps: Dict of dump-name -> dump contents.
+    :arg bool compressed: Whether or not to post a compressed payload.
+
+    :returns: The requests Response instance.
+
+    """
+    crash_data = {}
+    crash_data.update(raw_crash)
+    if dumps:
+        for name, contents in dumps.items():
+            if isinstance(contents, six.text_type):
+                contents = io.BytesIO(contents.encode('utf-8'))
+            elif isinstance(contents, six.binary_type):
+                contents = io.BytesIO(contents)
+            else:
+                contents = io.ByteIO(six.text_type(contents).encode('utf-8'))
+            crash_data[name] = ('fakecrash.dump', io.BytesIO(contents))
+
+    payload, headers = multipart_encode(raw_crash)
+
+    if compressed:
+        payload = compress(payload)
+        headers['Content-Encoding'] = 'gzip'
+
+    resp = requests.post(
+        url,
+        headers=headers,
+        data=payload
+    )
+
+    return resp
+
+
+if __name__ == '__main__':
+    import sys
+
+    args = sys.argv[1:]
+    if args:
+        url = args[0]
+    else:
+        url = 'http://localhost:8000/submit'
+
+    # Set up all the debug logging for grossest possible output
+    from http.client import HTTPConnection
+    HTTPConnection.debuglevel = 1
+
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
+    logging.getLogger('requests').setLevel(logging.DEBUG)
+    logging.getLogger('requests.packages.urllib3').setLevel(logging.DEBUG)
+
+    print('Submitting fake crash to %s' % url)
+    resp = post_crash(
+        url=url,
+        raw_crash={'ProductName': 'Firefox', 'Version': '1'},
+        dumps={},
+        # compressed=True
+    )
+
+    print('Response: %s %s' % (resp.status_code, resp.content))
+    sys.exit(0)
