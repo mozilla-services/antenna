@@ -18,13 +18,27 @@ This will send a minimal fake crash to the specified URL or
 """
 
 from email.header import Header
+import gzip
 import io
 import uuid
 
 import requests
 import six
 
-from antenna.util import compress
+
+def compress(multipart):
+    """Takes a multi-part/form-data payload and compresses it
+
+    :arg multipart: a bytes object representing a multi-part/form-data
+
+    :returns: bytes compressed
+
+    """
+    bio = io.BytesIO()
+    g = gzip.GzipFile(fileobj=bio, mode='w')
+    g.write(multipart)
+    g.close()
+    return bio.getbuffer()
 
 
 def multipart_encode(raw_crash, boundary=None):

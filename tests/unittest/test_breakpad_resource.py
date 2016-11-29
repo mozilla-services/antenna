@@ -8,8 +8,7 @@ from everett.manager import ConfigManager
 import pytest
 
 from antenna.app import BreakpadSubmitterResource
-from antenna.mini_poster import multipart_encode
-from antenna.util import compress
+from antenna.mini_poster import compress, multipart_encode
 
 
 class TestBreakpadSubmitterResource:

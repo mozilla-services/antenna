@@ -4,8 +4,6 @@
 
 import datetime
 from functools import wraps
-import gzip
-import io
 import json
 import time
 import uuid
@@ -67,21 +65,6 @@ def json_ordered_dumps(data):
 
     """
     return json.dumps(data, sort_keys=True)
-
-
-def compress(multipart):
-    """Takes a multi-part/form-data payload and compresses it
-
-    :arg multipart: a bytes object representing a multi-part/form-data
-
-    :returns: bytes compressed
-
-    """
-    bio = io.BytesIO()
-    g = gzip.GzipFile(fileobj=bio, mode='w')
-    g.write(multipart)
-    g.close()
-    return bio.getbuffer()
 
 
 def create_crash_id(timestamp=None, throttle_result=1):
