@@ -143,7 +143,7 @@ def post_crash(url, raw_crash, dumps, compressed=False):
                 contents = six.text_type(contents).encode('utf-8')
             crash_data[name] = ('fakecrash.dump', io.BytesIO(contents))
 
-    payload, headers = multipart_encode(raw_crash)
+    payload, headers = multipart_encode(crash_data)
 
     if compressed:
         payload = compress(payload)
