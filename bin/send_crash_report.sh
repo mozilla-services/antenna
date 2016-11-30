@@ -13,5 +13,5 @@ curl -v -H 'Host: crash-reports' \
      -F 'uuid=a448814e-16dd-45fb-b7dd-b0b522161010' \
      -F 'ProductName=Firefox' \
      -F 'Version=1' \
-     -F upload_file_minidump2=@tests/data/fakecrash.dump \
+     -F upload_file_minidump=@tests/data/fakecrash.dump \
      "$URL"
