@@ -161,13 +161,11 @@ def post_crash(url, crash_payload, compressed=False):
         payload = compress(payload)
         headers['Content-Encoding'] = 'gzip'
 
-    resp = requests.post(
+    return requests.post(
         url,
         headers=headers,
         data=payload
     )
-
-    return resp
 
 
 if __name__ == '__main__':

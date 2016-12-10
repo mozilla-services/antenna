@@ -4,8 +4,7 @@ import os
 import pytest
 import requests
 
-from jansky import lib
-from jansky import mini_poster
+from testlib import mini_poster
 
 
 logger = logging.getLogger(__name__)
@@ -18,16 +17,16 @@ class Test20mbLimit:
 
         dumps['upload_file_minidump'] = ''
 
-        crash_data = mini_poster.put_dumps_in_crash(raw_crash, dumps)
-        payload, headers = mini_poster.multipart_encode(crash_data)
+        crash_payload = mini_poster.assemble_crash_payload(raw_crash, dumps)
+        payload, headers = mini_poster.multipart_encode(crash_payload)
         base_size = len(payload)
 
         # Create a "dump file" which is really just a bunch of 'a' such that
         # the entire payload is equal to size
         dumps['upload_file_minidump'] = 'a' * (size - base_size)
 
-        crash_data = mini_poster.put_dumps_in_crash(raw_crash, dumps)
-        payload, headers = mini_poster.multipart_encode(crash_data)
+        crash_payload = mini_poster.assemble_crash_payload(raw_crash, dumps)
+        payload, headers = mini_poster.multipart_encode(crash_payload)
 
         if len(payload) != size:
             raise ValueError('payload size %s', len(payload))
@@ -53,7 +52,7 @@ class Test20mbLimit:
         return 200
 
     @pytest.mark.skipif(
-        'localhost' in os.environ.get('POSTURL', 'localhost'),
+        bool(os.environ.get('SKIP20')),
         reason=(
             'Requires nginx which you probably do not have running '
             'via localhost'
@@ -66,7 +65,7 @@ class Test20mbLimit:
         # past 20mb, so this should fail with an HTTP 413
         ((20 * 1024 * 1024) + 1, 413)
     ])
-    def test_crash_size(self, posturl, size, status_code):
-        mini_poster.log_everything()
-        result = self._test_crash_size(posturl, size)
+    def test_crash_size(self, posturl, size, status_code, crash_generator):
+        # mini_poster._log_everything()
+        result = self._test_crash_size(posturl, size, crash_generator)
         assert result == status_code

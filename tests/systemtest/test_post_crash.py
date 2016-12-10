@@ -3,8 +3,9 @@ import logging
 import time
 
 import isodate
+import pytest
 
-from jansky import mini_poster
+from testlib import mini_poster
 
 
 logger = logging.getLogger(__name__)
@@ -113,6 +114,89 @@ class CrashVerifier:
         # FIXME(willkg): compare dumps
 
 
+def compare(a, b):
+    def _compare(a, b):
+        if type(a) != type(b):
+            print('TypeError %s != %s' % (type(a), type(b)))
+            return False
+
+        if isinstance(a, dict):
+            for key in a.keys():
+                if key not in b:
+                    print('ValueError %s not in %s' % (key, b))
+                    return False
+                if not _compare(a[key], b[key]):
+                    print('%s != %s' % (a[key], b[key]))
+                    return False
+
+            if len(a) < len(b):
+                print('ValueError %s < %s' % (a.keys(), b.keys()))
+                return False
+
+            return True
+
+        if isinstance(a, (list, set)):
+            for item_a, item_b in zip(a, b):
+                if not _compare(item_a, item_b):
+                    print('ValueError %s != %s' % (item_a, item_b))
+                    return False
+
+        return a == b
+    return _compare(a, b)
+
+
+class TestCompare:
+    def test_none(self):
+        assert compare(None, None) is True
+
+    def test_int(self):
+        assert compare(1, 1) is True
+        assert compare(1, 2) is False
+
+    @pytest.mark.parametrize('a,b,expected', [
+        ([], [], True),
+        ([1], [1], True),
+        ([1, 2, 3, 'abc'], [1, 2, 3, 'abc'], True),
+        ([1, 2], [2, 1], False)
+    ])
+    def test_list(self, a, b, expected):
+        assert compare(a, b) is expected
+        assert compare(b, a) is expected
+
+    @pytest.mark.parametrize('a,b,expected', [
+        (set(), set(), True),
+        ({1}, {1}, True),
+        ({1, 2, 3, 'abc'}, {1, 2, 3, 'abc'}, True),
+        ({1, 2}, {2, 1}, True),
+    ])
+    def test_set(self, a, b, expected):
+        assert compare(a, b) is expected
+        assert compare(b, a) is expected
+
+    @pytest.mark.parametrize('a,b,expected', [
+        ({}, {}, True),
+        ({1: 2}, {1: 2}, True),
+        ({1: 2, 3: 4}, {1: 2, 3: 4}, True),
+        ({1: 2}, {1: 3}, False),
+    ])
+    def test_dict(self, a, b, expected):
+        assert compare(a, b) is expected
+        assert compare(b, a) is expected
+
+    def test_crash_like(self):
+        obj_a = {
+            'ProductName': 'Firefox',
+            'Version': '1',
+            'BuildID': '20160728203720'
+        }
+        obj_b = {
+            'ProductName': 'Firefox',
+            'Version': '2',
+            'BuildID': '20160728203720'
+        }
+        assert compare(obj_a, obj_b) is False
+
+
 def content_to_crashid(content):
     if not isinstance(content, str):
         content = str(content, encoding='utf-8')
@@ -126,8 +210,8 @@ class TestPostCrash:
     def test_regular(self, posturl, s3conn, crash_generator):
         """Post a valid crash and verify the contents made it to S3"""
         raw_crash, dumps = crash_generator.generate()
-
-        resp = mini_poster.post_crash(posturl, raw_crash, dumps)
+        crash_payload = mini_poster.assemble_crash_payload(raw_crash, dumps)
+        resp = mini_poster.post_crash(posturl, crash_payload, dumps)
 
         # Sleep 1s to give Antenna time to save things
         time.sleep(1)
@@ -135,7 +219,7 @@ class TestPostCrash:
         crash_id = content_to_crashid(resp.content)
         logger.debug('Crash ID is: %s', crash_id)
 
-        verifier = lib.CrashVerifier()
+        verifier = CrashVerifier()
         verifier.verify_crash_data(crash_id, raw_crash, dumps, s3conn)
 
         if verifier.errors:
@@ -147,8 +231,8 @@ class TestPostCrash:
     def test_compressed_crash(self, posturl, s3conn, crash_generator):
         """Post a compressed crash and verify contents made it to s3"""
         raw_crash, dumps = crash_generator.generate()
-
-        resp = mini_poster.post_crash(posturl, raw_crash, dumps, compressed=True)
+        crash_payload = mini_poster.assemble_crash_payload(raw_crash, dumps)
+        resp = mini_poster.post_crash(posturl, crash_payload, compressed=True)
 
         # Sleep 1s to give Antenna time to save things
         time.sleep(1)
@@ -156,7 +240,7 @@ class TestPostCrash:
         crash_id = content_to_crashid(resp.content)
         logger.debug('Crash ID is: %s', crash_id)
 
-        verifier = lib.CrashVerifier()
+        verifier = CrashVerifier()
         verifier.verify_crash_data(crash_id, raw_crash, dumps, s3conn)
 
         if verifier.errors:

@@ -1,11 +1,17 @@
 import json
 import logging
 import os
+from pathlib import Path
+import sys
 
 import boto3
 from botocore.client import Config
 from everett.manager import ConfigManager, ConfigEnvFileEnv, ConfigOSEnv
 import pytest
+
+# Add repository root so we can import testlib.
+REPO_ROOT = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(REPO_ROOT))
 
 
 @pytest.fixture
@@ -20,10 +26,10 @@ def config():
 @pytest.fixture
 def posturl(config):
     """Generates configuration based on os.environ"""
+    # Endpoint url to connect to
     return config(
         'posturl',
-        default='http://localhost:8000/submit',
-        doc='The url to HTTP POST to'
+        default='http://localhost:8000/submit'
     )
 
 
@@ -51,8 +57,8 @@ class S3Connection:
             'region_name': self.region,
             'config': Config(s3={'addression_style': 'path'})
         }
-        if self.url:
-            client_kwargs['endpoint_url'] = self.url
+        if self.endpointurl:
+            client_kwargs['endpoint_url'] = self.endpointurl
 
         client = session.client(**client_kwargs)
         return client
@@ -88,11 +94,16 @@ def s3conn(config):
     # NOTE(willkg): These env keys match what Antenna uses so we can have one
     # .env file that works for Antenna and the system configuration.
     return S3Connection(
-        access_key=config('crashstorage_access_key', default='', doc='The s3 access key.'),
-        secret_access_key=config('crashstorage_secret_access_key', default='', doc='The s3 secret access key.'),
-        endpointurl=config('crashstorage_endpoint_url', default='', doc='The s3 endpoint url to use.'),
-        region=config('crashstorage_region', default='us-west-2', doc='The s3 region to use.'),
-        bucket=config('crashstorage_bucket_name', doc='The s3 bucket to use.')
+        # The s3 access key.
+        access_key=config('crashstorage_access_key', default=''),
+        # The s3 secret access key.
+        secret_access_key=config('crashstorage_secret_access_key', default=''),
+        # The s3 endpoint url to use.
+        endpointurl=config('crashstorage_endpoint_url', default=''),
+        # The s3 region to use.
+        region=config('crashstorage_region', default='us-west-2'),
+        # The s3 bucket to use.
+        bucket=config('crashstorage_bucket_name'),
     )
 
 

@@ -12,7 +12,8 @@ help:
 	@echo "shell         - open a shell in the base container"
 	@echo "clean         - remove all build, test, coverage and Python artifacts"
 	@echo "lint          - check style with flake8"
-	@echo "test          - run tests"
+	@echo "test          - run unit tests"
+	@echo "test-system   - run system tests against a running Antenna instance"
 	@echo "test-coverage - run tests and generate coverage report in cover/"
 	@echo "docs          - generate Sphinx HTML documentation, including API docs"
 
@@ -60,10 +61,16 @@ lint: .docker-build
 test: .docker-build
 	ANTENNA_ENV=empty.env ${DC} run base py.test
 
+test-system: .docker-build
+	ANTENNA_ENV=${ANTENNA_ENV} ${DC} run systemtest py.test tests/systemtest/
+
+test-system-shell: .docker-build
+	ANTENNA_ENV=${ANTENNA_ENV} ${DC} run systemtest bash
+
 test-coverage: .docker-build
 	ANTENNA_ENV=empty.env ${DC} run base py.test --with-coverage --cover-package=antenna --cover-inclusive --cover-html
 
 docs: .docker-build
 	ANTENNA_ENV=empty.env ${DC} run base ./bin/build_docs.sh
 
-.PHONY: default clean build docs lint run shell test test-coverage
+.PHONY: default clean build docs lint run shell test test-system test-system-shell test-coverage

@@ -2,8 +2,7 @@ from http.client import HTTPConnection
 import logging
 import urllib
 
-from jansky import lib
-from jansky import mini_poster
+from testlib import mini_poster
 
 
 logger = logging.getLogger(__name__)
