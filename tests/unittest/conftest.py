@@ -14,12 +14,9 @@ from falcon.testing.client import TestClient
 import pytest
 
 
-# Add repository root so we can import Antenna.
+# Add repository root so we can import antenna and testlib.
 REPO_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT))
-
-# Add testlib so we can import testlib modules.
-sys.path.insert(0, str(REPO_ROOT / 'tests'))
 
 from antenna import metrics  # noqa
 from antenna.app import get_app, setup_logging, setup_metrics  # noqa

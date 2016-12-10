@@ -42,6 +42,17 @@ services:
       - fakes3
       - statsd
 
+  # System test container
+  systemtest:
+    extends:
+      service: base
+    environment:
+      - ANTENNA_ENV=${ANTENNA_ENV}
+      - POSTURL=http://web:8000/submit
+      - SKIP20=true
+    links:
+      - web
+
   # fakes3 service
   # https://hub.docker.com/r/lphoward/fake-s3/
   fakes3:

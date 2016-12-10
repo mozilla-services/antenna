@@ -20,3 +20,12 @@ Subdirectories
     during normal development to unit test the code in Antenna.
 
     These are run in a docker container using the ``make test`` rule.
+
+
+**tests/systemtest/**
+
+    These are written in Python, use py.test as the test runner and are
+    designed to run against a running instance of Antenna.
+
+    These are run in a docker container using the ``make test-system``
+    rule, but you could also run them from a Python virtual env.

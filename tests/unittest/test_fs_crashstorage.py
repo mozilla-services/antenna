@@ -9,7 +9,7 @@ from everett.manager import ConfigManager
 from freezegun import freeze_time
 
 from antenna.ext.fs.crashstorage import FSCrashStorage
-from antenna.mini_poster import multipart_encode
+from testlib.mini_poster import multipart_encode
 
 
 def get_tree(path):
