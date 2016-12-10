@@ -20,10 +20,35 @@ This will send a minimal fake crash to the specified URL or
 from email.header import Header
 import gzip
 import io
+import logging
 import uuid
 
 import requests
 import six
+
+
+def _log_everything():
+    # Set up all the debug logging for grossest possible output
+    from http.client import HTTPConnection
+    HTTPConnection.debuglevel = 1
+
+    logging.getLogger('requests').setLevel(logging.DEBUG)
+    logging.getLogger('requests.packages.urllib3').setLevel(logging.DEBUG)
+
+
+def assemble_crash_payload(raw_crash, dumps):
+    crash_data = dict(raw_crash)
+
+    if dumps:
+        for name, contents in dumps.items():
+            if isinstance(contents, six.text_type):
+                contents = contents.encode('utf-8')
+            elif isinstance(contents, six.binary_type):
+                contents = contents
+            else:
+                contents = six.text_type(contents).encode('utf-8')
+            crash_data[name] = ('fakecrash.dump', io.BytesIO(contents))
+    return crash_data
 
 
 def compress(multipart):
@@ -118,32 +143,19 @@ def multipart_encode(raw_crash, boundary=None):
     return output, headers
 
 
-def post_crash(url, raw_crash, dumps, compressed=False):
+def post_crash(url, crash_payload, compressed=False):
     """Posts a crash to specified url
 
     .. Note:: This is not full-featured. It's for testing purposes only.
 
     :arg str url: The url to post to.
-    :arg dict raw_crash: The raw crash metadata.
-    :arg dict dumps: Dict of dump-name -> dump contents.
+    :arg dict crash_payload: The raw crash and dumps as a single thing.
     :arg bool compressed: Whether or not to post a compressed payload.
 
     :returns: The requests Response instance.
 
     """
-    crash_data = dict(raw_crash)
-
-    if dumps:
-        for name, contents in dumps.items():
-            if isinstance(contents, six.text_type):
-                contents = contents.encode('utf-8')
-            elif isinstance(contents, six.binary_type):
-                contents = contents
-            else:
-                contents = six.text_type(contents).encode('utf-8')
-            crash_data[name] = ('fakecrash.dump', io.BytesIO(contents))
-
-    payload, headers = multipart_encode(crash_data)
+    payload, headers = multipart_encode(crash_payload)
 
     if compressed:
         payload = compress(payload)
@@ -167,20 +179,17 @@ if __name__ == '__main__':
     else:
         url = 'http://localhost:8000/submit'
 
-    # Set up all the debug logging for grossest possible output
-    from http.client import HTTPConnection
-    HTTPConnection.debuglevel = 1
-
-    import logging
     logging.basicConfig(level=logging.DEBUG)
-    logging.getLogger('requests').setLevel(logging.DEBUG)
-    logging.getLogger('requests.packages.urllib3').setLevel(logging.DEBUG)
+    _log_everything()
 
     print('Submitting fake crash to %s' % url)
+    crash_payload = assemble_crash_payload(
+        raw_crash={'ProductName': 'Firefox', 'Version': '1'},
+        dumps={}
+    )
     resp = post_crash(
         url=url,
-        raw_crash={'ProductName': 'Firefox', 'Version': '1'},
-        dumps={},
+        crash_payload=crash_payload,
         # compressed=True
     )
 
