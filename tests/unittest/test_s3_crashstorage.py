@@ -3,7 +3,7 @@ import io
 import botocore
 import pytest
 
-from antenna.mini_poster import multipart_encode
+from testlib.mini_poster import multipart_encode
 
 
 class TestS3Mock:

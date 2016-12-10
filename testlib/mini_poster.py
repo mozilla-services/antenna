@@ -10,7 +10,7 @@ wanted in Antenna.
 
 Further, this module can be executed::
 
-    python -m antenna.mini_poster [URL]
+    python -m testlib.mini_poster [URL]
 
 This will send a minimal fake crash to the specified URL or
 ``http://localhost:8000/submit``.
