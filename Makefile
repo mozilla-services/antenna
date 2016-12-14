@@ -62,7 +62,7 @@ test: .docker-build
 	ANTENNA_ENV=empty.env ${DC} run base py.test
 
 test-system: .docker-build
-	ANTENNA_ENV=${ANTENNA_ENV} ${DC} run systemtest py.test tests/systemtest/
+	ANTENNA_ENV=${ANTENNA_ENV} ${DC} run systemtest py.test -v tests/systemtest/
 
 test-system-shell: .docker-build
 	ANTENNA_ENV=${ANTENNA_ENV} ${DC} run systemtest bash
