@@ -24,14 +24,14 @@ if [ -z "${POSTURL}" ]; then
     export POSTURL="http://web:8000/submit"
 fi
 echo "POSTURL: ${POSTURL}"
-if [ -z "${ANTENNA_DEV}" ]; then
+if [ -z "${ANTENNA_ENV}" ]; then
     # This is the env file for running against a local dev environment
     export ANTENNA_ENV="dev.env"
 fi
 echo "ANTENNA_ENV: ${ANTENNA_ENV}"
 
 cmd_required() {
-    command -v "$@" > /dev/null 2>&1 || { echo >&2 "$@ required, but not on PATH. Exiting."; exit 1; }
+    command -v "$1" > /dev/null 2>&1 || { echo >&2 "$1 required, but not on PATH. Exiting."; exit 1; }
 }
 
 echo "Setting up system tests."
@@ -48,7 +48,7 @@ echo "Required commands available."
 
 # If venv exists, exit
 if [ -d "${VENV_DIR}" ]; then
-    echo "${vENV_DIR} exists. Please remove it and try again. Exiting."
+    echo "${VENV_DIR} exists. Please remove it and try again. Exiting."
     exit 1
 fi
 
