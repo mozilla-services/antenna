@@ -146,7 +146,14 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             # have to do that here because nginx doesn't have a good way to do
             # that in nginx-land.
             gzip_header = 16 + zlib.MAX_WBITS
-            data = zlib.decompress(req.stream.read(content_length), gzip_header)
+            try:
+                data = zlib.decompress(req.stream.read(content_length), gzip_header)
+            except zlib.error:
+                # This indicates this isn't a valid compressed stream. Given
+                # that the HTTP request insists it is, we're just going to
+                # assume it's junk and not try to process any further.
+                self.mymetrics.incr('bad_gzipped_crash')
+                return {}, {}
 
             # Stomp on the content length to correct it because we've changed
             # the payload size by decompressing it. We save the original value
