@@ -63,4 +63,4 @@ pip install --no-cache-dir -r tests/systemtest/requirements.txt
 
 echo "Running tests."
 # Run tests--this  uses configuration in the environment
-py.test tests/systemtest/
+py.test -vv tests/systemtest/
