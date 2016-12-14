@@ -57,17 +57,17 @@ class S3CrashStorage(CrashStorageBase):
         self.conn.check_health(state)
 
     def _get_raw_crash_path(self, crash_id):
-        return '/v2/raw_crash/{entropy}/{date}/{crash_id}'.format(
+        return 'v2/raw_crash/{entropy}/{date}/{crash_id}'.format(
             entropy=crash_id[:3],
             date=get_date_from_crash_id(crash_id),
             crash_id=crash_id
         )
 
     def _get_dump_names_path(self, crash_id):
-        return '/v1/dump_names/{crash_id}'.format(crash_id=crash_id)
+        return 'v1/dump_names/{crash_id}'.format(crash_id=crash_id)
 
     def _get_dump_name_path(self, crash_id, dump_name):
-        return '/v1/{dump_name}/{crash_id}'.format(
+        return 'v1/{dump_name}/{crash_id}'.format(
             dump_name=dump_name,
             crash_id=crash_id
         )

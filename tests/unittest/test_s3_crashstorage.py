@@ -19,19 +19,19 @@ class TestS3Mock:
         # # We want to verify these files are saved in this specific order.
         s3mock.add_step(
             method='PUT',
-            url='http://fakes3:4569/fakebucket//v1/dump_names/de1bb258-cbbf-4589-a673-34f800160918',
+            url='http://fakes3:4569/fakebucket/v1/dump_names/de1bb258-cbbf-4589-a673-34f800160918',
             body=b'["upload_file_minidump"]',
             resp=s3mock.fake_response(status_code=200)
         )
         s3mock.add_step(
             method='PUT',
-            url='http://fakes3:4569/fakebucket//v1/upload_file_minidump/de1bb258-cbbf-4589-a673-34f800160918',
+            url='http://fakes3:4569/fakebucket/v1/upload_file_minidump/de1bb258-cbbf-4589-a673-34f800160918',
             body=b'abcd1234',
             resp=s3mock.fake_response(status_code=200)
         )
         s3mock.add_step(
             method='PUT',
-            url='http://fakes3:4569/fakebucket//v2/raw_crash/de1/20160918/de1bb258-cbbf-4589-a673-34f800160918',
+            url='http://fakes3:4569/fakebucket/v2/raw_crash/de1/20160918/de1bb258-cbbf-4589-a673-34f800160918',
             # Not going to compare the body here because it's just the raw crash
             resp=s3mock.fake_response(status_code=200)
         )
@@ -76,19 +76,19 @@ class TestS3Mock:
         # We want to verify these files are saved in this specific order.
         s3mock.add_step(
             method='PUT',
-            url=ROOT + 'fakebucket.with.periods//v1/dump_names/de1bb258-cbbf-4589-a673-34f800160918',
+            url=ROOT + 'fakebucket.with.periods/v1/dump_names/de1bb258-cbbf-4589-a673-34f800160918',
             body=b'["upload_file_minidump"]',
             resp=s3mock.fake_response(status_code=200)
         )
         s3mock.add_step(
             method='PUT',
-            url=ROOT + 'fakebucket.with.periods//v1/upload_file_minidump/de1bb258-cbbf-4589-a673-34f800160918',
+            url=ROOT + 'fakebucket.with.periods/v1/upload_file_minidump/de1bb258-cbbf-4589-a673-34f800160918',
             body=b'abcd1234',
             resp=s3mock.fake_response(status_code=200)
         )
         s3mock.add_step(
             method='PUT',
-            url=ROOT + 'fakebucket.with.periods//v2/raw_crash/de1/20160918/de1bb258-cbbf-4589-a673-34f800160918',
+            url=ROOT + 'fakebucket.with.periods/v2/raw_crash/de1/20160918/de1bb258-cbbf-4589-a673-34f800160918',
             # Not going to compare the body here because it's just the raw crash
             resp=s3mock.fake_response(status_code=200)
         )
@@ -163,7 +163,7 @@ class TestS3MockLogging:
         # Fail once with a 403, retry and then proceed.
         s3mock.add_step(
             method='PUT',
-            url=ROOT + 'fakebucket//v1/dump_names/de1bb258-cbbf-4589-a673-34f800160918',
+            url=ROOT + 'fakebucket/v1/dump_names/de1bb258-cbbf-4589-a673-34f800160918',
             body=b'["upload_file_minidump"]',
             resp=s3mock.fake_response(status_code=403)
         )
@@ -171,19 +171,19 @@ class TestS3MockLogging:
         # Proceed with saving files.
         s3mock.add_step(
             method='PUT',
-            url=ROOT + 'fakebucket//v1/dump_names/de1bb258-cbbf-4589-a673-34f800160918',
+            url=ROOT + 'fakebucket/v1/dump_names/de1bb258-cbbf-4589-a673-34f800160918',
             body=b'["upload_file_minidump"]',
             resp=s3mock.fake_response(status_code=200)
         )
         s3mock.add_step(
             method='PUT',
-            url=ROOT + 'fakebucket//v1/upload_file_minidump/de1bb258-cbbf-4589-a673-34f800160918',
+            url=ROOT + 'fakebucket/v1/upload_file_minidump/de1bb258-cbbf-4589-a673-34f800160918',
             body=b'abcd1234',
             resp=s3mock.fake_response(status_code=200)
         )
         s3mock.add_step(
             method='PUT',
-            url=ROOT + 'fakebucket//v2/raw_crash/de1/20160918/de1bb258-cbbf-4589-a673-34f800160918',
+            url=ROOT + 'fakebucket/v2/raw_crash/de1/20160918/de1bb258-cbbf-4589-a673-34f800160918',
             # Not going to compare the body here because it's just the raw crash
             resp=s3mock.fake_response(status_code=200)
         )
