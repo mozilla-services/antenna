@@ -134,6 +134,10 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         content_length = req.content_length or 0
 
+        # If there's no content, return an empty crash
+        if content_length == 0:
+            return {}, {}
+
         # Decompress payload if it's compressed
         if req.env.get('HTTP_CONTENT_ENCODING') == 'gzip':
             self.mymetrics.incr('gzipped_crash')
@@ -154,10 +158,6 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             data = io.BytesIO(data)
         else:
             data = io.BytesIO(req.stream.read(req.content_length or 0))
-
-        # If there's no content, return an empty crash
-        if content_length == 0:
-            return {}, {}
 
         fs = cgi.FieldStorage(fp=data, environ=req.env, keep_blank_values=1)
 
