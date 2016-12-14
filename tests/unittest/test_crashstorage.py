@@ -6,7 +6,7 @@ import io
 
 from freezegun import freeze_time
 
-from antenna.mini_poster import multipart_encode
+from testlib.mini_poster import multipart_encode
 
 
 class TestCrashStorage:

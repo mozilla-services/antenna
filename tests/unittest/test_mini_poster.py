@@ -5,7 +5,7 @@
 
 import io
 
-from antenna.mini_poster import multipart_encode
+from testlib.mini_poster import multipart_encode
 
 
 def test_multipart_encode_with_files():
