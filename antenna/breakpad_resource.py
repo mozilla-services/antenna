@@ -156,7 +156,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
                 # crash that was re-submitted.
                 continue
 
-            elif fs_item.type.startswith('application/octet-stream') or isinstance(fs_item.value, bytes):
+            elif fs_item.type and (fs_item.type.startswith('application/octet-stream') or isinstance(fs_item.value, bytes)):
                 # This is a dump, so we get a checksum and save the bits in the
                 # relevant places.
 
