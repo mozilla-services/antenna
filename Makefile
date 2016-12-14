@@ -1,4 +1,4 @@
-ANTENNA_ENV ?= "prod.env"
+ANTENNA_ENV ?= "dev.env"
 DC := $(shell which docker-compose)
 
 default:
@@ -6,16 +6,19 @@ default:
 	@exit 1
 
 help:
-	@echo "build         - build docker containers for dev"
-	@echo "run           - docker-compose up the entire system for dev"
+	@echo "build            - build docker containers for dev"
+	@echo "run              - docker-compose up the entire system for dev"
 	@echo ""
-	@echo "shell         - open a shell in the base container"
-	@echo "clean         - remove all build, test, coverage and Python artifacts"
-	@echo "lint          - check style with flake8"
-	@echo "test          - run unit tests"
-	@echo "test-system   - run system tests against a running Antenna instance"
-	@echo "test-coverage - run tests and generate coverage report in cover/"
-	@echo "docs          - generate Sphinx HTML documentation, including API docs"
+	@echo "shell            - open a shell in the base container"
+	@echo "clean            - remove all build, test, coverage and Python artifacts"
+	@echo "lint             - check style with flake8"
+	@echo "test             - run unit tests"
+	@echo "systemtest       - run system tests against a running Antenna instance"
+	@echo "systemtest-shell - open a shell in the systemtest container"
+	@echo "test-coverage    - run tests and generate coverage report in cover/"
+	@echo "docs             - generate Sphinx HTML documentation, including API docs"
+	@echo ""
+	@echo "Set ANTENNA_ENV=/path/to/env/file for configuration."
 
 # Dev configuration steps
 .docker-build:
@@ -61,11 +64,11 @@ lint: .docker-build
 test: .docker-build
 	ANTENNA_ENV=empty.env ${DC} run base py.test
 
-test-system: .docker-build
-	ANTENNA_ENV=${ANTENNA_ENV} ${DC} run systemtest py.test -v tests/systemtest/
+systemtest: .docker-build
+	ANTENNA_ENV=dev.env ${DC} run systemtest tests/systemtest/run_tests.sh
 
-test-system-shell: .docker-build
-	ANTENNA_ENV=${ANTENNA_ENV} ${DC} run systemtest bash
+systemtest-shell: .docker-build
+	ANTENNA_ENV=dev.env ${DC} run systemtest bash
 
 test-coverage: .docker-build
 	ANTENNA_ENV=empty.env ${DC} run base py.test --with-coverage --cover-package=antenna --cover-inclusive --cover-html

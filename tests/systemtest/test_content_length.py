@@ -68,7 +68,7 @@ class TestContentLength:
         assert str(resp.read(), encoding='utf-8') == 'Discarded=1'
 
     @pytest.mark.skipif(
-        bool(os.environ.get('SKIP20')),
+        bool(os.environ.get('NONGINX')),
         reason=(
             'Requires nginx which you probably do not have running '
             'via localhost'

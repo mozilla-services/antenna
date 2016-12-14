@@ -17,12 +17,12 @@ Running tests against locally running Antenna
 
 Run these tests from the repository root using::
 
-    make test-system
+    make systemtest
 
 
 To run a single test or group of tests or with different options, do::
 
-    make test-system-shell
+    make systemtest-shell
 
 
 This gives you a bash shell in the docker container where you can more easily
@@ -44,3 +44,9 @@ You can run specific tests or groups of tests or with different py.test
 options::
 
     ANTENNA_ENV=my.env make test-system-shell
+
+
+.. Note::
+
+   In ``my.env`` make sure to define ``POSTURL`` and ``NONGINX`` variables to
+   override what they're set to in the systemtest container.

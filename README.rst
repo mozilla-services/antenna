@@ -51,7 +51,7 @@ production, see docs_.
 
    You should see a lot of output. It'll start out with something like this::
 
-      ANTENNA_ENV="prod.env" /usr/bin/docker-compose up web
+      ANTENNA_ENV="dev.env" /usr/bin/docker-compose up web
       antenna_statsd_1 is up-to-date
       antenna_fakes3_1 is up-to-date
       Recreating antenna_web_1
@@ -119,7 +119,7 @@ production, see docs_.
       $ ANTENNA_ENV=my.env make run
 
 
-   See ``prod.env`` and the docs_ for configuration options.
+   See ``dev.env`` and the docs_ for configuration options.
 
 5. Run tests:
 

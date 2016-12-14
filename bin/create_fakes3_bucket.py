@@ -16,7 +16,7 @@ To use:
 2. In a second terminal, start a web container and run the script::
 
        $ docker-compose run web bash
-       app@...$ ANTENNA_ENV=prod.env bin/create_fakes3_bucket.py
+       app@...$ ANTENNA_ENV=dev.env bin/create_fakes3_bucket.py
 
 
 It'll check to see if the bucket is already created and if so, it won't do

@@ -52,7 +52,7 @@ class Test20mbLimit:
         return 200
 
     @pytest.mark.skipif(
-        bool(os.environ.get('SKIP20')),
+        bool(os.environ.get('NONGINX')),
         reason=(
             'Requires nginx which you probably do not have running '
             'via localhost'
