@@ -36,6 +36,9 @@ class TestDiscarded:
         """Test crash with no payload is discarded"""
         raw_crash, dumps = crash_generator.generate()
         payload, headers = mini_poster.multipart_encode(raw_crash)
+        # Zero out the content-length because we're sending an empty
+        # payload.
+        headers['Content-Length'] = '0'
 
         # Send no payload
         resp = requests.post(posturl, headers=headers, data='')
