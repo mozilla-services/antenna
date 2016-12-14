@@ -35,7 +35,7 @@ class TestContentLength:
         resp = http_post(posturl, headers, payload)
 
         assert resp.getcode() == 200
-        assert str(resp.read(), encoding='utf-8') == 'Discarded=1'
+        assert str(resp.read(), encoding='utf-8').startswith('CrashID=')
 
     def test_content_length_0(self, posturl, crash_generator):
         """Post a crash with a content-length 0"""
