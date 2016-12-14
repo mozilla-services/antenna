@@ -108,8 +108,8 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         Decompresses the payload if necessary and then walks through the
         FieldStorage converting from multipart/form-data to Python datatypes.
 
-        Note: The FieldStorage is poorly documented (in my opinion). It has a
-        list attribute that is a list of FieldStorage items--one for each
+        NOTE(willkg): The FieldStorage is poorly documented (in my opinion). It
+        has a list attribute that is a list of FieldStorage items--one for each
         key/val in the form. For attached files, the FieldStorage will have a
         name, value and filename and the type should be
         application/octet-stream. Thus we parse it looking for things of type
@@ -120,6 +120,20 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         :returns: (raw_crash dict, dumps dict)
 
         """
+        # If we don't have a content type, return an empty crash
+        if not req.content_type:
+            return {}, {}
+
+        # If it's the wrong content type or there's no boundary section, return
+        # an empty crash
+        content_type = [part.strip() for part in req.content_type.split(';', 1)]
+        if ((len(content_type) != 2 or
+             content_type[0] != 'multipart/form-data' or
+             not content_type[1].startswith('boundary='))):
+            return {}, {}
+
+        content_length = req.content_length or 0
+
         # Decompress payload if it's compressed
         if req.env.get('HTTP_CONTENT_ENCODING') == 'gzip':
             self.mymetrics.incr('gzipped_crash')
@@ -128,7 +142,6 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             # have to do that here because nginx doesn't have a good way to do
             # that in nginx-land.
             gzip_header = 16 + zlib.MAX_WBITS
-            content_length = req.content_length or 0
             data = zlib.decompress(req.stream.read(content_length), gzip_header)
 
             # Stomp on the content length to correct it because we've changed
@@ -136,10 +149,15 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             # in case we need to debug something later on.
             req.env['ORIG_CONTENT_LENGTH'] = content_length
             req.env['CONTENT_LENGTH'] = str(len(data))
+            content_length = len(data)
 
             data = io.BytesIO(data)
         else:
             data = io.BytesIO(req.stream.read(req.content_length or 0))
+
+        # If there's no content, return an empty crash
+        if content_length == 0:
+            return {}, {}
 
         fs = cgi.FieldStorage(fp=data, environ=req.env, keep_blank_values=1)
 
