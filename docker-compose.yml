@@ -49,7 +49,7 @@ services:
     environment:
       - ANTENNA_ENV=${ANTENNA_ENV}
       - POSTURL=http://web:8000/submit
-      - SKIP20=true
+      - NONGINX=1
     links:
       - web
 

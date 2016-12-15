@@ -27,5 +27,5 @@ Subdirectories
     These are written in Python, use py.test as the test runner and are
     designed to run against a running instance of Antenna.
 
-    These are run in a docker container using the ``make test-system``
+    These are run in a docker container using the ``make systemtest``
     rule, but you could also run them from a Python virtual env.
