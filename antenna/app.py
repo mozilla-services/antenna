@@ -230,12 +230,18 @@ def get_app(config=None):
     """Returns AntennaAPI instance"""
     try:
         if config is None:
-            config = ConfigManager([
-                # Pull configuration from env file specified as ANTENNA_ENV
-                ConfigEnvFileEnv([os.environ.get('ANTENNA_ENV')]),
-                # Pull configuration from environment variables
-                ConfigOSEnv()
-            ])
+            config = ConfigManager(
+                environments=[
+                    # Pull configuration from env file specified as ANTENNA_ENV
+                    ConfigEnvFileEnv([os.environ.get('ANTENNA_ENV')]),
+                    # Pull configuration from environment variables
+                    ConfigOSEnv()
+                ],
+                doc=(
+                    'For configuration help, see '
+                    'https://antenna.readthedocs.io/en/latest/configuration.html'
+                )
+            )
 
         app_config = AppConfig(config)
         setup_logging(app_config('logging_level'))
