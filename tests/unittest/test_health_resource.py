@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+
 class TestHealthChecks:
     def test_no_version(self, client, tmpdir):
         # Set basedir here to tmpdir which we *know* doesn't have a
