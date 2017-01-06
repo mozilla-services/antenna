@@ -1,3 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 import json
 import logging
 import os
@@ -8,6 +12,7 @@ import boto3
 from botocore.client import Config
 from everett.manager import ConfigManager, ConfigEnvFileEnv, ConfigOSEnv
 import pytest
+
 
 # Add repository root so we can import testlib.
 REPO_ROOT = Path(__file__).parent.parent.parent
