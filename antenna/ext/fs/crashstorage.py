@@ -91,14 +91,14 @@ class FSCrashStorage(CrashStorageBase):
             crash_id
         )
 
-    def save_raw_crash(self, raw_crash, dumps, crash_id):
+    def save_raw_crash(self, crash_id, raw_crash, dumps):
         """Saves the raw crash and related dumps
 
         FIXME(willkg): How should this method handle exceptions?
 
+        :arg crash_id: The crash id as a string.
         :arg raw_crash: dict The raw crash as a dict.
         :arg dumps: Map of dump name (e.g. ``upload_file_minidump``) to dump contents.
-        :arg crash_id: The crash id as a string.
 
         """
         files = {}
