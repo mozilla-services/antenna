@@ -22,9 +22,17 @@ class CrashStorageBase(RequiredConfigMixin):
 
         FIXME(willkg): How should this method handle exceptions?
 
-        :arg crash_id: The crash id as a string.
-        :arg raw_crash: dict The raw crash as a dict.
-        :arg dumps: Map of dump name (e.g. ``upload_file_minidump``) to dump contents.
+        :arg str crash_id: The crash id as a string.
+        :arg dict raw_crash: dict The raw crash as a dict.
+
+        """
+        raise NotImplementedError
+
+    def save_dumps(self, crash_id, dumps):
+        """Saves dump data
+
+        :arg str crash_id: The crash id
+        :arg dict dumps: dump name -> dump
 
         """
         raise NotImplementedError
@@ -50,16 +58,16 @@ class NoOpCrashStorage(CrashStorageBase):
     """
     def __init__(self, config):
         super().__init__(config)
-        self.crashes = []
+        self.saved_things = []
 
-    def add_crash(self, raw_crash, dumps, crash_id):
-        self.crashes.append({
-            'raw_crash': raw_crash,
-            'dumps': dumps,
-            'crash_id': crash_id
+    def add_saved_thing(self, crash_id, type_, data):
+        self.saved_things.append({
+            'crash_id': crash_id,
+            'type': type_,
+            'data': data
         })
         # Nix all but the last 10 crashes
-        self.crashes = self.crashes[-10:]
+        self.saved_things = self.saved_things[-10:]
 
     def _truncate_raw_crash(self, raw_crash):
         """Truncates a raw crash to something printable in a log"""
@@ -69,11 +77,20 @@ class NoOpCrashStorage(CrashStorageBase):
         """Truncates dumps information to something printable to a log"""
         return sorted(dumps.keys())
 
-    def save_raw_crash(self, crash_id, raw_crash, dumps):
+    def save_raw_crash(self, crash_id, raw_crash):
         logger.info(
-            'crash no-op: %s %s %s',
+            'crash no-op: %s raw_crash %s',
             crash_id,
             self._truncate_raw_crash(raw_crash),
-            self._truncate_dumps(dumps)
         )
-        self.add_crash(raw_crash, dumps, crash_id)
+        self.add_saved_thing(crash_id, 'raw_crash', raw_crash)
+
+    def save_dumps(self, crash_id, dumps):
+        for name, data in dumps.items():
+            logger.info(
+                'crash no-op: %s dump %s (%d)',
+                crash_id,
+                name,
+                len(data)
+            )
+            self.add_saved_thing(crash_id, name, data)
