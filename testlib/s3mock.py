@@ -132,6 +132,10 @@ class FakeAdapter(BaseAdapter):
     def close(self):
         raise ThouShaltNotPass('Preventing unexpected .close() call')
 
+    def remaining_conversation(self):
+        """Returns the remaining conversation to happen"""
+        return self.expected_conv
+
 
 def serialize_request(request):
     """Takes a request object and "serializes" it into bytes
@@ -274,6 +278,12 @@ class S3Mock:
                 resp=s3.fake_response(status_code=200)
             )
 
+            # ... do whatever here
+
+            # Assert that the entire expected conversation has occurred
+            assert s3.remaining_conversation() == []
+
+
     In that, the first HTTP request has to be a ``PUT
     http://fakes3:4569/fakebucket/some/key`` and if it's not, then an exception
     is thrown with helpful information. If that's the first request, then the
@@ -287,18 +297,21 @@ class S3Mock:
     ``S3Mock`` has a ``fake_response`` method that will generate a fake response
     to return when the request matches.
 
+    After all the steps and other things that you want to do are done, then you
+    can assert that the entire expected conversation has occurred.
 
     **Recording**
 
     One of the difficulties with writing tests that assert HTTP conversations
     happen in a certain way is that if the conversation happens over SSL, then
     it's not readable using network sniffing tools. Thus S3Mock provides a
-    record feature that spits out what's going on to stdout.
+    record feature that spits out what's going on to the specified file or
+    ``s3mock.log``.
 
     Usage::
 
         with S3Mock() as s3:
-            s3.record()
+            s3.record(filename='s3mock.log')
 
             # Do stuff here
 
@@ -391,3 +404,7 @@ class S3Mock:
     def stop_mock(self):
         requests.Session.get_adapter = self._real_get_adapter
         delattr(self, '_real_get_adapter')
+
+    def remaining_conversation(self):
+        """Returns remaining conversation"""
+        return self.adapter.remaining_conversation()

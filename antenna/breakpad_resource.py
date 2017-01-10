@@ -322,9 +322,9 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         # Save the crash to crashstorage
         self.crashstorage.save_raw_crash(
+            crash_id,
             raw_crash,
-            dumps,
-            crash_id
+            dumps
         )
         logger.info('%s saved', crash_id)
 

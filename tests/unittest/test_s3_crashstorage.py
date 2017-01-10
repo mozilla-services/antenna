@@ -29,7 +29,7 @@ class TestS3Mock:
         )
         s3mock.add_step(
             method='PUT',
-            url='http://fakes3:4569/fakebucket/v1/upload_file_minidump/de1bb258-cbbf-4589-a673-34f800160918',
+            url='http://fakes3:4569/fakebucket/v1/dump/de1bb258-cbbf-4589-a673-34f800160918',
             body=b'abcd1234',
             resp=s3mock.fake_response(status_code=200)
         )
@@ -67,6 +67,9 @@ class TestS3Mock:
         assert result.status_code == 200
         assert result.content == b'CrashID=bp-de1bb258-cbbf-4589-a673-34f800160918\n'
 
+        # Assert we did the entire s3 conversation
+        assert s3mock.remaining_conversation() == []
+
     def test_region_and_bucket_with_periods(self, client, s3mock):
         # # .verify_configuration() calls HEAD on the bucket to verify it exists
         # # and the configuration is correct.
@@ -86,7 +89,7 @@ class TestS3Mock:
         )
         s3mock.add_step(
             method='PUT',
-            url=ROOT + 'fakebucket.with.periods/v1/upload_file_minidump/de1bb258-cbbf-4589-a673-34f800160918',
+            url=ROOT + 'fakebucket.with.periods/v1/dump/de1bb258-cbbf-4589-a673-34f800160918',
             body=b'abcd1234',
             resp=s3mock.fake_response(status_code=200)
         )
@@ -124,6 +127,9 @@ class TestS3Mock:
         assert result.status_code == 200
         assert result.content == b'CrashID=bp-de1bb258-cbbf-4589-a673-34f800160918\n'
 
+        # Assert we did the entire s3 conversation
+        assert s3mock.remaining_conversation() == []
+
     def test_missing_bucket_halts_startup(self, client, s3mock):
         # .verify_configuration() calls HEAD on the bucket to verify it exists
         # and the configuration is correct. This fails for here.
@@ -148,6 +154,9 @@ class TestS3Mock:
             'An error occurred (404) when calling the HeadBucket operation: Not Found'
             in str(excinfo.value)
         )
+
+        # Assert we did the entire s3 conversation
+        assert s3mock.remaining_conversation() == []
 
 
 class TestS3MockLogging:
@@ -181,7 +190,7 @@ class TestS3MockLogging:
         )
         s3mock.add_step(
             method='PUT',
-            url=ROOT + 'fakebucket/v1/upload_file_minidump/de1bb258-cbbf-4589-a673-34f800160918',
+            url=ROOT + 'fakebucket/v1/dump/de1bb258-cbbf-4589-a673-34f800160918',
             body=b'abcd1234',
             resp=s3mock.fake_response(status_code=200)
         )
@@ -226,6 +235,8 @@ class TestS3MockLogging:
                 levelname='ERROR',
                 msg_contains='retry attempt 0'
             )
+        # Assert we did the entire s3 conversation
+        assert s3mock.remaining_conversation() == []
 
     # FIXME(willkg): Add test for bad region
     # FIXME(willkg): Add test for invalid credentials
