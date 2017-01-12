@@ -17,9 +17,10 @@ logger = logging.getLogger(__name__)
 
 def http_post(posturl, headers, data):
     parsed = urllib.parse.urlparse(posturl)
-    host, port = parsed.netloc.split(':')
-    if not port:
-        port = '80'
+    if ':' in parsed.netloc:
+        host, port = parsed.netloc.split(':')
+    else:
+        host, port = parsed.netloc, '80'
     conn = HTTPConnection(host, int(port))
     conn.request('POST', parsed.path, headers=headers, body=data)
     return conn.getresponse()
