@@ -27,14 +27,14 @@ class CrashVerifier:
         self.errors.append(msg)
 
     def raw_crash_key(self, crash_id):
-        return '/v2/raw_crash/{entropy}/{date}/{crashid}'.format(
+        return 'v2/raw_crash/{entropy}/{date}/{crashid}'.format(
             entropy=crash_id[0:3],
             date='20' + crash_id[-6:],
             crashid=crash_id
         )
 
     def dump_names_key(self, crash_id):
-        return '/v1/dump_names/{crashid}'.format(
+        return 'v1/dump_names/{crashid}'.format(
             crashid=crash_id
         )
 
@@ -42,7 +42,7 @@ class CrashVerifier:
         if name in (None, '', 'upload_file_minidump'):
             name = 'dump'
 
-        return '/v1/{name}/{crashid}'.format(
+        return 'v1/{name}/{crashid}'.format(
             name=name,
             crashid=crash_id
         )
@@ -225,6 +225,7 @@ class TestPostCrash:
 
         crash_id = content_to_crashid(resp.content)
         logger.debug('Crash ID is: %s', crash_id)
+        logger.debug('S3conn: %s', s3conn.get_config())
 
         verifier = CrashVerifier()
         verifier.verify_crash_data(crash_id, raw_crash, dumps, s3conn)
@@ -246,6 +247,7 @@ class TestPostCrash:
 
         crash_id = content_to_crashid(resp.content)
         logger.debug('Crash ID is: %s', crash_id)
+        logger.debug('S3conn: %s', s3conn.get_config())
 
         verifier = CrashVerifier()
         verifier.verify_crash_data(crash_id, raw_crash, dumps, s3conn)

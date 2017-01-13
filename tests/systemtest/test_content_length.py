@@ -95,8 +95,10 @@ class TestContentLength:
 
         resp = http_post(posturl, headers, payload)
 
-        assert resp.getcode() == 200
-        assert str(resp.read(), encoding='utf-8') == 'Discarded=1'
+        # Verify we get an HTTP 504 because something timed out waiting for the
+        # HTTP client (us) to send the rest of the data which is expected
+        # because we sent a bad content-length
+        assert resp.getcode() == 504
 
     def test_content_length_non_int(self, posturl, crash_generator):
         """Post a crash with a content-length that isn't an int"""

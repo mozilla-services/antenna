@@ -14,9 +14,13 @@ from everett.manager import ConfigManager, ConfigEnvFileEnv, ConfigOSEnv
 import pytest
 
 
-# Add repository root so we can import testlib.
+# Add repository root so we can import testlib
 REPO_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT))
+
+# Set up logging to log at DEBUG level; this is quelled by pytest except when
+# there are errors
+logging.basicConfig(level=logging.DEBUG)
 
 
 @pytest.fixture
@@ -48,6 +52,13 @@ class S3Connection:
 
         self.logger = logging.getLogger(__name__ + '.s3conn')
         self.conn = self.connect()
+
+    def get_config(self):
+        return {
+            'endpointurl': self.endpointurl,
+            'region': self.region,
+            'bucket': self.bucket
+        }
 
     def connect(self):
         session_kwargs = {}
