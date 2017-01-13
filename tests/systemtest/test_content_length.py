@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from http.client import HTTPConnection
+from http.client import HTTPConnection, HTTPSConnection
 import logging
 import os
 import urllib
@@ -21,7 +21,11 @@ def http_post(posturl, headers, data):
         host, port = parsed.netloc.split(':')
     else:
         host, port = parsed.netloc, '80'
-    conn = HTTPConnection(host, int(port))
+
+    if posturl.startswith('https'):
+        conn = HTTPSConnection(host, int(port))
+    else:
+        conn = HTTPConnection(host, int(port))
     conn.request('POST', parsed.path, headers=headers, body=data)
     return conn.getresponse()
 
