@@ -20,7 +20,8 @@ def http_post(posturl, headers, data):
     if ':' in parsed.netloc:
         host, port = parsed.netloc.split(':')
     else:
-        host, port = parsed.netloc, '80'
+        host = parsed.netloc
+        port = '443' if posturl.startswith('https') else '80'
 
     if posturl.startswith('https'):
         conn = HTTPSConnection(host, int(port))
