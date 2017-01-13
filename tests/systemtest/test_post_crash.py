@@ -220,7 +220,7 @@ class TestPostCrash:
         crash_payload = mini_poster.assemble_crash_payload(raw_crash, dumps)
         resp = mini_poster.post_crash(posturl, crash_payload, dumps)
 
-        # Sleep 1s to give Antenna time to save things
+        # Sleep to give Antenna time to save things
         time.sleep(5)
 
         crash_id = content_to_crashid(resp.content)
@@ -241,7 +241,7 @@ class TestPostCrash:
         crash_payload = mini_poster.assemble_crash_payload(raw_crash, dumps)
         resp = mini_poster.post_crash(posturl, crash_payload, compressed=True)
 
-        # Sleep 1s to give Antenna time to save things
+        # Sleep to give Antenna time to save things
         time.sleep(5)
 
         crash_id = content_to_crashid(resp.content)
