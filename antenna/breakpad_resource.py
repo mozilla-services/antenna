@@ -316,15 +316,20 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
     def save_crash_to_storage(self, raw_crash, dumps, crash_id):
         """Saves the crash to storage"""
 
-        # FIXME(willkg): How to deal with errors here? The save_raw_crash should
-        # handle retrying, so if it bubbles up to this point, then it's an
-        # unretryable unhandleable error.
+        # FIXME(willkg): How to deal with errors here? These should handle
+        # retrying, so if it bubbles up to this point, then it's an unretryable
+        # unhandleable error.
 
-        # Save the crash to crashstorage
+        # Save dumps to crashstorage
+        self.crashstorage.save_dumps(
+            crash_id,
+            dumps
+        )
+
+        # Save the raw crash metadata to crashstorage
         self.crashstorage.save_raw_crash(
             crash_id,
-            raw_crash,
-            dumps
+            raw_crash
         )
         logger.info('%s saved', crash_id)
 

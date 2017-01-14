@@ -91,20 +91,45 @@ class FSCrashStorage(CrashStorageBase):
             crash_id
         )
 
-    def save_raw_crash(self, crash_id, raw_crash, dumps):
+    def _save_file(self, fn, contents):
+        logger.debug('Saving file %r', fn)
+        path = os.path.dirname(fn)
+
+        # FIXME(willkg): What happens if there is something here already and
+        # it's not a directory?
+        if not os.path.exists(path):
+            try:
+                os.makedirs(path)
+            except OSError:
+                logger.exception('Threw exception while trying to make path %r', path)
+                # FIXME(willkg): If we ever make this production-ready, we
+                # need a better option here.
+                return
+
+        # FIXME(willkg): This will stomp on existing crashes. Is that ok?
+        # Should we detect and do something different somehow?
+        with open(fn, 'wb') as fp:
+            fp.write(contents)
+
+    def save_raw_crash(self, crash_id, raw_crash):
         """Saves the raw crash and related dumps
 
         FIXME(willkg): How should this method handle exceptions?
 
         :arg crash_id: The crash id as a string.
         :arg raw_crash: dict The raw crash as a dict.
-        :arg dumps: Map of dump name (e.g. ``upload_file_minidump``) to dump contents.
+
+        """
+        self._save_file(self._get_raw_crash_path(crash_id), json_ordered_dumps(raw_crash).encode('utf-8'))
+
+    def save_dumps(self, crash_id, dumps):
+        """Saves dump data
+
+        :arg str crash_id: The crash id
+        :arg dict dumps: dump name -> dump
 
         """
         files = {}
-
-        # Add raw_crash to the list of files to save.
-        files[self._get_raw_crash_path(crash_id)] = json_ordered_dumps(raw_crash).encode('utf-8')
 
         # Add dump_names to the list of files to save. We always generate this
         # even if there are no dumps.
@@ -114,26 +139,8 @@ class FSCrashStorage(CrashStorageBase):
         for dump_name, dump in dumps.items():
             files[self._get_dump_name_path(crash_id, dump_name)] = dump
 
-        # Save all the files.
         for fn, contents in files.items():
-            logger.debug('Saving file %r', fn)
-            path = os.path.dirname(fn)
-
-            # FIXME(willkg): What happens if there is something here already and
-            # it's not a directory?
-            if not os.path.exists(path):
-                try:
-                    os.makedirs(path)
-                except OSError:
-                    logger.exception('Threw exception while trying to make path %r', path)
-                    # FIXME(willkg): If we ever make this production-ready, we
-                    # need a better option here.
-                    continue
-
-            # FIXME(willkg): This will stomp on existing crashes. Is that ok?
-            # Should we detect and do something different somehow?
-            with open(fn, 'wb') as fp:
-                fp.write(contents)
+            self._save_file(fn, contents)
 
     def load_raw_crash(self, crash_id):
         """Retrieves all the parts of a crash from the file system

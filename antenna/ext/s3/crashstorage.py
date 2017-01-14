@@ -78,25 +78,41 @@ class S3CrashStorage(CrashStorageBase):
             crash_id=crash_id
         )
 
-    def save_raw_crash(self, crash_id, raw_crash, dumps):
+    def save_raw_crash(self, crash_id, raw_crash):
         """Saves the raw crash and related dumps
+
+        .. Note::
+
+           If you're saving the raw crash and dumps, make sure to save the raw
+           crash last.
 
         :arg crash_id: The crash id as a string.
         :arg raw_crash: dict The raw crash as a dict.
-        :arg dumps: Map of dump name (e.g. ``upload_file_minidump``) to dump contents.
 
         :raises botocore.exceptions.ClientError: connection issues, permissions
             issues, bucket is missing, etc.
 
         """
-        # NOTE(willkg): We save the actual raw_crash file last because that's
-        # likely to trigger an S3 event and we want all the parts saved before
-        # that gets handled.
-
         # FIXME(willkg): self.conn.save_file raises a
         # botocore.exceptions.ClientError if the perms aren't right. That needs
         # to surface to "this node is not healthy".
 
+        # Save raw_crash
+        self.conn.save_file(
+            self._get_raw_crash_path(crash_id),
+            json_ordered_dumps(raw_crash).encode('utf-8')
+        )
+
+    def save_dumps(self, crash_id, dumps):
+        """Saves dump data
+
+        :arg str crash_id: The crash id
+        :arg dict dumps: dump name -> dump
+
+        :raises botocore.exceptions.ClientError: connection issues, permissions
+            issues, bucket is missing, etc.
+
+        """
         # Save dump_names even if there are no dumps
         self.conn.save_file(
             self._get_dump_names_path(crash_id),
@@ -109,12 +125,6 @@ class S3CrashStorage(CrashStorageBase):
                 self._get_dump_name_path(crash_id, dump_name),
                 dump
             )
-
-        # Save raw_crash
-        self.conn.save_file(
-            self._get_raw_crash_path(crash_id),
-            json_ordered_dumps(raw_crash).encode('utf-8')
-        )
 
     def load_raw_crash(self, crash_id):
         """Loads and thaws out a raw crash

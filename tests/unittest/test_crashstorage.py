@@ -38,21 +38,35 @@ class TestCrashStorage:
         # crashstorage, verify there's only one crash in it and then verify the
         # contents of the crash.
         crashstorage = bsr.crashstorage
-        assert len(crashstorage.crashes) == 1
-        crash = crashstorage.crashes[0]
+        # 1 raw crash and 1 dump
+        assert len(crashstorage.saved_things) == 2
+
+        # First thing is the dump
         assert (
-            crash['raw_crash'] ==
+            crashstorage.saved_things[0] ==
             {
-                'ProductName': 'Test',
-                'Version': '1.0',
-                'dump_checksums': {'upload_file_minidump': 'e19d5cd5af0378da05f63f891c7467af'},
-                'legacy_processing': 0,
-                'percentage': 100,
-                'submitted_timestamp': '2011-09-06T00:00:00+00:00',
-                'timestamp': 1315267200.0,
-                'type_tag': 'bp',
-                'uuid': 'de1bb258-cbbf-4589-a673-34f800160918'
+                'crash_id': 'de1bb258-cbbf-4589-a673-34f800160918',
+                'type': 'upload_file_minidump',
+                'data': b'abcd1234'
             }
         )
-        assert crash['dumps'] == {'upload_file_minidump': b'abcd1234'}
-        assert crash['crash_id'] == 'de1bb258-cbbf-4589-a673-34f800160918'
+
+        # Second thing is the raw crash metadata
+        assert (
+            crashstorage.saved_things[1] ==
+            {
+                'crash_id': 'de1bb258-cbbf-4589-a673-34f800160918',
+                'type': 'raw_crash',
+                'data': {
+                    'ProductName': 'Test',
+                    'Version': '1.0',
+                    'dump_checksums': {'upload_file_minidump': 'e19d5cd5af0378da05f63f891c7467af'},
+                    'legacy_processing': 0,
+                    'percentage': 100,
+                    'submitted_timestamp': '2011-09-06T00:00:00+00:00',
+                    'timestamp': 1315267200.0,
+                    'type_tag': 'bp',
+                    'uuid': 'de1bb258-cbbf-4589-a673-34f800160918'
+                }
+            }
+        )
