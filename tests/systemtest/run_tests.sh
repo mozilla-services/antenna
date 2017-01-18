@@ -13,7 +13,8 @@
 #
 #     $ ./tests/systemtests/run_tests.sh
 #
-# Set ANTENNA_ENV to the env file to use.
+# Set ANTENNA_ENV to the env file to use. It can be the same one used
+# for running Antenna. It needs to have the S3 information in it.
 #
 # Set POSTURL to the url to post to.
 #

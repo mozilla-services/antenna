@@ -7,8 +7,9 @@ Antenna instance. We use the py.test test runner.
 
 Contents of this directory::
 
-    conftest.py -- holds py.test fixtures
-    test_*.py   -- a test file
+    conftest.py  -- holds py.test fixtures
+    test_*.py    -- a test file
+    run_tests.sh -- test runner shell script
 
 
 
@@ -46,7 +47,28 @@ options::
     ANTENNA_ENV=my.env make test-system-shell
 
 
-.. Note::
+Make sure to set ``ANTENNA_ENV`` as the path to the env file with the
+following items defined in it::
 
-   In ``my.env`` make sure to define ``POSTURL`` and ``NONGINX`` variables to
-   override what they're set to in the systemtest container.
+``POSTURL``
+    The full URL to post to.
+
+    Example: ``POSTURL=http://localhost:8000/submit``
+
+``NONGINX``
+    Set ``NONGINX=1`` if you're running against a local dev environment
+    that isn't using Nginx. This will skip tests that require Nginx.
+
+``CRASHSTORAGE_ACCESS_KEY``
+``CRASHSTORAGE_SECRET_ACCESS_KEY``
+    These are the access key and secret access key if you have AWS S3 for
+    the node this is running on to require these.
+
+``CRASHSTORAGE_ENDPOINT_URL``
+    If you're using fakes3, you need to define this.
+
+``CRASHSTORAGE_REGION``
+    The regeion you're using. Defaults to ``us-west-2``.
+
+``CRASHSTORAGE_BUCKET_NAME``
+    The name of the bucket that Antenna is saving to.
