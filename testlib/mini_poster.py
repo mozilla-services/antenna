@@ -2,29 +2,28 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-"""This is a rewritten Python-3 compatible multi-part/form-data encoder heavily
+"""This is a Python-3 compatible re-write of a multi-part/form-data encoder heavily
 inspired by poster <https://bitbucket.org/chrisatlee/poster>.
 
 The API is similar, but the implementation consists of just the bits that we
 wanted in Antenna.
 
-Further, this module can be executed::
+Further, this module can be executed at the command line. Do this for help::
 
-    python -m testlib.mini_poster [URL]
+    python -m testlib.mini_poster --help
 
-This will send a minimal fake crash to the specified URL or
-``http://localhost:8000/submit``.
+It can send crashes and dumps and compress them and make you french toast.
 
 """
 
 import argparse
 from email.header import Header
 import gzip
-import json
 import io
+import json
 import logging
-import uuid
 import sys
+import uuid
 
 import requests
 import six
