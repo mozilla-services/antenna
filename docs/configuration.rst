@@ -37,6 +37,7 @@ First, you need to configure the application-scoped variables.
 
 .. autoconfig:: antenna.app.AppConfig
    :hide-classname:
+   :case: upper
 
    These all have sane defaults, so you don't have to configure any of this.
 
@@ -49,6 +50,7 @@ LoggingMetrics
 
 .. autoconfig:: antenna.metrics.LoggingMetrics
    :show-docstring:
+   :case: upper
 
 
 DogStatsd metrics
@@ -56,6 +58,7 @@ DogStatsd metrics
 
 .. autoconfig:: antenna.metrics.DogStatsdMetrics
    :show-docstring:
+   :case: upper
 
 
 Breakpad crash resource
@@ -63,6 +66,7 @@ Breakpad crash resource
 
 .. autoconfig:: antenna.breakpad_resource.BreakpadSubmitterResource
    :show-docstring:
+   :case: upper
 
 
 Throttler
@@ -70,6 +74,7 @@ Throttler
 
 .. autoconfig:: antenna.throttler.Throttler
    :show-docstring:
+   :case: upper
 
 
 Crash storage
@@ -86,6 +91,7 @@ be used.
 
 .. autoconfig:: antenna.ext.crashstorage_base.NoOpCrashStorage
    :show-docstring:
+   :case: upper
 
 
 Filesystem
@@ -97,6 +103,8 @@ and implement that.
 
 .. autoconfig:: antenna.ext.fs.crashstorage.FSCrashStorage
    :show-docstring:
+   :case: upper
+   :namespace: crashstorage
 
    When set as the BreakpadSubmitterResource crashstorage class, configuration
    for this class is in the ``CRASHSTORAGE`` namespace.
@@ -115,6 +123,8 @@ supported.
 
 .. autoconfig:: antenna.ext.s3.connection.S3Connection
    :show-docstring:
+   :case: upper
+   :namespace: crashstorage
 
    When set as the BreakpadSubmitterResource crashstorage class, configuration
    for this class is in the ``CRASHSTORAGE`` namespace.
@@ -129,6 +139,8 @@ supported.
 
 .. autoconfig:: antenna.ext.s3.crashstorage.S3CrashStorage
    :show-docstring:
+   :case: upper
+   :namespace: crashstorage
 
    When set as the BreakpadSubmitterResource crashstorage class, configuration
    for this class is in the ``CRASHSTORAGE`` namespace.
