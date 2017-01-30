@@ -216,17 +216,16 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         """
         # If we have throttle results for this crash, return those.
-        if 'legacy_processing' in raw_crash and 'percentage' in raw_crash:
+        if 'legacy_processing' in raw_crash and 'throttle_rate' in raw_crash:
             try:
                 result = int(raw_crash['legacy_processing'])
                 if result not in (ACCEPT, DEFER):
                     raise ValueError('Result is not a valid value: %r', result)
 
-                percentage = int(raw_crash['percentage'])
-                if not (0 <= percentage <= 100):
-                    raise ValueError('Percentage is not a valid value: %r', result)
-
-                return result, 'ALREADY_THROTTLED', percentage
+                throttle_rate = int(raw_crash['throttle_rate'])
+                if not (0 <= throttle_rate <= 100):
+                    raise ValueError('Throttle rate is not a valid value: %r', result)
+                return result, 'ALREADY_THROTTLED', throttle_rate
 
             except ValueError:
                 # If we've gotten a ValueError, it means one or both of the
@@ -239,18 +238,18 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             self.mymetrics.incr('throttleable_0')
             result = ACCEPT
             rule_name = 'THROTTLEABLE_0'
-            percentage = 100
+            throttle_rate = 100
 
         else:
             # At this stage, nothing has given us a throttle answer, so we
             # throttle the crash.
-            result, rule_name, percentage = self.throttler.throttle(raw_crash)
+            result, rule_name, throttle_rate = self.throttler.throttle(raw_crash)
 
         # Save the results in the raw_crash itself
         raw_crash['legacy_processing'] = result
-        raw_crash['percentage'] = percentage
+        raw_crash['throttle_rate'] = throttle_rate
 
-        return result, rule_name, percentage
+        return result, rule_name, throttle_rate
 
     @mymetrics.timer_decorator('BreakpadSubmitterResource.on_post.time')
     def on_post(self, req, resp):
