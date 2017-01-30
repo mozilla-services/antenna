@@ -144,7 +144,7 @@ class TestBreakpadSubmitterResource:
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234')),
 
             'legacy_processing': '0',  # ACCEPT
-            'percentage': '100',
+            'throttle_rate': '100',
         })
 
         with loggingmock(['antenna']) as lm:
@@ -161,7 +161,7 @@ class TestBreakpadSubmitterResource:
                 msg_contains='%s: matched by ALREADY_THROTTLED; returned ACCEPT' % crash_id
             )
 
-    @pytest.mark.parametrize('legacy,percentage', [
+    @pytest.mark.parametrize('legacy,throttle_rate', [
         # One of the two is a non-int
         ('foo', 'bar'),
         ('0', 'bar'),
@@ -170,10 +170,10 @@ class TestBreakpadSubmitterResource:
         # legacy_processing is not a valid value
         ('1000', '100'),
 
-        # percentage is not valid
+        # throttle_rate is not valid
         ('0', '1000')
     ])
-    def test_legacy_processing_bad_values(self, legacy, percentage, client, loggingmock):
+    def test_legacy_processing_bad_values(self, legacy, throttle_rate, client, loggingmock):
         crash_id = 'de1bb258-cbbf-4589-a673-34f800160918'
         data, headers = multipart_encode({
             'uuid': crash_id,
@@ -181,9 +181,9 @@ class TestBreakpadSubmitterResource:
             'Version': '1.0',
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234')),
 
-            # These are invalid values for legacy_processing and percentage
+            # These are invalid values for legacy_processing and throttle_rate
             'legacy_processing': legacy,
-            'percentage': percentage
+            'throttle_rate': throttle_rate
         })
 
         with loggingmock(['antenna']) as lm:

@@ -78,8 +78,8 @@ class TestFSCrashStorage:
                 b'"Version": "1.0", ' +
                 b'"dump_checksums": {"upload_file_minidump": "e19d5cd5af0378da05f63f891c7467af"}, ' +
                 b'"legacy_processing": 0, ' +
-                b'"percentage": 100, ' +
                 b'"submitted_timestamp": "2011-09-06T00:00:00+00:00", ' +
+                b'"throttle_rate": 100, ' +
                 b'"timestamp": 1315267200.0, ' +
                 b'"type_tag": "bp", ' +
                 b'"uuid": "de1bb258-cbbf-4589-a673-34f800160918"}'
@@ -141,7 +141,7 @@ class TestFSCrashStorage:
                 'Version': '1.0',
                 'dump_checksums': {'upload_file_minidump': 'e19d5cd5af0378da05f63f891c7467af'},
                 'legacy_processing': 0,
-                'percentage': 100,
+                'throttle_rate': 100,
                 'submitted_timestamp': '2011-09-06T00:00:00+00:00',
                 'timestamp': 1315267200.0,
                 'type_tag': 'bp',
