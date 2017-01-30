@@ -21,7 +21,7 @@ class Test20mbLimit:
 
         dumps['upload_file_minidump'] = ''
 
-        crash_payload = mini_poster.assemble_crash_payload(raw_crash, dumps)
+        crash_payload = mini_poster.assemble_crash_payload_dict(raw_crash, dumps)
         payload, headers = mini_poster.multipart_encode(crash_payload)
         base_size = len(payload)
 
@@ -29,7 +29,7 @@ class Test20mbLimit:
         # the entire payload is equal to size
         dumps['upload_file_minidump'] = 'a' * (size - base_size)
 
-        crash_payload = mini_poster.assemble_crash_payload(raw_crash, dumps)
+        crash_payload = mini_poster.assemble_crash_payload_dict(raw_crash, dumps)
         payload, headers = mini_poster.multipart_encode(crash_payload)
 
         if len(payload) != size:
