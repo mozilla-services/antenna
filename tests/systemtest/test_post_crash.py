@@ -100,9 +100,9 @@ class CrashVerifier:
                     submitted_timestamp, (now - datetime.timedelta(min=5)), now
                 ))
 
-        # percentage in the throttle rules is always either 10 or 100 for rules
+        # throttle_rate in the throttle rules is always either 10 or 100 for rules
         # that involve saving to s3.
-        self.compare_item('percentage', s3_raw_crash.get('percentage', None), [10, 100])
+        self.compare_item('throttle_rate', s3_raw_crash.get('throttle_rate', None), [10, 100])
         self.compare_item('legacy_processing', s3_raw_crash.get('legacy_processing', None), [0, 1])
 
         self.compare_item('type_tag', s3_raw_crash.get('type_tag', None), 'bp')
