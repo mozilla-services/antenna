@@ -217,7 +217,7 @@ class TestPostCrash:
     def test_regular(self, posturl, s3conn, crash_generator):
         """Post a valid crash and verify the contents made it to S3"""
         raw_crash, dumps = crash_generator.generate()
-        crash_payload = mini_poster.assemble_crash_payload(raw_crash, dumps)
+        crash_payload = mini_poster.assemble_crash_payload_dict(raw_crash, dumps)
         resp = mini_poster.post_crash(posturl, crash_payload, dumps)
 
         # Sleep to give Antenna time to save things
@@ -239,7 +239,7 @@ class TestPostCrash:
     def test_compressed_crash(self, posturl, s3conn, crash_generator):
         """Post a compressed crash and verify contents made it to s3"""
         raw_crash, dumps = crash_generator.generate()
-        crash_payload = mini_poster.assemble_crash_payload(raw_crash, dumps)
+        crash_payload = mini_poster.assemble_crash_payload_dict(raw_crash, dumps)
         resp = mini_poster.post_crash(posturl, crash_payload, compressed=True)
 
         # Sleep to give Antenna time to save things
