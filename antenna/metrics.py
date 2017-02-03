@@ -69,6 +69,9 @@ class LoggingMetrics(RequiredConfigMixin):
     def timing(self, stat, **kwargs):
         self._log('timing', stat, kwargs)
 
+    def histogram(self, stat, **kwargs):
+        self._log('histogram', stat, kwargs)
+
 
 class DogStatsdMetrics(RequiredConfigMixin):
     """Uses the Datadog DogStatsd client for statsd pings."""
@@ -111,6 +114,9 @@ class DogStatsdMetrics(RequiredConfigMixin):
 
     def timing(self, stat, value):
         self.client.timing(metric=stat, value=value)
+
+    def histogram(self, stat, value):
+        self.client.histogram(metric=stat, value=value)
 
 
 def metrics_configure(metrics_class, config):
@@ -191,10 +197,23 @@ class MetricsInterface:
     def timing(self, stat, value):
         """Send timing information
 
-        Note: value is in ms.
+        .. Note::
+
+           value is in ms.
 
         """
         _metrics_impl.timing(self._full_stat(stat), value=value)
+
+    def histogram(self, stat, value):
+        """Send data information which gets rolled as a histogram
+
+        .. Note::
+
+           For metrics systems that don't have histogram, this will do the same
+           as timing.
+
+        """
+        _metrics_impl.histogram(self._full_stat(stat), value=value)
 
     @contextlib.contextmanager
     def timer(self, stat):
@@ -287,6 +306,9 @@ class MetricsMock:
 
     def timing(self, stat, **kwargs):
         self._add_record('timing', stat, kwargs)
+
+    def histogram(self, stat, **kwargs):
+        self._add_record('histogram', stat, kwargs)
 
     def __enter__(self):
         self.records = []
