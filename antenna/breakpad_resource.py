@@ -163,10 +163,10 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             content_length = len(data)
 
             data = io.BytesIO(data)
-            self.mymetrics.gauge('crash_size.compressed', content_length)
+            self.mymetrics.histogram('crash_size.compressed', content_length)
         else:
             data = io.BytesIO(req.stream.read(req.content_length or 0))
-            self.mymetrics.gauge('crash_size.uncompressed', content_length)
+            self.mymetrics.histogram('crash_size.uncompressed', content_length)
 
         fs = cgi.FieldStorage(fp=data, environ=req.env, keep_blank_values=1)
 
