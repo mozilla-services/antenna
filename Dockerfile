@@ -18,13 +18,16 @@ COPY . /app/
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PORT 8000
+ENV GUNICORN_WORKERS 1
+ENV GUNICORN_WORKER_CONNECTIONS 4
+ENV GUNICORN_WORKER_CLASS gevent
 
 USER app
 EXPOSE $PORT
 
 CMD gunicorn \
-    --workers=1 \
-    --worker-connections=4 \
-    --worker-class=gevent \
+    --workers=$GUNICORN_WORKERS \
+    --worker-connections=$GUNICORN_WORKER_CONNECTIONS \
+    --worker-class=$GUNICORN_WORKER_CLASS \
     --bind 0.0.0.0:$PORT \
     antenna.wsgi:application
