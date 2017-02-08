@@ -335,7 +335,11 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         # Capture the total time it took for this crash to be handled from post
         # to s3 save and log the crash id
-        self.mymetrics.timing('crash_handling.time', time.time() - raw_crash['timestamp'])
+        #
+        # NOTE(willkg): time.time returns seconds, but .timing() wants
+        # milliseconds, so we multiply!
+        delta = (time.time() - raw_crash['timestamp']) * 1000
+        self.mymetrics.timing('crash_handling.time', delta)
         logger.info('%s saved', crash_id)
 
     def join_pool(self):
