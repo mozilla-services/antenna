@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 class Test20mbLimit:
     """Post a crash that's too big--it should be rejected"""
-    def _test_crash_size(self, posturl, size, crash_generator):
+    def _generate_sized_crash(self, size, crash_generator):
         raw_crash, dumps = crash_generator.generate()
 
         dumps['upload_file_minidump'] = ''
@@ -29,7 +29,10 @@ class Test20mbLimit:
         # the entire payload is equal to size
         dumps['upload_file_minidump'] = 'a' * (size - base_size)
 
-        crash_payload = mini_poster.assemble_crash_payload_dict(raw_crash, dumps)
+        return mini_poster.assemble_crash_payload_dict(raw_crash, dumps)
+
+    def _test_crash_size(self, posturl, size, crash_generator):
+        crash_payload = self._generate_sized_crash(size, crash_generator)
         payload, headers = mini_poster.multipart_encode(crash_payload)
 
         if len(payload) != size:
@@ -73,3 +76,30 @@ class Test20mbLimit:
         # mini_poster._log_everything()
         result = self._test_crash_size(posturl, size, crash_generator)
         assert result == status_code
+
+    @pytest.mark.skipif(
+        bool(os.environ.get('NONGINX')),
+        reason=(
+            'Requires nginx which you probably do not have running '
+            'via localhost'
+        ))
+    def test_21mb_and_low_content_length(self, posturl, crash_generator):
+        # Generate a crash that exceeds nginx's max size
+        crash_payload = self._generate_sized_crash(21 * 1024 * 1024, crash_generator)
+        payload, headers = mini_poster.multipart_encode(crash_payload)
+
+        # Reduce the size of the content length
+        headers['Content-Length'] = 19 * 1024 * 1024
+        try:
+            resp = requests.post(posturl, headers=headers, data=payload)
+            status_code = resp.status_code
+        except requests.exceptions.ConnectionError as exc:
+            if 'Broken pipe' in str(exc):
+                status_code = 413
+            raise
+
+        # Assert this fails with a 413 because the payload is too big. This
+        # tells us if nginx is applying its max payload check to the
+        # content-length or the size of the payload. We really want it to be
+        # applying to the size of the payload.
+        assert status_code == 413
