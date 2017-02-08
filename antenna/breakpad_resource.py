@@ -317,8 +317,6 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
     def save_crash_to_storage(self, raw_crash, dumps, crash_id):
         """Saves the crash to storage"""
 
-        logger.info('%s saving now...', crash_id)
-
         # FIXME(willkg): How to deal with errors here? These should handle
         # retrying, so if it bubbles up to this point, then it's an unretryable
         # unhandleable error.
@@ -340,9 +338,8 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         #
         # NOTE(willkg): time.time returns seconds, but .timing() wants
         # milliseconds, so we multiply!
-        # FIXME(willkg): temporarily backing these out because something's not working
-        # delta = (time.time() - raw_crash['timestamp']) * 1000
-        # self.mymetrics.timing('crash_handling.time', delta)
+        delta = (time.time() - raw_crash['timestamp']) * 1000
+        self.mymetrics.timing('crash_handling.time', delta)
         logger.info('%s saved', crash_id)
 
     def join_pool(self):
