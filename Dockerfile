@@ -1,7 +1,7 @@
 FROM python:3.5.2-slim
 
 WORKDIR /app/
-RUN groupadd --gid 1001 app && useradd -g app --uid 1001 --shell /usr/sbin/nologin app
+RUN groupadd --gid 10001 app && useradd -g app --uid 10001 --shell /usr/sbin/nologin app
 
 RUN apt-get update && \
     apt-get install -y gcc apt-transport-https
