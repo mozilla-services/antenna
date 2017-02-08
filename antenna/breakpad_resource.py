@@ -255,6 +255,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
     @mymetrics.timer_decorator('BreakpadSubmitterResource.on_post.time')
     def on_post(self, req, resp):
+        start_time = time.time()
         resp.content_type = 'text/plain'
 
         raw_crash, dumps = self.extract_payload(req)
@@ -263,8 +264,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         current_timestamp = utc_now()
         raw_crash['submitted_timestamp'] = current_timestamp.isoformat()
-        # FIXME(willkg): Check the processor to see if we can remove this.
-        raw_crash['timestamp'] = time.time()
+        raw_crash['timestamp'] = start_time
 
         # We throttle first because throttling affects generation of new crash
         # ids and we want to do all our logging with the correct crash id to
@@ -332,6 +332,14 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             crash_id,
             raw_crash
         )
+
+        # Capture the total time it took for this crash to be handled from post
+        # to s3 save and log the crash id
+        #
+        # NOTE(willkg): time.time returns seconds, but .timing() wants
+        # milliseconds, so we multiply!
+        delta = (time.time() - raw_crash['timestamp']) * 1000
+        self.mymetrics.timing('crash_handling.time', delta)
         logger.info('%s saved', crash_id)
 
     def join_pool(self):
