@@ -89,7 +89,7 @@ class Test20mbLimit:
         payload, headers = mini_poster.multipart_encode(crash_payload)
 
         # Reduce the size of the content length
-        headers['Content-Length'] = 19 * 1024 * 1024
+        headers['Content-Length'] = str(19 * 1024 * 1024)
         try:
             resp = requests.post(posturl, headers=headers, data=payload)
             status_code = resp.status_code
