@@ -94,9 +94,9 @@ class Test20mbLimit:
             resp = requests.post(posturl, headers=headers, data=payload)
             status_code = resp.status_code
         except requests.exceptions.ConnectionError as exc:
-            if 'Broken pipe' in str(exc):
-                status_code = 413
-            raise
+            if 'Broken pipe' not in str(exc):
+                raise
+            status_code = 413
 
         # Assert this fails with a 413 because the payload is too big. This
         # tells us if nginx is applying its max payload check to the
