@@ -49,14 +49,13 @@ clean:
 
 	# test related things
 	-rm -f .coverage
-	ANTENNA_ENV=empty.env ${DC} run base rm -rf cover
 
 	# docs files
 	-rm -rf docs/_build/
 
 	# state files
 	-rm .docker-build
-	-rm -rf fakes3_root/
+	ANTENNA_ENV=empty.env ${DC} run --entrypoint "/bin/bash -c 'rm -rf /fakes3_root/*'" fakes3
 
 lint: .docker-build
 	ANTENNA_ENV=empty.env ${DC} run base flake8 --statistics antenna tests/unittest/
@@ -71,7 +70,7 @@ systemtest-shell: .docker-build
 	ANTENNA_ENV=dev.env ${DC} run systemtest bash
 
 test-coverage: .docker-build
-	ANTENNA_ENV=empty.env ${DC} run base py.test --with-coverage --cover-package=antenna --cover-inclusive --cover-html
+	ANTENNA_ENV=empty.env ${DC} run base py.test --cov=antenna --cov-report term-missing
 
 docs: .docker-build
 	ANTENNA_ENV=empty.env ${DC} run base ./bin/build_docs.sh

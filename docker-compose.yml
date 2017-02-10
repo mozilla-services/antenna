@@ -26,6 +26,8 @@ services:
   # and building docs.
   base:
     image: local/antenna_dev
+    environment:
+      - COVERAGE_FILE=/tmp/.coverage
     volumes:
       - .:/app
 
