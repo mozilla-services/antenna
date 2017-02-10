@@ -9,7 +9,8 @@ RUN apt-get update && \
 COPY ./requirements.txt /app/requirements.txt
 
 RUN pip install -U 'pip>=8' && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt\
+    pip install newrelic
 
 # Install the app
 COPY . /app/
