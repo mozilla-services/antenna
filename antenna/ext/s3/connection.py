@@ -132,7 +132,7 @@ class S3Connection(RequiredConfigMixin):
         try:
             self.verify_configuration()
         except Exception as exc:
-            state.add_error(self, repr(exc))
+            state.add_error('S3Connection', repr(exc))
 
     @retry(
         retryable_exceptions=[
