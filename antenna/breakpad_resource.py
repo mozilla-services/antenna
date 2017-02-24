@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import cgi
+from collections import namedtuple
 import hashlib
 import io
 import logging
@@ -31,6 +32,40 @@ from antenna.util import (
 
 logger = logging.getLogger(__name__)
 mymetrics = metrics.get_metrics(__name__)
+
+
+CrashReport = namedtuple('CrashReport', ['raw_crash', 'dumps', 'crash_id'])
+
+
+class SaveQueue:
+    """Simple FIFO queue that's not thread-safe
+
+    This is mostly to get a cheap convenient API.
+
+    """
+    def __init__(self):
+        self._queue = []
+
+    def __len__(self):
+        return len(self._queue)
+
+    def add(self, item):
+        """Adds an item to the end of the queue"""
+        self._queue.append(item)
+
+    def next(self):
+        """Returns the next item or None"""
+        if self._queue:
+            return self._queue.pop(0)
+        return None
+
+
+def positive_int(val):
+    """Everett parser that enforces val >= 1"""
+    val = int(val)
+    if val < 1:
+        raise ValueError('val must be greater than 1: %s' % val)
+    return val
 
 
 class BreakpadSubmitterResource(RequiredConfigMixin):
@@ -76,6 +111,12 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         parser=parse_class,
         doc='the class in charge of storing crashes'
     )
+    required_config.add_option(
+        'concurrent_saves',
+        default='10',
+        parser=positive_int,
+        doc='max number of crash reports being saved concurrently; minimum of 1'
+    )
 
     def __init__(self, config):
         self.config = config.with_options(self)
@@ -83,8 +124,9 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         self.throttler = Throttler(config)
 
         # Gevent pool for handling incoming crash reports
-        self.pipeline_pool = Pool()
+        self.pipeline_pool = Pool(size=self.config('concurrent_saves'))
 
+        self.save_queue = SaveQueue()
         self.mymetrics = metrics.get_metrics(self)
 
     def get_runtime_config(self, namespace=None):
@@ -98,7 +140,12 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             yield item
 
     def check_health(self, state):
-        state.add_statsd(self, 'queue_size', len(self.pipeline_pool))
+        # The number of crash reports sitting in the queue
+        state.add_statsd(self, 'save_queue_size', len(self.save_queue))
+
+        # The number of actively running coroutines saving crashes
+        state.add_statsd(self, 'active_save_workers', len(self.pipeline_pool))
+
         if hasattr(self.crashstorage, 'check_health'):
             self.crashstorage.check_health(state)
 
@@ -302,24 +349,46 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             resp.body = 'Discarded=1'
             return
 
-        self.pipeline_pool.spawn(
-            self.save_crash_to_storage,
-            raw_crash=raw_crash,
-            dumps=dumps,
-            crash_id=crash_id
-        )
+        self.add_to_queue(CrashReport(raw_crash, dumps, crash_id))
 
         logger.info('%s accepted', crash_id)
 
         resp.status = falcon.HTTP_200
         resp.body = 'CrashID=%s%s\n' % (self.config('dump_id_prefix'), crash_id)
 
-    def save_crash_to_storage(self, raw_crash, dumps, crash_id):
-        """Saves the crash to storage"""
+    def add_to_queue(self, crash_report):
+        """Adds a crash report to the save queue
 
-        # FIXME(willkg): How to deal with errors here? These should handle
-        # retrying, so if it bubbles up to this point, then it's an unretryable
-        # unhandleable error.
+        As a side-effect, this also spins off a coroutine to deal with the
+        crash report.
+
+        """
+        self.save_queue.add(crash_report)
+
+        # Check the pool and spawn a new co-routine if possible
+        if self.pipeline_pool.free_count() > 0:
+            self.pipeline_pool.spawn(self.process_queue)
+
+    def process_queue(self):
+        """Processes the save queue until it's empty"""
+        # Process until the queue is empty
+        while len(self.save_queue) > 0:
+            crash_report = self.save_queue.next()
+            try:
+                self.save_crash_to_storage(crash_report)
+            except Exception:
+                self.add_to_queue(crash_report)
+
+    def save_crash_to_storage(self, crash_report):
+        """Saves a crash to storage
+
+        If this raises an error, then that bubbles up and the caller can retry
+        later.
+
+        """
+        crash_id = crash_report.crash_id
+        dumps = crash_report.dumps
+        raw_crash = crash_report.raw_crash
 
         # Save dumps to crashstorage
         self.crashstorage.save_dumps(
