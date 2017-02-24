@@ -38,8 +38,14 @@ class TestHealthChecks:
         # NOTE(willkg): This isn't mocked out, so it's entirely likely that
         # this expected result will change over time.
         assert (
-            resp.content ==
-            b'{"errors": [], "info": {"BreakpadSubmitterResource.queue_size": 0}}'
+            resp.json ==
+            {
+                'errors': [],
+                'info': {
+                    'BreakpadSubmitterResource.save_queue_size': 0,
+                    'BreakpadSubmitterResource.active_save_workers': 0
+                }
+            }
         )
 
     def test_broken(self, client):
