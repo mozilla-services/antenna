@@ -139,21 +139,17 @@ class MaxAttemptsError(Exception):
         self.return_value = ret
 
 
-# Tuple of retry times in seconds in order of attempt.
-RETRY_TIMES = (
-    1,
-    5,
-    10,
-    30,
-    60,
-    2 * 60,
-)
-RETRY_TIMES_MAX_INDEX = len(RETRY_TIMES) - 1
+def wait_time_generator():
+    for amt in [1, 1, 5, 10, 30]:
+        yield amt
 
 
-def retry(retryable_exceptions=Exception, retryable_return=None, max_attempts=10,
-          sleep_function=time.sleep, module_logger=None):
-    """Decorator for retrying with exponential wait and logging
+def retry(retryable_exceptions=Exception,
+          retryable_return=None,
+          wait_time_generator=wait_time_generator,
+          sleep_function=time.sleep,
+          module_logger=None):
+    """Decorator for retrying with wait times, max attempts and logging
 
     Example with defaults::
 
@@ -187,12 +183,11 @@ def retry(retryable_exceptions=Exception, retryable_return=None, max_attempts=10
         A function that takes a function return and returns ``True`` to retry
         or ``False`` to stop retrying.
 
-    :arg int/None max_attempts:
-        The maximum number of times this will retry. After max attempts, it'll
-        reraise the last exception in the case of an exception or raise a
-        ``MaxAttemptsError`` in the case of invalid return values.
+        This allows you to retry based on a failed exception or failed return.
 
-        If ``max_attempts`` is ``None``, this will try indefinitely.
+    :arg wait_time_generator:
+        Generator function that returns wait times until a maximum number of
+        attempts have been tried.
 
     :arg fun sleep_function:
         Function that takes the current attempt number as an int and sleeps.
@@ -211,25 +206,51 @@ def retry(retryable_exceptions=Exception, retryable_return=None, max_attempts=10
         @wraps(fun)
         def _retry_fun(*args, **kwargs):
             attempts = 0
+            wait_times = wait_time_generator()
+
             while True:
+                # Grab the next wait time and if there isn't one, then this is
+                # the last attempt
+                try:
+                    next_wait = next(wait_times)
+                except StopIteration:
+                    next_wait = None
+
                 try:
                     ret = fun(*args, **kwargs)
                     if retryable_return is None or not retryable_return(ret):
+                        # This was a successful return--yay!
                         return ret
 
-                    elif max_attempts is not None and attempts >= max_attempts:
-                        raise MaxAttemptsError(
-                            'Maximum retry attempts. Error return.', ret
+                    # The return value is "bad", so we log something and then
+                    # do another iteration.
+                    if module_logger is not None:
+                        module_logger.warning(
+                            '%s: bad return, retry attempt %s',
+                            fun.__qualname__,
+                            attempts
                         )
 
-                except retryable_exceptions:
-                    if module_logger is not None:
-                        module_logger.exception('retry attempt %s', attempts)
+                    # If last attempt, then raise MaxAttemptsError
+                    if next_wait is None:
+                        raise MaxAttemptsError('Maximum retry attempts.', ret)
 
-                    if max_attempts is not None and attempts >= max_attempts:
+                except retryable_exceptions as exc:
+                    # Retryable exception is thrown, so we log something and
+                    # then do another iteration.
+                    if module_logger is not None:
+                        module_logger.warning(
+                            '%s: exception %s, retry attempt %s',
+                            fun.__qualname__,
+                            exc,
+                            attempts
+                        )
+
+                    # If last attempt, re-raise the exception thrown
+                    if next_wait is None:
                         raise
 
-                sleep_function(RETRY_TIMES[min(attempts, RETRY_TIMES_MAX_INDEX)])
+                sleep_function(next_wait)
                 attempts += 1
 
         return _retry_fun

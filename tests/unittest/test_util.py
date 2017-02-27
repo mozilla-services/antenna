@@ -108,13 +108,13 @@ class Test_retry:
         sleeps = []
 
         # This will retry until the max attempts and then reraise the exception
-        @retry(retryable_exceptions=ValueError, max_attempts=10, sleep_function=fake_sleep)
+        @retry(retryable_exceptions=ValueError, sleep_function=fake_sleep)
         def some_thing():
             raise ValueError
 
         with pytest.raises(ValueError):
             some_thing()
-        assert len(sleeps) == 10
+        assert len(sleeps) == 5
 
     def test_retry_retryable_return(self):
         """Tests retry retryable_return arg does the right thing"""
@@ -128,7 +128,7 @@ class Test_retry:
 
         # Will keep retrying until max_attempts and then raise an error that includes
         # the last function return
-        @retry(retryable_return=is_not_200, max_attempts=10, sleep_function=fake_sleep)
+        @retry(retryable_return=is_not_200, sleep_function=fake_sleep)
         def some_thing():
             return 404
 
@@ -136,12 +136,12 @@ class Test_retry:
             some_thing()
 
         assert excinfo.value.return_value == 404
-        assert len(sleeps) == 10
+        assert len(sleeps) == 5
 
         sleeps = []
 
         # Will succeed and not retry because the return value is fine
-        @retry(retryable_return=is_not_200, max_attempts=10, sleep_function=fake_sleep)
+        @retry(retryable_return=is_not_200, sleep_function=fake_sleep)
         def some_thing():
             return 200
 
@@ -160,10 +160,10 @@ class Test_retry:
 
         with pytest.raises(Exception):
             some_thing()
-        # Builds up to 3 minutes and then keeps trying every 2 minutes.
-        assert sleeps == [1, 5, 10, 30, 60, 120, 120, 120, 120, 120]
 
-    def test_max_attempts(self):
+        assert sleeps == [1, 1, 5, 10, 30]
+
+    def test_wait_time_generator(self):
         sleeps = []
 
         def fake_sleep(attempt):
@@ -175,14 +175,18 @@ class Test_retry:
 
         with pytest.raises(Exception):
             some_thing()
-        assert len(sleeps) == 10
+        assert len(sleeps) == 5
 
         sleeps = []
 
-        @retry(max_attempts=5, sleep_function=fake_sleep)
+        def waits():
+            for i in [1, 1, 2, 2, 1, 1]:
+                yield i
+
+        @retry(wait_time_generator=waits, sleep_function=fake_sleep)
         def some_thing():
             raise Exception
 
         with pytest.raises(Exception):
             some_thing()
-        assert len(sleeps) == 5
+        assert sleeps == [1, 1, 2, 2, 1, 1]

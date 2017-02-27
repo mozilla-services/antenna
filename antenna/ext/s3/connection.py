@@ -17,6 +17,17 @@ from antenna.util import retry
 logger = logging.getLogger(__name__)
 
 
+def wait_times_save():
+    """Wait time generator for failed save attempts
+
+    This waits 2 seconds between failed save attempts for 5 iterations and then
+    gives up.
+
+    """
+    for i in [2, 2, 2, 2, 2]:
+        yield i
+
+
 class S3Connection(RequiredConfigMixin):
     """Connection object for S3.
 
@@ -94,6 +105,16 @@ class S3Connection(RequiredConfigMixin):
             # anything with them.
             self.verify_configuration()
 
+    @retry(
+        retryable_exceptions=[
+            # FIXME(willkg): Seems like botocore always raises ClientError
+            # which is unhelpful for granularity purposes.
+            ClientError,
+        ],
+        wait_time_generator=wait_times_save,
+        sleep_function=gevent.sleep,
+        module_logger=logger,
+    )
     def _build_client(self):
         # Either they provided ACCESS_KEY and SECRET_ACCESS_KEY in which case
         # we use those, or they didn't in which case boto3 pulls credentials
@@ -140,10 +161,25 @@ class S3Connection(RequiredConfigMixin):
             # which is unhelpful for granularity purposes.
             ClientError,
         ],
+        wait_time_generator=wait_times_save,
         sleep_function=gevent.sleep,
         module_logger=logger,
     )
     def save_file(self, path, data):
+        """Saves a single file to s3
+
+        This will retry a handful of times in short succession so as to deal
+        with # some amount of fishiness. After that, the caller should retry
+        saving after a longer period of time.
+
+        :arg str path: the path to save to
+
+        :arg str data: the data to save
+
+        :raises botocore.exceptions.ClientError: connection issues, permissions
+            issues, bucket is missing, etc.
+
+        """
         if not isinstance(data, bytes):
             raise TypeError('data argument must be bytes')
 
