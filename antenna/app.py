@@ -244,35 +244,45 @@ def get_app(config=None):
             )
 
         app_config = AppConfig(config)
-        setup_logging(app_config('logging_level'))
-        setup_metrics(app_config('metrics_class'), config)
 
-        log_config(logger, app_config)
-        # FIXME(willkg): This is a little gross, but it's a component and we
-        # want to log the configuration, but it's "internal" to the metrics
-        # module.
-        log_config(logger, metrics._metrics_impl)
-
-        app = AntennaAPI(config)
-
-        app.add_route('homepage', '/', HomePageResource(config))
-        app.add_route('breakpad', '/submit', BreakpadSubmitterResource(config))
-        app.add_route('version', '/__version__', VersionResource(config, basedir=app_config('basedir')))
-        app.add_route('heartbeat', '/__heartbeat__', HeartbeatResource(config, app))
-        app.add_route('lbheartbeat', '/__lbheartbeat__', LBHeartbeatResource(config))
-        app.add_route('broken', '/__broken__', BrokenResource(config))
-
-        log_config(logger, app)
-
-        # Wrap the app in some kind of unhandled exception notification mechanism
+        # Build a Sentry client if we're so configured
         if app_config('secret_sentry_dsn'):
-            # Build a Sentry client
-            client = Client(
+            sentry_client = Client(
                 dsn=app_config('secret_sentry_dsn'),
                 include_paths=['antenna'],
             )
-            # Then wrap the app in a Sentry middleware thing
-            app = Sentry(app, client)
+        else:
+            sentry_client = None
+
+        try:
+            setup_logging(app_config('logging_level'))
+            setup_metrics(app_config('metrics_class'), config)
+
+            log_config(logger, app_config)
+            # FIXME(willkg): This is a little gross, but it's a component and
+            # we want to log the configuration, but it's "internal" to the
+            # metrics module.
+            log_config(logger, metrics._metrics_impl)
+
+            app = AntennaAPI(config)
+
+            app.add_route('homepage', '/', HomePageResource(config))
+            app.add_route('breakpad', '/submit', BreakpadSubmitterResource(config))
+            app.add_route('version', '/__version__', VersionResource(config, basedir=app_config('basedir')))
+            app.add_route('heartbeat', '/__heartbeat__', HeartbeatResource(config, app))
+            app.add_route('lbheartbeat', '/__lbheartbeat__', LBHeartbeatResource(config))
+            app.add_route('broken', '/__broken__', BrokenResource(config))
+
+            log_config(logger, app)
+
+        except Exception:
+            if sentry_client:
+                sentry_client.captureException()
+            raise
+
+        # Wrap the app in some kind of unhandled exception notification mechanism
+        if sentry_client:
+            app = Sentry(app, sentry_client)
         else:
             app = WSGILoggingMiddleware(app)
 
