@@ -13,6 +13,7 @@ import zlib
 from everett.component import ConfigOptions, RequiredConfigMixin
 from everett.manager import parse_class
 import falcon
+import gevent
 from gevent.pool import Pool
 
 from antenna import metrics
@@ -129,6 +130,9 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         self.save_queue = SaveQueue()
         self.mymetrics = metrics.get_metrics(self)
 
+        # Kick off the heartbeat
+        gevent.spawn(self.heartbeat)
+
     def get_runtime_config(self, namespace=None):
         for item in super().get_runtime_config():
             yield item
@@ -140,14 +144,28 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             yield item
 
     def check_health(self, state):
-        # The number of crash reports sitting in the queue
-        state.add_statsd(self, 'save_queue_size', len(self.save_queue))
-
-        # The number of actively running coroutines saving crashes
-        state.add_statsd(self, 'active_save_workers', len(self.pipeline_pool))
-
         if hasattr(self.crashstorage, 'check_health'):
             self.crashstorage.check_health(state)
+
+    def heartbeat(self):
+        """Heartbeat function
+
+        Every 30 seconds, runs a set of methods on this class.
+
+        """
+        while True:
+            gevent.sleep(30)
+            try:
+                self.health_stats()
+            except Exception:
+                logger.exception('Exception thrown while retrieving health stats')
+
+    def health_stats(self):
+        # The number of crash reports sitting in the queue
+        self.mymetrics.gauge('save_queue_size', len(self.save_queue))
+
+        # The number of actively running coroutines saving crashes
+        self.mymetrics.gauge('active_save_workers', len(self.pipeline_pool))
 
     def extract_payload(self, req):
         """Parses the HTTP POST payload
