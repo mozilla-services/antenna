@@ -232,9 +232,10 @@ class TestS3MockLogging:
             # Verify the retry decorator logged something
             assert lm.has_record(
                 name='antenna.ext.s3.connection',
-                levelname='ERROR',
+                levelname='WARNING',
                 msg_contains='retry attempt 0'
             )
+
         # Assert we did the entire s3 conversation
         assert s3mock.remaining_conversation() == []
 
