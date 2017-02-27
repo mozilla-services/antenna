@@ -229,6 +229,11 @@ class TestBreakpadSubmitterResource:
             )
 
     def test_queuing(self, client):
+        def check_health(active_save_workers, save_queue_size):
+            bpr = client.get_resource_by_name('breakpad')
+            assert len(bpr.save_queue) == save_queue_size
+            assert len(bpr.pipeline_pool) == active_save_workers
+
         # Rebuild the app so the client only saves one crash at a time to s3
         client.rebuild_app({
             'CONCURRENT_SAVES': '1'
@@ -241,33 +246,24 @@ class TestBreakpadSubmitterResource:
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
         })
 
-        health = client.simulate_get('/__heartbeat__').json
         # Verify initial conditions are correct--no active coroutines and
         # nothing in the save queue
-        assert health['info']['BreakpadSubmitterResource.active_save_workers'] == 0
-        assert health['info']['BreakpadSubmitterResource.save_queue_size'] == 0
+        check_health(active_save_workers=0, save_queue_size=0)
 
         # Submit a crash
         client.simulate_post('/submit', headers=headers, body=data)
-        health = client.simulate_get('/__heartbeat__').json
         # Now there's one coroutine active and one item in the save queue
-        assert health['info']['BreakpadSubmitterResource.active_save_workers'] == 1
-        assert health['info']['BreakpadSubmitterResource.save_queue_size'] == 1
+        check_health(active_save_workers=1, save_queue_size=1)
 
         # Submit another crash
         client.simulate_post('/submit', headers=headers, body=data)
-        health = client.simulate_get('/__heartbeat__').json
         # The coroutine hasn't run yet (we haven't called .join), so there's
         # one coroutine and two queued crashes
-        assert health['info']['BreakpadSubmitterResource.active_save_workers'] == 1
-        assert health['info']['BreakpadSubmitterResource.save_queue_size'] == 2
+        check_health(active_save_workers=1, save_queue_size=2)
 
         # Now join the app and let the coroutines run and make sure the queue clears
         client.join_app()
-
-        health = client.simulate_get('/__heartbeat__').json
         # No more coroutines and no more save queue
-        assert health['info']['BreakpadSubmitterResource.active_save_workers'] == 0
-        assert health['info']['BreakpadSubmitterResource.save_queue_size'] == 0
+        check_health(active_save_workers=0, save_queue_size=0)
 
     # FIXME: test crash report shapes (multiple dumps? no dumps? what else is in there?)

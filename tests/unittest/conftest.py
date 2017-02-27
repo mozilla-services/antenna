@@ -49,7 +49,7 @@ def request_generator():
 
 class AntennaTestClient(TestClient):
     """Test client to ease testing with Antenna API"""
-    def rebuild_app(self, new_config=None):
+    def rebuild_app(self, new_config):
         """Rebuilds the app
 
         This is helpful if you've changed configuration and need to rebuild the
@@ -58,8 +58,6 @@ class AntennaTestClient(TestClient):
         :arg new_config: dict of configuration to build the new app with
 
         """
-        if new_config is None:
-            new_config = {}
         self.app = get_app(ConfigManager.from_dict(new_config))
 
     def join_app(self):

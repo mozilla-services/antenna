@@ -42,8 +42,6 @@ class TestHealthChecks:
             {
                 'errors': [],
                 'info': {
-                    'BreakpadSubmitterResource.save_queue_size': 0,
-                    'BreakpadSubmitterResource.active_save_workers': 0
                 }
             }
         )
