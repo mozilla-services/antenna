@@ -423,7 +423,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         delta = (time.time() - raw_crash['timestamp']) * 1000
         self.mymetrics.timing('crash_handling.time', delta)
 
-        self.mymetrics.incr('save_crash')
+        self.mymetrics.incr('save_crash.count')
         logger.info('%s saved', crash_id)
 
     def join_pool(self):
