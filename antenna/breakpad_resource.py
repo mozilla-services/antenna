@@ -320,6 +320,8 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
     @mymetrics.timer_decorator('BreakpadSubmitterResource.on_post.time')
     def on_post(self, req, resp):
+        resp.status = falcon.HTTP_200
+
         start_time = time.time()
         resp.content_type = 'text/plain'
 
@@ -334,8 +336,9 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         # We throttle first because throttling affects generation of new crash
         # ids and we want to do all our logging with the correct crash id to
         # make it easier to follow crashes through Antenna.
-        result, rule_name, percentage = self.get_throttle_result(raw_crash)
+        throttle_result, rule_name, percentage = self.get_throttle_result(raw_crash)
 
+        # Determine the uuid (aka crashid)
         if 'uuid' in raw_crash:
             # FIXME(willkg): This means the uuid is essentially user-provided.
             # We should sanitize it before proceeding.
@@ -343,32 +346,28 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             logger.info('%s has existing crash_id', crash_id)
 
         else:
-            crash_id = create_crash_id(timestamp=current_timestamp, throttle_result=result)
+            crash_id = create_crash_id(
+                timestamp=current_timestamp,
+                throttle_result=throttle_result
+            )
             raw_crash['uuid'] = crash_id
 
         raw_crash['type_tag'] = self.config('dump_id_prefix').strip('-')
 
         # Log the throttle result
-        logger.info('%s: matched by %s; returned %s', crash_id, rule_name, RESULT_TO_TEXT[result])
+        logger.info('%s: matched by %s; returned %s', crash_id, rule_name,
+                    RESULT_TO_TEXT[throttle_result])
+        self.mymetrics.incr(('throttle.%s' % RESULT_TO_TEXT[throttle_result]).lower())
 
-        if raw_crash['legacy_processing'] is ACCEPT:
-            self.mymetrics.incr('throttle.accept')
-
-        elif raw_crash['legacy_processing'] is DEFER:
-            self.mymetrics.incr('throttle.defer')
-
-        elif raw_crash['legacy_processing'] is REJECT:
-            # Reject the crash and end processing.
-            self.mymetrics.incr('throttle.reject')
-
-            resp.status = falcon.HTTP_200
+        if throttle_result is REJECT:
+            # If the result is REJECT, then discard it
             resp.body = 'Discarded=1'
-            return
 
-        self.add_to_queue(CrashReport(raw_crash, dumps, crash_id))
-
-        resp.status = falcon.HTTP_200
-        resp.body = 'CrashID=%s%s\n' % (self.config('dump_id_prefix'), crash_id)
+        else:
+            # If the result is not REJECT, then add it to the queue for saving
+            # and return the CrashID to the client
+            self.add_to_queue(CrashReport(raw_crash, dumps, crash_id))
+            resp.body = 'CrashID=%s%s\n' % (self.config('dump_id_prefix'), crash_id)
 
     def add_to_queue(self, crash_report):
         """Adds a crash report to the save queue
