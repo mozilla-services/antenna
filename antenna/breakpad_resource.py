@@ -340,12 +340,11 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             # FIXME(willkg): This means the uuid is essentially user-provided.
             # We should sanitize it before proceeding.
             crash_id = raw_crash['uuid']
-            logger.info('%s received with existing crash_id', crash_id)
+            logger.info('%s has existing crash_id', crash_id)
 
         else:
             crash_id = create_crash_id(timestamp=current_timestamp, throttle_result=result)
             raw_crash['uuid'] = crash_id
-            logger.info('%s received', crash_id)
 
         raw_crash['type_tag'] = self.config('dump_id_prefix').strip('-')
 
@@ -362,14 +361,11 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             # Reject the crash and end processing.
             self.mymetrics.incr('throttle.reject')
 
-            logger.info('%s rejected', crash_id)
             resp.status = falcon.HTTP_200
             resp.body = 'Discarded=1'
             return
 
         self.add_to_queue(CrashReport(raw_crash, dumps, crash_id))
-
-        logger.info('%s accepted', crash_id)
 
         resp.status = falcon.HTTP_200
         resp.body = 'CrashID=%s%s\n' % (self.config('dump_id_prefix'), crash_id)
@@ -428,7 +424,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         delta = (time.time() - raw_crash['timestamp']) * 1000
         self.mymetrics.timing('crash_handling.time', delta)
 
-        self.mymetrics.incr('crash_save', 1)
+        self.mymetrics.incr('save_crash')
         logger.info('%s saved', crash_id)
 
     def join_pool(self):
