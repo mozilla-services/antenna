@@ -154,6 +154,8 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         """
         while True:
+            # NOTE(willkg): We don't need the first heartbeat to happen immediately, so
+            # sleep first rather than last in the iterations
             gevent.sleep(30)
             try:
                 self.health_stats()
@@ -390,6 +392,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             try:
                 self.save_crash_to_storage(crash_report)
             except Exception:
+                logger.exception('Exception when processing save queue')
                 self.add_to_queue(crash_report)
 
     def save_crash_to_storage(self, crash_report):
