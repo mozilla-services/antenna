@@ -17,6 +17,7 @@ import gevent
 from gevent.pool import Pool
 
 from antenna import metrics
+from antenna.sentry import capture_unhandled_exceptions
 from antenna.throttler import (
     ACCEPT,
     DEFER,
@@ -119,6 +120,9 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         doc='max number of crash reports being saved concurrently; minimum of 1'
     )
 
+    # Interval between heartbeats
+    heartbeat_interval = 30
+
     def __init__(self, config):
         self.config = config.with_options(self)
         self.crashstorage = self.config('crashstorage_class')(config.with_namespace('crashstorage'))
@@ -154,9 +158,13 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         """
         while True:
-            gevent.sleep(30)
+            # NOTE(willkg): We don't need the first heartbeat to happen immediately, so
+            # sleep first rather than last in the iterations
+            gevent.sleep(self.heartbeat_interval)
+            logger.info('thump')
             try:
-                self.health_stats()
+                with capture_unhandled_exceptions():
+                    self.health_stats()
             except Exception:
                 logger.exception('Exception thrown while retrieving health stats')
 
@@ -320,6 +328,12 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
     @mymetrics.timer_decorator('BreakpadSubmitterResource.on_post.time')
     def on_post(self, req, resp):
+        """Handles incoming HTTP POSTs
+
+        Note: This is executed by the WSGI app, so it and anything it does is
+        covered by the Sentry middleware.
+
+        """
         resp.status = falcon.HTTP_200
 
         start_time = time.time()
@@ -383,20 +397,31 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             self.pipeline_pool.spawn(self.process_queue)
 
     def process_queue(self):
-        """Processes the save queue until it's empty"""
-        # Process until the queue is empty
+        """Processes the save queue until it's empty
+
+        Note: Since this is spawned in the pipeline pool, it happens in its own
+        execution context outside of WSGI app HTTP request handling.
+
+        Note: This has to be super careful not to lose crash reports. If
+        there's any kind of problem, we must return it to the save queue.
+
+        """
+        # Process crashes until the queue is empty
         while len(self.save_queue) > 0:
             crash_report = self.save_queue.next()
             try:
-                self.save_crash_to_storage(crash_report)
+                with capture_unhandled_exceptions():
+                    self.save_crash_to_storage(crash_report)
+
             except Exception:
+                logger.exception('Exception when processing save queue')
                 self.add_to_queue(crash_report)
 
     def save_crash_to_storage(self, crash_report):
         """Saves a crash to storage
 
-        If this raises an error, then that bubbles up and the caller can retry
-        later.
+        If this raises an error, then that bubbles up and the caller can figure
+        out what to do with it and retry again later.
 
         """
         crash_id = crash_report.crash_id
@@ -404,16 +429,10 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         raw_crash = crash_report.raw_crash
 
         # Save dumps to crashstorage
-        self.crashstorage.save_dumps(
-            crash_id,
-            dumps
-        )
+        self.crashstorage.save_dumps(crash_id, dumps)
 
         # Save the raw crash metadata to crashstorage
-        self.crashstorage.save_raw_crash(
-            crash_id,
-            raw_crash
-        )
+        self.crashstorage.save_raw_crash(crash_id, raw_crash)
 
         # Capture the total time it took for this crash to be handled from post
         # to s3 save and log the crash id
