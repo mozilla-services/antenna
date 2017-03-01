@@ -11,8 +11,6 @@ import sys
 from everett.manager import ConfigManager, ConfigEnvFileEnv, ConfigOSEnv, parse_class
 from everett.component import ConfigOptions, RequiredConfigMixin
 import falcon
-from raven import Client
-from raven.middleware import Sentry
 
 from antenna import metrics
 from antenna.breakpad_resource import BreakpadSubmitterResource
@@ -22,6 +20,7 @@ from antenna.health_resource import (
     LBHeartbeatResource,
     VersionResource,
 )
+from antenna.sentry import set_sentry_client, wsgi_capture_exceptions, capture_unhandled_exceptions
 
 
 logger = logging.getLogger(__name__)
@@ -35,7 +34,7 @@ def setup_logging(logging_level):
         'disable_existing_loggers': True,
         'formatters': {
             'development': {
-                'format': '[%(asctime)s] [%(levelname)s] %(name)s: %(message)s',
+                'format': '[%(asctime)s] [ANTENNA %(process)d] [%(levelname)s] %(name)s: %(message)s',
                 'datefmt': '%Y-%m-%d %H:%M:%S %z',
             },
         },
@@ -204,28 +203,6 @@ class AntennaAPI(falcon.API):
                     yield item
 
 
-class WSGILoggingMiddleware(object):
-    """WSGI middleware that logs unhandled exceptions"""
-    def __init__(self, application):
-        # NOTE(willkg): This has to match how the Sentry middleware works so
-        # that we can (ab)use that fact and access the underlying application.
-        self.application = application
-
-    def __call__(self, environ, start_response):
-        try:
-            return self.application(environ, start_response)
-
-        except Exception:
-            logger.exception('Unhandled exception')
-            exc_info = sys.exc_info()
-            start_response(
-                '500 Internal Server Error',
-                [('content-type', 'text/plain')],
-                exc_info
-            )
-            return [b'COUGH! Internal Server Error']
-
-
 def get_app(config=None):
     """Returns AntennaAPI instance"""
     try:
@@ -245,16 +222,10 @@ def get_app(config=None):
 
         app_config = AppConfig(config)
 
-        # Build a Sentry client if we're so configured
-        if app_config('secret_sentry_dsn'):
-            sentry_client = Client(
-                dsn=app_config('secret_sentry_dsn'),
-                include_paths=['antenna'],
-            )
-        else:
-            sentry_client = None
+        # Set a Sentry client if we're so configured
+        set_sentry_client(app_config('secret_sentry_dsn'))
 
-        try:
+        with capture_unhandled_exceptions():
             setup_logging(app_config('logging_level'))
             setup_metrics(app_config('metrics_class'), config)
 
@@ -275,16 +246,8 @@ def get_app(config=None):
 
             log_config(logger, app)
 
-        except Exception:
-            if sentry_client:
-                sentry_client.captureException()
-            raise
-
         # Wrap the app in some kind of unhandled exception notification mechanism
-        if sentry_client:
-            app = Sentry(app, sentry_client)
-        else:
-            app = WSGILoggingMiddleware(app)
+        app = wsgi_capture_exceptions(app)
 
         return app
 
