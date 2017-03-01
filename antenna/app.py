@@ -6,7 +6,6 @@ import logging
 import os
 import logging.config
 from pathlib import Path
-import sys
 
 from everett.manager import ConfigManager, ConfigEnvFileEnv, ConfigOSEnv, parse_class
 from everett.component import ConfigOptions, RequiredConfigMixin
