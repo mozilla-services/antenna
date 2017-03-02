@@ -35,6 +35,8 @@ import time
 from datadog.dogstatsd import DogStatsd
 from everett.component import ConfigOptions, RequiredConfigMixin
 
+from antenna.heartbeat import register_for_heartbeat
+
 
 NOT_ALPHANUM_RE = re.compile(r'[^a-z0-9_\.]', re.I)
 
@@ -62,6 +64,9 @@ class LoggingMetrics(RequiredConfigMixin):
 
     def incr(self, stat, **kwargs):
         self._log('incr', stat, kwargs)
+
+    def batch_incr(self, stat, **kwargs):
+        self._log('batch_incr', stat, kwargs)
 
     def gauge(self, stat, **kwargs):
         self._log('gauge', stat, kwargs)
@@ -100,14 +105,26 @@ class DogStatsdMetrics(RequiredConfigMixin):
         self.port = self.config('statsd_port')
         self.namespace = self.config('statsd_namespace')
 
+        self.batch = {}
+
         self.client = self.get_client(self.host, self.port, self.namespace)
         logger.info('%s configured: %s:%s %s', self.__class__.__name__, self.host, self.port, self.namespace)
+
+        register_for_heartbeat(self.flush_batch)
 
     def get_client(self, host, port, namespace):
         return DogStatsd(host=host, port=port, namespace=namespace)
 
+    def flush_batch(self):
+        for key, val in self.batch:
+            self.incr(key, val)
+        self.batch = {}
+
     def incr(self, stat, value=1):
         self.client.increment(metric=stat, value=value)
+
+    def batch_incr(self, stat, value=1):
+        self.batch[stat] = self.batch.get(stat, 0) + value
 
     def gauge(self, stat, value):
         self.client.gauge(metric=stat, value=value)
@@ -183,11 +200,26 @@ class MetricsInterface:
         # Remove . at beginning and end
         self.name = name.strip('.')
 
+        self.batch = {}
+
     def _full_stat(self, stat):
         return self.name + '.' + stat
 
     def incr(self, stat, value=1):
         """Increment a stat by value"""
+        _metrics_impl.incr(self._full_stat(stat), value=value)
+
+    def batch_incr(self, stat, value=1):
+        """Batches a count for a stat by value
+
+        This is the same as ``.incr()``, however it gets batched and sent out
+        every heartbeat_interval.
+
+        This is helpful for counters that count more frequently than 1/s where
+        statsd might "do interesting things" such that you don't get good
+        counts.
+
+        """
         _metrics_impl.incr(self._full_stat(stat), value=value)
 
     def gauge(self, stat, value):
@@ -287,7 +319,20 @@ def get_metrics(thing, extra=''):
 class MetricsMock:
     """Mock for recording metrics events and testing them
 
-    FIXME: Add docstring
+    Mimics a metrics implementation as a context manager. Keeps records of what
+    got metricfied so that you can print them out, filter them, assert various
+    things about them, etc.
+
+    To use::
+
+        with MetricsMock() as mm:
+            # do things that might record metrics
+
+            # Print the metrics recorded (helps with debugging)
+            mm.print_metrics()
+
+            # Assert something about the metrics recorded
+            assert mm.has_metric('incr', 'some.random.key', {'value': 1})
 
     """
     def __init__(self):
@@ -300,6 +345,9 @@ class MetricsMock:
 
     def incr(self, stat, **kwargs):
         self._add_record('incr', stat, kwargs)
+
+    def batch_incr(self, stat, **kwargs):
+        self._add_record('incr_batch', stat, kwargs)
 
     def gauge(self, stat, **kwargs):
         self._add_record('gauge', stat, kwargs)
