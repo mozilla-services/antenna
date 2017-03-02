@@ -13,10 +13,10 @@ import zlib
 from everett.component import ConfigOptions, RequiredConfigMixin
 from everett.manager import parse_class
 import falcon
-import gevent
 from gevent.pool import Pool
 
 from antenna import metrics
+from antenna.heartbeat import register_for_heartbeat
 from antenna.sentry import capture_unhandled_exceptions
 from antenna.throttler import (
     ACCEPT,
@@ -120,9 +120,6 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         doc='max number of crash reports being saved concurrently; minimum of 1'
     )
 
-    # Interval between heartbeats
-    heartbeat_interval = 30
-
     def __init__(self, config):
         self.config = config.with_options(self)
         self.crashstorage = self.config('crashstorage_class')(config.with_namespace('crashstorage'))
@@ -134,8 +131,8 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         self.save_queue = SaveQueue()
         self.mymetrics = metrics.get_metrics(self)
 
-        # Kick off the heartbeat
-        gevent.spawn(self.heartbeat)
+        # Register hb functions with heartbeat manager
+        register_for_heartbeat(self.hb_health_stats)
 
     def get_runtime_config(self, namespace=None):
         for item in super().get_runtime_config():
@@ -151,24 +148,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         if hasattr(self.crashstorage, 'check_health'):
             self.crashstorage.check_health(state)
 
-    def heartbeat(self):
-        """Heartbeat function
-
-        Every 30 seconds, runs a set of methods on this class.
-
-        """
-        while True:
-            # NOTE(willkg): We don't need the first heartbeat to happen immediately, so
-            # sleep first rather than last in the iterations
-            gevent.sleep(self.heartbeat_interval)
-            logger.info('thump')
-            try:
-                with capture_unhandled_exceptions():
-                    self.health_stats()
-            except Exception:
-                logger.exception('Exception thrown while retrieving health stats')
-
-    def health_stats(self):
+    def hb_health_stats(self):
         # The number of crash reports sitting in the queue
         self.mymetrics.gauge('save_queue_size', len(self.save_queue))
 
@@ -213,7 +193,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         # Decompress payload if it's compressed
         if req.env.get('HTTP_CONTENT_ENCODING') == 'gzip':
-            self.mymetrics.incr('gzipped_crash')
+            self.mymetrics.batch_incr('gzipped_crash')
 
             # If the content is gzipped, we pull it out and decompress it. We
             # have to do that here because nginx doesn't have a good way to do
@@ -225,7 +205,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
                 # This indicates this isn't a valid compressed stream. Given
                 # that the HTTP request insists it is, we're just going to
                 # assume it's junk and not try to process any further.
-                self.mymetrics.incr('bad_gzipped_crash')
+                self.mymetrics.batch_incr('bad_gzipped_crash')
                 return {}, {}
 
             # Stomp on the content length to correct it because we've changed
@@ -305,12 +285,12 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             except ValueError:
                 # If we've gotten a ValueError, it means one or both of the
                 # values is bad and we should ignore it and move forward.
-                self.mymetrics.incr('throttle.bad_throttle_values')
+                self.mymetrics.batch_incr('throttle.bad_throttle_values')
 
         if raw_crash.get('Throttleable', None) == '0':
             # If the raw crash has ``Throttleable=0``, then we accept the
             # crash.
-            self.mymetrics.incr('throttleable_0')
+            self.mymetrics.batch_incr('throttleable_0')
             result = ACCEPT
             rule_name = 'THROTTLEABLE_0'
             throttle_rate = 100
@@ -341,7 +321,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         raw_crash, dumps = self.extract_payload(req)
 
-        self.mymetrics.incr('incoming_crash')
+        self.mymetrics.batch_incr('incoming_crash')
 
         current_timestamp = utc_now()
         raw_crash['submitted_timestamp'] = current_timestamp.isoformat()
@@ -371,7 +351,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         # Log the throttle result
         logger.info('%s: matched by %s; returned %s', crash_id, rule_name,
                     RESULT_TO_TEXT[throttle_result])
-        self.mymetrics.incr(('throttle.%s' % RESULT_TO_TEXT[throttle_result]).lower())
+        self.mymetrics.batch_incr(('throttle.%s' % RESULT_TO_TEXT[throttle_result]).lower())
 
         if throttle_result is REJECT:
             # If the result is REJECT, then discard it
@@ -442,7 +422,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         delta = (time.time() - raw_crash['timestamp']) * 1000
         self.mymetrics.timing('crash_handling.time', delta)
 
-        self.mymetrics.incr('save_crash.count')
+        self.mymetrics.batch_incr('save_crash.count')
         logger.info('%s saved', crash_id)
 
     def join_pool(self):

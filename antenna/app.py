@@ -19,6 +19,7 @@ from antenna.health_resource import (
     LBHeartbeatResource,
     VersionResource,
 )
+from antenna.heartbeat import HeartbeatManager
 from antenna.sentry import set_sentry_client, wsgi_capture_exceptions, capture_unhandled_exceptions
 
 
@@ -168,6 +169,8 @@ class AntennaAPI(falcon.API):
         self.config = config
         self._all_resources = {}
 
+        self.hb = HeartbeatManager(config)
+
     def add_route(self, name, uri_template, resource, *args, **kwargs):
         """Adds specified Falcon route
 
@@ -244,6 +247,8 @@ def get_app(config=None):
             app.add_route('broken', '/__broken__', BrokenResource(config))
 
             log_config(logger, app)
+
+            app.hb.start_heartbeat()
 
         # Wrap the app in some kind of unhandled exception notification mechanism
         app = wsgi_capture_exceptions(app)
