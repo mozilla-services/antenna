@@ -161,7 +161,6 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             # NOTE(willkg): We don't need the first heartbeat to happen immediately, so
             # sleep first rather than last in the iterations
             gevent.sleep(self.heartbeat_interval)
-            logger.info('thump')
             try:
                 with capture_unhandled_exceptions():
                     self.health_stats()
