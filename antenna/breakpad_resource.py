@@ -113,26 +113,27 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         parser=parse_class,
         doc='the class in charge of storing crashes'
     )
-    required_config.add_option(
-        'concurrent_saves',
-        default='10',
-        parser=positive_int,
-        doc='max number of crash reports being saved concurrently; minimum of 1'
-    )
+
+    # Maximum number of concurrent crashmover workers; each process gets this
+    # many concurrent crashmovers, so if you're running 5 processes on the node
+    # then it's (5 * concurrent_crashmovers) fighting for upload bandwidth
+    concurrent_crashmovers = 1
 
     def __init__(self, config):
         self.config = config.with_options(self)
         self.crashstorage = self.config('crashstorage_class')(config.with_namespace('crashstorage'))
         self.throttler = Throttler(config)
 
-        # Gevent pool for handling incoming crash reports
-        self.pipeline_pool = Pool(size=self.config('concurrent_saves'))
+        # Gevent pool for crashmover workers
+        self.crashmover_pool = Pool(size=self.concurrent_crashmovers)
 
-        self.save_queue = SaveQueue()
+        # Queue for crashmover of crashes to save
+        self.crashmover_save_queue = SaveQueue()
+
         self.mymetrics = metrics.get_metrics(self)
 
         # Register hb functions with heartbeat manager
-        register_for_heartbeat(self.hb_health_stats)
+        register_for_heartbeat(self.hb_report_health_stats)
 
     def get_runtime_config(self, namespace=None):
         for item in super().get_runtime_config():
@@ -148,12 +149,11 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         if hasattr(self.crashstorage, 'check_health'):
             self.crashstorage.check_health(state)
 
-    def hb_health_stats(self):
-        # The number of crash reports sitting in the queue
-        self.mymetrics.gauge('save_queue_size', len(self.save_queue))
-
-        # The number of actively running coroutines saving crashes
-        self.mymetrics.gauge('active_save_workers', len(self.pipeline_pool))
+    def hb_report_health_stats(self):
+        # The number of crash reports sitting in the queue; this is a direct
+        # measure of the health of this process--a number that's going up means
+        # impending doom
+        self.mymetrics.gauge('save_queue_size', len(self.crashmover_save_queue))
 
     def extract_payload(self, req):
         """Parses the HTTP POST payload
@@ -358,46 +358,49 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             resp.body = 'Discarded=1'
 
         else:
-            # If the result is not REJECT, then add it to the queue for saving
-            # and return the CrashID to the client
-            self.add_to_queue(CrashReport(raw_crash, dumps, crash_id))
+            # If the result is not REJECT, then save it and return the CrashID
+            # to the client
+            self.save_crash(CrashReport(raw_crash, dumps, crash_id))
             resp.body = 'CrashID=%s%s\n' % (self.config('dump_id_prefix'), crash_id)
 
-    def add_to_queue(self, crash_report):
+    def save_crash(self, crash_report):
         """Adds a crash report to the save queue
 
-        As a side-effect, this also spins off a coroutine to deal with the
-        crash report.
+        As a side-effect, this also spawns a new crashmover if there aren't any
+        running.
 
         """
-        self.save_queue.add(crash_report)
+        self.crashmover_save_queue.add(crash_report)
 
-        # Check the pool and spawn a new co-routine if possible
-        if self.pipeline_pool.free_count() > 0:
-            self.pipeline_pool.spawn(self.process_queue)
+        # Spawn a new crashmover if there isn't one running
+        if self.crashmover_pool.free_count() > 0:
+            self.crashmover_pool.spawn(self.run_crashmover)
 
-    def process_queue(self):
-        """Processes the save queue until it's empty
+    def run_crashmover(self):
+        """Processes the queue of crashes to save until it's empty
 
-        Note: Since this is spawned in the pipeline pool, it happens in its own
-        execution context outside of WSGI app HTTP request handling.
+        Note: Since this is spawned, it happens in its own execution context
+        outside of WSGI app HTTP request handling, so unhandled exceptions
+        aren't captured by the Sentry WSGI middleware. Thus this creates its
+        own capture context.
 
         Note: This has to be super careful not to lose crash reports. If
-        there's any kind of problem, we must return it to the save queue.
+        there's any kind of problem, this must return the crash to the queue.
 
         """
         # Process crashes until the queue is empty
-        while len(self.save_queue) > 0:
-            crash_report = self.save_queue.next()
+        while len(self.crashmover_save_queue) > 0:
+            crash_report = self.crashmover_save_queue.next()
             try:
                 with capture_unhandled_exceptions():
-                    self.save_crash_to_storage(crash_report)
+                    self.crashmover_save(crash_report)
 
             except Exception:
                 logger.exception('Exception when processing save queue')
-                self.add_to_queue(crash_report)
+                self.mymetrics.batch_incr('save_crash_exception.count')
+                self.save_crash(crash_report)
 
-    def save_crash_to_storage(self, crash_report):
+    def crashmover_save(self, crash_report):
         """Saves a crash to storage
 
         If this raises an error, then that bubbles up and the caller can figure
@@ -408,14 +411,16 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         dumps = crash_report.dumps
         raw_crash = crash_report.raw_crash
 
-        # Save dumps to crashstorage
-        self.crashstorage.save_dumps(crash_id, dumps)
+        # Capture total time it takes to save the crash
+        with self.mymetrics.timer('crash_save.time'):
+            # Save dumps to crashstorage
+            self.crashstorage.save_dumps(crash_id, dumps)
 
-        # Save the raw crash metadata to crashstorage
-        self.crashstorage.save_raw_crash(crash_id, raw_crash)
+            # Save the raw crash metadata to crashstorage
+            self.crashstorage.save_raw_crash(crash_id, raw_crash)
 
-        # Capture the total time it took for this crash to be handled from post
-        # to s3 save and log the crash id
+        # Capture the total time it took for this crash to be handled from
+        # being received from breakpad client to saving to s3.
         #
         # NOTE(willkg): time.time returns seconds, but .timing() wants
         # milliseconds, so we multiply!
@@ -428,9 +433,9 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
     def join_pool(self):
         """Joins the pool--use only in tests!
 
-        This is helpful for forcing all the coroutines to complete so that we
-        can verify outcomes in the test suite for work that might cross
-        coroutines.
+        This is helpful for forcing all the coroutines in the pool to complete
+        so that we can verify outcomes in the test suite for work that might
+        cross coroutines.
 
         """
-        self.pipeline_pool.join()
+        self.crashmover_pool.join()
