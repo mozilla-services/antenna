@@ -20,6 +20,7 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from antenna import metrics  # noqa
 from antenna.app import get_app, setup_logging, setup_metrics  # noqa
+from antenna.heartbeat import reset_hb_funs  # noqa
 from antenna.metrics import MetricsMock  # noqa
 from testlib.loggingmock import LoggingMock  # noqa
 from testlib.s3mock import S3Mock  # noqa
@@ -29,6 +30,9 @@ def pytest_runtest_setup():
     # Make sure we set up logging and metrics to sane default values.
     setup_logging('DEBUG')
     setup_metrics(metrics.LoggingMetrics, ConfigManager.from_dict({}))
+
+    # Wipe any registered heartbeat functions
+    reset_hb_funs()
 
 
 @pytest.fixture

@@ -13,10 +13,10 @@ import zlib
 from everett.component import ConfigOptions, RequiredConfigMixin
 from everett.manager import parse_class
 import falcon
-import gevent
 from gevent.pool import Pool
 
 from antenna import metrics
+from antenna.heartbeat import register_for_heartbeat
 from antenna.sentry import capture_unhandled_exceptions
 from antenna.throttler import (
     ACCEPT,
@@ -120,9 +120,6 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         doc='max number of crash reports being saved concurrently; minimum of 1'
     )
 
-    # Interval between heartbeats
-    heartbeat_interval = 30
-
     def __init__(self, config):
         self.config = config.with_options(self)
         self.crashstorage = self.config('crashstorage_class')(config.with_namespace('crashstorage'))
@@ -134,8 +131,8 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         self.save_queue = SaveQueue()
         self.mymetrics = metrics.get_metrics(self)
 
-        # Kick off the heartbeat
-        gevent.spawn(self.heartbeat)
+        # Register hb functions with heartbeat manager
+        register_for_heartbeat(self.hb_health_stats)
 
     def get_runtime_config(self, namespace=None):
         for item in super().get_runtime_config():
@@ -151,23 +148,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         if hasattr(self.crashstorage, 'check_health'):
             self.crashstorage.check_health(state)
 
-    def heartbeat(self):
-        """Heartbeat function
-
-        Every 30 seconds, runs a set of methods on this class.
-
-        """
-        while True:
-            # NOTE(willkg): We don't need the first heartbeat to happen immediately, so
-            # sleep first rather than last in the iterations
-            gevent.sleep(self.heartbeat_interval)
-            try:
-                with capture_unhandled_exceptions():
-                    self.health_stats()
-            except Exception:
-                logger.exception('Exception thrown while retrieving health stats')
-
-    def health_stats(self):
+    def hb_health_stats(self):
         # The number of crash reports sitting in the queue
         self.mymetrics.gauge('save_queue_size', len(self.save_queue))
 
