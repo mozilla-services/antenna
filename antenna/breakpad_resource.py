@@ -116,7 +116,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
     # Maximum number of concurrent crashmover workers; each process gets this
     # many concurrent crashmovers, so if you're running 5 processes on the node
-    # then it's (5 * concurrenct_crashmovers) fighting for upload bandwidth
+    # then it's (5 * concurrent_crashmovers) fighting for upload bandwidth
     concurrent_crashmovers = 1
 
     def __init__(self, config):
@@ -133,7 +133,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         self.mymetrics = metrics.get_metrics(self)
 
         # Register hb functions with heartbeat manager
-        register_for_heartbeat(self.hb_health_stats)
+        register_for_heartbeat(self.hb_report_health_stats)
 
     def get_runtime_config(self, namespace=None):
         for item in super().get_runtime_config():
@@ -149,12 +149,11 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         if hasattr(self.crashstorage, 'check_health'):
             self.crashstorage.check_health(state)
 
-    def hb_health_stats(self):
-        # The number of crash reports sitting in the queue
+    def hb_report_health_stats(self):
+        # The number of crash reports sitting in the queue; this is a direct
+        # measure of the health of this process--a number that's going up means
+        # impending doom
         self.mymetrics.gauge('save_queue_size', len(self.crashmover_save_queue))
-
-        # The number of actively running coroutines saving crashes
-        self.mymetrics.gauge('active_save_workers', len(self.crashmover_pool))
 
     def extract_payload(self, req):
         """Parses the HTTP POST payload
