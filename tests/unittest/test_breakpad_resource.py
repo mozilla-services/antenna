@@ -259,7 +259,7 @@ class TestBreakpadSubmitterResource:
         client.simulate_post('/submit', headers=headers, body=data)
         # The coroutine hasn't run yet (we haven't called .join), so there's
         # one coroutine and two queued crashes
-        check_health(crashmover_pool_size=1, crashmover_save_queue_size=2)
+        check_health(crashmover_pool_size=2, crashmover_save_queue_size=2)
 
         # Now join the app and let the coroutines run and make sure the queue clears
         client.join_app()
