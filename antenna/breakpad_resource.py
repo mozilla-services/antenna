@@ -117,7 +117,12 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
     # Maximum number of concurrent crashmover workers; each process gets this
     # many concurrent crashmovers, so if you're running 5 processes on the node
     # then it's (5 * concurrent_crashmovers) fighting for upload bandwidth
-    concurrent_crashmovers = 1
+    required_config.add_option(
+        'concurrent_crashmovers',
+        default='2',
+        parser=int,
+        doc='the number of crashes concurrently being saved to s3'
+    )
 
     def __init__(self, config):
         self.config = config.with_options(self)
@@ -125,7 +130,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         self.throttler = Throttler(config)
 
         # Gevent pool for crashmover workers
-        self.crashmover_pool = Pool(size=self.concurrent_crashmovers)
+        self.crashmover_pool = Pool(size=self.config('concurrent_crashmovers'))
 
         # Queue for crashmover of crashes to save
         self.crashmover_save_queue = SaveQueue()
