@@ -48,6 +48,9 @@ class SaveQueue:
     def __init__(self):
         self._queue = []
 
+    def __bool__(self):
+        return bool(len(self))
+
     def __len__(self):
         return len(self._queue)
 
@@ -139,6 +142,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         # Register hb functions with heartbeat manager
         register_for_heartbeat(self.hb_report_health_stats)
+        register_for_heartbeat(self.hb_run_crashmover)
 
     def get_runtime_config(self, namespace=None):
         for item in super().get_runtime_config():
@@ -365,23 +369,22 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         else:
             # If the result is not REJECT, then save it and return the CrashID
             # to the client
-            self.save_crash(CrashReport(raw_crash, dumps, crash_id))
+            self.queue_crash_to_save(CrashReport(raw_crash, dumps, crash_id))
+            self.hb_run_crashmover()
             resp.body = 'CrashID=%s%s\n' % (self.config('dump_id_prefix'), crash_id)
 
-    def save_crash(self, crash_report):
-        """Adds a crash report to the save queue
-
-        As a side-effect, this also spawns a new crashmover if there aren't any
-        running.
-
-        """
+    def queue_crash_to_save(self, crash_report):
+        """Adds a crash report to the save queue"""
         self.crashmover_save_queue.add(crash_report)
 
-        # Spawn a new crashmover if there isn't one running
-        if self.crashmover_pool.free_count() > 0:
-            self.crashmover_pool.spawn(self.run_crashmover)
+    def hb_run_crashmover(self):
+        """Checks to see if it should spawn a crashmover and does if appropriate"""
+        # Spawn a new crashmover if there's stuff in the queue and there isn't
+        # one currently running
+        if self.crashmover_save_queue and self.crashmover_pool.free_count() > 0:
+            self.crashmover_pool.spawn(self.crashmover_process_queue)
 
-    def run_crashmover(self):
+    def crashmover_process_queue(self):
         """Processes the queue of crashes to save until it's empty
 
         Note: Since this is spawned, it happens in its own execution context
@@ -403,7 +406,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             except Exception:
                 logger.exception('Exception when processing save queue')
                 self.mymetrics.batch_incr('save_crash_exception.count')
-                self.save_crash(crash_report)
+                self.queue_crash_to_save(crash_report)
 
     def crashmover_save(self, crash_report):
         """Saves a crash to storage
