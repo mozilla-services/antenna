@@ -21,9 +21,10 @@ gunicorn \
     --reload \
     --bind=0.0.0.0:8000 \
     --workers=1 \
-    --worker-connections=1 \
+    --worker-connections=2 \
     --worker-class=gevent \
     --error-logfile=- \
     --access-logfile=- \
+    --config=antenna/gunicornhooks.py \
     antenna.wsgi:application \
     --log-file -

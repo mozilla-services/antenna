@@ -16,7 +16,7 @@ import falcon
 from gevent.pool import Pool
 
 from antenna import metrics
-from antenna.heartbeat import register_for_heartbeat
+from antenna.heartbeat import register_for_life, register_for_heartbeat
 from antenna.sentry import capture_unhandled_exceptions
 from antenna.throttler import (
     ACCEPT,
@@ -144,6 +144,9 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         register_for_heartbeat(self.hb_report_health_stats)
         register_for_heartbeat(self.hb_run_crashmover)
 
+        # Register life function with heartbeat manager
+        register_for_life(self.has_work_to_do)
+
     def get_runtime_config(self, namespace=None):
         for item in super().get_runtime_config():
             yield item
@@ -163,6 +166,12 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         # measure of the health of this process--a number that's going up means
         # impending doom
         self.mymetrics.gauge('save_queue_size', len(self.crashmover_save_queue))
+
+    def has_work_to_do(self):
+        logger.info('work left to do: %s' % len(self.crashmover_save_queue))
+        # Indicates whether or not we're sitting on crashes to save--this helps
+        # keep Antenna alive until we're done with our queue
+        return len(self.crashmover_save_queue)
 
     def extract_payload(self, req):
         """Parses the HTTP POST payload

@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import logging
-import os
 import logging.config
+import os
 from pathlib import Path
 import socket
 
@@ -209,6 +209,9 @@ class AntennaAPI(falcon.API):
                 for item in res.get_runtime_config(namespace):
                     yield item
 
+    def start_heartbeat(self, is_alive, pool):
+        self.hb.start_heartbeat(is_alive, pool)
+
 
 def get_app(config=None):
     """Returns AntennaAPI instance"""
@@ -252,8 +255,6 @@ def get_app(config=None):
             app.add_route('broken', '/__broken__', BrokenResource(config))
 
             log_config(logger, app)
-
-            app.hb.start_heartbeat()
 
         # Wrap the app in some kind of unhandled exception notification mechanism
         app = wsgi_capture_exceptions(app)
