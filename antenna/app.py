@@ -6,6 +6,7 @@ import logging
 import os
 import logging.config
 from pathlib import Path
+import socket
 
 from everett.manager import ConfigManager, ConfigEnvFileEnv, ConfigOSEnv, parse_class
 from everett.component import ConfigOptions, RequiredConfigMixin
@@ -34,7 +35,11 @@ def setup_logging(logging_level):
         'disable_existing_loggers': True,
         'formatters': {
             'development': {
-                'format': '[%(asctime)s] [ANTENNA %(process)d] [%(levelname)s] %(name)s: %(message)s',
+                'format': (
+                    '[%(asctime)s] [ANTENNA ' +
+                    socket.gethostname() +
+                    ' %(process)d] [%(levelname)s] %(name)s: %(message)s'
+                ),
                 'datefmt': '%Y-%m-%d %H:%M:%S %z',
             },
         },
