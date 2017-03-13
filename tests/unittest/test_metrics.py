@@ -201,6 +201,19 @@ class TestDogStatsdMetrics:
             mymetrics.incr('key1')
             mock_incr.assert_called_with(metric='foobar.key1', value=1)
 
+    def test_batch_incr(self):
+        metrics.metrics_configure(metrics.DogStatsdMetrics, ConfigManager.from_dict({}))
+        mymetrics = metrics.get_metrics('foobar')
+
+        with patch.object(metrics._metrics_impl.client, 'increment') as mock_incr:
+            mymetrics.batch_incr('key1', 1)
+            mymetrics.batch_incr('key1', 2)
+
+            # Reach in and flush the batch
+            metrics._metrics_impl.flush_batch()
+
+            mock_incr.assert_called_with(metric='foobar.key1', value=3)
+
     def test_timing(self):
         metrics.metrics_configure(metrics.DogStatsdMetrics, ConfigManager.from_dict({}))
         mymetrics = metrics.get_metrics('foobar')

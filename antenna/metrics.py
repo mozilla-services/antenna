@@ -116,9 +116,9 @@ class DogStatsdMetrics(RequiredConfigMixin):
         return DogStatsd(host=host, port=port, namespace=namespace)
 
     def flush_batch(self):
-        for key, val in self.batch:
+        for key, val in self.batch.items():
             self.incr(key, val)
-        logger.debug('metrics batch: %r', dict(self.batch))
+        logger.debug('metrics batch: %r', sorted(self.batch.items()))
         self.batch = {}
 
     def incr(self, stat, value=1):
@@ -221,7 +221,7 @@ class MetricsInterface:
         counts.
 
         """
-        _metrics_impl.incr(self._full_stat(stat), value=value)
+        _metrics_impl.batch_incr(self._full_stat(stat), value=value)
 
     def gauge(self, stat, value):
         """Set a gauge stat as value"""
