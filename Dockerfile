@@ -33,5 +33,6 @@ CMD $CMD_PREFIX \
     --workers=$GUNICORN_WORKERS \
     --worker-connections=$GUNICORN_WORKER_CONNECTIONS \
     --worker-class=$GUNICORN_WORKER_CLASS \
+    --config=antenna/gunicornhooks.py \
     --bind 0.0.0.0:$PORT \
     antenna.wsgi:application

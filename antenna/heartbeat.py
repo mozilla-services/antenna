@@ -38,23 +38,22 @@ class HeartbeatManager(RequiredConfigMixin):
 
     def __init__(self, config):
         self.config = config.with_options(self)
-        self.hb_live = False
+        self.hb_started = False
+        self.is_alive = None
+        self.pool = None
 
-    def start_heartbeat(self):
+    def start_heartbeat(self, is_alive, pool):
         """Starts the heartbeat coroutine"""
-        if not self.hb_live:
-            self.hb_live = True
-            gevent.spawn_later(self.heartbeat_interval, self.heartbeat)
+        if self.hb_started:
+            return
 
-    def stop_heartbeat(self):
-        """Tells the heartbeat to stop running
+        self.hb_started = True
+        self.is_alive = is_alive
+        self.pool = pool
 
-        Note: This doesn't actually kill the heartbeat greenlet because we
-        don't know what it might be doing and that could cause integrity
-        problems.
-
-        """
-        self.hb_live = False
+        # Spwan the heartbeat loop in the incoming connections pool
+        logger.info('Adding heartbeat to pool')
+        pool.spawn(self.heartbeat)
 
     def heartbeat(self):
         """Heartbeat function
@@ -63,7 +62,9 @@ class HeartbeatManager(RequiredConfigMixin):
         capture unhandled exceptions and report them.
 
         """
-        while self.hb_live:
+        # Keep beating unless the WSGI worker is shutting down AND all
+        # registered lifers are ok with us shutting down
+        while self.is_alive() or any([fun() for fun in _registered_lifers]):
             logger.debug('thump')
             for fun in _registered_hb_funs:
                 try:
@@ -75,18 +76,32 @@ class HeartbeatManager(RequiredConfigMixin):
 
             gevent.sleep(self.heartbeat_interval)
 
+        logger.info('Heartbeat stopped.')
+
 
 # All functions registered to run during an Antenna heartbeat
 _registered_hb_funs = set()
 
 
+# All functions that return a please-keep-me-alive status
+_registered_lifers = set()
+
+
 def reset_hb_funs():
     """Resets the list of registered hb functions--used for tests"""
     _registered_hb_funs.clear()
+    _registered_lifers.clear()
 
 
 def register_for_heartbeat(fun):
     """Registers a function as one to run during heartbeats"""
     logger.debug('registered %s for heartbeats', fun.__qualname__)
     _registered_hb_funs.add(fun)
+    return fun
+
+
+def register_for_life(fun):
+    """Registers a function that returns True if we need to stay alive"""
+    logger.debug('registered %s for life', fun.__qualname__)
+    _registered_lifers.add(fun)
     return fun
