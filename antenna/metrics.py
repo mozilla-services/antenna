@@ -118,6 +118,7 @@ class DogStatsdMetrics(RequiredConfigMixin):
     def flush_batch(self):
         for key, val in self.batch:
             self.incr(key, val)
+        logger.debug('metrics batch: %r', dict(self.batch))
         self.batch = {}
 
     def incr(self, stat, value=1):
