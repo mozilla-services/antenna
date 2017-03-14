@@ -91,5 +91,6 @@ def capture_unhandled_exceptions():
 
     except Exception:
         if _sentry_client is not None:
+            logger.info('Unhandled exception sent to sentry.')
             _sentry_client.captureException()
         raise

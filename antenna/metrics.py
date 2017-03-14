@@ -116,10 +116,11 @@ class DogStatsdMetrics(RequiredConfigMixin):
         return DogStatsd(host=host, port=port, namespace=namespace)
 
     def flush_batch(self):
-        for key, val in self.batch.items():
-            self.incr(key, val)
-        logger.debug('metrics batch: %r', sorted(self.batch.items()))
-        self.batch = {}
+        if self.batch:
+            for key, val in self.batch.items():
+                self.incr(key, val)
+            logger.debug('metrics batch: %r', sorted(self.batch.items()))
+            self.batch = {}
 
     def incr(self, stat, value=1):
         self.client.increment(metric=stat, value=value)

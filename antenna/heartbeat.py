@@ -69,7 +69,7 @@ class HeartbeatManager(RequiredConfigMixin):
             for fun in _registered_hb_funs:
                 try:
                     with capture_unhandled_exceptions():
-                        logger.debug('hb: running %s', fun.__qualname__)
+                        # logger.debug('hb: running %s', fun.__qualname__)
                         fun()
                 except Exception:
                     logger.exception('Exception thrown while retrieving health stats')
