@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 def wait_times_save():
-    """Wait time generator for failed save attempts
+    """Wait time generator for failed save and connection attempts
 
     This waits 2 seconds between failed save attempts for 5 iterations and then
     gives up.
@@ -110,6 +110,11 @@ class S3Connection(RequiredConfigMixin):
             # FIXME(willkg): Seems like botocore always raises ClientError
             # which is unhelpful for granularity purposes.
             ClientError,
+
+            # This raises a ValueError "invalid endpoint" if it has problems
+            # getting the s3 credentials and then tries "s3..amazonaws.com"--we
+            # want to retry that, too.
+            ValueError,
         ],
         wait_time_generator=wait_times_save,
         sleep_function=gevent.sleep,
