@@ -5,6 +5,7 @@
 
 import io
 import logging
+import random
 
 import boto3
 from botocore.client import ClientError, Config
@@ -17,8 +18,23 @@ from antenna.util import retry
 logger = logging.getLogger(__name__)
 
 
+def wait_times_connect():
+    """Wait time generator for failed connection attempts
+
+    We have this problem where we're binding IAM credentials to the EC2 node
+    and on startup when boto3 goes to get the credentials, it fails for some
+    reason and then degrades to hitting the https://s3..amazonaws.net/
+    endpoint and then fails because that's not a valid endpoint.
+
+    This sequence increases the wait times and adds some jitter.
+
+    """
+    for i in ([5] * 5):
+        yield i + random.uniform(-2, 2)
+
+
 def wait_times_save():
-    """Wait time generator for failed save and connection attempts
+    """Wait time generator for failed save
 
     This waits 2 seconds between failed save attempts for 5 iterations and then
     gives up.
@@ -116,7 +132,7 @@ class S3Connection(RequiredConfigMixin):
             # want to retry that, too.
             ValueError,
         ],
-        wait_time_generator=wait_times_save,
+        wait_time_generator=wait_times_connect,
         sleep_function=gevent.sleep,
         module_logger=logger,
     )
