@@ -6,8 +6,9 @@ Antenna: Breakpad crash report collector
 collector web app that handles incoming crash reports and saves them
 to AWS S3.
 
-Uses Python 3, `gevent <http://www.gevent.org/>`_ and `Falcon
-<https://falconframework.org/>`_.
+Uses Python 3, `Gunicorn <http://gunicorn.org/>`_, `gevent
+<http://www.gevent.org/>`_, `Falcon <https://falconframework.org/>`_ and some
+other things.
 
 * Free software: Mozilla Public License version 2.0
 * Documentation: https://antenna.readthedocs.io/

@@ -147,24 +147,3 @@ supported.
 
    Generally, if the default connection class is fine, you don't need to do any
    configuration here.
-
-
-Putting Antenna in production
-=============================
-
-Antenna is a WSGI application. We use it with gunicorn and nginx, but it can
-be set up in other ways.
-
-Some things to be aware of when you set up Antenna in production:
-
-1. The following endpoints should require basic auth:
-
-   1. ``/__broken__`` -- This throws an exception. It helps to test Sentry
-      configuration. It's best to put it behind auth.
-   2. ``/__heartbeat__`` -- This is a more intensive health check, so it's best
-      to put it behind auth.
-
-2. The S3 connectivity check requires the credentials that Antenna is using to
-   be able to list the contents of the bucket.
-
-3. FIXME -- note about scaling based on RAM usage

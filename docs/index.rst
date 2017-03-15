@@ -14,6 +14,7 @@ User docs:
    :maxdepth: 2
 
    configuration
+   deploy
    breakpad_reporting
 
 
