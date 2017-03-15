@@ -271,4 +271,4 @@ def one_line_exception(exc_info=None):
     if exc_info is None:
         exc_info = sys.exc_info()
 
-    return '<NL>'.join(traceback.format_exception(*exc_info)).strip().replace('\n', '<NL>')
+    return ''.join(traceback.format_exception(*exc_info)).strip().replace('\n', '<NL>')
