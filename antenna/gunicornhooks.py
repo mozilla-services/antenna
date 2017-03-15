@@ -64,4 +64,3 @@ def post_worker_init(worker):
 
     """
     gevent.spawn_later(2, _start_heartbeat, worker)
-    print('Done hb spawn')
