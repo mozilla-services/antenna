@@ -30,8 +30,10 @@ def set_sentry_client(sentry_dsn):
     global _sentry_client
     if sentry_dsn:
         _sentry_client = Client(dsn=sentry_dsn, include_paths=['antenna'])
+        logger.info('Set up sentry client')
     else:
         _sentry_client = None
+        logger.info('Removed sentry client')
 
 
 class WSGILoggingMiddleware(object):
