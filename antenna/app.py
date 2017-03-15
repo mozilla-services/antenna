@@ -7,6 +7,7 @@ import logging.config
 import os
 from pathlib import Path
 import socket
+import sys
 
 from everett.manager import ConfigManager, ConfigEnvFileEnv, ConfigOSEnv, parse_class
 from everett.component import ConfigOptions, RequiredConfigMixin
@@ -22,6 +23,7 @@ from antenna.health_resource import (
 )
 from antenna.heartbeat import HeartbeatManager
 from antenna.sentry import set_sentry_client, wsgi_capture_exceptions, capture_unhandled_exceptions
+from antenna.util import one_line_exception
 
 
 logger = logging.getLogger(__name__)
@@ -262,5 +264,5 @@ def get_app(config=None):
         return app
 
     except Exception:
-        logger.exception('Unhandled startup exception')
+        logger.error('Unhandled startup exception: %s', one_line_exception(sys.exc_info()))
         raise

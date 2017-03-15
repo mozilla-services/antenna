@@ -3,18 +3,20 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from datetime import datetime
+import sys
 
 from freezegun import freeze_time
 import pytest
 
 from antenna.util import (
+    MaxAttemptsError,
     create_crash_id,
     de_null,
     get_date_from_crash_id,
     get_throttle_from_crash_id,
+    one_line_exception,
     retry,
-    MaxAttemptsError,
-    utc_now
+    utc_now,
 )
 
 
@@ -190,3 +192,18 @@ class Test_retry:
         with pytest.raises(Exception):
             some_thing()
         assert sleeps == [1, 1, 2, 2, 1, 1]
+
+
+def test_one_line_exception():
+    try:
+        1 / 0
+
+    except ZeroDivisionError:
+        exc_no_args = one_line_exception()
+        exc_args = one_line_exception(sys.exc_info())
+
+    assert '\n' not in exc_no_args
+    assert '\n' not in exc_args
+    assert exc_no_args == exc_args
+
+    assert exc_args.endswith('ZeroDivisionError: division by zero')
