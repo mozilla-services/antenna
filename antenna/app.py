@@ -74,6 +74,7 @@ def setup_metrics(metrics_class, config):
 
 
 def log_config(logger, component):
+    """Logs configuration for a given component"""
     for namespace, key, val, opt in component.get_runtime_config():
         if namespace:
             namespaced_key = '%s_%s' % ('_'.join(namespace), key)
@@ -82,7 +83,7 @@ def log_config(logger, component):
 
         namespaced_key = namespaced_key.upper()
 
-        if 'secret' in opt.key.lower():
+        if 'secret' in opt.key.lower() and val:
             msg = '%s=*****' % namespaced_key
         else:
             msg = '%s=%s' % (namespaced_key, val)
