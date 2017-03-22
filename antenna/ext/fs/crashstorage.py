@@ -145,9 +145,9 @@ class FSCrashStorage(CrashStorageBase):
     def load_raw_crash(self, crash_id):
         """Retrieves all the parts of a crash from the file system
 
-        :arg crash_id: The crash id as a string.
+        :arg str crash_id: The crash id as a string.
 
-        :returns: tuple of (raw_crash dict, dumps dict)
+        :returns: tuple of ``(raw_crash dict, dumps dict)``
 
         """
         # Fetch raw_crash.
