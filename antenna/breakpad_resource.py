@@ -230,13 +230,13 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             # the payload size by decompressing it. We save the original value
             # in case we need to debug something later on.
             req.env['ORIG_CONTENT_LENGTH'] = content_length
-            req.env['CONTENT_LENGTH'] = str(len(data))
             content_length = len(data)
+            req.env['CONTENT_LENGTH'] = str(content_length)
 
             data = io.BytesIO(data)
             self.mymetrics.histogram('crash_size.compressed', content_length)
         else:
-            data = io.BytesIO(req.stream.read(req.content_length or 0))
+            data = io.BytesIO(req.stream.read(content_length))
             self.mymetrics.histogram('crash_size.uncompressed', content_length)
 
         fs = cgi.FieldStorage(fp=data, environ=req.env, keep_blank_values=1)
@@ -288,6 +288,20 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         :returns tuple: ``(result, rule_name, percentage)``
 
         """
+        # If the raw_crash has a uuid, then that implies throttling, so return
+        # that.
+        if 'uuid' in raw_crash:
+            crash_id = raw_crash['uuid']
+            if int(crash_id[-7]) in (ACCEPT, DEFER):
+                result = int(crash_id[-7])
+                throttle_rate = 100
+
+                # Save the results in the raw_crash itself
+                raw_crash['legacy_processing'] = result
+                raw_crash['throttle_rate'] = throttle_rate
+
+                return result, 'FROM_CRASHID', throttle_rate
+
         # If we have throttle results for this crash, return those.
         if 'legacy_processing' in raw_crash and 'throttle_rate' in raw_crash:
             try:
@@ -305,6 +319,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
                 # values is bad and we should ignore it and move forward.
                 self.mymetrics.batch_incr('throttle.bad_throttle_values')
 
+        # If we have a Throttleable=0, then return that.
         if raw_crash.get('Throttleable', None) == '0':
             # If the raw crash has ``Throttleable=0``, then we accept the
             # crash.
@@ -345,12 +360,10 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         raw_crash['submitted_timestamp'] = current_timestamp.isoformat()
         raw_crash['timestamp'] = start_time
 
-        # We throttle first because throttling affects generation of new crash
-        # ids and we want to do all our logging with the correct crash id to
-        # make it easier to follow crashes through Antenna.
+        # First throttle the crash which gives us the information we need
+        # to generate a crash id.
         throttle_result, rule_name, percentage = self.get_throttle_result(raw_crash)
 
-        # Determine the uuid (aka crashid)
         if 'uuid' in raw_crash:
             # FIXME(willkg): This means the uuid is essentially user-provided.
             # We should sanitize it before proceeding.
