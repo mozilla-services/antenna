@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import cgi
-from collections import namedtuple
+from collections import deque, namedtuple
 import hashlib
 import io
 import logging
@@ -38,32 +38,6 @@ mymetrics = metrics.get_metrics(__name__)
 
 
 CrashReport = namedtuple('CrashReport', ['raw_crash', 'dumps', 'crash_id'])
-
-
-class SaveQueue:
-    """Simple FIFO queue that's not thread-safe
-
-    This is mostly to get a cheap convenient API.
-
-    """
-    def __init__(self):
-        self._queue = []
-
-    def __bool__(self):
-        return bool(len(self))
-
-    def __len__(self):
-        return len(self._queue)
-
-    def add(self, item):
-        """Adds an item to the end of the queue"""
-        self._queue.append(item)
-
-    def next(self):
-        """Returns the next item or None"""
-        if self._queue:
-            return self._queue.pop(0)
-        return None
 
 
 def positive_int(val):
@@ -137,7 +111,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         self.crashmover_pool = Pool(size=self.config('concurrent_crashmovers'))
 
         # Queue for crashmover of crashes to save
-        self.crashmover_save_queue = SaveQueue()
+        self.crashmover_save_queue = deque()
 
         self.mymetrics = metrics.get_metrics(self)
 
@@ -404,13 +378,9 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         else:
             # If the result is not REJECT, then save it and return the CrashID
             # to the client
-            self.queue_crash_to_save(CrashReport(raw_crash, dumps, crash_id))
+            self.crashmover_save_queue.append(CrashReport(raw_crash, dumps, crash_id))
             self.hb_run_crashmover()
             resp.body = 'CrashID=%s%s\n' % (self.config('dump_id_prefix'), crash_id)
-
-    def queue_crash_to_save(self, crash_report):
-        """Adds a crash report to the save queue"""
-        self.crashmover_save_queue.add(crash_report)
 
     def hb_run_crashmover(self):
         """Checks to see if it should spawn a crashmover and does if appropriate"""
@@ -432,8 +402,8 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         """
         # Process crashes until the queue is empty
-        while len(self.crashmover_save_queue) > 0:
-            crash_report = self.crashmover_save_queue.next()
+        while self.crashmover_save_queue:
+            crash_report = self.crashmover_save_queue.popleft()
             try:
                 with capture_unhandled_exceptions():
                     self.crashmover_save(crash_report)
@@ -441,7 +411,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             except Exception:
                 logger.exception('Exception when processing save queue')
                 self.mymetrics.batch_incr('save_crash_exception.count')
-                self.queue_crash_to_save(crash_report)
+                self.crashmover_save_queue.append(crash_report)
 
     def crashmover_save(self, crash_report):
         """Saves a crash to storage
