@@ -13,6 +13,7 @@ import zlib
 from everett.component import ConfigOptions, RequiredConfigMixin
 from everett.manager import parse_class
 import falcon
+from falcon.request_helpers import BoundedStream
 from gevent.pool import Pool
 
 from antenna import metrics
@@ -236,7 +237,19 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             data = io.BytesIO(data)
             self.mymetrics.histogram('crash_size.compressed', content_length)
         else:
-            data = io.BytesIO(req.stream.read(content_length))
+            # NOTE(willkg): At this point, req.stream is either a
+            # falcon.request_helper.BoundedStream (in tests) or a
+            # gunicorn.http.body.Body (in production).
+            #
+            # FieldStorage doesn't work with BoundedStream so we pluck out the
+            # internal stream from that which works fine.
+            #
+            # FIXME(willkg): why don't tests work with BoundedStream?
+            if isinstance(req.stream, BoundedStream):
+                data = req.stream.stream
+            else:
+                data = req.stream
+
             self.mymetrics.histogram('crash_size.uncompressed', content_length)
 
         fs = cgi.FieldStorage(fp=data, environ=req.env, keep_blank_values=1)
