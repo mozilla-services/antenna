@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import cgi
-from collections import namedtuple
+from collections import deque, namedtuple
 import hashlib
 import io
 import logging
@@ -13,6 +13,7 @@ import zlib
 from everett.component import ConfigOptions, RequiredConfigMixin
 from everett.manager import parse_class
 import falcon
+from falcon.request_helpers import BoundedStream
 from gevent.pool import Pool
 
 from antenna import metrics
@@ -37,32 +38,6 @@ mymetrics = metrics.get_metrics(__name__)
 
 
 CrashReport = namedtuple('CrashReport', ['raw_crash', 'dumps', 'crash_id'])
-
-
-class SaveQueue:
-    """Simple FIFO queue that's not thread-safe
-
-    This is mostly to get a cheap convenient API.
-
-    """
-    def __init__(self):
-        self._queue = []
-
-    def __bool__(self):
-        return bool(len(self))
-
-    def __len__(self):
-        return len(self._queue)
-
-    def add(self, item):
-        """Adds an item to the end of the queue"""
-        self._queue.append(item)
-
-    def next(self):
-        """Returns the next item or None"""
-        if self._queue:
-            return self._queue.pop(0)
-        return None
 
 
 def positive_int(val):
@@ -136,7 +111,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         self.crashmover_pool = Pool(size=self.config('concurrent_crashmovers'))
 
         # Queue for crashmover of crashes to save
-        self.crashmover_save_queue = SaveQueue()
+        self.crashmover_save_queue = deque()
 
         self.mymetrics = metrics.get_metrics(self)
 
@@ -230,13 +205,25 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             # the payload size by decompressing it. We save the original value
             # in case we need to debug something later on.
             req.env['ORIG_CONTENT_LENGTH'] = content_length
-            req.env['CONTENT_LENGTH'] = str(len(data))
             content_length = len(data)
+            req.env['CONTENT_LENGTH'] = str(content_length)
 
             data = io.BytesIO(data)
             self.mymetrics.histogram('crash_size.compressed', content_length)
         else:
-            data = io.BytesIO(req.stream.read(req.content_length or 0))
+            # NOTE(willkg): At this point, req.stream is either a
+            # falcon.request_helper.BoundedStream (in tests) or a
+            # gunicorn.http.body.Body (in production).
+            #
+            # FieldStorage doesn't work with BoundedStream so we pluck out the
+            # internal stream from that which works fine.
+            #
+            # FIXME(willkg): why don't tests work with BoundedStream?
+            if isinstance(req.stream, BoundedStream):
+                data = req.stream.stream
+            else:
+                data = req.stream
+
             self.mymetrics.histogram('crash_size.uncompressed', content_length)
 
         fs = cgi.FieldStorage(fp=data, environ=req.env, keep_blank_values=1)
@@ -288,6 +275,20 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         :returns tuple: ``(result, rule_name, percentage)``
 
         """
+        # If the raw_crash has a uuid, then that implies throttling, so return
+        # that.
+        if 'uuid' in raw_crash:
+            crash_id = raw_crash['uuid']
+            if int(crash_id[-7]) in (ACCEPT, DEFER):
+                result = int(crash_id[-7])
+                throttle_rate = 100
+
+                # Save the results in the raw_crash itself
+                raw_crash['legacy_processing'] = result
+                raw_crash['throttle_rate'] = throttle_rate
+
+                return result, 'FROM_CRASHID', throttle_rate
+
         # If we have throttle results for this crash, return those.
         if 'legacy_processing' in raw_crash and 'throttle_rate' in raw_crash:
             try:
@@ -305,6 +306,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
                 # values is bad and we should ignore it and move forward.
                 self.mymetrics.batch_incr('throttle.bad_throttle_values')
 
+        # If we have a Throttleable=0, then return that.
         if raw_crash.get('Throttleable', None) == '0':
             # If the raw crash has ``Throttleable=0``, then we accept the
             # crash.
@@ -345,12 +347,10 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         raw_crash['submitted_timestamp'] = current_timestamp.isoformat()
         raw_crash['timestamp'] = start_time
 
-        # We throttle first because throttling affects generation of new crash
-        # ids and we want to do all our logging with the correct crash id to
-        # make it easier to follow crashes through Antenna.
+        # First throttle the crash which gives us the information we need
+        # to generate a crash id.
         throttle_result, rule_name, percentage = self.get_throttle_result(raw_crash)
 
-        # Determine the uuid (aka crashid)
         if 'uuid' in raw_crash:
             # FIXME(willkg): This means the uuid is essentially user-provided.
             # We should sanitize it before proceeding.
@@ -378,13 +378,9 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         else:
             # If the result is not REJECT, then save it and return the CrashID
             # to the client
-            self.queue_crash_to_save(CrashReport(raw_crash, dumps, crash_id))
+            self.crashmover_save_queue.append(CrashReport(raw_crash, dumps, crash_id))
             self.hb_run_crashmover()
             resp.body = 'CrashID=%s%s\n' % (self.config('dump_id_prefix'), crash_id)
-
-    def queue_crash_to_save(self, crash_report):
-        """Adds a crash report to the save queue"""
-        self.crashmover_save_queue.add(crash_report)
 
     def hb_run_crashmover(self):
         """Checks to see if it should spawn a crashmover and does if appropriate"""
@@ -406,8 +402,8 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         """
         # Process crashes until the queue is empty
-        while len(self.crashmover_save_queue) > 0:
-            crash_report = self.crashmover_save_queue.next()
+        while self.crashmover_save_queue:
+            crash_report = self.crashmover_save_queue.popleft()
             try:
                 with capture_unhandled_exceptions():
                     self.crashmover_save(crash_report)
@@ -415,7 +411,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             except Exception:
                 logger.exception('Exception when processing save queue')
                 self.mymetrics.batch_incr('save_crash_exception.count')
-                self.queue_crash_to_save(crash_report)
+                self.crashmover_save_queue.append(crash_report)
 
     def crashmover_save(self, crash_report):
         """Saves a crash to storage

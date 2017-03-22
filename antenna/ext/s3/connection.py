@@ -195,7 +195,7 @@ class S3Connection(RequiredConfigMixin):
 
         :arg str path: the path to save to
 
-        :arg str data: the data to save
+        :arg bytes data: the data to save
 
         :raises botocore.exceptions.ClientError: connection issues, permissions
             issues, bucket is missing, etc.

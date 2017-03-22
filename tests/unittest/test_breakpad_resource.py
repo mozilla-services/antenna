@@ -136,7 +136,9 @@ class TestBreakpadSubmitterResource:
         assert result.content.decode('utf-8') == 'CrashID=bp-%s\n' % crash_id
 
     def test_legacy_processing(self, client, loggingmock):
+        # NOTE(willkg): This encodes throttle result which is 0 (ACCEPT)
         crash_id = 'de1bb258-cbbf-4589-a673-34f800160918'
+
         data, headers = multipart_encode({
             'uuid': crash_id,
             'ProductName': 'Test',
@@ -158,7 +160,7 @@ class TestBreakpadSubmitterResource:
             assert lm.has_record(
                 name='antenna.breakpad_resource',
                 levelname='INFO',
-                msg_contains='%s: matched by ALREADY_THROTTLED; returned ACCEPT' % crash_id
+                msg_contains='%s: matched by FROM_CRASHID; returned ACCEPT' % crash_id
             )
 
     @pytest.mark.parametrize('legacy,throttle_rate', [
@@ -174,9 +176,7 @@ class TestBreakpadSubmitterResource:
         ('0', '1000')
     ])
     def test_legacy_processing_bad_values(self, legacy, throttle_rate, client, loggingmock):
-        crash_id = 'de1bb258-cbbf-4589-a673-34f800160918'
         data, headers = multipart_encode({
-            'uuid': crash_id,
             'ProductName': 'Test',
             'Version': '1.0',
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234')),
@@ -199,13 +199,11 @@ class TestBreakpadSubmitterResource:
             assert lm.has_record(
                 name='antenna.breakpad_resource',
                 levelname='INFO',
-                msg_contains='%s: matched by is_thunderbird_seamonkey; returned ACCEPT' % crash_id
+                msg_contains='matched by is_thunderbird_seamonkey; returned ACCEPT'
             )
 
     def test_throttleable(self, client, loggingmock):
-        crash_id = 'de1bb258-cbbf-4589-a673-34f800160918'
         data, headers = multipart_encode({
-            'uuid': crash_id,
             'ProductName': 'Test',
             'Version': '1.0',
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234')),
@@ -225,7 +223,7 @@ class TestBreakpadSubmitterResource:
             assert lm.has_record(
                 name='antenna.breakpad_resource',
                 levelname='INFO',
-                msg_contains='%s: matched by THROTTLEABLE_0; returned ACCEPT' % crash_id
+                msg_contains='matched by THROTTLEABLE_0; returned ACCEPT'
             )
 
     def test_queuing(self, client):
