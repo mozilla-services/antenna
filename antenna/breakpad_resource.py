@@ -143,10 +143,11 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         self.mymetrics.gauge('save_queue_size', len(self.crashmover_save_queue))
 
     def has_work_to_do(self):
-        logger.info('work left to do: %s' % len(self.crashmover_save_queue))
+        work_to_do = len(self.crashmover_save_queue) + len(self.crashmover_pool)
+        logger.info('work left to do: %s' % work_to_do)
         # Indicates whether or not we're sitting on crashes to save--this helps
-        # keep Antenna alive until we're done with our queue
-        return len(self.crashmover_save_queue)
+        # keep Antenna alive until we're done saving crashes
+        return bool(work_to_do)
 
     def extract_payload(self, req):
         """Parses the HTTP POST payload
