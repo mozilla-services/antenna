@@ -30,8 +30,10 @@ logger = logging.getLogger(__name__)
 mymetrics = metrics.get_metrics(__name__)
 
 
-def setup_logging(logging_level):
+def setup_logging(app_config):
     """Initializes Python logging configuration"""
+    host_id = app_config('host_id') or socket.gethostname()
+
     dc = {
         'version': 1,
         'disable_existing_loggers': True,
@@ -39,7 +41,7 @@ def setup_logging(logging_level):
             'development': {
                 'format': (
                     '[%(asctime)s] [ANTENNA ' +
-                    socket.gethostname() +
+                    host_id +
                     ' %(process)d] [%(levelname)s] %(name)s: %(message)s'
                 ),
                 'datefmt': '%Y-%m-%d %H:%M:%S %z',
@@ -60,7 +62,7 @@ def setup_logging(logging_level):
             'antenna': {
                 'propagate': False,
                 'handlers': ['console'],
-                'level': logging_level,
+                'level': app_config('logging_level'),
             },
         },
     }
@@ -151,6 +153,16 @@ class AppConfig(RequiredConfigMixin):
             'will be used instead.'
         )
     )
+    required_config.add_option(
+        'host_id',
+        default='',
+        doc=(
+            'Identifier for the host that is running Antenna. This identifies this Antenna '
+            'instance in the logs and makes it easier to correlate Antenna logs with '
+            'other data. For example, the value could be a public hostname, an instance id, '
+            'or something like that.'
+        )
+    )
 
     def __init__(self, config):
         self.config_manager = config
@@ -239,7 +251,7 @@ def get_app(config=None):
         set_sentry_client(app_config('secret_sentry_dsn'))
 
         with capture_unhandled_exceptions():
-            setup_logging(app_config('logging_level'))
+            setup_logging(app_config)
             setup_metrics(app_config('metrics_class'), config)
 
             log_config(logger, app_config)

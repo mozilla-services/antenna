@@ -28,7 +28,10 @@ from testlib.s3mock import S3Mock  # noqa
 
 def pytest_runtest_setup():
     # Make sure we set up logging and metrics to sane default values.
-    setup_logging('DEBUG')
+    setup_logging(ConfigManager.from_dict({
+        'HOST_ID': '',
+        'LOGGING_LEVEL': 'DEBUG',
+    }))
     setup_metrics(metrics.LoggingMetrics, ConfigManager.from_dict({}))
 
     # Wipe any registered heartbeat functions
