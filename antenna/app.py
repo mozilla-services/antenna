@@ -160,7 +160,8 @@ class AppConfig(RequiredConfigMixin):
             'Identifier for the host that is running Antenna. This identifies this Antenna '
             'instance in the logs and makes it easier to correlate Antenna logs with '
             'other data. For example, the value could be a public hostname, an instance id, '
-            'or something like that.'
+            'or something like that. If you do not set this, then socket.gethostname() is '
+            'used instead.'
         )
     )
 
