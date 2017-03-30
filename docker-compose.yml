@@ -41,7 +41,7 @@ services:
       - "8000:8000"
     command: ./bin/run_web.sh
     links:
-      - fakes3
+      - moto-s3
       - statsd
 
   # System test container
@@ -55,14 +55,13 @@ services:
     links:
       - web
 
-  # fakes3 service
-  # https://hub.docker.com/r/lphoward/fake-s3/
-  fakes3:
-    image: lphoward/fake-s3
+  moto-s3:
+    build:
+      context: .
+      dockerfile: Dockerfile.motos3
+    command: s3 -H 0.0.0.0 -p5000
     ports:
-      - "4569:4569"
-    volumes:
-      - ./fakes3_root:/fakes3_root
+      - "5000:5000"
 
   statsd:
     # https://hub.docker.com/r/kamon/grafana_graphite/

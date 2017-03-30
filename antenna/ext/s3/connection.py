@@ -172,7 +172,7 @@ class S3Connection(RequiredConfigMixin):
         self.client.head_bucket(Bucket=self.bucket)
 
     def _create_bucket(self):
-        # NOTE(willkg): Don't use this except with fakes3 and dev environments.
+        # NOTE(willkg): Don't use this except with a fake s3 and dev environments.
         self.client.create_bucket(Bucket=self.bucket)
 
     def check_health(self, state):

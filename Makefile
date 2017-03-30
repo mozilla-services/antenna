@@ -54,7 +54,6 @@ clean:
 
 	# state files
 	-rm .docker-build
-	ANTENNA_ENV=empty.env ${DC} run --entrypoint "/bin/bash -c 'rm -rf /fakes3_root/*'" fakes3
 
 lint: .docker-build
 	ANTENNA_ENV=empty.env ${DC} run base flake8 --statistics antenna tests/unittest/
