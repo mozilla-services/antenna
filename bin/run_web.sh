@@ -17,6 +17,12 @@
 # If you're having problems getting the app to start, add ``--preload`` to the
 # args list.
 
+set -e
+
+# First, create the bucket if it doesn't already exist
+./bin/create_s3_bucket.py
+
+# Launch the web-app
 gunicorn \
     --reload \
     --bind=0.0.0.0:8000 \
