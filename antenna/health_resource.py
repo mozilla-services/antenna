@@ -34,7 +34,7 @@ class VersionResource:
         self.basedir = basedir
 
     def on_get(self, req, resp):
-        version_info = get_version_info(self.basedir)
+        version_info = json.dumps(get_version_info(self.basedir))
 
         resp.content_type = 'application/json; charset=utf-8'
         resp.status = falcon.HTTP_200
