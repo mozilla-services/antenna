@@ -11,6 +11,7 @@ from everett.component import RequiredConfigMixin
 import falcon
 
 from antenna import metrics
+from antenna.util import get_version_info
 
 
 logger = logging.getLogger(__name__)
@@ -34,17 +35,11 @@ class VersionResource:
         self.basedir = basedir
 
     def on_get(self, req, resp):
-        try:
-            path = Path(self.basedir) / 'version.json'
-            with open(str(path), 'r') as fp:
-                commit_info = fp.read().strip()
-        except (IOError, OSError):
-            logging.error('Exception thrown when retrieving version.json', exc_info=True)
-            commit_info = '{}'
+        version_info = get_version_info(self.basedir)
 
         resp.content_type = 'application/json; charset=utf-8'
         resp.status = falcon.HTTP_200
-        resp.body = commit_info
+        resp.body = version_info
 
 
 class LBHeartbeatResource:

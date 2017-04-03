@@ -5,12 +5,17 @@
 import datetime
 from functools import wraps
 import json
-import time
-import uuid
+import logging
+from pathlib import Path
 import sys
+import time
 import traceback
+import uuid
 
 import isodate
+
+
+logger = logging.getLogger(__name__)
 
 
 UTC = isodate.UTC
@@ -38,10 +43,29 @@ def utc_now():
     return datetime.datetime.now(UTC)
 
 
+def get_version_info(basedir):
+    """Given a basedir, retrieves version information for this deploy
+
+    :arg str basedir: the path of the base directory where ``version.json``
+        exists
+
+    :returns: version info as a dict or an empty dict
+
+    """
+    try:
+        path = Path(basedir) / 'version.json'
+        with open(str(path), 'r') as fp:
+            commit_info = fp.read().strip()
+    except (IOError, OSError):
+        logger.error('Exception thrown when retrieving version.json', exc_info=True)
+        commit_info = '{}'
+    return commit_info
+
+
 def de_null(value):
     """Remove nulls from bytes and str values
 
-    :arg value: The str or bytes to remove nulls from
+    :arg str/bytes value: The str or bytes to remove nulls from
 
     :returns: str or bytes without nulls
 

@@ -249,7 +249,7 @@ def get_app(config=None):
         app_config = AppConfig(config)
 
         # Set a Sentry client if we're so configured
-        set_sentry_client(app_config('secret_sentry_dsn'))
+        set_sentry_client(app_config('secret_sentry_dsn'), app_config('basedir'))
 
         with capture_unhandled_exceptions():
             setup_logging(app_config)
