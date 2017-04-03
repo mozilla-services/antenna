@@ -14,6 +14,8 @@ import sys
 from raven import Client
 from raven.middleware import Sentry
 
+from antenna.util import get_version_info
+
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +23,7 @@ logger = logging.getLogger(__name__)
 _sentry_client = None
 
 
-def set_sentry_client(sentry_dsn):
+def set_sentry_client(sentry_dsn, basedir):
     """Sets a Sentry client using a given sentry_dsn
 
     To clear the client, pass in something falsey like ``''`` or ``None``.
@@ -29,7 +31,14 @@ def set_sentry_client(sentry_dsn):
     """
     global _sentry_client
     if sentry_dsn:
-        _sentry_client = Client(dsn=sentry_dsn, include_paths=['antenna'])
+        version_info = get_version_info(basedir)
+        commit = version_info.get('commit')[:8]
+
+        _sentry_client = Client(
+            dsn=sentry_dsn,
+            include_paths=['antenna'],
+            tags={'commit': commit}
+        )
         logger.info('Set up sentry client')
     else:
         _sentry_client = None
