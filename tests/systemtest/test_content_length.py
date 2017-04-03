@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from http.client import HTTPConnection, HTTPSConnection
+from http.client import HTTPConnection, HTTPSConnection, RemoteDisconnected
 import logging
 import os
 import urllib
@@ -93,12 +93,20 @@ class TestContentLength:
         # Add wrong content-length
         headers['Content-Length'] = '1000'
 
-        resp = http_post(posturl, headers, payload)
+        try:
+            resp = http_post(posturl, headers, payload)
+            status_code = resp.getcode()
+        except RemoteDisconnected as exc:
+            # If there's an ELB and nginx times out waiting for the rest of the
+            # request, then we get an HTTP 504. If there's no ELB (we're
+            # connecting directly to nginx), then nginx just drops the
+            # connection and we get back a RemoteDisconnected error.
+            status_code = 504
 
         # Verify we get an HTTP 504 because something timed out waiting for the
         # HTTP client (us) to send the rest of the data which is expected
         # because we sent a bad content-length
-        assert resp.getcode() == 504
+        assert status_code == 504
 
     def test_content_length_non_int(self, posturl, crash_generator):
         """Post a crash with a content-length that isn't an int"""
