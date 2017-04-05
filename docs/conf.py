@@ -34,6 +34,7 @@ sys.path.insert(0, str(BASEDIR))
 extensions = [
     'sphinx.ext.autodoc',
     'everett.sphinx_autoconfig',
+    'sphinx.ext.graphviz',
 ]
 
 # Add any paths that contain templates here, relative to this directory.

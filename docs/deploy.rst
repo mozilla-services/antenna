@@ -2,11 +2,21 @@
 Putting Antenna in production
 =============================
 
-Antenna is a WSGI application that runs with Gunicorn.
+.. contents::
 
-We use nginx in front of that, but you might be able to use other web servers.
 
-Make sure to use HTTPS--don't send your users' crash reports over HTTP.
+High-level things
+=================
+
+Antenna is a WSGI application that uses `Gunicorn <http://gunicorn.org/>`_ as
+the WSGI server.
+
+We use `nginx <http://nginx.org/>`_ in front of that, but you might be able to
+use other web servers.
+
+.. Note::
+
+   Make sure to use HTTPS--don't send your users' crash reports over HTTP.
 
 
 Gunicorn configuration
@@ -110,3 +120,91 @@ For Socorro, our median incoming crash is 400k and our typical load is between
 
 Antenna on two x4.large nodes can handle 1,500 crashes/min without a problem and
 without scaling up.
+
+
+Troubleshooting
+===============
+
+Antenna doesn't start up
+------------------------
+
+Antenna won't start up if it's configured wrong.
+
+Things to check:
+
+1. If you're using Sentry and it's set up correctly, then Antenna will send
+   startup errors to Sentry and you can see it there.
+
+2. Check the logs for startup errors. They'll have the string "Unhandled startup
+   exception".
+
+3. Is the configuration correct?
+
+
+AWS S3 bucket permission issues
+-------------------------------
+
+At startup, Antenna will try to Head the AWS S3 bucket and if it fails, will
+refuse to start up. It does this so that it doesn't start up, then get a crash
+and then fail to submit the crash due to permission issues. At that point, you'd
+have lost the crash.
+
+If you're seeing errors like::
+
+    [ERROR] antenna.app: Unhandled startup exception: ... botocore.exceptions.ClientError:
+    An error occurred (403) when calling the HeadBucket operation: Forbidden
+
+it means that the credentials that Antenna is using don't have the right
+permissions to the AWS S3 bucket.
+
+Things to check:
+
+1. Check the bucket and region that Antenna is configured with. It'll be in the
+   logs when Antenna starts up.
+
+2. Check that Antenna has the right AWS credentials.
+
+3. Try using the credentials that Antenna is using to access the bucket.
+
+
+Logs are getting lost / StatsD data is getting lost
+---------------------------------------------------
+
+Depending on how you're collecting logs and StatsD data, it's possible that you
+might lose this data if Antenna is under so much load that it's saturating the
+network interface.
+
+You might see evidence of this by seeing lines in the logs saying a crash was
+saved, but no line indicating it was received. Or vice versa.
+
+You might see evidence of this in StatsD when incoming crashes and saved crashes
+off by a large number.
+
+Things to check:
+
+1. What's the network out amount for this node? Is it too low?
+
+2. What happens if you increase the capacity for the node? Or if the node is in
+   a cluster, add more nodes to the cluster?
+
+
+The ``save_queue_size > 0`` and climbing
+----------------------------------------
+
+This means Antenna is having trouble keeping up with incoming crashes.
+
+Things to check:
+
+1. Increase or decrease the number in the ``concurrent_crashmovers``
+   configuration variable.
+
+   Too many will cause a single crash to take longer to save.
+
+   Too few will reduce the efficiency regarding parallelizing around network I/O
+   slowness.
+
+   If you've already tuned this configuration variable, skip this step.
+
+2. Increase the number of nodes in the cluster to better share the load.
+
+3. Increase the node capacity so that it has more network out bandwidth.

@@ -7,7 +7,8 @@ USER root
 # and also vim for easier debugging/editing in the container
 RUN apt-get install -y \
     build-essential \
-    vim
+    vim \
+    graphviz
 
 # Give the root a password for easier development
 RUN echo "root:docker" | chpasswd

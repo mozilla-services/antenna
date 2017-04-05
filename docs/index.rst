@@ -15,6 +15,7 @@ User docs:
 
    configuration
    deploy
+   architecture
    breakpad_reporting
 
 
