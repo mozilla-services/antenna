@@ -20,6 +20,16 @@ PEP8 is nice. To lint your code, do:
 If you hit issues, use ``# noqa``.
 
 
+Docker
+======
+
+Everything runs in a Docker container. Thus Antenna requires fewer things to get
+started and you're guaranteed to have the same setup as everyone else and it
+solves some other problems, too.
+
+If you're not familiar with Docker and docker-compose, it's worth reading up on.
+
+
 Documentation
 =============
 
