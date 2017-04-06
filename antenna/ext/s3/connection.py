@@ -49,7 +49,7 @@ class S3Connection(RequiredConfigMixin):
 
     When configuring this connection object, you can do one of two things:
 
-    1. provide ``ACCESS_KEY`` and ``SECRET_ACCESS_KEY`` in the configuration
+    1. provide ``ACCESS_KEY`` and ``SECRET_ACCESS_KEY`` in the configuration, OR
     2. use one of the other methods described in the boto3 docs
        http://boto3.readthedocs.io/en/latest/guide/configuration.html#configuring-credentials
 
@@ -62,29 +62,34 @@ class S3Connection(RequiredConfigMixin):
 
     .. Warning::
 
-       This does not verify that it has write permissions to the bucket. Test
-       your configuration by sending a test crash and watch your logs at
-       startup!
-
-       Permission errors are a retryable error, so this component will keep
-       retrying forever.
+       This does not verify that it has write permissions to the bucket. Make
+       sure to test your configuration by sending a test crash and watch your
+       logs at startup!
 
 
-    When saving crashes, this connection will retry forever.
+    When saving crashes, this connection will retry saving several times. Then
+    give up. The crashmover coroutine will put the crash back in the queue to
+    retry later. Crashes are never thrown out.
 
     """
     required_config = ConfigOptions()
     required_config.add_option(
         'access_key',
         default='',
-        alternate_keys=['root:s3_access_key'],
-        doc='AWS S3 access key'
+        alternate_keys=['root:aws_access_key_id'],
+        doc=(
+            'AWS S3 access key. You can also specify AWS_ACCESS_KEY_ID which is '
+            'the env var used by boto3.'
+        )
     )
     required_config.add_option(
         'secret_access_key',
         default='',
-        alternate_keys=['root:s3_secret_access_key'],
-        doc='AWS S3 secret access key'
+        alternate_keys=['root:aws_secret_access_key'],
+        doc=(
+            'AWS S3 secret access key. You can also specify AWS_SECRET_ACCESS_KEY '
+            'which is the env var used by boto3.'
+        )
     )
     required_config.add_option(
         'region',
