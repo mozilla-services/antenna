@@ -115,9 +115,9 @@ s3transfer==0.1.10 \
 
 
 # Development requirements (tests, docs, linting, etc)
-alabaster==0.7.9 \
-    --hash=sha256:d3e64a74919373d6d4d1d36bd717206584cb64cbb0532dfce3bc2081cba6817b \
-    --hash=sha256:47afd43b08a4ecaa45e3496e139a193ce364571e7e10c6a87ca1a4c57eb7ea08
+alabaster==0.7.10 \
+    --hash=sha256:2eef172f44e8d301d25aff8068fddd65f767a3f04b5f15b0f4922f113aa1c732 \
+    --hash=sha256:37cdcb9e9954ed60912ebc1ca12a9d12178c26637abdf124e3cde2341c257fe0
 argh==0.26.2 \
     --hash=sha256:a9b3aaa1904eeb78e32394cd46c6f37ac0fb4af6dc488daa58971bdc7d7fcaf3 \
     --hash=sha256:e9535b8c84dc9571a48999094fda7f33e63c3f1b74f3e5f3ac0105a58405bb65

@@ -26,9 +26,9 @@ Project docs:
    dev
    spec_v1
 
+
 Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`

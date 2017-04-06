@@ -27,7 +27,6 @@ help:
 build:
 	ANTENNA_ENV=empty.env ${DC} build deploy-base
 	ANTENNA_ENV=empty.env ${DC} build dev-base
-	ANTENNA_ENV=empty.env ${DC} build base
 	touch .docker-build
 
 run: .docker-build
