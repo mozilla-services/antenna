@@ -36,7 +36,7 @@ sys.path.insert(0, str(BASEDIR))
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'everett.sphinx_autoconfig',
+    'everett.sphinxext',
     'sphinx.ext.graphviz',
 ]
 

@@ -35,7 +35,7 @@ Application
 
 First, you need to configure the application-scoped variables.
 
-.. autoconfig:: antenna.app.AppConfig
+.. autocomponent:: antenna.app.AppConfig
    :hide-classname:
    :case: upper
 
@@ -48,7 +48,7 @@ Metrics
 LoggingMetrics
 --------------
 
-.. autoconfig:: antenna.metrics.LoggingMetrics
+.. autocomponent:: antenna.metrics.LoggingMetrics
    :show-docstring:
    :case: upper
 
@@ -56,7 +56,7 @@ LoggingMetrics
 DogStatsd metrics
 -----------------
 
-.. autoconfig:: antenna.metrics.DogStatsdMetrics
+.. autocomponent:: antenna.metrics.DogStatsdMetrics
    :show-docstring:
    :case: upper
 
@@ -64,7 +64,7 @@ DogStatsd metrics
 Breakpad crash resource
 =======================
 
-.. autoconfig:: antenna.breakpad_resource.BreakpadSubmitterResource
+.. autocomponent:: antenna.breakpad_resource.BreakpadSubmitterResource
    :show-docstring:
    :case: upper
 
@@ -72,7 +72,7 @@ Breakpad crash resource
 Throttler
 =========
 
-.. autoconfig:: antenna.throttler.Throttler
+.. autocomponent:: antenna.throttler.Throttler
    :show-docstring:
    :case: upper
 
@@ -89,7 +89,7 @@ NoOpCrashStorage
 The ``NoOpCrashStorage`` class is helpful for debugging, but otherwise shouldn't
 be used.
 
-.. autoconfig:: antenna.ext.crashstorage_base.NoOpCrashStorage
+.. autocomponent:: antenna.ext.crashstorage_base.NoOpCrashStorage
    :show-docstring:
    :case: upper
 
@@ -101,7 +101,7 @@ The ``FSCrashStorage`` class will save crash data to disk. If you choose this,
 you'll want to think about what happens to the crash after Antenna has saved it
 and implement that.
 
-.. autoconfig:: antenna.ext.fs.crashstorage.FSCrashStorage
+.. autocomponent:: antenna.ext.fs.crashstorage.FSCrashStorage
    :show-docstring:
    :case: upper
    :namespace: crashstorage
@@ -121,7 +121,7 @@ The ``S3CrashStorage`` class will save crash data to AWS S3. You might be able
 to use this to save to other S3-like systems, but that's not tested or
 supported.
 
-.. autoconfig:: antenna.ext.s3.connection.S3Connection
+.. autocomponent:: antenna.ext.s3.connection.S3Connection
    :show-docstring:
    :case: upper
    :namespace: crashstorage
@@ -137,7 +137,7 @@ supported.
        CRASHSTORAGE_SECRET_ACCESS_KEY=somethingsomething
 
 
-.. autoconfig:: antenna.ext.s3.crashstorage.S3CrashStorage
+.. autocomponent:: antenna.ext.s3.crashstorage.S3CrashStorage
    :show-docstring:
    :case: upper
    :namespace: crashstorage
