@@ -27,7 +27,6 @@ from antenna.util import one_line_exception
 
 
 logger = logging.getLogger(__name__)
-mymetrics = metrics.get_metrics(__name__)
 
 
 def setup_logging(app_config):
