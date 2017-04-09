@@ -185,7 +185,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         # Decompress payload if it's compressed
         if req.env.get('HTTP_CONTENT_ENCODING') == 'gzip':
-            mymetrics.batch_incr('gzipped_crash')
+            mymetrics.incr('gzipped_crash')
 
             # If the content is gzipped, we pull it out and decompress it. We
             # have to do that here because nginx doesn't have a good way to do
@@ -197,7 +197,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
                 # This indicates this isn't a valid compressed stream. Given
                 # that the HTTP request insists it is, we're just going to
                 # assume it's junk and not try to process any further.
-                mymetrics.batch_incr('bad_gzipped_crash')
+                mymetrics.incr('bad_gzipped_crash')
                 return {}, {}
 
             # Stomp on the content length to correct it because we've changed
@@ -303,13 +303,13 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             except ValueError:
                 # If we've gotten a ValueError, it means one or both of the
                 # values is bad and we should ignore it and move forward.
-                mymetrics.batch_incr('throttle.bad_throttle_values')
+                mymetrics.incr('throttle.bad_throttle_values')
 
         # If we have a Throttleable=0, then return that.
         if raw_crash.get('Throttleable', None) == '0':
             # If the raw crash has ``Throttleable=0``, then we accept the
             # crash.
-            mymetrics.batch_incr('throttleable_0')
+            mymetrics.incr('throttleable_0')
             result = ACCEPT
             rule_name = 'THROTTLEABLE_0'
             throttle_rate = 100
@@ -340,7 +340,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         raw_crash, dumps = self.extract_payload(req)
 
-        mymetrics.batch_incr('incoming_crash')
+        mymetrics.incr('incoming_crash')
 
         current_timestamp = utc_now()
         raw_crash['submitted_timestamp'] = current_timestamp.isoformat()
@@ -368,7 +368,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         # Log the throttle result
         logger.info('%s: matched by %s; returned %s', crash_id, rule_name,
                     RESULT_TO_TEXT[throttle_result])
-        mymetrics.batch_incr(('throttle.%s' % RESULT_TO_TEXT[throttle_result]).lower())
+        mymetrics.incr(('throttle.%s' % RESULT_TO_TEXT[throttle_result]).lower())
 
         if throttle_result is REJECT:
             # If the result is REJECT, then discard it
@@ -409,7 +409,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
             except Exception:
                 logger.exception('Exception when processing save queue')
-                mymetrics.batch_incr('save_crash_exception.count')
+                mymetrics.incr('save_crash_exception.count')
                 self.crashmover_save_queue.append(crash_report)
 
     def crashmover_save(self, crash_report):
@@ -439,7 +439,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         delta = (time.time() - raw_crash['timestamp']) * 1000
         mymetrics.timing('crash_handling.time', delta)
 
-        mymetrics.batch_incr('save_crash.count')
+        mymetrics.incr('save_crash.count')
         logger.info('%s saved', crash_id)
 
     def join_pool(self):
