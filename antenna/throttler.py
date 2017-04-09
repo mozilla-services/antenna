@@ -13,6 +13,7 @@ from antenna import metrics
 
 
 logger = logging.getLogger(__name__)
+mymetrics = metrics.get_metrics('throttler')
 
 
 ACCEPT = 0   # save and process
@@ -82,7 +83,6 @@ class Throttler(RequiredConfigMixin):
     def __init__(self, config):
         self.config = config.with_options(self)
         self.rule_set = self.config('throttle_rules')
-        self.mymetrics = metrics.get_metrics(self)
 
     def throttle(self, raw_crash):
         """Go through rule set to ACCEPT, REJECT or DEFER
@@ -96,7 +96,7 @@ class Throttler(RequiredConfigMixin):
             match = rule.match(raw_crash)
 
             if match:
-                self.mymetrics.incr('match_%s' % rule.rule_name)
+                mymetrics.incr('match_%s' % rule.rule_name)
 
                 if rule.percentage is None:
                     return REJECT, rule.rule_name, None

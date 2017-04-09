@@ -154,10 +154,9 @@ Statsd
 Antenna sends data to statsd. Read the code for what's available where and what
 it means.
 
-Here are some good ones--all are prefixed with
-``antenna.breakpad_resource.BreakpadSubmitterResource``:
+Here are some good ones:
 
-* ``incoming_crash``
+* ``breakpad_resource.incoming_crash``
 
   Counter. Denotes an incoming crash.
 
@@ -165,11 +164,11 @@ Here are some good ones--all are prefixed with
 
   Counters. Throttle results. Possibilities: ``accept``, ``defer``, ``reject``.
 
-* ``save_crash.count``
+* ``breakpad_resource.save_crash.count``
 
   Counter. Denotes a crash has been successfully saved.
 
-* ``save_queue_size``
+* ``breakpad_resource.save_queue_size``
 
   Gauge. Tells you how many things are sitting in the ``crashmover_save_queue``.
 
@@ -178,15 +177,15 @@ Here are some good ones--all are prefixed with
      If this number is > 0, it means that Antenna is having difficulties keeping
      up with incoming crashes.
 
-* ``on_post.time``
+* ``breakpad_resource.on_post.time``
 
   Timing. This is the time it took to handle the HTTP POST request.
 
-* ``crash_save.time``
+* ``breakpad_resource.crash_save.time``
 
   Timing. This is the time it took to save the crash to S3.
 
-* ``crash_handling.time``
+* ``breakpad_resource.crash_handling.time``
 
   Timing. This is the total time the crash was in Antenna-land from receiving
   the crash to saving it to S3.

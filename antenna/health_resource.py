@@ -14,7 +14,7 @@ from antenna.util import get_version_info
 
 
 logger = logging.getLogger(__name__)
-mymetrics = metrics.get_metrics(__name__)
+mymetrics = metrics.get_metrics('health')
 
 
 class BrokenResource(RequiredConfigMixin):

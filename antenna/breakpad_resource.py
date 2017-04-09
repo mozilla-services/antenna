@@ -34,7 +34,7 @@ from antenna.util import (
 
 
 logger = logging.getLogger(__name__)
-mymetrics = metrics.get_metrics(__name__)
+mymetrics = metrics.get_metrics('breakpad_resource')
 
 
 CrashReport = namedtuple('CrashReport', ['raw_crash', 'dumps', 'crash_id'])
@@ -113,8 +113,6 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         # Queue for crashmover of crashes to save
         self.crashmover_save_queue = deque()
 
-        self.mymetrics = metrics.get_metrics(self)
-
         # Register hb functions with heartbeat manager
         register_for_heartbeat(self.hb_report_health_stats)
         register_for_heartbeat(self.hb_run_crashmover)
@@ -140,7 +138,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         # The number of crash reports sitting in the queue; this is a direct
         # measure of the health of this process--a number that's going up means
         # impending doom
-        self.mymetrics.gauge('save_queue_size', len(self.crashmover_save_queue))
+        mymetrics.gauge('save_queue_size', len(self.crashmover_save_queue))
 
     def has_work_to_do(self):
         work_to_do = len(self.crashmover_save_queue) + len(self.crashmover_pool)
@@ -187,7 +185,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         # Decompress payload if it's compressed
         if req.env.get('HTTP_CONTENT_ENCODING') == 'gzip':
-            self.mymetrics.batch_incr('gzipped_crash')
+            mymetrics.batch_incr('gzipped_crash')
 
             # If the content is gzipped, we pull it out and decompress it. We
             # have to do that here because nginx doesn't have a good way to do
@@ -199,7 +197,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
                 # This indicates this isn't a valid compressed stream. Given
                 # that the HTTP request insists it is, we're just going to
                 # assume it's junk and not try to process any further.
-                self.mymetrics.batch_incr('bad_gzipped_crash')
+                mymetrics.batch_incr('bad_gzipped_crash')
                 return {}, {}
 
             # Stomp on the content length to correct it because we've changed
@@ -210,7 +208,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             req.env['CONTENT_LENGTH'] = str(content_length)
 
             data = io.BytesIO(data)
-            self.mymetrics.histogram('crash_size.compressed', content_length)
+            mymetrics.histogram('crash_size.compressed', content_length)
         else:
             # NOTE(willkg): At this point, req.stream is either a
             # falcon.request_helper.BoundedStream (in tests) or a
@@ -225,7 +223,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             else:
                 data = req.stream
 
-            self.mymetrics.histogram('crash_size.uncompressed', content_length)
+            mymetrics.histogram('crash_size.uncompressed', content_length)
 
         fs = cgi.FieldStorage(fp=data, environ=req.env, keep_blank_values=1)
 
@@ -305,13 +303,13 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             except ValueError:
                 # If we've gotten a ValueError, it means one or both of the
                 # values is bad and we should ignore it and move forward.
-                self.mymetrics.batch_incr('throttle.bad_throttle_values')
+                mymetrics.batch_incr('throttle.bad_throttle_values')
 
         # If we have a Throttleable=0, then return that.
         if raw_crash.get('Throttleable', None) == '0':
             # If the raw crash has ``Throttleable=0``, then we accept the
             # crash.
-            self.mymetrics.batch_incr('throttleable_0')
+            mymetrics.batch_incr('throttleable_0')
             result = ACCEPT
             rule_name = 'THROTTLEABLE_0'
             throttle_rate = 100
@@ -327,7 +325,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         return result, rule_name, throttle_rate
 
-    @mymetrics.timer_decorator('BreakpadSubmitterResource.on_post.time')
+    @mymetrics.timer_decorator('on_post.time')
     def on_post(self, req, resp):
         """Handles incoming HTTP POSTs
 
@@ -342,7 +340,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         raw_crash, dumps = self.extract_payload(req)
 
-        self.mymetrics.batch_incr('incoming_crash')
+        mymetrics.batch_incr('incoming_crash')
 
         current_timestamp = utc_now()
         raw_crash['submitted_timestamp'] = current_timestamp.isoformat()
@@ -370,7 +368,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         # Log the throttle result
         logger.info('%s: matched by %s; returned %s', crash_id, rule_name,
                     RESULT_TO_TEXT[throttle_result])
-        self.mymetrics.batch_incr(('throttle.%s' % RESULT_TO_TEXT[throttle_result]).lower())
+        mymetrics.batch_incr(('throttle.%s' % RESULT_TO_TEXT[throttle_result]).lower())
 
         if throttle_result is REJECT:
             # If the result is REJECT, then discard it
@@ -411,7 +409,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
             except Exception:
                 logger.exception('Exception when processing save queue')
-                self.mymetrics.batch_incr('save_crash_exception.count')
+                mymetrics.batch_incr('save_crash_exception.count')
                 self.crashmover_save_queue.append(crash_report)
 
     def crashmover_save(self, crash_report):
@@ -426,7 +424,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         raw_crash = crash_report.raw_crash
 
         # Capture total time it takes to save the crash
-        with self.mymetrics.timer('crash_save.time'):
+        with mymetrics.timer('crash_save.time'):
             # Save dumps to crashstorage
             self.crashstorage.save_dumps(crash_id, dumps)
 
@@ -439,9 +437,9 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         # NOTE(willkg): time.time returns seconds, but .timing() wants
         # milliseconds, so we multiply!
         delta = (time.time() - raw_crash['timestamp']) * 1000
-        self.mymetrics.timing('crash_handling.time', delta)
+        mymetrics.timing('crash_handling.time', delta)
 
-        self.mymetrics.batch_incr('save_crash.count')
+        mymetrics.batch_incr('save_crash.count')
         logger.info('%s saved', crash_id)
 
     def join_pool(self):
