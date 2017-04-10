@@ -8,12 +8,11 @@ import random
 import re
 
 from everett.component import ConfigOptions, RequiredConfigMixin
-
-from antenna import metrics
+import markus
 
 
 logger = logging.getLogger(__name__)
-mymetrics = metrics.get_metrics('throttler')
+mymetrics = markus.get_metrics('throttler')
 
 
 ACCEPT = 0   # save and process

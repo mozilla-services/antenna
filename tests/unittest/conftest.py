@@ -11,6 +11,8 @@ from everett.manager import ConfigManager
 from falcon.request import Request
 from falcon.testing.helpers import create_environ
 from falcon.testing.client import TestClient
+import markus
+from markus.testing import MetricsMock
 import pytest
 
 
@@ -18,10 +20,8 @@ import pytest
 REPO_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from antenna import metrics  # noqa
-from antenna.app import get_app, setup_logging, setup_metrics  # noqa
+from antenna.app import get_app, setup_logging  # noqa
 from antenna.heartbeat import reset_hb_funs  # noqa
-from antenna.metrics import MetricsMock  # noqa
 from testlib.loggingmock import LoggingMock  # noqa
 from testlib.s3mock import S3Mock  # noqa
 
@@ -32,7 +32,9 @@ def pytest_runtest_setup():
         'HOST_ID': '',
         'LOGGING_LEVEL': 'DEBUG',
     }))
-    setup_metrics(metrics.LoggingMetrics, ConfigManager.from_dict({}))
+    markus.configure([
+        {'class': 'markus.backends.logging.LoggingMetrics'}
+    ])
 
     # Wipe any registered heartbeat functions
     reset_hb_funs()

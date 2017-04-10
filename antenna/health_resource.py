@@ -8,13 +8,13 @@ import logging
 
 from everett.component import RequiredConfigMixin
 import falcon
+import markus
 
-from antenna import metrics
 from antenna.util import get_version_info
 
 
 logger = logging.getLogger(__name__)
-mymetrics = metrics.get_metrics('health')
+mymetrics = markus.get_metrics('health')
 
 
 class BrokenResource(RequiredConfigMixin):
@@ -98,7 +98,7 @@ class HeartbeatResource:
 
         # Go through and call gauge for each statsd item.
         for k, v in state.statsd.items():
-            mymetrics.gauge(k, v)
+            mymetrics.gauge(k, value=v)
 
         if state.is_healthy():
             resp.status = falcon.HTTP_200
