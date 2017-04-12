@@ -56,8 +56,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Antenna'
-copyright = u'2016-2017, Mozilla'
-author = u'Mozilla'
+copyright = u'2016-2017, Mozilla Foundation'
+author = u'Socorro Team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
