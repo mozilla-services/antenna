@@ -107,8 +107,8 @@ class Throttler(RequiredConfigMixin):
                     response = ACCEPT
                 return response, rule.rule_name, rule.percentage
 
-        # None of the rules matched, so we reject
-        return REJECT, 'NO_MATCH', 0
+        # None of the rules matched, so we defer
+        return DEFER, 'NO_MATCH', 0
 
 
 class Rule:

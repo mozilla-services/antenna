@@ -177,3 +177,10 @@ class Testmozilla_rules:
 
         throttler = Throttler(ConfigManager.from_dict({}))
         assert throttler.throttle(raw_crash) == (ACCEPT, 'is_thunderbird_seamonkey', 100)
+
+    def test_is_nothing(self):
+        # None of the rules will match an empty crash
+        raw_crash = {}
+
+        throttler = Throttler(ConfigManager.from_dict({}))
+        assert throttler.throttle(raw_crash) == (DEFER, 'NO_MATCH', 0)
