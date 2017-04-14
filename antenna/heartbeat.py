@@ -40,20 +40,27 @@ class HeartbeatManager(RequiredConfigMixin):
         self.config = config.with_options(self)
         self.hb_started = False
         self.is_alive = None
-        self.pool = None
+        self.hb_greenlet = None
 
-    def start_heartbeat(self, is_alive, pool):
+    def start_heartbeat(self, is_alive):
         """Starts the heartbeat coroutine"""
         if self.hb_started:
             return
 
         self.hb_started = True
         self.is_alive = is_alive
-        self.pool = pool
 
-        # Spwan the heartbeat loop in the incoming connections pool
-        logger.info('Adding heartbeat to pool')
-        pool.spawn(self.heartbeat)
+        logger.info('Starting heartbeat')
+        self.hb_greenlet = gevent.spawn(self.heartbeat)
+
+    def _heartbeat_beat_once(self):
+        for fun in _registered_hb_funs:
+            try:
+                with capture_unhandled_exceptions():
+                    # logger.debug('hb: running %s', fun.__qualname__)
+                    fun()
+            except Exception:
+                logger.exception('Exception thrown while retrieving health stats')
 
     def heartbeat(self):
         """Heartbeat function
@@ -62,21 +69,29 @@ class HeartbeatManager(RequiredConfigMixin):
         capture unhandled exceptions and report them.
 
         """
-        # Keep beating unless the WSGI worker is shutting down AND all
-        # registered lifers are ok with us shutting down
-        while self.is_alive() or any([fun() for fun in _registered_lifers]):
+        # Keep beating unless the WSGI worker is shutting down
+        while self.is_alive():
             logger.debug('thump')
-            for fun in _registered_hb_funs:
-                try:
-                    with capture_unhandled_exceptions():
-                        # logger.debug('hb: running %s', fun.__qualname__)
-                        fun()
-                except Exception:
-                    logger.exception('Exception thrown while retrieving health stats')
-
+            self._heartbeat_beat_once()
             gevent.sleep(self.heartbeat_interval)
 
-        logger.info('Heartbeat stopped.')
+        logger.info('App stopped, so stopping heartbeat.')
+
+        # We're at worker shutdown, so beat until all registered lifers are ok
+        # with us shutting down
+        while any([fun() for fun in _registered_lifers]):
+            logger.debug('thump (finishing up)')
+            self._heartbeat_beat_once()
+
+            # Faster beat so we can shutdown sooner
+            gevent.sleep(1)
+
+        logger.info('Everything completed.')
+
+    def join_heartbeat(self):
+        """Blocks until heartbeat coroutine is done"""
+        if self.hb_greenlet is not None:
+            self.hb_greenlet.join()
 
 
 # All functions registered to run during an Antenna heartbeat

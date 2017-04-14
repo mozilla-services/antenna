@@ -224,8 +224,11 @@ class AntennaAPI(falcon.API):
                 for item in res.get_runtime_config(namespace):
                     yield item
 
-    def start_heartbeat(self, is_alive, pool):
-        self.hb.start_heartbeat(is_alive, pool)
+    def start_heartbeat(self, is_alive):
+        self.hb.start_heartbeat(is_alive)
+
+    def join_heartbeat(self):
+        self.hb.join_heartbeat()
 
 
 def get_app(config=None):
