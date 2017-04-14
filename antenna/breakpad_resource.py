@@ -160,7 +160,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         application/octet-stream. Thus we parse it looking for things of type
         text/plain and application/octet-stream.
 
-        :arg req: a Falcon Request instance
+        :arg falcon.request.Request req: a Falcon Request instance
 
         :returns: (raw_crash dict, dumps dict)
 

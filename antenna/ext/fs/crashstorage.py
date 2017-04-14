@@ -116,8 +116,8 @@ class FSCrashStorage(CrashStorageBase):
 
         FIXME(willkg): How should this method handle exceptions?
 
-        :arg crash_id: The crash id as a string.
-        :arg raw_crash: dict The raw crash as a dict.
+        :arg str crash_id: The crash id as a string.
+        :arg dict raw_crash: dict The raw crash as a dict.
 
         """
         self._save_file(self._get_raw_crash_path(crash_id), json_ordered_dumps(raw_crash).encode('utf-8'))
