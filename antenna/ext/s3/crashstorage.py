@@ -86,8 +86,8 @@ class S3CrashStorage(CrashStorageBase):
            If you're saving the raw crash and dumps, make sure to save the raw
            crash last.
 
-        :arg crash_id: The crash id as a string.
-        :arg raw_crash: dict The raw crash as a dict.
+        :arg str crash_id: The crash id as a string.
+        :arg dict raw_crash: dict The raw crash as a dict.
 
         :raises botocore.exceptions.ClientError: connection issues, permissions
             issues, bucket is missing, etc.
@@ -129,7 +129,7 @@ class S3CrashStorage(CrashStorageBase):
     def load_raw_crash(self, crash_id):
         """Loads and thaws out a raw crash
 
-        :arg crash_id: crash id of the crash as a string
+        :arg str crash_id: crash id of the crash as a string
 
         :returns: tuple of (raw_crash dict, dumps dict)
 

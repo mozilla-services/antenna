@@ -87,7 +87,7 @@ class Throttler(RequiredConfigMixin):
     def throttle(self, raw_crash):
         """Go through rule set to ACCEPT, REJECT or DEFER
 
-        :arg raw_crash: the crash to throttle
+        :arg dict raw_crash: the crash to throttle
 
         :returns tuple: ``(result, rule_name, percentage)``
 

@@ -86,7 +86,7 @@ def json_ordered_dumps(data):
 
          json_ordered_dumps(data).encode('utf-8')
 
-    :arg data: The data to convert to JSON
+    :arg varies data: The data to convert to JSON
 
     :returns: string
 
