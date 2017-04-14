@@ -340,6 +340,12 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         raw_crash, dumps = self.extract_payload(req)
 
+        # If we didn't get any crash data, then just drop it and move on--don't
+        # count this as an incoming crash and don't do any more work on it
+        if not raw_crash:
+            resp.body = 'Discarded=1'
+            return
+
         mymetrics.incr('incoming_crash')
 
         current_timestamp = utc_now()
