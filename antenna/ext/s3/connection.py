@@ -195,7 +195,7 @@ class S3Connection(RequiredConfigMixin):
         """Saves a single file to s3
 
         This will retry a handful of times in short succession so as to deal
-        with # some amount of fishiness. After that, the caller should retry
+        with some amount of fishiness. After that, the caller should retry
         saving after a longer period of time.
 
         :arg str path: the path to save to

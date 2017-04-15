@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import cgi
-from collections import deque, namedtuple
+from collections import deque
 import hashlib
 import io
 import logging
@@ -37,7 +37,16 @@ logger = logging.getLogger(__name__)
 mymetrics = metrics.get_metrics('breakpad_resource')
 
 
-CrashReport = namedtuple('CrashReport', ['raw_crash', 'dumps', 'crash_id'])
+#: Maximum number of attempts to save a crash before we give up
+MAX_ATTEMPTS = 20
+
+
+class CrashReport:
+    def __init__(self, raw_crash, dumps, crash_id, errors=0):
+        self.raw_crash = raw_crash
+        self.dumps = dumps
+        self.crash_id = crash_id
+        self.errors = errors
 
 
 def positive_int(val):
@@ -409,14 +418,27 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         # Process crashes until the queue is empty
         while self.crashmover_save_queue:
             crash_report = self.crashmover_save_queue.popleft()
+
             try:
                 with capture_unhandled_exceptions():
                     self.crashmover_save(crash_report)
 
             except Exception:
-                logger.exception('Exception when processing save queue')
                 mymetrics.incr('save_crash_exception.count')
-                self.crashmover_save_queue.append(crash_report)
+                crash_report.errors += 1
+                logger.exception(
+                    'Exception when processing save queue (%s); error %d/%d',
+                    crash_report.crash_id,
+                    crash_report.errors,
+                    MAX_ATTEMPTS
+                )
+
+                # After MAX_ATTEMPTS, we give up on this crash and move on
+                if crash_report.errors < MAX_ATTEMPTS:
+                    self.crashmover_save_queue.append(crash_report)
+                else:
+                    logger.error('%s: too many errors trying to save; dropped', crash_report.crash_id)
+                    mymetrics.incr('save_crash_dropped.count')
 
     def crashmover_save(self, crash_report):
         """Saves a crash to storage
