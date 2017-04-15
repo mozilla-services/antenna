@@ -8,7 +8,17 @@ from everett.manager import ConfigManager
 import pytest
 
 from antenna.app import BreakpadSubmitterResource
+from antenna.breakpad_resource import MAX_ATTEMPTS
+from antenna.ext.crashstorage_base import CrashStorageBase
 from testlib.mini_poster import compress, multipart_encode
+
+
+class BadCrashStorage(CrashStorageBase):
+    def save_dumps(self, crash_id, dumps):
+        raise Exception
+
+    def save_raw_crash(self, crash_id, raw_crash):
+        raise Exception
 
 
 class TestBreakpadSubmitterResource:
@@ -264,4 +274,41 @@ class TestBreakpadSubmitterResource:
         # No more coroutines and no more save queue
         check_health(crashmover_pool_size=0, crashmover_save_queue_size=0)
 
-    # FIXME: test crash report shapes (multiple dumps? no dumps? what else is in there?)
+    def test_retry(self, client, loggingmock):
+        crash_id = 'de1bb258-cbbf-4589-a673-34f800160918'
+        data, headers = multipart_encode({
+            'uuid': crash_id,
+            'ProductName': 'Test',
+            'Version': '1.0',
+            'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
+        })
+
+        client.rebuild_app({
+            'CRASHSTORAGE_CLASS': BadCrashStorage.__module__ + '.' + BadCrashStorage.__name__,
+        })
+
+        with loggingmock(['antenna']) as lm:
+            result = client.simulate_post(
+                '/submit',
+                headers=headers,
+                body=data
+            )
+            assert result.status_code == 200
+
+            # The storage is bad, so this should raise errors and then log something
+            client.join_app()
+
+            # We're using BadCrashStorage so the crashmover should retry 20
+            # times logging a message each time and then give up
+            for i in range(1, MAX_ATTEMPTS):
+                assert lm.has_record(
+                    name='antenna.breakpad_resource',
+                    levelname='ERROR',
+                    msg_contains=(
+                        'Exception when processing save queue (%s); error %d/%d' % (
+                            crash_id,
+                            i,
+                            MAX_ATTEMPTS
+                        )
+                    )
+                )
