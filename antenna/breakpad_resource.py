@@ -261,7 +261,9 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
             else:
                 # This isn't a dump, so it's a key/val pair, so we add that.
-                raw_crash[fs_item.name] = de_null(fs_item.value)
+                # NOTE(willkg): We saw some crashes come in where the raw crash ends up with
+                # a None as a key. Make sure we can't end up with non-strings as keys.
+                raw_crash[fs_item.name or ''] = de_null(fs_item.value)
 
         return raw_crash, dumps
 
