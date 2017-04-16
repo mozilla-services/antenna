@@ -65,11 +65,8 @@ services:
       - ./fakes3_root:/fakes3_root
 
   statsd:
-    # https://hub.docker.com/r/hopsoft/graphite-statsd/
-    image: hopsoft/graphite-statsd
+    # https://hub.docker.com/r/kamon/grafana_graphite/
+    # username: admin, password: admin
+    image: kamon/grafana_graphite
     ports:
-      - "9000:80"
-      - "2003-2004:2003-2004"
-      - "2023-2024:2023-2024"
-      - "8125:8125/udp"
-      - "8126:8126"
+      - "9000:3000"  # grafana port
