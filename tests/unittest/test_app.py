@@ -10,4 +10,5 @@ class TestBasic:
 
     def test_home_page(self, client):
         result = client.simulate_get('/')
-        assert result.status_code == 200
+        assert result.status_code == 404
+        assert b'Antenna' in result.content
