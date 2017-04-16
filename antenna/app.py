@@ -179,8 +179,8 @@ class HomePageResource:
 
     def on_get(self, req, resp):
         resp.content_type = 'text/html'
-        resp.status = falcon.HTTP_200
-        resp.body = '<html><body><p>I am Antenna.</p></body></html>'
+        resp.status = falcon.HTTP_404
+        resp.body = '<html><body><!-- Antenna --><p>HTTP 404: Not found.</p></body></html>'
 
 
 class AntennaAPI(falcon.API):
