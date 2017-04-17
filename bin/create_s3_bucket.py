@@ -7,7 +7,7 @@
 """When doing local development, we need to create the bucket before we can use
 it. This script makes that easier.
 
-In order for this script to run, you must have the fakes3 container running.
+In order for this script to run, you must have the moto-s3 container running.
 
 If a bucket exists, it won't do anything.
 
@@ -20,6 +20,7 @@ It'll throw an error if something unexpected happened.
 
 """
 
+import logging
 import os
 import sys
 
@@ -29,6 +30,18 @@ from everett.manager import ConfigManager, ConfigEnvFileEnv, ConfigOSEnv
 sys.path.insert(0, os.getcwd())  # noqa
 
 from antenna.ext.s3.connection import S3Connection
+
+
+def _log_everything():
+    # Set up all the debug logging for grossest possible output
+    from http.client import HTTPConnection
+    HTTPConnection.debuglevel = 1
+
+    logging.getLogger('requests').setLevel(logging.DEBUG)
+    logging.getLogger('requests.packages.urllib3').setLevel(logging.DEBUG)
+
+
+# _log_everything()
 
 
 def main(args):
@@ -55,7 +68,6 @@ def main(args):
         print(str(exc))
         if 'HeadBucket operation: Not Found' in str(exc):
             print('Bucket not found. Creating %s ...' % conn.bucket)
-            # Create the bucket.
             conn._create_bucket()
             print('Bucket created.')
         else:

@@ -56,7 +56,7 @@ production, see docs_.
 
          ANTENNA_ENV="dev.env" /usr/bin/docker-compose up web
          antenna_statsd_1 is up-to-date
-         antenna_fakes3_1 is up-to-date
+         antenna_moto-s3_1 is up-to-date
          Recreating antenna_web_1
          Attaching to antenna_web_1
          web_1      | [2016-11-07 15:39:21 +0000] [7] [INFO] Starting gunicorn 19.6.0
@@ -72,18 +72,22 @@ production, see docs_.
          web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: DUMP_ID_PREFIX=bp-
          web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: CRASHSTORAGE_CLASS=antenna.ext.s3.crashstorage.S3CrashStorage
          web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: THROTTLE_RULES=antenna.throttler.mozilla_rules
-         web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: CRASHSTORAGE_ACCESS_KEY=fakes3
+         web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: CRASHSTORAGE_ACCESS_KEY=foo
          web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: CRASHSTORAGE_SECRET_ACCESS_KEY=*****
-         web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: CRASHSTORAGE_REGION=us-west-2
-         web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: CRASHSTORAGE_ENDPOINT_URL=http://fakes3:4569
-         web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: CRASHSTORAGE_BUCKET_NAME=org.fakes3.prod
+         web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: CRASHSTORAGE_REGION=us-east-1
+         web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: CRASHSTORAGE_ENDPOINT_URL=http://moto-s3:5000
+         web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: CRASHSTORAGE_BUCKET_NAME=antennabucket
 
 
    2. Verify things are running:
 
-      In another terminal, you can verify the proper containers are running with
-      ``docker-compose ps``. You should see containers with names ``web``,
-      ``statsd`` and ``fakes3``.
+      In another terminal, you can verify the proper containers are running with:
+
+      .. code-block:: shell
+
+         $ docker-compose ps
+
+      You should see containers with names ``web``, ``statsd`` and ``moto-s3``.
 
    3. Send in a crash report:
 
@@ -109,10 +113,10 @@ production, see docs_.
          web_1      | [2016-11-07 15:48:45 +0000] [INFO] antenna.breakpad_resource: a448814e-16dd-45fb-b7dd-b0b522161010 saved
 
 
-   4. See the data in fakes3:
+   4. See the data in moto-s3:
 
-      The ``fakes3`` container will store data in ``./fakes3_root``, so you can
-      verify the contents of files there.
+      The ``moto-s3`` container will store data in memory. When you shut down the
+      container it goes away. You can use the aws-cli to access it.
 
    5. Look at runtime metrics with Grafana:
 

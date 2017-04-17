@@ -65,7 +65,7 @@ following items defined in it::
     the node this is running on to require these.
 
 ``CRASHSTORAGE_ENDPOINT_URL``
-    If you're using fakes3, you need to define this.
+    If you're using a fake s3 (for example, moto), you need to define this.
 
 ``CRASHSTORAGE_REGION``
     The regeion you're using. Defaults to ``us-west-2``.

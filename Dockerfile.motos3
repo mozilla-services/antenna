@@ -1,0 +1,24 @@
+FROM python:3.5.3
+
+MAINTAINER Will Kahn-Greene <willkg@mozilla.com>
+
+# FIXME(willkg): Use a commit on master because 0.4.31 has bugs on buckets. Once a new
+# release has happened, we can switch to that.
+ENV MOTO_VERSION df84675ae67e717449f01fafe3a022eb14984e26
+
+RUN cd /tmp && \
+    wget https://github.com/spulec/moto/archive/$MOTO_VERSION.tar.gz -O moto-$MOTO_VERSION.tar.gz && \
+    tar -xzvf moto-$MOTO_VERSION.tar.gz && \
+    cd moto-$MOTO_VERSION/ && \
+    pip install .[server]
+
+# Expose /opt/moto as a volume
+VOLUME "/opt/moto"
+
+# Port that moto listens on
+EXPOSE 5000
+
+# This spits out --help which isn't helpful, but you can specify what to do
+# by setting the command.
+ENTRYPOINT ["moto_server"]
+CMD ["--help"]
