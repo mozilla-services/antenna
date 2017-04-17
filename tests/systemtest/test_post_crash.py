@@ -7,7 +7,6 @@ import logging
 import time
 
 import isodate
-import pytest
 
 from testlib import mini_poster
 
