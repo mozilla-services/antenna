@@ -81,10 +81,7 @@ class S3Connection:
     def list_objects(self, prefix):
         """Returns list of keys in the bucket"""
         self.logger.info('listing "%s" for prefix "%s"', self.bucket, prefix)
-        # resp = self.conn.list_objects(Bucket=self.bucket, Prefix=prefix, RequestPayer='requester')
-        resp = self.conn.list_objects(Bucket=self.bucket)
-        print(type(resp))
-        print(resp)
+        resp = self.conn.list_objects(Bucket=self.bucket, Prefix=prefix, RequestPayer='requester')
         return [obj['Key'] for obj in resp['Contents']]
 
 
