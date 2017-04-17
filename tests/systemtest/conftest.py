@@ -79,29 +79,14 @@ class S3Connection:
         client = session.client(**client_kwargs)
         return client
 
-    # FIXME(willkg): Better name
-    def list_buckets(self):
-        return self.conn.list_buckets()
-
-    # FIXME(willkg): Better name
-    def head_bucket(self):
-        return self.conn.head_bucket(Bucket=self.bucket)
-
-    # FIXME(willkg): Better name
-    def list_objects(self):
-        for key in self.conn.list_objects(Bucket=self.bucket):
-            print(key)
-
-    def get_object(self, key, is_json=False):
-        self.logger.info('fetching "%s" "%s"', self.bucket, key)
-        obj = self.conn.get_object(
-            Bucket=self.bucket,
-            Key=key
-        )
-        data = obj['Body'].read()
-        if is_json:
-            data = json.loads(str(data, encoding='utf-8'))
-        return data
+    def list_objects(self, prefix):
+        """Returns list of keys in the bucket"""
+        self.logger.info('listing "%s" for prefix "%s"', self.bucket, prefix)
+        # resp = self.conn.list_objects(Bucket=self.bucket, Prefix=prefix, RequestPayer='requester')
+        resp = self.conn.list_objects(Bucket=self.bucket)
+        print(type(resp))
+        print(resp)
+        return [obj['Key'] for obj in resp['Contents']]
 
 
 @pytest.fixture

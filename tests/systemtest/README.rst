@@ -61,8 +61,15 @@ following items defined in it::
 
 ``CRASHSTORAGE_ACCESS_KEY``
 ``CRASHSTORAGE_SECRET_ACCESS_KEY``
-    These are the access key and secret access key if you have AWS S3 for
-    the node this is running on to require these.
+    The systemtest will use these if supplied to access AWS S3. There
+    are other ways to provide credentials, too. See the Boto3 documentation
+    for details:
+
+    http://boto3.readthedocs.io/en/latest/guide/configuration.html
+
+    The credentials supplied must have the following permission:
+
+    * ``s3:ListBucket``
 
 ``CRASHSTORAGE_ENDPOINT_URL``
     If you're using a fake s3 (for example, moto), you need to define this.
