@@ -41,7 +41,7 @@ def _log_everything():
     logging.getLogger('requests.packages.urllib3').setLevel(logging.DEBUG)
 
 
-_log_everything()
+# _log_everything()
 
 
 def main(args):
