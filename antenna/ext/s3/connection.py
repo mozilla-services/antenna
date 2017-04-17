@@ -47,25 +47,39 @@ def wait_times_save():
 class S3Connection(RequiredConfigMixin):
     """Connection object for S3.
 
+    **Credentials and permissions**
+
     When configuring this connection object, you can do one of two things:
 
     1. provide ``ACCESS_KEY`` and ``SECRET_ACCESS_KEY`` in the configuration, OR
     2. use one of the other methods described in the boto3 docs
        http://boto3.readthedocs.io/en/latest/guide/configuration.html#configuring-credentials
 
-    When Antenna starts up, ``S3Connection`` will call ``HEAD`` on the bucket
-    verifying the bucket exists, the endpoint url is good, it's accessible and
-    the credentials are valid. This means that the credentials you use must have
-    "list" permissions on the bucket.
 
-    If that fails, then this will raise an error and will halt startup.
+    The AWS credentials that Antenna is configured with must have the following
+    Amazon S3 permissions:
 
-    .. Warning::
+    * ``s3:ListBucket``
 
-       This does not verify that it has write permissions to the bucket. Make
-       sure to test your configuration by sending a test crash and watch your
-       logs at startup!
+      When Antenna starts up, ``S3Connection`` will call ``HEAD`` on the bucket
+      verifying the bucket exists, the endpoint url is good, it's accessible
+      and the credentials are valid. This means that the credentials you use
+      must have "list" permissions on the bucket.
 
+      If that fails, then this will raise an error and will halt startup.
+
+      .. Warning::
+
+         This does not verify that it has write permissions to the bucket. Make
+         sure to test your configuration by sending a test crash and watch your
+         logs at startup!
+
+    * ``s3:PutObject``
+
+      This permission is used to save items to the bucket.
+
+
+    **Retrying saves**
 
     When saving crashes, this connection will retry saving several times. Then
     give up. The crashmover coroutine will put the crash back in the queue to
