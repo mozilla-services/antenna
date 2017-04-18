@@ -45,6 +45,7 @@ def test_get_version_info(tmpdir):
     (123, 123),
 
     # has nulls
+    ('abc\u0000', 'abc'),
     ('abc\0', 'abc'),
     ('ab\0c\0', 'abc'),
     (b'abc\0', b'abc'),
