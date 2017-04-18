@@ -101,10 +101,10 @@ class Throttler(RequiredConfigMixin):
                 if rule.percentage is None:
                     return REJECT, rule.rule_name, None
 
-                if (random.random() * 100.0) > rule.percentage:
-                    response = DEFER
-                else:
+                if rule.percentage == 100 or (random.random() * 100.0) <= rule.percentage:
                     response = ACCEPT
+                else:
+                    response = DEFER
                 return response, rule.rule_name, rule.percentage
 
         # None of the rules matched, so we defer
