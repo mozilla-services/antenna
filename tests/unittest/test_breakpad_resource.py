@@ -125,6 +125,35 @@ class TestBreakpadSubmitterResource:
         }
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
 
+    @pytest.mark.parametrize('data, expected_raw_crash, expected_dumps', [
+        ({'ProductName': 'Firefox'}, {'ProductName': 'Firefox'}, {}),
+
+        # In the key...
+        ({'\u0000ProductName': 'Firefox'}, {'ProductName': 'Firefox'}, {}),
+
+        # In the value...
+        ({'ProductName': 'Firefox\u0000'}, {'ProductName': 'Firefox'}, {}),
+
+        # In the dump filename...
+        (
+            {'ProductName': 'Firefox', '\u0000upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'deadbeef'))},
+            {'ProductName': 'Firefox', 'dump_checksums': {'upload_file_minidump': '4f41243847da693a4f356c0486114bc6'}},
+            {'upload_file_minidump': b'deadbeef'}
+        )
+    ])
+    def test_extract_payload_with_nulls(self, data, expected_raw_crash, expected_dumps, request_generator):
+        data, headers = multipart_encode(data)
+
+        req = request_generator(
+            method='POST',
+            path='/submit',
+            headers=headers,
+            body=data,
+        )
+
+        bsp = BreakpadSubmitterResource(self.empty_config)
+        assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
+
     def test_existing_uuid(self, client):
         crash_id = 'de1bb258-cbbf-4589-a673-34f800160918'
         data, headers = multipart_encode({

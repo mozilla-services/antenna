@@ -244,7 +244,11 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         dumps = {}
 
         for fs_item in fs.list:
-            if fs_item.name == 'dump_checksums':
+            # NOTE(willkg): We saw some crashes come in where the raw crash ends up with
+            # a None as a key. Make sure we can't end up with non-strings as keys.
+            item_name = de_null(fs_item.name or '')
+
+            if item_name == 'dump_checksums':
                 # We don't want to pick up the dump_checksums from a raw
                 # crash that was re-submitted.
                 continue
@@ -255,15 +259,13 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
                 # FIXME(willkg): The dump name is essentially user-provided. We should
                 # sanitize it before proceeding.
-                dumps[fs_item.name] = fs_item.value
+                dumps[item_name] = fs_item.value
                 checksum = hashlib.md5(fs_item.value).hexdigest()
-                raw_crash.setdefault('dump_checksums', {})[fs_item.name] = checksum
+                raw_crash.setdefault('dump_checksums', {})[item_name] = checksum
 
             else:
                 # This isn't a dump, so it's a key/val pair, so we add that.
-                # NOTE(willkg): We saw some crashes come in where the raw crash ends up with
-                # a None as a key. Make sure we can't end up with non-strings as keys.
-                raw_crash[fs_item.name or ''] = de_null(fs_item.value)
+                raw_crash[item_name] = de_null(fs_item.value)
 
         return raw_crash, dumps
 
