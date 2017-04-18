@@ -59,8 +59,7 @@ following items defined in it::
     Set ``NONGINX=1`` if you're running against a local dev environment
     that isn't using Nginx. This will skip tests that require Nginx.
 
-``CRASHSTORAGE_ACCESS_KEY``
-``CRASHSTORAGE_SECRET_ACCESS_KEY``
+``CRASHSTORAGE_ACCESS_KEY`` and ``CRASHSTORAGE_SECRET_ACCESS_KEY``
     The systemtest will use these if supplied to access AWS S3. There
     are other ways to provide credentials, too. See the Boto3 documentation
     for details:
