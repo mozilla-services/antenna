@@ -51,6 +51,12 @@ Requirements for v1 of antenna:
    Antenna should parse HTTP payloads the same way that Socorro collector
    currently does.
 
+   HTTP payloads are large:
+
+   * average: 500kb
+   * 95%: 1.5mb
+   * max: 3mb
+
 2. Throttle the crash
 
    * Examine the crash and apply throttling rules to it.
@@ -61,9 +67,18 @@ Requirements for v1 of antenna:
    Throttling system and rules should match what Socorro collector currently
    does.
 
-3. Generate a crash id
+   .. Note::
+
+      At some point, we could/should move this to the processor, but we can't
+      easily do that without also changing the processor at the same time. To
+      reduce the scope of this project, we're going to keep throttling in
+      Antenna and then rewrite the processor and then maybe move throttling.
+
+3. Generate a crash id and return it to the breakpad client.
 
    * Generate a crash id using the same scheme we're currently using.
+   * Return the crash id to the client so that it can generate urls
+     in about:crashes.
 
 4. Add collector-generated bits to the crash report.
 
@@ -272,57 +287,79 @@ The current collector has a web process that:
 
 1. handles incoming HTTP requests
 2. throttles the crash based on configured rules
-3. generates a crash id
-4. saves the crash report to disk
+3. generates a crash id and returns it to the breakpad client
+4. saves the crash report to local disk
 
-Then there's a crashmover process that runs as a service and checks the disk for
-new crash reports periodically, uploads them to S3 and adds a message to
-RabbitMQ. It also does a bunch of statsd things so we can measure what's going
-on.
+Then there's a crashmover process that runs as a service on the same node and:
 
-The Telemetry edge which is roughly the same as the Socorro collector uses an
-nginx module to handle incoming HTTP requests and sends the payload to kafka. It
-also has a separate process running as a service that watches the disk uploads
-to S3.
+1. uploads crash report files to S3
+2. adds a message to RabbitMQ with the crashid telling the processor to process
+   that crash
+3. sends some data to statsd
 
-My first collector rewrite folded the web and crashmover processes into a single
-process using asyncio and an eventloop so that we could return the crash id to
-the client as quickly as possible, but continue to do the additional work of
-uploading to S3 and notifying RabbitMQ. This also has the nicety that we don't
-have to use the disk to queue crash reports up and theoretically we could run
-this on Heroku [1]_.
+My first collector rewrite (June 2016-ish) folded the web and crashmover
+processes into a single process using asyncio and an eventloop so that we could
+return the crash id to the client as quickly as possible, but continue to do the
+additional work of uploading to S3 and notifying RabbitMQ. This also has the
+nicety that we don't have to use the disk to queue crash reports up and
+theoretically we could run this on Heroku [1]_.
 
 .. [1] Heroku can run docker containers now, so it's probably the case we don't
        have to worry about the "only one process!" thing anymore.
 
-My second collector rewrite merely extracted the collector bits from the
-existing Socorro code base. I did this attempt figuring it was the fastest way
-to extract the collector. However, it left us with two processes.
+My second collector (August 2016-ish) rewrite merely extracted the collector
+bits from the existing Socorro code base. I did this attempt figuring it was the
+fastest way to extract the collector. However, it left us with two processes. I
+abandoned this one, too.
 
-Rob suggested we build it all in nginx using modules similar to what
-Telemetry did. He has a basic collector that generates a uuid and saves the
-crash report to disk [2]_. We could use a uuid module and then tweak the outcome
-of that with the date. Then use an S3 upload module to upload it to S3. We
-talked about this a bit at the work week and there was some concern about the
-various S3 failure scenarios and how to deal with those and how doing everything
-as an nginx module makes that more tricky. We could instead have nginx save it
-to disk and have a service using inotify notice it on disk and then upload it to
-S3.
+In August 2016, I traded emails with Mark Reid regarding the Telemetry edge
+which serves roughly the same purpose as the Socorro collector. At the time,
+they had a heka-based edge but were moving to an nginx-based one called
+`nginx_moz_ingest <https://github.com/mozilla-services/nginx_moz_ingest>`_. The
+edge sends incoming payloads directly to Kafka.
+
+The edge looked interesting, but there are a few things that Socorro needs
+currently that the edge doesn't do:
+
+1. Socorro needs to generate and return a CrashID
+2. Socorro has large crash reports and needs to save to S3
+3. Socorro currently throttles crashes in the collector
+4. Socorro currently uses RabbitMQ to queue crashes up for processing
+
+In September 2016 at the work week, I talked with Rob Helmer about this and he
+suggested we build it all in nginx using modules similar to what Telemetry did.
+He has a basic collector that generates a uuid and saves the crash report to
+disk [2]_. We could use a uuid module and then tweak the outcome of that with
+the date.
+
+We could move the throttling to the processor. This is tricky because it means
+we're making changes to multiple components at the same time which greatly
+increases the scope of the project.
+
+At the work week, we decided we can't just send crash payloads to Kafka because
+we get too many of them and they're too large.
+
+We could use an nginx S3 upload module to upload it to S3. We had some concerns
+about the various S3 failure scenarios and how to deal with those and how doing
+everything as an nginx module makes that more tricky. We could instead have
+nginx save it to disk and have a service using inotify notice it on disk and
+then upload it to S3.
 
 .. [2] Rob's gist: https://gist.github.com/rhelmer/00dd0f9e4076260078367f763bc9aaf3
 
 
-My current thinking is that we've got the following rough options:
+Given all that, my current thinking is that we've got the following rough options:
 
-1. This is a doable project using nginx, c, lua and such. Doing that will likely
-   give us a collector that's closer to the Telemetry collector. That might be a
-   nice thing at some point in the future.
+1. This is a doable project using nginx, c, lua, and such and follow what
+   Telemetry did with the edge. Doing that will likely give us a collector
+   that's closer to the Telemetry collector. That might be a nice thing at some
+   point in the future.
 
    However, the current Socorro team has zero experience building nginx modules
    or using lua. It'd take time to level up on these things. Will's done some
    similar-ish things and we could use what Rob and Telemetry have built. Still,
    we have no existing skills here and I suggest this makes it more likely for
-   it to take "a long time" to design, implement, review, test and push to prod.
+   it to take "a long time" to design, implement, review, test, and get to prod.
 
 2. This is a doable project using Python. Doing that will likely give us a
    collector that has a lifetime of like 2 years, thus it's a stopgap between
@@ -340,9 +377,11 @@ My current thinking is that we've got the following rough options:
 
    This is just like one of the earlier collector rewrites I was working on
    (Antenna). The current Socorro team has experience in this field. Further,
-   because we've reduced the requirements from the original collector, it'd
-   probably take "a short time" to design, implement, review, test and push to
-   prod.
+   we've reduced the requirements from the original collector, it'd probably
+   take "a short time" to design, implement, review, test and push to prod.
+
+   We would then be in a better place to switch to something like the Telemetry
+   edge.
 
 
 Given that, I'm inclined to go the Python route. At some point it may prove to
