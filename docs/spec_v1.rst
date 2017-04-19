@@ -1,12 +1,45 @@
-=========================
-Project specification: v1
-=========================
+=================================
+Antenna Project specification: v1
+=================================
 
 .. contents::
 
+:Author:      Will Kahn-Greene
+:Last edited: April 18th, 2017
 
-Requirements
-============
+
+Background
+==========
+
+`Socorro <https://github.com/mozilla/socorro>`_ is the crash ingestion pipeline
+for Mozilla's products including Firefox, Firefox for Android, and others.
+
+When Firefox crashes, the Breakpad crash reporter collects data, generates the
+crash payload, and sends it to Socorro via an HTTP POST.
+
+The Socorro collector handles the incoming HTTP POST, extracts the crash from
+the HTTP request payload, saves all the parts to AWS S3, and then tells the
+processor to process the crash.
+
+There are several problems with the current state of things:
+
+1. Our current and future infrastructures don't work well with the "multiple
+   separate components in the same repository" structure we currently have. When
+   we do a deployment, we have to deploy and restart everything even if the
+   component didn't change.
+
+2. The different components have radically different uptime requirements.
+
+3. The different components have radically different risk profiles and
+   permissions requirements.
+
+
+For these reasons, we want to extract the Socorro collector into a separate
+project in a separate repository with separate infrastructure.
+
+
+Requirements for Antenna
+========================
 
 Requirements for v1 of antenna:
 
@@ -15,10 +48,18 @@ Requirements for v1 of antenna:
    * Handle gzip compressed HTTP POST request bodies.
    * Parse ``multipart/form-data`` into a raw crash.
 
+   Antenna should parse HTTP payloads the same way that Socorro collector
+   currently does.
+
 2. Throttle the crash
 
    * Examine the crash and apply throttling rules to it.
+   * "Accepted" crashes are saved and processed.
+   * "Deferred" crashes are saved, but not processed.
    * Rejected crashes get dropped.
+
+   Throttling system and rules should match what Socorro collector currently
+   does.
 
 3. Generate a crash id
 
@@ -38,8 +79,8 @@ Requirements for v1 of antenna:
 
    * Use the same S3 "directory" scheme we're currently using.
    * Keep trying to save until all files are successfully saved.
-   * We'll use SNS to alert something else that will notify the processor of the
-     new item to process.
+   * Saving the raw crash file to S3 will trigger an AWS Lambda function to
+     notify the processor of the crash to process.
 
 7. Support Ops Dockerflow status endpoints
 
@@ -49,9 +90,11 @@ Requirements for v1 of antenna:
 
 8. Support Ops logging requirements
 
-   * FIXME: link?
+   * Use the new logging infrastructure.
 
 9. Support Ops statsd for metrics
+
+   * Use Datadog.
 
 
 Crash reports and the current collector
@@ -204,9 +247,19 @@ makes it wayyyyyy easier to write, review, verify correctness and maintain over
 time.
 
 
+Logging
+=======
+
+We'll use the new logging infrastructure. Antenna will use the Python logging
+system and log to stdout and that'll get picked up by the node and sent to the
+logging infrastructure.
+
+
 Metrics
 =======
 
+Antenna will use the Datadog Python library to generate stats. These will be
+collected by the dd-agent on the node and sent to Datadog.
 
 
 Research and decisions
