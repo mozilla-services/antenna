@@ -95,7 +95,7 @@ class Throttler(RequiredConfigMixin):
             match = rule.match(raw_crash)
 
             if match:
-                mymetrics.incr('match_%s' % rule.rule_name)
+                mymetrics.incr('throttle_match', tags=['rule:%s' % rule.rule_name])
 
                 if rule.percentage is None:
                     return REJECT, rule.rule_name, None

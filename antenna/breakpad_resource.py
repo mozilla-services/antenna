@@ -217,7 +217,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             req.env['CONTENT_LENGTH'] = str(content_length)
 
             data = io.BytesIO(data)
-            mymetrics.histogram('crash_size.compressed', value=content_length)
+            mymetrics.histogram('crash_size', value=content_length, tags=['payload:compressed'])
         else:
             # NOTE(willkg): At this point, req.stream is either a
             # falcon.request_helper.BoundedStream (in tests) or a
@@ -232,7 +232,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             else:
                 data = req.stream
 
-            mymetrics.histogram('crash_size.uncompressed', value=content_length)
+            mymetrics.histogram('crash_size', value=content_length, tags=['payload:uncompressed'])
 
         fs = cgi.FieldStorage(fp=data, environ=req.env, keep_blank_values=1)
 
@@ -387,7 +387,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         # Log the throttle result
         logger.info('%s: matched by %s; returned %s', crash_id, rule_name,
                     RESULT_TO_TEXT[throttle_result])
-        mymetrics.incr(('throttle.%s' % RESULT_TO_TEXT[throttle_result]).lower())
+        mymetrics.incr('throttle', tags=['result:%s' % RESULT_TO_TEXT[throttle_result].lower()])
 
         if throttle_result is REJECT:
             # If the result is REJECT, then discard it
