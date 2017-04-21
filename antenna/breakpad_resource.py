@@ -15,8 +15,8 @@ from everett.manager import parse_class
 import falcon
 from falcon.request_helpers import BoundedStream
 from gevent.pool import Pool
+import markus
 
-from antenna import metrics
 from antenna.heartbeat import register_for_life, register_for_heartbeat
 from antenna.sentry import capture_unhandled_exceptions
 from antenna.throttler import (
@@ -34,7 +34,7 @@ from antenna.util import (
 
 
 logger = logging.getLogger(__name__)
-mymetrics = metrics.get_metrics('breakpad_resource')
+mymetrics = markus.get_metrics('breakpad_resource')
 
 
 #: Maximum number of attempts to save a crash before we give up
@@ -147,7 +147,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         # The number of crash reports sitting in the queue; this is a direct
         # measure of the health of this process--a number that's going up means
         # impending doom
-        mymetrics.gauge('save_queue_size', len(self.crashmover_save_queue))
+        mymetrics.gauge('save_queue_size', value=len(self.crashmover_save_queue))
 
     def has_work_to_do(self):
         work_to_do = len(self.crashmover_save_queue) + len(self.crashmover_pool)
@@ -217,7 +217,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             req.env['CONTENT_LENGTH'] = str(content_length)
 
             data = io.BytesIO(data)
-            mymetrics.histogram('crash_size.compressed', content_length)
+            mymetrics.histogram('crash_size', value=content_length, tags=['payload:compressed'])
         else:
             # NOTE(willkg): At this point, req.stream is either a
             # falcon.request_helper.BoundedStream (in tests) or a
@@ -232,7 +232,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             else:
                 data = req.stream
 
-            mymetrics.histogram('crash_size.uncompressed', content_length)
+            mymetrics.histogram('crash_size', value=content_length, tags=['payload:uncompressed'])
 
         fs = cgi.FieldStorage(fp=data, environ=req.env, keep_blank_values=1)
 
@@ -387,7 +387,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         # Log the throttle result
         logger.info('%s: matched by %s; returned %s', crash_id, rule_name,
                     RESULT_TO_TEXT[throttle_result])
-        mymetrics.incr(('throttle.%s' % RESULT_TO_TEXT[throttle_result]).lower())
+        mymetrics.incr('throttle', tags=['result:%s' % RESULT_TO_TEXT[throttle_result].lower()])
 
         if throttle_result is REJECT:
             # If the result is REJECT, then discard it
@@ -469,7 +469,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         # NOTE(willkg): time.time returns seconds, but .timing() wants
         # milliseconds, so we multiply!
         delta = (time.time() - raw_crash['timestamp']) * 1000
-        mymetrics.timing('crash_handling.time', delta)
+        mymetrics.timing('crash_handling.time', value=delta)
 
         mymetrics.incr('save_crash.count')
         logger.info('%s saved', crash_id)

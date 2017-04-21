@@ -9,11 +9,11 @@ from pathlib import Path
 import socket
 import sys
 
-from everett.manager import ConfigManager, ConfigEnvFileEnv, ConfigOSEnv, parse_class
+from everett.manager import ConfigManager, ConfigEnvFileEnv, ConfigOSEnv, ListOf, parse_class
 from everett.component import ConfigOptions, RequiredConfigMixin
 import falcon
+import markus
 
-from antenna import metrics
 from antenna.breakpad_resource import BreakpadSubmitterResource
 from antenna.health_resource import (
     BrokenResource,
@@ -63,15 +63,27 @@ def setup_logging(app_config):
                 'handlers': ['console'],
                 'level': app_config('logging_level'),
             },
+            'markus': {
+                'propagate': False,
+                'handlers': ['console'],
+                'level': 'INFO',
+            },
         },
     }
     logging.config.dictConfig(dc)
 
 
-def setup_metrics(metrics_class, config):
-    """Initializes the metrics system"""
-    logger.info('Setting up metrics: %s', metrics_class)
-    metrics.metrics_configure(metrics_class, config)
+def setup_and_log_metrics(metrics_classes, config, logger=None):
+    """Initializes and configures the metrics system"""
+    logger.info('Setting up metrics: %s', metrics_classes)
+
+    markus_configuration = []
+    for cls in metrics_classes:
+        backend = cls(config)
+        log_config(logger, backend)
+        markus_configuration.append(backend.to_markus())
+
+    markus.configure(markus_configuration)
 
 
 def log_config(logger, component):
@@ -140,8 +152,11 @@ class AppConfig(RequiredConfigMixin):
     required_config.add_option(
         'metrics_class',
         default='antenna.metrics.LoggingMetrics',
-        doc='Metrics client to use',
-        parser=parse_class
+        doc=(
+            'Comma-separated list of metrics backends to use. Possible options: '
+            '"antenna.metrics.LoggingMetrics" and "antenna.metrics.DatadogMetrics"',
+        ),
+        parser=ListOf(parse_class)
     )
     required_config.add_option(
         'secret_sentry_dsn',
@@ -254,14 +269,13 @@ def get_app(config=None):
         set_sentry_client(app_config('secret_sentry_dsn'), app_config('basedir'))
 
         with capture_unhandled_exceptions():
+            # Set up logging first, so we have something to log to. Then build
+            # and log everything else.
             setup_logging(app_config)
-            setup_metrics(app_config('metrics_class'), config)
 
             log_config(logger, app_config)
-            # FIXME(willkg): This is a little gross, but it's a component and
-            # we want to log the configuration, but it's "internal" to the
-            # metrics module.
-            log_config(logger, metrics._metrics_impl)
+
+            setup_and_log_metrics(app_config('metrics_class'), config, logger)
 
             app = AntennaAPI(config)
 

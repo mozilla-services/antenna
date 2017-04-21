@@ -8,12 +8,11 @@ import random
 import re
 
 from everett.component import ConfigOptions, RequiredConfigMixin
-
-from antenna import metrics
+import markus
 
 
 logger = logging.getLogger(__name__)
-mymetrics = metrics.get_metrics('throttler')
+mymetrics = markus.get_metrics('throttler')
 
 
 ACCEPT = 0   # save and process
@@ -96,7 +95,7 @@ class Throttler(RequiredConfigMixin):
             match = rule.match(raw_crash)
 
             if match:
-                mymetrics.incr('match_%s' % rule.rule_name)
+                mymetrics.incr('throttle_match', tags=['rule:%s' % rule.rule_name])
 
                 if rule.percentage is None:
                     return REJECT, rule.rule_name, None
