@@ -55,13 +55,18 @@ def setup_logging(app_config):
         },
         'root': {
             'handlers': ['console'],
-            'level': 'INFO',
+            'level': 'WARNING',
         },
         'loggers': {
             'antenna': {
                 'propagate': False,
                 'handlers': ['console'],
                 'level': app_config('logging_level'),
+            },
+            'markus': {
+                'propagate': False,
+                'handlers': ['console'],
+                'level': 'INFO',
             },
         },
     }
