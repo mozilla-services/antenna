@@ -387,6 +387,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         # Log the throttle result
         logger.info('%s: matched by %s; returned %s', crash_id, rule_name,
                     RESULT_TO_TEXT[throttle_result])
+        mymetrics.incr('throttle_rule', tags=['rule:%s' % rule_name])
         mymetrics.incr('throttle', tags=['result:%s' % RESULT_TO_TEXT[throttle_result].lower()])
 
         if throttle_result is REJECT:
