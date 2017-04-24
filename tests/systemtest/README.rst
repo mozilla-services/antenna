@@ -16,12 +16,19 @@ Contents of this directory::
 Running tests against locally running Antenna
 =============================================
 
-Run these tests from the repository root using::
+In a terminal, run::
+
+    make run
+
+
+to run Antenna.
+
+Then in a separate terminal, run these tests from the repository root::
 
     make systemtest
 
 
-To run a single test or group of tests or with different options, do::
+If you want to run individual tests, or use different py.test options, do::
 
     make systemtest-shell
 
