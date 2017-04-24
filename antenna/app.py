@@ -33,35 +33,46 @@ def setup_logging(app_config):
     """Initializes Python logging configuration"""
     host_id = app_config('host_id') or socket.gethostname()
 
+    class AddHostID(logging.Filter):
+        def filter(self, record):
+            record.host_id = host_id
+            return True
+
     dc = {
         'version': 1,
         'disable_existing_loggers': True,
+        'filters': {
+            'add_hostid': {
+                '()': AddHostID
+            }
+        },
         'formatters': {
-            'development': {
-                'format': (
-                    '[%(asctime)s] [ANTENNA ' +
-                    host_id +
-                    ' %(process)d] [%(levelname)s] %(name)s: %(message)s'
-                ),
-                'datefmt': '%Y-%m-%d %H:%M:%S %z',
+            'mozlog': {
+                '()': 'dockerflow.logging.JsonLogFormatter',
+                'logger_name': 'antenna'
             },
         },
         'handlers': {
             'console': {
                 'level': 'DEBUG',
                 'class': 'logging.StreamHandler',
-                'formatter': 'development',
+            },
+            'mozlog': {
+                'level': 'DEBUG',
+                'class': 'logging.StreamHandler',
+                'formatter': 'mozlog',
             },
         },
         'root': {
-            'handlers': ['console'],
+            'handlers': ['mozlog'],
             'level': 'WARNING',
         },
         'loggers': {
             'antenna': {
                 'propagate': False,
-                'handlers': ['console'],
+                'handlers': ['mozlog'],
                 'level': app_config('logging_level'),
+                'filters': ['add_hostid'],
             },
             'markus': {
                 'propagate': False,
