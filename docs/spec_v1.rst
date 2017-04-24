@@ -280,19 +280,21 @@ collected by the dd-agent on the node and sent to Datadog.
 Research and decisions
 ======================
 
-nginx vs. python thoughts
--------------------------
+nginx like telemetry edge vs. python architecture thoughts
+----------------------------------------------------------
 
 The current collector has a web process that:
 
 1. handles incoming HTTP requests
-2. throttles the crash based on configured rules
-3. generates a crash id and returns it to the breakpad client
-4. saves the crash report to local disk
+2. converts the multipart/form-data HTTP payload into two JSON documents
+   (``raw_crash`` and ``dump_names``) and one binary file for each dump
+3. throttles the crash based on configured rules
+4. generates a crash id and returns it to the breakpad client
+5. saves the crash report data files to local disk
 
 Then there's a crashmover process that runs as a service on the same node and:
 
-1. uploads crash report files to S3
+1. uploads crash report data files to S3
 2. adds a message to RabbitMQ with the crashid telling the processor to process
    that crash
 3. sends some data to statsd
@@ -322,9 +324,12 @@ The edge looked interesting, but there are a few things that Socorro needs
 currently that the edge doesn't do:
 
 1. Socorro needs to generate and return a CrashID
-2. Socorro has large crash reports and needs to save to S3
-3. Socorro currently throttles crashes in the collector
-4. Socorro currently uses RabbitMQ to queue crashes up for processing
+2. Socorro needs to convert the multipart/form-data payload into two JSON
+   documents (``raw_crash`` and ``dump_names``) and one binary file for each
+   dump
+3. Socorro has large crash reports and needs to save to S3
+4. Socorro currently throttles crashes in the collector
+5. Socorro currently uses RabbitMQ to queue crashes up for processing
 
 In September 2016 at the work week, I talked with Rob Helmer about this and he
 suggested we build it all in nginx using modules similar to what Telemetry did.
@@ -347,19 +352,31 @@ then upload it to S3.
 
 .. [2] Rob's gist: https://gist.github.com/rhelmer/00dd0f9e4076260078367f763bc9aaf3
 
+We could push converting the payload from multipart/form-data to a series of
+separate files to the processor, but that heavily affects the processor, the
+webapp, and possibly a bunch of other tools.
+
+We could write a lua module for converting in nginx, but that's more work to do.
+
 
 Given all that, my current thinking is that we've got the following rough options:
 
 1. This is a doable project using nginx, c, lua, and such and follow what
-   Telemetry did with the edge. Doing that will likely give us a collector
-   that's closer to the Telemetry collector. That might be a nice thing at some
-   point in the future.
+   Telemetry did with the edge, but there are a lot of differences.
 
-   However, the current Socorro team has zero experience building nginx modules
-   or using lua. It'd take time to level up on these things. Will's done some
-   similar-ish things and we could use what Rob and Telemetry have built. Still,
-   we have no existing skills here and I suggest this makes it more likely for
-   it to take "a long time" to design, implement, review, test, and get to prod.
+   Doing that will likely give us a collector that's closer to the Telemetry
+   collector which is nice.
+
+   There are a decent number of things we'd have to figure out how to do in a
+   way that mirrors the current collector or this project becomes a lot bigger
+   since it'd also involve making changes to the processor, webapp, and any
+   thing that uses the raw crash data.
+
+   The current Socorro team has zero experience building nginx modules or using
+   lua. It'd take time to level up on these things. Will's done some similar-ish
+   things and we could use what Rob and Telemetry have built. Still, we have no
+   existing skills here and I suggest this makes it more likely for it to take
+   "a long time" to design, implement, review, test, and get to prod.
 
 2. This is a doable project using Python. Doing that will likely give us a
    collector that has a lifetime of like 2 years, thus it's a stopgap between
@@ -380,8 +397,13 @@ Given all that, my current thinking is that we've got the following rough option
    we've reduced the requirements from the original collector, it'd probably
    take "a short time" to design, implement, review, test and push to prod.
 
-   We would then be in a better place to switch to something like the Telemetry
-   edge.
+   After rewriting the collector, we plan to extract/rewrite other parts of
+   Socorro. After that work is done, it should be a lot easier to make chances
+   to components and change how data flows through the system and what shape
+   it's in.
+
+   After that, we would be in a much better place to switch to something like
+   the Telemetry edge.
 
 
 Given that, I'm inclined to go the Python route. At some point it may prove to
