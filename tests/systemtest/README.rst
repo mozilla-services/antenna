@@ -48,7 +48,7 @@ options::
 
 
 Make sure to set ``ANTENNA_ENV`` as the path to the env file with the
-following items defined in it::
+following items defined in it:
 
 ``POSTURL``
     The full URL to post to.
