@@ -7,6 +7,8 @@ from functools import wraps
 import json
 import logging
 from pathlib import Path
+import re
+import string
 import sys
 import time
 import traceback
@@ -124,6 +126,39 @@ def create_crash_id(timestamp=None, throttle_result=1):
     )
 
 
+CRASH_ID_RE = re.compile(r"""
+    ^
+    [a-f0-9]{8}-
+    [a-f0-9]{4}-
+    [a-f0-9]{4}-
+    [a-f0-9]{4}-
+    [a-f0-9]{6}
+    [0-9]{6}      # date in YYMMDD
+    $
+""", re.VERBOSE)
+
+
+def validate_crash_id(crash_id, strict=True):
+    """Returns whether this is a valid crash id
+
+    :arg str crash_id: the crash id in question
+    :arg boolean strict: whether or not to be strict about the throttle character
+
+    :returns: true if it's valid, false if not
+
+    """
+    # Assert the shape is correct
+    if not CRASH_ID_RE.match(crash_id):
+        return False
+
+    # Check throttle character
+    if strict:
+        if crash_id[-7] not in ('0', '1'):
+            return False
+
+    return True
+
+
 def get_throttle_from_crash_id(crash_id):
     """Retrieve the throttle instruction from the crash_id
 
@@ -149,6 +184,21 @@ def get_date_from_crash_id(crash_id, as_datetime=False):
     if as_datetime:
         return datetime.datetime(int(s[:4]), int(s[4:6]), int(s[6:8]), tzinfo=UTC)
     return s
+
+
+ALPHA_NUMERIC_UNDERSCORE = string.ascii_letters + string.digits + '_'
+
+
+def sanitize_dump_name(val):
+    """Sanitizes a dump name"""
+    # Dump names can only contain ASCII alpha-numeric characters and
+    # underscores
+    val = ''.join(v for v in val if v in ALPHA_NUMERIC_UNDERSCORE)
+
+    # Dump names can't be longer than 30 characters
+    val = val[:30]
+
+    return val
 
 
 class MaxAttemptsError(Exception):
