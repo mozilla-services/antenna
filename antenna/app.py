@@ -56,11 +56,13 @@ def setup_logging(app_config):
             'console': {
                 'level': 'DEBUG',
                 'class': 'logging.StreamHandler',
+                'filters': ['add_hostid'],
             },
             'mozlog': {
                 'level': 'DEBUG',
                 'class': 'logging.StreamHandler',
                 'formatter': 'mozlog',
+                'filters': ['add_hostid'],
             },
         },
         'root': {
@@ -72,7 +74,6 @@ def setup_logging(app_config):
                 'propagate': False,
                 'handlers': ['mozlog'],
                 'level': app_config('logging_level'),
-                'filters': ['add_hostid'],
             },
             'markus': {
                 'propagate': False,
