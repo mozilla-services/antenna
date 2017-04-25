@@ -18,7 +18,7 @@ mymetrics = markus.get_metrics('health')
 
 
 class BrokenResource(RequiredConfigMixin):
-    """Implements the ``/__broken__`` endpoint"""
+    """Handles ``/__broken__`` endpoint"""
     def __init__(self, config):
         self.config = config
 
@@ -28,7 +28,7 @@ class BrokenResource(RequiredConfigMixin):
 
 
 class VersionResource:
-    """Implements the ``/__version__`` endpoint"""
+    """Handles ``/__version__`` endpoint"""
     def __init__(self, config, basedir):
         self.config = config
         self.basedir = basedir
@@ -42,11 +42,12 @@ class VersionResource:
 
 
 class LBHeartbeatResource:
-    """Endpoint to let the load balancing know application health"""
+    """Handles ``/__lbheartbeat__`` to let the load balancing know application health"""
     def __init__(self, config):
         self.config = config
 
     def on_get(self, req, resp):
+        resp.content_type = 'application/json; charset=utf-8'
         resp.status = falcon.HTTP_200
 
 
@@ -80,7 +81,7 @@ class HealthState:
 
 
 class HeartbeatResource:
-    """Handles /__heartbeat__"""
+    """Handles ``/__heartbeat__`` for app health"""
     def __init__(self, config, app):
         self.config = config
         self.antenna_app = app

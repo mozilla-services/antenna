@@ -61,10 +61,10 @@ class WSGILoggingMiddleware(object):
             exc_info = sys.exc_info()
             start_response(
                 '500 Internal Server Error',
-                [('content-type', 'text/plain')],
+                [('content-type', 'application/json; charset=utf-8')],
                 exc_info
             )
-            return [b'COUGH! Internal Server Error']
+            return [b'{"msg": "COUGH! Internal Server Error"}']
 
 
 def wsgi_capture_exceptions(app):

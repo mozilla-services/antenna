@@ -37,6 +37,7 @@ class TestBreakpadSubmitterResource:
             body=data,
         )
         assert result.status_code == 200
+        assert result.headers['Content-Type'].startswith('text/plain')
         assert result.content.startswith(b'CrashID=bp')
 
     def test_extract_payload(self, request_generator):

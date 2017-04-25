@@ -349,6 +349,8 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         resp.status = falcon.HTTP_200
 
         start_time = time.time()
+        # NOTE(willkg): This has to return text/plain since that's what the
+        # breakpad clients expect.
         resp.content_type = 'text/plain'
 
         raw_crash, dumps = self.extract_payload(req)
