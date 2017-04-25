@@ -85,3 +85,23 @@ following items defined in it:
 
 ``CRASHSTORAGE_BUCKET_NAME``
     The name of the bucket that Antenna is saving to.
+
+
+Rules of systemtest
+===================
+
+1. Thou shalt not import anything from ``antenna``.
+
+2. If the test requires nginx (for example, testing whether crash reports
+   > 20mb are rejected which is configured in nginx), then add this
+   decorator::
+
+      @pytest.mark.skipif(
+          bool(os.environ.get('NONGINX')),
+          reason=(
+              'Requires nginx which you probably do not have running '
+              'via localhost'
+          ))
+
+3. Tests can check S3 to see if a file exists by listing objects, but
+   cannot get the file.
