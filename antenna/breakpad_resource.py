@@ -29,7 +29,9 @@ from antenna.throttler import (
 from antenna.util import (
     create_crash_id,
     de_null,
+    sanitize_dump_name,
     utc_now,
+    validate_crash_id,
 )
 
 
@@ -254,14 +256,14 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
                 continue
 
             elif fs_item.type and (fs_item.type.startswith('application/octet-stream') or isinstance(fs_item.value, bytes)):
-                # This is a dump, so we get a checksum and save the bits in the
-                # relevant places.
+                # This is a dump, so we sanitize the dump name, get a checksum
+                # of the dump, and save the appropriate bits in the relevant
+                # places.
+                dump_name = sanitize_dump_name(item_name)
 
-                # FIXME(willkg): The dump name is essentially user-provided. We should
-                # sanitize it before proceeding.
-                dumps[item_name] = fs_item.value
+                dumps[dump_name] = fs_item.value
                 checksum = hashlib.md5(fs_item.value).hexdigest()
-                raw_crash.setdefault('dump_checksums', {})[item_name] = checksum
+                raw_crash.setdefault('dump_checksums', {})[dump_name] = checksum
 
             else:
                 # This isn't a dump, so it's a key/val pair, so we add that.
@@ -371,9 +373,9 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         # to generate a crash id.
         throttle_result, rule_name, percentage = self.get_throttle_result(raw_crash)
 
-        if 'uuid' in raw_crash:
-            # FIXME(willkg): This means the uuid is essentially user-provided.
-            # We should sanitize it before proceeding.
+        # Use a uuid if they gave us one and it's valid--otherwise create a new
+        # one.
+        if 'uuid' in raw_crash and validate_crash_id(raw_crash['uuid']):
             crash_id = raw_crash['uuid']
             logger.info('%s has existing crash_id', crash_id)
 
