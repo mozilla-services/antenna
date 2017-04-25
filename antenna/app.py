@@ -198,17 +198,6 @@ class AppConfig(RequiredConfigMixin):
         return self.config(key)
 
 
-class HomePageResource:
-    """Shows something at /"""
-    def __init__(self, config):
-        pass
-
-    def on_get(self, req, resp):
-        resp.content_type = 'text/html'
-        resp.status = falcon.HTTP_404
-        resp.body = '<html><body><!-- Antenna --><p>HTTP 404: Not found.</p></body></html>'
-
-
 class AntennaAPI(falcon.API):
     def __init__(self, config):
         super().__init__()
@@ -290,7 +279,6 @@ def get_app(config=None):
 
             app = AntennaAPI(config)
 
-            app.add_route('homepage', '/', HomePageResource(config))
             app.add_route('breakpad', '/submit', BreakpadSubmitterResource(config))
             app.add_route('version', '/__version__', VersionResource(config, basedir=app_config('basedir')))
             app.add_route('heartbeat', '/__heartbeat__', HeartbeatResource(config, app))

@@ -7,8 +7,4 @@ class TestBasic:
     def test_404(self, client):
         result = client.simulate_get('/foo')
         assert result.status_code == 404
-
-    def test_home_page(self, client):
-        result = client.simulate_get('/')
-        assert result.status_code == 404
-        assert b'Antenna' in result.content
+        assert result.headers['Content-Type'].startswith('application/json')
