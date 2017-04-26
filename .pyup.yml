@@ -1,0 +1,7 @@
+schedule: "every day"
+search: False
+requirements:
+  - requirements.txt:
+      updates: security
+  - requirements-newrelic.txt:
+      updates: security
