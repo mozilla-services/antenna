@@ -41,7 +41,7 @@ services:
       - "8000:8000"
     command: ./bin/run_web.sh
     links:
-      - moto-s3
+      - localstack-s3
       - statsd
 
   # System test container
@@ -55,12 +55,14 @@ services:
     links:
       - web
 
-  # moto-server running a fake S3
-  moto-s3:
-    build:
-      context: .
-      dockerfile: Dockerfile.motos3
-    command: s3 -H 0.0.0.0 -p5000
+  # https://hub.docker.com/r/atlassianlabs/localstack/
+  # localstack running a fake S3
+  localstack-s3:
+    image: atlassianlabs/localstack:0.4.0
+    environment:
+      - SERVICES=s3:5000
+      - DEFAULT_REGION=us-east-1
+      - HOSTNAME=localstack-s3
     ports:
       - "5000:5000"
 
