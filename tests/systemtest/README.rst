@@ -78,7 +78,8 @@ following items defined in it:
     * ``s3:ListBucket``
 
 ``CRASHSTORAGE_ENDPOINT_URL``
-    If you're using a fake s3 (for example, moto), you need to define this.
+    If you're using a fake s3 (for example, localstack), you need to define
+    this.
 
 ``CRASHSTORAGE_REGION``
     The regeion you're using. Defaults to ``us-west-2``.

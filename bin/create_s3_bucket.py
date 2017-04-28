@@ -7,7 +7,8 @@
 """When doing local development, we need to create the bucket before we can use
 it. This script makes that easier.
 
-In order for this script to run, you must have the moto-s3 container running.
+In order for this script to run, you must have the localstack-s3 container
+running.
 
 If a bucket exists, it won't do anything.
 
