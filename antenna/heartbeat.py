@@ -17,8 +17,6 @@ import logging
 from everett.component import ConfigOptions, RequiredConfigMixin
 import gevent
 
-from antenna.sentry import capture_unhandled_exceptions
-
 
 logger = logging.getLogger(__name__)
 
@@ -56,9 +54,8 @@ class HeartbeatManager(RequiredConfigMixin):
     def _heartbeat_beat_once(self):
         for fun in _registered_hb_funs:
             try:
-                with capture_unhandled_exceptions():
-                    # logger.debug('hb: running %s', fun.__qualname__)
-                    fun()
+                # logger.debug('hb: running %s', fun.__qualname__)
+                fun()
             except Exception:
                 logger.exception('Exception thrown while retrieving health stats')
 

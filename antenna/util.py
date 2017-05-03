@@ -9,9 +9,7 @@ import logging
 from pathlib import Path
 import re
 import string
-import sys
 import time
-import traceback
 import uuid
 
 import isodate
@@ -332,18 +330,3 @@ def retry(retryable_exceptions=Exception,
 
         return _retry_fun
     return _retry_inner
-
-
-def one_line_exception(exc_info=None):
-    """Formats an exception such that it's all on one line
-
-    This fixes some problems with interleaved logging, but it's annoying. To
-    convert the line back do this::
-
-        line.replace('<NL>', '\n')
-
-    """
-    if exc_info is None:
-        exc_info = sys.exc_info()
-
-    return ''.join(traceback.format_exception(*exc_info)).strip().replace('\n', '<NL>')
