@@ -23,7 +23,6 @@ from antenna.health_resource import (
 )
 from antenna.heartbeat import HeartbeatManager
 from antenna.sentry import set_sentry_client, wsgi_capture_exceptions, capture_unhandled_exceptions
-from antenna.util import one_line_exception
 
 
 logger = logging.getLogger(__name__)
@@ -249,50 +248,45 @@ class AntennaAPI(falcon.API):
 
 def get_app(config=None):
     """Returns AntennaAPI instance"""
-    try:
-        if config is None:
-            config = ConfigManager(
-                environments=[
-                    # Pull configuration from env file specified as ANTENNA_ENV
-                    ConfigEnvFileEnv([os.environ.get('ANTENNA_ENV')]),
-                    # Pull configuration from environment variables
-                    ConfigOSEnv()
-                ],
-                doc=(
-                    'For configuration help, see '
-                    'https://antenna.readthedocs.io/en/latest/configuration.html'
-                )
+    if config is None:
+        config = ConfigManager(
+            environments=[
+                # Pull configuration from env file specified as ANTENNA_ENV
+                ConfigEnvFileEnv([os.environ.get('ANTENNA_ENV')]),
+                # Pull configuration from environment variables
+                ConfigOSEnv()
+            ],
+            doc=(
+                'For configuration help, see '
+                'https://antenna.readthedocs.io/en/latest/configuration.html'
             )
+        )
 
-        app_config = AppConfig(config)
+    app_config = AppConfig(config)
 
-        # Set a Sentry client if we're so configured
-        set_sentry_client(app_config('secret_sentry_dsn'), app_config('basedir'))
+    # Set a Sentry client if we're so configured
+    set_sentry_client(app_config('secret_sentry_dsn'), app_config('basedir'))
 
-        with capture_unhandled_exceptions():
-            # Set up logging first, so we have something to log to. Then build
-            # and log everything else.
-            setup_logging(app_config)
+    with capture_unhandled_exceptions():
+        # Set up logging first, so we have something to log to. Then build
+        # and log everything else.
+        setup_logging(app_config)
 
-            log_config(logger, app_config)
+        log_config(logger, app_config)
 
-            setup_and_log_metrics(app_config('metrics_class'), config, logger)
+        setup_and_log_metrics(app_config('metrics_class'), config, logger)
 
-            app = AntennaAPI(config)
+        app = AntennaAPI(config)
 
-            app.add_route('breakpad', '/submit', BreakpadSubmitterResource(config))
-            app.add_route('version', '/__version__', VersionResource(config, basedir=app_config('basedir')))
-            app.add_route('heartbeat', '/__heartbeat__', HeartbeatResource(config, app))
-            app.add_route('lbheartbeat', '/__lbheartbeat__', LBHeartbeatResource(config))
-            app.add_route('broken', '/__broken__', BrokenResource(config))
+        app.add_route('breakpad', '/submit', BreakpadSubmitterResource(config))
+        app.add_route('version', '/__version__', VersionResource(config, basedir=app_config('basedir')))
+        app.add_route('heartbeat', '/__heartbeat__', HeartbeatResource(config, app))
+        app.add_route('lbheartbeat', '/__lbheartbeat__', LBHeartbeatResource(config))
+        app.add_route('broken', '/__broken__', BrokenResource(config))
 
-            log_config(logger, app)
+        log_config(logger, app)
 
-        # Wrap the app in some kind of unhandled exception notification mechanism
-        app = wsgi_capture_exceptions(app)
+    # Wrap the app in some kind of unhandled exception notification mechanism
+    app = wsgi_capture_exceptions(app)
 
-        return app
-
-    except Exception:
-        logger.error('Unhandled startup exception: %s', one_line_exception(sys.exc_info()))
-        raise
+    return app
