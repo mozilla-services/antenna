@@ -18,7 +18,6 @@ from gevent.pool import Pool
 import markus
 
 from antenna.heartbeat import register_for_life, register_for_heartbeat
-from antenna.sentry import capture_unhandled_exceptions
 from antenna.throttler import (
     ACCEPT,
     DEFER,
@@ -415,11 +414,6 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
     def crashmover_process_queue(self):
         """Processes the queue of crashes to save until it's empty
 
-        Note: Since this is spawned, it happens in its own execution context
-        outside of WSGI app HTTP request handling, so unhandled exceptions
-        aren't captured by the Sentry WSGI middleware. Thus this creates its
-        own capture context.
-
         Note: This has to be super careful not to lose crash reports. If
         there's any kind of problem, this must return the crash to the queue.
 
@@ -429,8 +423,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             crash_report = self.crashmover_save_queue.popleft()
 
             try:
-                with capture_unhandled_exceptions():
-                    self.crashmover_save(crash_report)
+                self.crashmover_save(crash_report)
 
             except Exception:
                 mymetrics.incr('save_crash_exception.count')

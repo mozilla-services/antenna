@@ -7,11 +7,12 @@ unhandled exceptions
 
 """
 
-from contextlib import contextmanager
 import logging
 import sys
 
 from raven import Client
+from raven.conf import setup_logging
+from raven.handlers.logging import SentryHandler
 from raven.middleware import Sentry
 
 from antenna.util import get_version_info
@@ -21,6 +22,12 @@ logger = logging.getLogger(__name__)
 
 # Global Sentry client singleton
 _sentry_client = None
+
+
+def setup_sentry_logging():
+    """Set up sentry logging of exceptions"""
+    if _sentry_client:
+        setup_logging(SentryHandler(_sentry_client))
 
 
 def set_sentry_client(sentry_dsn, basedir):
@@ -78,32 +85,3 @@ def wsgi_capture_exceptions(app):
         return WSGILoggingMiddleware(app)
     else:
         return Sentry(app, _sentry_client)
-
-
-@contextmanager
-def capture_unhandled_exceptions():
-    """Context manager for capturing unhandled exceptions
-
-    If a Sentry client is set (see :py:func:`set_sentry_client`), then this
-    will capture unhandled exceptions and send the data to Sentry.
-
-    To use::
-
-        with capture_unhandled_exceptions():
-            # do crazy things here
-
-
-    Note: This will re-raise the exception, so it doesn't handle
-    exceptions--just captures them.
-
-    """
-    try:
-        yield
-
-    except Exception:
-        if _sentry_client is None:
-            logger.warning('No Sentry client set up.')
-        else:
-            logger.info('Unhandled exception sent to sentry.')
-            _sentry_client.captureException()
-        raise
