@@ -194,17 +194,17 @@ Which gets converted to a ``raw_crash`` like this::
 
 Which ends up in S3 like this::
 
-    /v2/raw_crash/000/20160513/00007bd0-2d1c-4865-af09-80bc02160513
+    v2/raw_crash/000/20160513/00007bd0-2d1c-4865-af09-80bc02160513
 
         Raw crash in serialized in JSON.
 
-    /v1/dump_names/00007bd0-2d1c-4865-af09-80bc02160513
+    v1/dump_names/00007bd0-2d1c-4865-af09-80bc02160513
 
         Map of dump_name to file name serialized in JSON.
 
-    /v1/upload_file_minidump/00007bd0-2d1c-4865-af09-80bc02160513
+    v1/dump/00007bd0-2d1c-4865-af09-80bc02160513
 
-        Raw dumps.
+        Raw dump.
 
 
 Crash ids

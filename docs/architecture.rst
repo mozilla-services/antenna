@@ -130,22 +130,18 @@ Diagnostics
 Logs to stdout
 --------------
 
-Antenna logs its activity to stdout.
-
-Logs have the following format:
-
-    [TIMESTAMP] [ANTENNA HOST] [LOGLEVEL] name: message
-
+Antenna logs its activity to stdout in `mozlog format
+<https://python-dockerflow.readthedocs.io/en/latest/logging.html>`_.
 
 You can see crashes being accepted and saved::
 
-    [2017-03-14 14:58:09 +0000] [ANTENNA ip-172-31-25-230 11] [INFO] antenna.breakpad_resource: 1ad900ab-58f6-401a-b6e1-a606d1170314: matched by is_firefox_desktop; returned DEFER
-    [2017-03-14 14:58:09 +0000] [ANTENNA ip-172-31-25-230 11] [INFO] antenna.breakpad_resource: 1ad900ab-58f6-401a-b6e1-a606d1170314 saved
+    {"Timestamp": 1493998643710555648, "Type": "antenna.breakpad_resource","Logger": "antenna", "Hostname": "ebf44d051438", "EnvVersion": "2.0", "Severity": 6, "Pid": 15, "Fields": {"host_id": "ebf44d051438", "message": "8e01b4e0-f38f-4b16-bc5a-043971170505: matched by is_firefox_desktop; returned DEFER"}}
+    {"Timestamp": 1493998645733482752, "Type": "antenna.breakpad_resource", "Logger": "antenna", "Hostname": "ebf44d051438", "EnvVersion": "2.0", "Severity": 6, "Pid": 15, "Fields": {"host_id": "ebf44d051438", "message": "8e01b4e0-f38f-4b16-bc5a-043971170505 saved"}}
 
 
 You can see the heartbeat kicking off::
 
-    [2017-03-14 14:58:07 +0000] [ANTENNA ip-172-31-25-230 10] [DEBUG] antenna.heartbeat: thump
+    {"Timestamp": 1493998645532856576, "Type": "antenna.heartbeat", "Logger": "antenna", "Hostname": "ebf44d051438", "EnvVersion": "2.0", "Severity": 7, "Pid": 15, "Fields": {"host_id": "ebf44d051438", "message": "thump"}}
 
 
 Statsd
@@ -198,3 +194,39 @@ Antenna works with `Sentry <https://sentry.io/welcome/>`_ and will send
 unhandled startup errors and other unhandled errors to Sentry where you can more
 easily see what's going on. You can use the hosted Sentry or run your own Sentry
 instance--either will work fine.
+
+
+AWS S3 file hierarchy
+---------------------
+
+If you use the Amazon Web Services S3 crashstorage component, then crashes get
+saved in this hierarchy in the bucket:
+
+* ``/v2/raw_crash/<ENTROPY>/<DATE>/<CRASHID>``
+* ``/v1/dump_names/<CRASHID>``
+
+And then one or more dumps in directories by dump name:
+
+* ``/v1/<DUMP_NAME>/<CRASHID>``
+
+Note that ``upload_file_minidump`` gets converted to ``dump``.
+
+For example, a crash with id ``00007bd0-2d1c-4865-af09-80bc00170413`` and
+two dumps "upload_file_minidump" and "upload_file_minidump_flash1" gets 
+these files saved::
+
+    v2/raw_crash/000/20170413/00007bd0-2d1c-4865-af09-80bc00170413
+
+        Raw crash in serialized in JSON.
+
+    v1/dump_names/00007bd0-2d1c-4865-af09-80bc00170413
+
+        Map of dump_name to file name serialized in JSON.
+
+    v1/dump/00007bd0-2d1c-4865-af09-80bc00170413
+
+        upload_file_minidump dump.
+
+    v1/upload_file_minidump_flash1/00007bd0-2d1c-4865-af09-80bc00170413
+
+        upload_file_minidump_flash1 dump.
