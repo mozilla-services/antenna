@@ -23,7 +23,7 @@ setup(
     long_description=get_file('README.rst'),
     author='Socorro Team',
     author_email='socorro-dev@mozilla.com',
-    url='https://github.com/mozilla/antenna',
+    url='https://github.com/mozilla-services/antenna',
     packages=[
         'antenna',
     ],
