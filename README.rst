@@ -27,7 +27,7 @@ production, see docs_.
 
    .. code-block:: shell
 
-      $ git clone https://github.com/mozilla/antenna
+      $ git clone https://github.com/mozilla-services/antenna
 
 
 2. `Install docker 1.10.0+ <https://docs.docker.com/engine/installation/>`_ and

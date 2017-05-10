@@ -77,8 +77,8 @@ Antenna exposes several URL endpoints to help you run it at scale.
         {
             "commit": "5cc6f5170973c7af2e4bb2097679a82ae5659466",
             "version": "",
-            "source": "https://github.com/mozilla/antenna",
-            "build": "https://circleci.com/gh/mozilla/antenna/331"
+            "source": "https://github.com/mozilla-services/antenna",
+            "build": "https://circleci.com/gh/mozilla-services/antenna/331"
         }
 
 ``/__broken__``
@@ -132,10 +132,10 @@ So, yay--we have raw crash data on AWS S3. What happens next?
 
 Currently, we have ``s3:PutObject`` events for ``v2/raw_crash`` prefix trigger
 an AWS Lambda function `socorro-pigeon
-<https://github.com/mozilla/socorro-pigeon>`_. That takes the crash id and adds
-it to a RabbitMQ queue. We have a processor that watches that queue, pulls the
-crash data from AWS S3, processes it and then the crash continues through our
-crash ingestion pipeline.
+<https://github.com/mozilla-services/socorro-pigeon>`_. That takes the crash
+id andadds it to a RabbitMQ queue. We have a processor that watches that queue,
+pulls the crash data from AWS S3, processes it and then the crash continues
+through our crash ingestion pipeline.
 
 You could do something along these lines. You could write your own crash storage
 class that does other things.
