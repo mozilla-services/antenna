@@ -254,9 +254,9 @@ requests==2.14.2 \
 requests-futures==0.9.7 \
     --hash=sha256:a9ca2c3480b6fac29ec5de59c146742e2ab2b60f8c68581766094edb52ea7bad
 snowballstemmer==1.2.1 --hash=sha256:9f3bcd3c401c3e862ec0ebe6d2c069ebc012ce142cce209c098ccb5b09136e89
-Sphinx==1.5.3 \
-    --hash=sha256:2809b2ab81906483b47c9d7e28740e3b69c160617f33d7aa11dc4ae376fd04d9 \
-    --hash=sha256:4f6b257bea61ee6454538dcdb9e8cf56470b4dc6c4f9f750de4aedc57557814f
+Sphinx==1.5.5 \
+    --hash=sha256:11f271e7a9398385ed730e90f0bb41dc3815294bdcd395b46ed2d033bc2e7d87 \
+    --hash=sha256:4064ea6c56feeb268838cb8fbbee507d0c3d5d92fa63a7df935a916b52c9e2f5
 sphinx-rtd-theme==0.1.9 \
     --hash=sha256:3c38d037713bd78043486eea5bf771d71ed697ec25c09e16f49e44887f7fe184 \
     --hash=sha256:46c2ca8b482b0398b9621bb5a8ec7c9c5c7226926e5363e18d744f5f0d39d78f \
