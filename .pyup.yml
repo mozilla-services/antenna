@@ -3,6 +3,6 @@ search: False
 update: insecure
 requirements:
   - requirements.txt:
-      updates: security
+      update: security
   - requirements-newrelic.txt:
-      updates: security
+      update: security
