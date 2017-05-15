@@ -216,9 +216,9 @@ pyflakes==1.5.0 \
 Pygments==2.2.0 \
     --hash=sha256:78f3f434bcc5d6ee09020f92ba487f95ba50f1e3ef83ae96b9d5ffa1bab25c5d \
     --hash=sha256:dbae1046def0efb574852fab9e90209b23f556367b5a320c0bcb871c77c3e8cc
-pytest==3.0.6 \
-    --hash=sha256:da0ab50c7eec0683bc24f1c1137db1f4111752054ecdad63125e7ec71316b813 \
-    --hash=sha256:643434a9f1a188271da35e20064cb8b6c5440976c5bb541dc7b5b0e3cf75d940
+pytest==3.0.7 \
+    --hash=sha256:66f332ae62593b874a648b10a8cb106bfdacd2c6288ed7dec3713c3a808a6017 \
+    --hash=sha256:b70696ebd1a5e6b627e7e3ac1365a4bc60aaf3495e843c1e70448966c5224cab
 pytest-env==0.6.0 --hash=sha256:f4d61885b0befcb474e73e775597a798bd37808f8856ebb624b0822f054f6c0c
 pytest-wholenodeid==0.2 \
     --hash=sha256:6bc4edaf560c8b45ac4669bb8b99d8fbbb7f6e5af8dc7727200cd4d3ef4668c2 \
