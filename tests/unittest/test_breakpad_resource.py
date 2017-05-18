@@ -175,96 +175,42 @@ class TestBreakpadSubmitterResource:
         # crash id we sent
         assert result.content.decode('utf-8') == 'CrashID=bp-%s\n' % crash_id
 
-    def test_legacy_processing(self, client, loggingmock):
-        # NOTE(willkg): This encodes throttle result which is 0 (ACCEPT)
-        crash_id = 'de1bb258-cbbf-4589-a673-34f800160918'
+    @pytest.mark.parametrize('data, expected', [
+        # uuid has ACCEPT in throttle character position
+        ({'uuid': 'de1bb258-cbbf-4589-a673-34f800160918'}, (0, 'FROM_CRASHID', 100)),
 
-        data, headers = multipart_encode({
-            'uuid': crash_id,
-            'ProductName': 'Test',
-            'Version': '1.0',
-            'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234')),
+        # uuid has DEFER in throttle character position
+        ({'uuid': 'de1bb258-cbbf-4589-a673-34f801160918'}, (1, 'FROM_CRASHID', 100)),
 
-            'legacy_processing': '0',  # ACCEPT
-            'throttle_rate': '100',
-        })
+        # uuid has bad character in throttle character position, so it doesn't use that throttle
+        # result
+        ({'uuid': 'de1bb258-cbbf-4589-a673-34f80f160918'}, (0, 'has_comments', 100)),
 
-        with loggingmock(['antenna']) as lm:
-            result = client.simulate_post(
-                '/submit',
-                headers=headers,
-                body=data
-            )
-            assert result.status_code == 200
-
-            assert lm.has_record(
-                name='antenna.breakpad_resource',
-                levelname='INFO',
-                msg_contains='%s: matched by FROM_CRASHID; returned ACCEPT' % crash_id
-            )
-
-    @pytest.mark.parametrize('legacy,throttle_rate', [
-        # One of the two is a non-int
-        ('foo', 'bar'),
-        ('0', 'bar'),
-        ('foo', '100'),
+        # legacy_processing and/or throttle_rate has bad value, so it doesn't use that throttle
+        # result
+        ({'legacy_processing': 'foo', 'throttle_rate': 'bar'}, (0, 'has_comments', 100)),
+        ({'legacy_processing': '0', 'throttle_rate': 'bar'}, (0, 'has_comments', 100)),
+        ({'legacy_processing': 'foo', 'throttle_rate': '100'}, (0, 'has_comments', 100)),
 
         # legacy_processing is not a valid value
-        ('1000', '100'),
+        ({'legacy_processing': '1000', 'throttle_rate': '100'}, (0, 'has_comments', 100)),
 
         # throttle_rate is not valid
-        ('0', '1000')
+        ({'legacy_processing': '0', 'throttle_rate': '1000'}, (0, 'has_comments', 100)),
+
+        # throttleable is 0
+        ({'Throttleable': '0'}, (0, 'THROTTLEABLE_0', 100)),
+
+        # throttleable is not 0
+        ({'Throttleable': '1'}, (0, 'has_comments', 100)),
+        ({'Throttleable': 'foo'}, (0, 'has_comments', 100)),
     ])
-    def test_legacy_processing_bad_values(self, legacy, throttle_rate, client, loggingmock):
-        data, headers = multipart_encode({
-            'ProductName': 'Test',
-            'Version': '1.0',
-            'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234')),
+    def test_get_throttle_result(self, data, expected, request_generator):
+        data['ProductName'] = 'Firefox'
+        data['Comments'] = 'foo bar baz'
 
-            # These are invalid values for legacy_processing and throttle_rate
-            'legacy_processing': legacy,
-            'throttle_rate': throttle_rate
-        })
-
-        with loggingmock(['antenna']) as lm:
-            result = client.simulate_post(
-                '/submit',
-                headers=headers,
-                body=data
-            )
-            assert result.status_code == 200
-
-            # Verify it didn't match with ALREADY_THROTTLED and instead matched
-            # with a rule indicating it went through throttling.
-            assert lm.has_record(
-                name='antenna.breakpad_resource',
-                levelname='INFO',
-                msg_contains='matched by is_thunderbird_seamonkey; returned ACCEPT'
-            )
-
-    def test_throttleable(self, client, loggingmock):
-        data, headers = multipart_encode({
-            'ProductName': 'Test',
-            'Version': '1.0',
-            'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234')),
-
-            'Throttleable': '0'
-        })
-
-        with loggingmock(['antenna']) as lm:
-            result = client.simulate_post(
-                '/submit',
-                headers=headers,
-                body=data
-            )
-            assert result.status_code == 200
-
-            # Verify it got matched as a THROTTLEABLE_0
-            assert lm.has_record(
-                name='antenna.breakpad_resource',
-                levelname='INFO',
-                msg_contains='matched by THROTTLEABLE_0; returned ACCEPT'
-            )
+        bsp = BreakpadSubmitterResource(self.empty_config)
+        assert bsp.get_throttle_result(data) == expected
 
     def test_queuing(self, client):
         def check_health(crashmover_pool_size, crashmover_save_queue_size):
