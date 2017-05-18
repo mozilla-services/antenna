@@ -292,7 +292,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         # that.
         if 'uuid' in raw_crash:
             crash_id = raw_crash['uuid']
-            if int(crash_id[-7]) in (ACCEPT, DEFER):
+            if crash_id[-7] in (str(ACCEPT), str(DEFER)):
                 result = int(crash_id[-7])
                 throttle_rate = 100
 
