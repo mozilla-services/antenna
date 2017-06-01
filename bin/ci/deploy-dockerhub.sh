@@ -21,15 +21,17 @@ function retry() {
     return 0
 }
 
-# configure docker creds
-retry 3 docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+if [[ "$DOCKER_DEPLOY" == "true" ]]; then
+    # configure docker creds
+    retry 3 docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
 
-# docker tag and push git branch to dockerhub
-if [ -n "$1" ]; then
-    [ "$1" == master ] && TAG=latest || TAG="$1"
-    docker tag antenna:build "mozilla/antenna:$TAG" ||
-        (echo "Couldn't tag antenna:build as mozilla/antenna:$TAG" && false)
-    retry 3 docker push "mozilla/antenna:$TAG" ||
-        (echo "Couldn't push mozilla/antenna:$TAG" && false)
-    echo "Pushed mozilla/antenna:$TAG"
+    # docker tag and push git branch to dockerhub
+    if [ -n "$1" ]; then
+        [ "$1" == master ] && TAG=latest || TAG="$1"
+        docker tag antenna:build "mozilla/antenna:$TAG" ||
+            (echo "Couldn't tag antenna:build as mozilla/antenna:$TAG" && false)
+        retry 3 docker push "mozilla/antenna:$TAG" ||
+            (echo "Couldn't push mozilla/antenna:$TAG" && false)
+        echo "Pushed mozilla/antenna:$TAG"
+    fi
 fi
