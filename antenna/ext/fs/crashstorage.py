@@ -48,7 +48,7 @@ class FSCrashStorage(CrashStorageBase):
     required_config = ConfigOptions()
     required_config.add_option(
         'fs_root',
-        default='/tmp/antenna_crashes',
+        default='/tmp/antenna_crashes',  # nosec
         doc='path to where files should be stored'
     )
 

@@ -57,6 +57,7 @@ clean:
 
 lint: .docker-build
 	ANTENNA_ENV=empty.env ${DC} run base flake8 --statistics antenna tests/unittest/
+	ANTENNA_ENV=empty.env ${DC} run base bandit -r antenna/
 
 test: .docker-build
 	ANTENNA_ENV=empty.env ${DC} run base py.test

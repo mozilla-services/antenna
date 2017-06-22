@@ -30,7 +30,7 @@ def wait_times_connect():
 
     """
     for i in ([5] * 5):
-        yield i + random.uniform(-2, 2)
+        yield i + random.uniform(-2, 2)  # nosec
 
 
 def wait_times_save():

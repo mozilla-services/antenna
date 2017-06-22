@@ -34,6 +34,7 @@ test:
   override:
     - docker run antenna:build py.test
     - docker run antenna:build flake8
+    - docker run antenna:build bandit -r antenna/
 
 # appropriately tag and push the container to dockerhub
 deployment:

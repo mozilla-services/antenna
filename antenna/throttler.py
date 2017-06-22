@@ -96,7 +96,7 @@ class Throttler(RequiredConfigMixin):
                 if rule.percentage is None:
                     return REJECT, rule.rule_name, None
 
-                if rule.percentage == 100 or (random.random() * 100.0) <= rule.percentage:
+                if rule.percentage == 100 or (random.random() * 100.0) <= rule.percentage:  # nosec
                     response = ACCEPT
                 else:
                     response = DEFER
