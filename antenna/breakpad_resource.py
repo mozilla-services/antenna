@@ -261,7 +261,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
                 dump_name = sanitize_dump_name(item_name)
 
                 dumps[dump_name] = fs_item.value
-                checksum = hashlib.md5(fs_item.value).hexdigest()
+                checksum = hashlib.md5(fs_item.value).hexdigest()  # nosec
                 raw_crash.setdefault('dump_checksums', {})[dump_name] = checksum
 
             else:
