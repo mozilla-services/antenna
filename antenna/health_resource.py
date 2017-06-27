@@ -23,6 +23,7 @@ class BrokenResource(RequiredConfigMixin):
         self.config = config
 
     def on_get(self, req, resp):
+        mymetrics.incr('broken.count')
         # This is intentional breakage
         raise Exception('intentional exception')
 
@@ -34,6 +35,7 @@ class VersionResource:
         self.basedir = basedir
 
     def on_get(self, req, resp):
+        mymetrics.incr('version.count')
         version_info = json.dumps(get_version_info(self.basedir))
 
         resp.content_type = 'application/json; charset=utf-8'
@@ -47,6 +49,7 @@ class LBHeartbeatResource:
         self.config = config
 
     def on_get(self, req, resp):
+        mymetrics.incr('lbheartbeat.count')
         resp.content_type = 'application/json; charset=utf-8'
         resp.status = falcon.HTTP_200
 
@@ -87,6 +90,7 @@ class HeartbeatResource:
         self.antenna_app = app
 
     def on_get(self, req, resp):
+        mymetrics.incr('heartbeat.count')
         state = HealthState()
 
         # So we're going to think of Antenna like a big object graph and
