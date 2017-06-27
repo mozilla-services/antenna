@@ -11,6 +11,7 @@ Uses Python 3, `Gunicorn <http://gunicorn.org/>`_, `gevent
 other things.
 
 * Free software: Mozilla Public License version 2.0
+* Code: https://github.com/mozilla-services/antenna/
 * Documentation: https://antenna.readthedocs.io/
 
 
