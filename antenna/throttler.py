@@ -245,7 +245,7 @@ mozilla_rules = [
     Rule(
         rule_name='is_thunderbird_seamonkey',
         key='ProductName',
-        condition=lambda x: x[0] in 'TSC',
+        condition=lambda x: x and x[0] in 'TSC',
         percentage=100
     ),
 
