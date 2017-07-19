@@ -184,3 +184,11 @@ class Testmozilla_rules:
 
         throttler = Throttler(ConfigManager.from_dict({}))
         assert throttler.throttle(raw_crash) == (DEFER, 'NO_MATCH', 0)
+
+    def test_bad_value(self):
+        raw_crash = {
+            'ProductName': ''
+        }
+
+        throttler = Throttler(ConfigManager.from_dict({}))
+        assert throttler.throttle(raw_crash) == (DEFER, 'NO_MATCH', 0)
