@@ -1,6 +1,6 @@
 ANTENNA_ENV ?= "dev.env"
 DC := $(shell which docker-compose)
-UIDGID := $(shell id -u):$(shell id -g)
+HOSTUSER := $(shell id -u):$(shell id -g)
 
 default:
 	@echo "You need to specify a subcommand."
@@ -73,6 +73,6 @@ test-coverage: .docker-build
 	ANTENNA_ENV=empty.env ${DC} run base py.test --cov=antenna --cov-report term-missing
 
 docs: .docker-build
-	ANTENNA_ENV=empty.env ${DC} run -u ${UIDGID} base ./bin/build_docs.sh
+	ANTENNA_ENV=empty.env ${DC} run -u ${HOSTUSER} base ./bin/build_docs.sh
 
 .PHONY: default clean build docs lint run shell test test-system test-system-shell test-coverage
