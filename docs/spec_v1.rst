@@ -5,7 +5,13 @@ Antenna Project specification: v1
 .. contents::
 
 :Author:      Will Kahn-Greene
-:Last edited: April 18th, 2017
+:Last edited: August 28th, 2017
+
+
+History
+=======
+
+https://github.com/mozilla-services/antenna/commits/master/docs/spec_v1.rst
 
 
 Background
@@ -220,9 +226,9 @@ The Socorro collector generates crash ids that look like this::
                                  depth
 
 
-The "depth" is used by FSRadixTreeStorage to figure out how many
-octet directories to use. That's the only place depth is used and Mozilla
-doesn't use FSRadixTreeStorage or any of its subclasses after the collector.
+The "depth" is used by ``FSRadixTreeStorage`` to figure out how many octet
+directories to use. That's the only place depth is used and Mozilla doesn't use
+``FSRadixTreeStorage`` or any of its subclasses after the collector.
 
 Antenna will (ab)use this character to encode the throttle result so that
 the lambda function listening to S3 save events knows which crashes to
@@ -266,7 +272,7 @@ Logging
 =======
 
 We'll use the new logging infrastructure. Antenna will use the Python logging
-system and log to stdout and that'll get picked up by the node and sent to the
+system and log to stdout and that will get picked up by the node and sent to the
 logging infrastructure.
 
 
@@ -275,6 +281,101 @@ Metrics
 
 Antenna will use the Datadog Python library to generate stats. These will be
 collected by the dd-agent on the node and sent to Datadog.
+
+
+Test plan
+=========
+
+flake8
+------
+
+Antenna will have a linter set up to lint the code base.
+
+This will be run by developers and also run by CI for every pull request and
+merge to master.
+
+This will help catch:
+
+* silly mistakes, typos, and so on
+* maintainability issues like code style, things to avoid in Python, and so on
+
+
+``tests/unittest/``
+-------------------
+
+Antenna will have a set of unit tests and integration tests in the repository
+alongside the code that will cover critical behavior for functions, methods, and
+classes in the application.
+
+These will be written in pytest.
+
+These will be run by developers and also run by CI for every pull request and
+merge to master.
+
+This will help catch:
+
+* bugs in the software
+* regressions in behavior
+
+
+``tests/systemtest/``
+---------------------
+
+Antenna will have a system test that verifies node configuration and behavior.
+
+This is critical because we don't want to put a dysfunctional or misconfigured
+node in service. If we did, that will cause us to lose crashes sent to that node
+because it may not be able to save them to S3.
+
+Nothing is mocked in these tests--everything is live.
+
+This can be run by the developer. This will be run on every node during a
+deployment before the node is put in service.
+
+This will help catch:
+
+* configuration issues in the server environment
+* permission issues for saving data to to S3
+* bugs in the software related to running in a server environment
+
+
+loadtest
+--------
+
+We want to run load tests on a single node as well as a scaling cluster of nodes
+to determine:
+
+1. Is Antenna roughly comparable to the Socorro collector it is replacing in
+   regards to resource usage under load?
+
+2. How does a single node handle increasing load? At what point does the node
+   fall down? What is the performance behavior for a node under load in regards
+   to CPU, memory usage, disk usage, network up/down, and throughput.
+
+3. How does a cluster of nodes handle increasing load? Does the system spin up
+   new nodes effectively? Do the conditions for scaling up and down work well
+   for the specific context of the Antenna application?
+
+4. How does Antenna handle representative load? How about 3x load? How about 10x
+   load?
+
+5. How does Antenna handle load over a period of time?
+
+
+This then informs us whether we need to make changes and what kind of changes we
+should make.
+
+We'll do two rounds of load testing. The first round is a "lite" round just to
+get us rough answers for basic performance questions.
+
+https://github.com/willkg/antenna-loadtests/tree/antenna-loadtest-lite
+
+Second round will be run multiple times and will be more comprehensive.
+
+https://github.com/mozilla-services/antenna-loadtests
+
+We'll use this load test system going forward whenever we make substantial
+changes that might impact performance.
 
 
 Research and decisions
