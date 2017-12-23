@@ -199,7 +199,7 @@ def match_infobar_true(data):
         # FIXME(willkg): buildid is a string that starts with a YYYYMMDD date
         # so we're doing string compares. Change this to the buildid date when
         # we push out fixes.
-        buildid < '20180110'
+        buildid < '20180401'
     )
 
 
