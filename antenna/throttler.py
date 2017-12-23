@@ -178,6 +178,31 @@ def always_match(crash):
     return True
 
 
+def match_infobar_true(data):
+    """Matches crashes we need to filter out due to infobar bug
+
+    Bug #1425949.
+
+    """
+    product = data.get('ProductName', '')
+    infobar = data.get('SubmittedFromInfobar', '')
+    version = data.get('Version', '')
+    buildid = data.get('BuildID', '')
+
+    if not (product and infobar and version and buildid):
+        return False
+
+    return (
+        product == 'Firefox' and
+        infobar == 'true' and
+        version.startswith(('52.', '53.', '54.', '55.', '56.', '57.', '58.', '59.')) and
+        # FIXME(willkg): buildid is a string that starts with a YYYYMMDD date
+        # so we're doing string compares. Change this to the buildid date when
+        # we push out fixes.
+        buildid < '20180401'
+    )
+
+
 accept_all = [
     # Accept everything
     Rule('accept_everything', '*', always_match, 100)
@@ -190,6 +215,14 @@ mozilla_rules = [
         rule_name='has_hangid_and_browser',
         key='*',
         condition=lambda d: 'HangID' in d and d.get('ProcessType', 'browser') == 'browser',
+        percentage=None
+    ),
+
+    # Drop infobar=true crashes for certain versions
+    Rule(
+        rule_name='infobar_is_true',
+        key='*',
+        condition=match_infobar_true,
         percentage=None
     ),
 

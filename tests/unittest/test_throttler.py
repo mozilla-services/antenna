@@ -7,7 +7,14 @@ import re
 from everett.manager import ConfigManager
 import pytest
 
-from antenna.throttler import Rule, Throttler, ACCEPT, DEFER, REJECT
+from antenna.throttler import (
+    ACCEPT,
+    DEFER,
+    REJECT,
+    Rule,
+    Throttler,
+    match_infobar_true,
+)
 
 
 class TestRule:
@@ -78,6 +85,99 @@ class Testaccept_all:
         assert throttler.throttle({'ProductName': 'Test'}) == (ACCEPT, 'accept_everything', 100)
 
 
+class Testmatch_infobar_true:
+    @pytest.mark.parametrize('version, expected', [
+        # Before 52 is fine
+        ('51.0', False),
+
+        # After 59 is fine
+        ('60.0', False),
+
+        # Anything in the middle is not fine
+        ('59.0', True),
+        ('58.0', True),
+        ('57.0', True),
+        ('57.0.2', True),
+        ('56.0', True),
+        ('55.0', True),
+        ('54.0', True),
+        ('53.0', True),
+        ('52.0', True),
+    ])
+    def test_versions(self, version, expected):
+        raw_crash = {
+            'ProductName': 'Firefox',
+            'SubmittedFromInfobar': 'true',
+            'BuildID': '20171128222554',
+            'Version': version
+        }
+        assert match_infobar_true(raw_crash) == expected
+
+    def test_product_name(self):
+        # No ProductName
+        raw_crash = {
+            'SubmittedFromInfobar': 'true',
+            'BuildID': '20171128222554',
+            'Version': '57.0'
+        }
+        assert match_infobar_true(raw_crash) is False
+
+        # ProductName is not Firefox
+        raw_crash = {
+            'ProductName': 'FishSplat',
+            'SubmittedFromInfobar': 'true',
+            'BuildID': '20171128222554',
+            'Version': '57.0'
+        }
+        assert match_infobar_true(raw_crash) is False
+
+    def test_submittedinfobar(self):
+        # No SubmittedFromInfobar
+        raw_crash = {
+            'ProductName': 'Firefox',
+            'BuildID': '20171128222554',
+            'Version': '57.0'
+        }
+        assert match_infobar_true(raw_crash) is False
+
+        # False SubmittedFromInfobar
+        raw_crash = {
+            'ProductName': 'Firefox',
+            'SubmittedFromInfobar': 'false',
+            'BuildID': '20171128222554',
+            'Version': '57.0'
+        }
+        assert match_infobar_true(raw_crash) is False
+
+    def test_buildid(self):
+        # FIXME(willkg): You might have to update this test when you update the buildid.
+        # No BuildID
+        raw_crash = {
+            'ProductName': 'Firefox',
+            'SubmittedFromInfobar': 'true',
+            'Version': '57.0'
+        }
+        assert match_infobar_true(raw_crash) is False
+
+        # BuildID that falls into range triggers rule.
+        raw_crash = {
+            'ProductName': 'Firefox',
+            'SubmittedFromInfobar': 'true',
+            'BuildID': '20171128222554',
+            'Version': '57.0'
+        }
+        assert match_infobar_true(raw_crash) is True
+
+        # BuildID after range doesn't trigger rule.
+        raw_crash = {
+            'ProductName': 'Firefox',
+            'SubmittedFromInfobar': 'true',
+            'BuildID': '20181212222554',
+            'Version': '57.0'
+        }
+        assert match_infobar_true(raw_crash) is False
+
+
 class Testmozilla_rules:
     def test_hangid(self):
         raw_crash = {
@@ -89,6 +189,16 @@ class Testmozilla_rules:
 
         throttler = Throttler(ConfigManager.from_dict({}))
         assert throttler.throttle(raw_crash) == (REJECT, 'has_hangid_and_browser', None)
+
+    def test_infobar(self):
+        raw_crash = {
+            'ProductName': 'Firefox',
+            'SubmittedFromInfobar': 'true',
+            'Version': '52.0.2',
+            'BuildID': '20171223222554',
+        }
+        throttler = Throttler(ConfigManager.from_dict({}))
+        assert throttler.throttle(raw_crash) == (REJECT, 'infobar_is_true', None)
 
     def test_comments(self):
         raw_crash = {
