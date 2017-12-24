@@ -204,6 +204,12 @@ class TestBreakpadSubmitterResource:
         # throttleable is not 0
         ({'Throttleable': '1'}, (0, 'has_comments', 100)),
         ({'Throttleable': 'foo'}, (0, 'has_comments', 100)),
+
+        # throttler rejects the code and it stays rejected regardless of throttleable value
+        (
+            {'Throttleable': '0', 'HangID': '555', 'ProcessType': 'browser'},
+            (2, 'has_hangid_and_browser', None)
+        ),
     ])
     def test_get_throttle_result(self, data, expected, request_generator):
         data['ProductName'] = 'Firefox'
