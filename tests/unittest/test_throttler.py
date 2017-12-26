@@ -172,7 +172,7 @@ class Testmatch_infobar_true:
         raw_crash = {
             'ProductName': 'Firefox',
             'SubmittedFromInfobar': 'true',
-            'BuildID': '20181212222554',
+            'BuildID': '20171226003912',
             'Version': '57.0'
         }
         assert match_infobar_true(raw_crash) is False

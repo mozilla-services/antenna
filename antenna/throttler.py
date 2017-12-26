@@ -196,10 +196,7 @@ def match_infobar_true(data):
         product == 'Firefox' and
         infobar == 'true' and
         version.startswith(('52.', '53.', '54.', '55.', '56.', '57.', '58.', '59.')) and
-        # FIXME(willkg): buildid is a string that starts with a YYYYMMDD date
-        # so we're doing string compares. Change this to the buildid date when
-        # we push out fixes.
-        buildid < '20180401'
+        buildid < '20171226'
     )
 
 
