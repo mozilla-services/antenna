@@ -200,8 +200,8 @@ def match_infobar_true(data):
     )
 
 
-def match_firefox_56_and_earlier(data):
-    """Matches crashes for Firefox 56 and before
+def match_firefox_pre_57(data):
+    """Matches crashes for Firefox before 57
 
     Bug #1433316.
 
@@ -219,7 +219,7 @@ def match_firefox_56_and_earlier(data):
 
     return (
         product == 'Firefox' and
-        major_version <= 56
+        major_version < 57
     )
 
 
@@ -272,9 +272,9 @@ mozilla_rules = [
 
     # 20% of Firefox 56 and earlier
     Rule(
-        rule_name='firefox_56_and_earlier',
+        rule_name='firefox_pre_57',
         key='*',
-        condition=match_firefox_56_and_earlier,
+        condition=match_firefox_pre_57,
         percentage=20
     ),
 

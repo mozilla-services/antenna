@@ -14,7 +14,7 @@ from antenna.throttler import (
     Rule,
     Throttler,
     match_infobar_true,
-    match_firefox_56_and_earlier,
+    match_firefox_pre_57,
 )
 
 
@@ -179,16 +179,18 @@ class Testmatch_infobar_true:
         assert match_infobar_true(raw_crash) is False
 
 
-class Test_match_firefox_56_and_earlier:
+class Test_match_firefox_pre_57:
     @pytest.mark.parametrize('version, expected', [
-        # 56 and before match
+        # Before 57 match
         ('56.0', True),
         ('56.0.2', True),
         ('55.0', True),
         ('5.0', True),
 
-        # After 56 does not match
+        # 57 and after does not match
         ('57.0', False),
+        ('57.0.1', False),
+        ('60.0', False),
 
         # Junk versions don't match
         ('abc', False),
@@ -198,27 +200,27 @@ class Test_match_firefox_56_and_earlier:
             'ProductName': 'Firefox',
             'Version': version
         }
-        assert match_firefox_56_and_earlier(raw_crash) == expected
+        assert match_firefox_pre_57(raw_crash) == expected
 
     def test_no_version(self):
         raw_crash = {
             'ProductName': 'Firefox',
         }
-        assert match_firefox_56_and_earlier(raw_crash) is False
+        assert match_firefox_pre_57(raw_crash) is False
 
     def test_product(self):
         # No ProductName
         raw_crash = {
             'Version': '56.0'
         }
-        assert match_firefox_56_and_earlier(raw_crash) is False
+        assert match_firefox_pre_57(raw_crash) is False
 
         # ProductName is not Firefox
         raw_crash = {
             'ProductName': 'FishSplat',
             'Version': '56.0'
         }
-        assert match_firefox_56_and_earlier(raw_crash) is False
+        assert match_firefox_pre_57(raw_crash) is False
 
 
 class Testmozilla_rules:
