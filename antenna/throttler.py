@@ -200,6 +200,29 @@ def match_infobar_true(data):
     )
 
 
+def match_firefox_56_and_earlier(data):
+    """Matches crashes for Firefox 56 and before
+
+    Bug #1433316.
+
+    """
+    product = data.get('ProductName', '')
+    version = data.get('Version', '')
+
+    if not (product and version):
+        return False
+
+    try:
+        major_version = int(version.split('.')[0])
+    except ValueError:
+        return False
+
+    return (
+        product == 'Firefox' and
+        major_version <= 56
+    )
+
+
 accept_all = [
     # Accept everything
     Rule('accept_everything', '*', always_match, 100)
@@ -245,6 +268,14 @@ mozilla_rules = [
         key='ReleaseChannel',
         condition=lambda x: x.startswith('nightly'),
         percentage=100
+    ),
+
+    # 20% of Firefox 56 and earlier
+    Rule(
+        rule_name='firefox_56_and_earlier',
+        key='*',
+        condition=match_firefox_56_and_earlier,
+        percentage=20
     ),
 
     # 10% of ProductName=Firefox
