@@ -286,7 +286,7 @@ mozilla_rules = [
         percentage=10
     ),
 
-    # 100% of PrductName=Fennec
+    # 100% of ProductName=Fennec
     Rule(
         rule_name='is_fennec',
         key='ProductName',
