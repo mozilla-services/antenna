@@ -200,6 +200,29 @@ def match_infobar_true(data):
     )
 
 
+def match_firefox_pre_57(data):
+    """Matches crashes for Firefox before 57
+
+    Bug #1433316.
+
+    """
+    product = data.get('ProductName', '')
+    version = data.get('Version', '')
+
+    if not (product and version):
+        return False
+
+    try:
+        major_version = int(version.split('.')[0])
+    except ValueError:
+        return False
+
+    return (
+        product == 'Firefox' and
+        major_version < 57
+    )
+
+
 accept_all = [
     # Accept everything
     Rule('accept_everything', '*', always_match, 100)
@@ -247,6 +270,14 @@ mozilla_rules = [
         percentage=100
     ),
 
+    # 20% of Firefox 56 and earlier
+    Rule(
+        rule_name='firefox_pre_57',
+        key='*',
+        condition=match_firefox_pre_57,
+        percentage=20
+    ),
+
     # 10% of ProductName=Firefox
     Rule(
         rule_name='is_firefox_desktop',
@@ -255,7 +286,7 @@ mozilla_rules = [
         percentage=10
     ),
 
-    # 100% of PrductName=Fennec
+    # 100% of ProductName=Fennec
     Rule(
         rule_name='is_fennec',
         key='ProductName',
