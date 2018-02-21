@@ -12,6 +12,7 @@ other things.
 
 * Free software: Mozilla Public License version 2.0
 * Documentation: https://antenna.readthedocs.io/
+* Bugs: `Report a bug <https://bugzilla.mozilla.org/enter_bug.cgi?format=__standard__&product=Socorro&component=Antenna>`_
 
 
 Quickstart
