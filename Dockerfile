@@ -7,11 +7,9 @@ RUN apt-get update && \
     apt-get install -y gcc apt-transport-https
 
 COPY ./requirements.txt /app/requirements.txt
-COPY ./requirements-newrelic.txt /app/requirements-newrelic.txt
 
 RUN pip install -U 'pip>=8' && \
-    pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir -r requirements-newrelic.txt
+    pip install --no-cache-dir -r requirements.txt
 
 # Install the app
 COPY . /app/

@@ -1,2 +1,0 @@
-newrelic==2.78.0.57 \
-    --hash=sha256:2191b7699e14a07efa5d9221270eb29bdf6cce643aa56cff08546ecb3f729be6
