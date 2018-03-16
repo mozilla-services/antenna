@@ -254,6 +254,22 @@ class Testmozilla_rules:
         throttler = Throttler(ConfigManager.from_dict({}))
         assert throttler.throttle(raw_crash) == (ACCEPT, 'has_comments', 100)
 
+    @pytest.mark.parametrize('email, expected', [
+        (None, (DEFER, 'NO_MATCH', 0)),
+        ('', (DEFER, 'NO_MATCH', 0)),
+        ('foo', (DEFER, 'NO_MATCH', 0)),
+        ('foo@example.com', (ACCEPT, 'has_email', 100)),
+    ])
+    def test_email(self, email, expected):
+        raw_crash = {
+            'ProductName': 'BarTest',
+        }
+        if email is not None:
+            raw_crash['Email'] = email
+
+        throttler = Throttler(ConfigManager.from_dict({}))
+        assert throttler.throttle(raw_crash) == expected
+
     @pytest.mark.parametrize('channel', [
         'aurora',
         'beta',

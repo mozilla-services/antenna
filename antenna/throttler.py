@@ -254,6 +254,14 @@ mozilla_rules = [
         percentage=100
     ),
 
+    # 100% of crashes that have an email address with at least an @
+    Rule(
+        rule_name='has_email',
+        key='Email',
+        condition=lambda x: x and '@' in x,
+        percentage=100
+    ),
+
     # 100% of all ReleaseChannel=aurora, beta, esr channels
     Rule(
         rule_name='is_alpha_beta_esr',
