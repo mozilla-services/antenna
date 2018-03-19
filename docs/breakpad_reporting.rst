@@ -155,6 +155,8 @@ development instance. There are a few options:
 
    https://addons.mozilla.org/en-US/firefox/addon/crash-me-now-simple/
 
+   This doesn't work with Firefox 57+.
+
 3. Set environment variables:
 
    https://developer.mozilla.org/en-US/docs/Environment_variables_affecting_crash_reporting
@@ -163,20 +165,22 @@ development instance. There are a few options:
 
 4. On Linux, you can crash processes using ``kill``::
 
-       kill -ABRT $(pidof firefox)
+       kill -SIGFPE $(pidof firefox)
 
 
 You can capture a raw HTTP POST this way:
 
-1. Run ``nc -l localhost 8000 > http_post.raw`` in one terminal
+1. Run ``nc -l localhost 8000 > http_post.raw`` in one terminal.
 
-2. Run ``MOZ_CRASHREPORTER_URL=http://localhost:8000/submit firefox`` in a second terminal
+2. Run ``MOZ_CRASHREPORTER_URL=http://localhost:8000/submit firefox`` in a
+   second terminal.
 
-3. Run ``ps -aef``, find the firefox process id and then do ``kill -ABRT <PID>`` in a
-   third terminal
+3. Run ``ps -aef | grep firefox``, find the process id for the main firefox
+   process or a content process, and then do ``kill -SIGFPE <PID>`` in a third
+   terminal.
 
-4. The Firefox process will crash and the crash report dialog will pop up. Make sure
-   to submit the crash, then click on "Quit Firefox" button
+4. The Firefox process will crash and the crash report dialog will pop up.
+   Make sure to submit the crash, then click on "Quit Firefox" button.
 
    That will send the crash to ``nc`` which will pipe it to the file.
 
