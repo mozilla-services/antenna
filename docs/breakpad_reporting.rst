@@ -141,13 +141,15 @@ Things to know about the HTTP POST response:
      CrashID=bp-28a40956-d19e-48ff-a2ee-19a932160525
 
 
+.. _testing-breakpad-crash-reporting:
+
 Testing breakpad crash reporting
 ================================
 
 When working on Antenna, it helps to be able to send real live crashes to your
 development instance. There are a few options:
 
-1. Use curl:
+1. Use curl to send a crash report to an Antenna instance:
 
    http://socorro.readthedocs.io/en/latest/configuring-socorro.html#test-collection-and-processing
 
@@ -155,28 +157,56 @@ development instance. There are a few options:
 
    https://addons.mozilla.org/en-US/firefox/addon/crash-me-now-simple/
 
-3. Set environment variables:
+   .. Note::
+
+      This doesn't work with Firefox 57+.
+
+3. Use Firefox and set the ``MOZ_CRASHREPORTER_URL`` environment variable:
 
    https://developer.mozilla.org/en-US/docs/Environment_variables_affecting_crash_reporting
 
-   Particularly ``MOZ_CRASHREPORTER_URL``.
 
-4. On Linux, you can crash processes using ``kill``::
+   Then kill the Firefox process using the ``kill`` command.
 
-       kill -ABRT $(pidof firefox)
+   1. Run ``ps -aef | grep firefox``. That will list all the
+      Firefox processes.
+
+      Find the process id of the Firefox process you want to kill.
+
+      * main process looks something like ``/usr/bin/firefox``
+      * content process looks something like
+        ``/usr/bin/firefox -contentproc -childID ...``
+
+   2. The ``kill`` command lets you pass a signal to the process. By default, it
+      passes ``SIGTERM`` which will kill the process in a way that doesn't
+      launch the crash reporter.
+
+      You want to kill the process in a way that *does* launch the crash
+      reporter. I've had success with ``SIGABRT`` and ``SIGFPE``. For example:
+
+      * ``kill -SIGABRT <PID>``
+      * ``kill -SIGFPE <PID>``
+
+      What works for you will depend on the operating system and version of
+      Firefox you're using.
 
 
-You can capture a raw HTTP POST this way:
+Capturing an HTTP POST payload for a crash report
+=================================================
 
-1. Run ``nc -l localhost 8000 > http_post.raw`` in one terminal
+The HTTP POST payload for a crash report is sometimes handy to have. You can
+capture it this way:
 
-2. Run ``MOZ_CRASHREPORTER_URL=http://localhost:8000/submit firefox`` in a second terminal
+1. Run ``nc -l localhost 8000 > http_post.raw`` in one terminal.
 
-3. Run ``ps -aef``, find the firefox process id and then do ``kill -ABRT <PID>`` in a
-   third terminal
+2. Run ``MOZ_CRASHREPORTER_URL=http://localhost:8000/submit firefox`` in a
+   second terminal.
 
-4. The Firefox process will crash and the crash report dialog will pop up. Make sure
-   to submit the crash, then click on "Quit Firefox" button
+3. Kill a Firefox process using one of the methods in
+   :ref:`testing-breakpad-crash-reporting`.
+
+4. The Firefox process will crash and the crash report dialog will pop up.
+   Make sure to submit the crash, then click on "Quit Firefox" button.
 
    That will send the crash to ``nc`` which will pipe it to the file.
 
