@@ -255,14 +255,10 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
                 continue
 
             elif fs_item.type and (fs_item.type.startswith('application/octet-stream') or isinstance(fs_item.value, bytes)):
-                # This is a dump, so we sanitize the dump name, get a checksum
-                # of the dump, and save the appropriate bits in the relevant
-                # places.
+                # This is a dump, so add it to dumps using a sanitized dump
+                # name.
                 dump_name = sanitize_dump_name(item_name)
-
                 dumps[dump_name] = fs_item.value
-                checksum = hashlib.md5(fs_item.value).hexdigest()  # nosec
-                raw_crash.setdefault('dump_checksums', {})[dump_name] = checksum
 
             else:
                 # This isn't a dump, so it's a key/val pair, so we add that.
@@ -364,9 +360,17 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         mymetrics.incr('incoming_crash')
 
+        # Add timestamps
         current_timestamp = utc_now()
         raw_crash['submitted_timestamp'] = current_timestamp.isoformat()
         raw_crash['timestamp'] = start_time
+
+        # Add checksums and MinidumpSha256Hash
+        raw_crash['dump_checksums'] = {
+            dump_name: hashlib.sha256(dump).hexdigest()
+            for dump_name, dump in dumps.items()
+        }
+        raw_crash['MinidumpSha256Hash'] = raw_crash['dump_checksums'].get('upload_file_minidump', '')
 
         # First throttle the crash which gives us the information we need
         # to generate a crash id.
@@ -398,8 +402,8 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             resp.body = 'Discarded=1'
 
         else:
-            # If the result is not REJECT, then save it and return the CrashID
-            # to the client
+            # If the result is not REJECT, then save it and return the CrashID to
+            # the client
             self.crashmover_save_queue.append(CrashReport(raw_crash, dumps, crash_id))
             self.hb_run_crashmover()
             resp.body = 'CrashID=%s%s\n' % (self.config('dump_id_prefix'), crash_id)

@@ -60,8 +60,11 @@ class TestCrashStorage:
                 'data': {
                     'ProductName': 'Test',
                     'Version': '1.0',
-                    'dump_checksums': {'upload_file_minidump': 'e19d5cd5af0378da05f63f891c7467af'},
+                    'dump_checksums': {
+                        'upload_file_minidump': 'e9cee71ab932fde863338d08be4de9dfe39ea049bdafb342ce659ec5450b69ae'
+                    },
                     'legacy_processing': 0,
+                    'MinidumpSha256Hash': 'e9cee71ab932fde863338d08be4de9dfe39ea049bdafb342ce659ec5450b69ae',
                     'throttle_rate': 100,
                     'submitted_timestamp': '2011-09-06T00:00:00+00:00',
                     'timestamp': 1315267200.0,

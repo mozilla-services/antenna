@@ -74,9 +74,11 @@ class TestFSCrashStorage:
         assert (
             contents['/antenna_crashes/20160918/raw_crash/de1bb258-cbbf-4589-a673-34f800160918.json'] ==
             (
-                b'{"ProductName": "Test", ' +
+                b'{"MinidumpSha256Hash": "e9cee71ab932fde863338d08be4de9dfe39ea049bdafb342ce659ec5450b69ae", ' +
+                b'"ProductName": "Test", ' +
                 b'"Version": "1.0", ' +
-                b'"dump_checksums": {"upload_file_minidump": "e19d5cd5af0378da05f63f891c7467af"}, ' +
+                b'"dump_checksums": ' +
+                b'{"upload_file_minidump": "e9cee71ab932fde863338d08be4de9dfe39ea049bdafb342ce659ec5450b69ae"}, ' +
                 b'"legacy_processing": 0, ' +
                 b'"submitted_timestamp": "2011-09-06T00:00:00+00:00", ' +
                 b'"throttle_rate": 100, ' +
@@ -138,8 +140,11 @@ class TestFSCrashStorage:
             {
                 'uuid': crash_id,
                 'ProductName': 'Test',
+                'MinidumpSha256Hash': 'e9cee71ab932fde863338d08be4de9dfe39ea049bdafb342ce659ec5450b69ae',
                 'Version': '1.0',
-                'dump_checksums': {'upload_file_minidump': 'e19d5cd5af0378da05f63f891c7467af'},
+                'dump_checksums': {
+                    'upload_file_minidump': 'e9cee71ab932fde863338d08be4de9dfe39ea049bdafb342ce659ec5450b69ae'
+                },
                 'legacy_processing': 0,
                 'throttle_rate': 100,
                 'submitted_timestamp': '2011-09-06T00:00:00+00:00',
