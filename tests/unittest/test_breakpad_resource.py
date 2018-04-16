@@ -57,9 +57,6 @@ class TestBreakpadSubmitterResource:
         expected_raw_crash = {
             'ProductName': 'Test',
             'Version': '1.0',
-            'dump_checksums': {
-                'upload_file_minidump': 'e19d5cd5af0378da05f63f891c7467af',
-            }
         }
         expected_dumps = {
             'upload_file_minidump': b'abcd1234'
@@ -85,10 +82,6 @@ class TestBreakpadSubmitterResource:
         expected_raw_crash = {
             'ProductName': 'Test',
             'Version': '1',
-            'dump_checksums': {
-                'upload_file_minidump': '4f41243847da693a4f356c0486114bc6',
-                'upload_file_minidump_flash1': 'e19d5cd5af0378da05f63f891c7467af',
-            }
         }
         expected_dumps = {
             'upload_file_minidump': b'deadbeef',
@@ -117,9 +110,6 @@ class TestBreakpadSubmitterResource:
         expected_raw_crash = {
             'ProductName': 'Test',
             'Version': '1.0',
-            'dump_checksums': {
-                'upload_file_minidump': 'e19d5cd5af0378da05f63f891c7467af',
-            }
         }
         expected_dumps = {
             'upload_file_minidump': b'abcd1234'
@@ -138,7 +128,7 @@ class TestBreakpadSubmitterResource:
         # In the dump filename...
         (
             {'ProductName': 'Firefox', '\u0000upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'deadbeef'))},
-            {'ProductName': 'Firefox', 'dump_checksums': {'upload_file_minidump': '4f41243847da693a4f356c0486114bc6'}},
+            {'ProductName': 'Firefox'},
             {'upload_file_minidump': b'deadbeef'}
         )
     ])
