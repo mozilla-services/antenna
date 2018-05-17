@@ -149,17 +149,17 @@ Testing breakpad crash reporting
 When working on Antenna, it helps to be able to send real live crashes to your
 development instance. There are a few options:
 
-1. Use curl to send a crash report to an Antenna instance:
+1. Use Antenna's tools to send a fake crash:
 
-   http://socorro.readthedocs.io/en/latest/configuring-socorro.html#test-collection-and-processing
+   .. code-block:: bash
 
-2. Use an addon:
+      $ make shell
+      app@c392a11dbfec:/app$ python -m testlib.mini_poster --url URL
 
-   https://addons.mozilla.org/en-US/firefox/addon/crash-me-now-simple/
+2. Use an addon/webextension:
 
-   .. Note::
-
-      This doesn't work with Firefox 57+.
+   * **Firefox < 57:** https://addons.mozilla.org/en-US/firefox/addon/crash-me-now-simple/
+   * **Firefox >= 59 nightly/beta:** https://github.com/rhelmer/webext-experiment-crashme
 
 3. Use Firefox and set the ``MOZ_CRASHREPORTER_URL`` environment variable:
 
