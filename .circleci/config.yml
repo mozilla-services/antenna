@@ -5,8 +5,7 @@ jobs:
       - image: docker:stable
     environment:
       BUILD_IMAGE: antenna:build
-      TAGGED_IMAGE: mozilla/antenna
-      TAGGED_IMAGE_2: mozilla/socorro_collector
+      TAGGED_IMAGE: mozilla/socorro_collector
     steps:
       - checkout
       - setup_remote_docker
@@ -38,18 +37,33 @@ jobs:
       - run:
           name: Push to Dockerhub
           command: |
+            function retry {
+                set +e
+                local n=0
+                local max=3
+                while true; do
+                "$@" && break || {
+                  if [[ $n -lt $max ]]; then
+                    ((n++))
+                    echo "Command failed. Attempt $n/$max:"
+                  else
+                    echo "Failed after $n attempts."
+                    exit 1
+                  fi
+                }
+                done
+                set -e
+            }
+
             # images default to :latest unless there is a tag
             if [ -n "${CIRCLE_TAG}" ]; then
                 export TAGGED_IMAGE="${TAGGED_IMAGE}:${CIRCLE_TAG}"
-                export TAGGED_IMAGE_2="${TAGGED_IMAGE_2}:${CIRCLE_TAG}"
             fi
 
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
                 echo "${DOCKER_PASSWORD}" | docker login -u="${DOCKER_USERNAME}" --password-stdin
-                docker tag "${BUILD_IMAGE}" "${TAGGED_IMAGE}"
-                docker tag "${BUILD_IMAGE}" "${TAGGED_IMAGE_2}"
-                docker push "${TAGGED_IMAGE}"
-                docker push "${TAGGED_IMAGE_2}"
+                retry docker tag "${BUILD_IMAGE}" "${TAGGED_IMAGE}"
+                retry docker push "${TAGGED_IMAGE}"
             fi
 
 workflows:
