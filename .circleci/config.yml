@@ -1,0 +1,85 @@
+version: 2
+jobs:
+  build_test_push:
+    docker:
+      - image: docker:stable
+    environment:
+      BUILD_IMAGE: antenna:build
+      TAGGED_IMAGE: mozilla/socorro_collector
+    steps:
+      - checkout
+      - setup_remote_docker
+
+      - run:
+          name: Create version.json
+          command: |
+            # create a version.json per https://github.com/mozilla-services/Dockerflow/blob/master/docs/version_object.md
+            printf '{"commit":"%s","version":"%s","source":"https://github.com/%s/%s","build":"%s"}\n' \
+            "$CIRCLE_SHA1" \
+            "$CIRCLE_TAG" \
+            "$CIRCLE_PROJECT_USERNAME" \
+            "$CIRCLE_PROJECT_REPONAME" \
+            "$CIRCLE_BUILD_URL" > version.json
+
+      - run:
+          name: Build Docker image
+          command: |
+            docker info
+            docker build -t ${BUILD_IMAGE} .
+
+      - run:
+          name: Run tests in Docker image
+          command: |
+            docker run ${BUILD_IMAGE} py.test
+            docker run ${BUILD_IMAGE} flake8
+            docker run ${BUILD_IMAGE} bandit -r antenna/
+
+      - run:
+          name: Push to Dockerhub
+          command: |
+            function retry {
+                set +e
+                local n=0
+                local max=3
+                while true; do
+                "$@" && break || {
+                  if [[ $n -lt $max ]]; then
+                    ((n++))
+                    echo "Command failed. Attempt $n/$max:"
+                  else
+                    echo "Failed after $n attempts."
+                    exit 1
+                  fi
+                }
+                done
+                set -e
+            }
+
+            # images default to :latest unless there is a tag
+            if [ -n "${CIRCLE_TAG}" ]; then
+                export TAGGED_IMAGE="${TAGGED_IMAGE}:${CIRCLE_TAG}"
+            fi
+
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+                echo "${DOCKER_PASSWORD}" | docker login -u="${DOCKER_USERNAME}" --password-stdin
+                retry docker tag "${BUILD_IMAGE}" "${TAGGED_IMAGE}"
+                retry docker push "${TAGGED_IMAGE}"
+            fi
+
+workflows:
+  version: 2
+
+  # workflow jobs are _not_ run in tag builds by default
+  # we use filters to whitelist jobs that should be run for tags
+
+  # workflow jobs are run in _all_ branch builds by default
+  # we use filters to blacklist jobs that shouldn't be run for a branch
+
+  # see: https://circleci.com/docs/2.0/workflows/#git-tag-job-execution
+
+  build_test_push:
+    jobs:
+      - build_test_push:
+          filters:
+            tags:
+              only: /.*/
