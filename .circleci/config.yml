@@ -4,8 +4,7 @@ jobs:
     docker:
       - image: docker:stable
     environment:
-      BUILD_IMAGE: antenna:build
-      TAGGED_IMAGE: mozilla/socorro_collector
+      APP_NAME: "socorro_collector"
     steps:
       - checkout
       - setup_remote_docker
@@ -25,14 +24,14 @@ jobs:
           name: Build Docker image
           command: |
             docker info
-            docker build -t ${BUILD_IMAGE} .
+            docker build -t ${APP_NAME}:build .
 
       - run:
           name: Run tests in Docker image
           command: |
-            docker run ${BUILD_IMAGE} py.test
-            docker run ${BUILD_IMAGE} flake8
-            docker run ${BUILD_IMAGE} bandit -r antenna/
+            docker run ${APP_NAME}:build py.test
+            docker run ${APP_NAME}:build flake8
+            docker run ${APP_NAME}:build bandit -r antenna/
 
       - run:
           name: Push to Dockerhub
@@ -55,15 +54,17 @@ jobs:
                 set -e
             }
 
-            # images default to :latest unless there is a tag
+            # tag images with SHA1 hash or git tag
+            export DOCKER_IMAGE="mozilla/${APP_NAME}:${CIRCLE_SHA1}"
             if [ -n "${CIRCLE_TAG}" ]; then
-                export TAGGED_IMAGE="${TAGGED_IMAGE}:${CIRCLE_TAG}"
+                export DOCKER_IMAGE="mozilla/${APP_NAME}:${CIRCLE_TAG}"
             fi
 
-            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+            # push on master or git tag
+            if [ "${CIRCLE_BRANCH}" == "master" ] || [ -n "${CIRCLE_TAG}" ]; then
                 echo "${DOCKER_PASSWORD}" | docker login -u="${DOCKER_USERNAME}" --password-stdin
-                retry docker tag "${BUILD_IMAGE}" "${TAGGED_IMAGE}"
-                retry docker push "${TAGGED_IMAGE}"
+                retry docker tag "${APP_NAME}:build" "${DOCKER_IMAGE}"
+                retry docker push "${DOCKER_IMAGE}"
             fi
 
 workflows:
