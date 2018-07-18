@@ -13,9 +13,6 @@ def get_file(fn):
         return fp.read()
 
 
-# FIXME: This requires the requirements in requirements.txt, but we need to
-# pull that in without the hashes.
-
 setup(
     name='antenna',
     version='0.1.0',
