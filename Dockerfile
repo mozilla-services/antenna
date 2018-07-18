@@ -4,7 +4,7 @@ WORKDIR /app/
 RUN groupadd --gid 10001 app && useradd -g app --uid 10001 --shell /usr/sbin/nologin app
 
 RUN apt-get update && \
-    apt-get install -y gcc apt-transport-https
+    apt-get install -y gcc apt-transport-https build-essential graphviz
 
 COPY ./requirements.txt /app/requirements.txt
 
