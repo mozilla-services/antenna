@@ -2,7 +2,7 @@ schedule: "every day"
 search: False
 update: insecure
 requirements:
-  - requirements.txt:
+  - requirements/default.txt:
       update: security
-  - requirements-newrelic.txt:
+  - requirements/constraints.txt:
       update: security

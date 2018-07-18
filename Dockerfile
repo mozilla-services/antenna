@@ -4,12 +4,12 @@ WORKDIR /app/
 RUN groupadd --gid 10001 app && useradd -g app --uid 10001 --shell /usr/sbin/nologin app
 
 RUN apt-get update && \
-    apt-get install -y gcc apt-transport-https
+    apt-get install -y gcc apt-transport-https build-essential graphviz
 
-COPY ./requirements.txt /app/requirements.txt
+COPY ./requirements /app/requirements
 
-RUN pip install -U 'pip>=8' && \
-    pip install --no-cache-dir -r requirements.txt
+RUN pip install -U 'pip>=10' && \
+    pip install --no-cache-dir -r requirements/default.txt -c requirements/constraints.txt
 
 # Install the app
 COPY . /app/

@@ -129,7 +129,7 @@ def multipart_encode(raw_crash, boundary=None):
                 (Header(key).encode(), Header(val[0]).encode())))
             block.append('Content-Type: application/octet-stream')
         else:
-            logger.info('Skipping %r %r' % key)
+            logger.info('Skipping %r' % key)
             continue
 
         block.append('')
