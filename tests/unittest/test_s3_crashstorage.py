@@ -71,9 +71,9 @@ class TestS3Mock:
         assert s3mock.remaining_conversation() == []
 
     def test_region_and_bucket_with_periods(self, client, s3mock):
-        # # .verify_configuration() calls HEAD on the bucket to verify it exists
-        # # and the configuration is correct.
-        ROOT = 'https://s3-us-west-1.amazonaws.com/'
+        # .verify_configuration() calls HEAD on the bucket to verify it exists
+        # and the configuration is correct.
+        ROOT = 'https://s3.us-west-1.amazonaws.com/'
         s3mock.add_step(
             method='HEAD',
             url=ROOT + 'fakebucket.with.periods',
