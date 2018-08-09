@@ -2,6 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+"""Defines the throttler for the breakpad handler for Antenna.
+
+The throttler lets you define rules for which crashes to accept (save and
+process), defer (save, but not process), and reject.
+
+"""
+
 import importlib
 import logging
 import random
@@ -47,8 +54,11 @@ class Throttler(RequiredConfigMixin):
 
     If you don't want to throttle anything, use this::
 
-        THROTTLE_RULES=antenna.throttler.accept_all
+        THROTTLE_RULES=antenna.throttler.ACCEPT_ALL
 
+    If you want to support all products, use this::
+
+        PRODUCTS=antenna.throttler.ALL_PRODUCTS
 
     To set up a rule set, put it in a Python file and define the rule set
     there. For example, you could have file ``myruleset.py`` with this in it::
@@ -72,8 +82,14 @@ class Throttler(RequiredConfigMixin):
     required_config = ConfigOptions()
     required_config.add_option(
         'throttle_rules',
-        default='antenna.throttler.mozilla_rules',
+        default='antenna.throttler.MOZILLA_RULES',
         doc='Python dotted path to ruleset',
+        parser=parse_attribute
+    )
+    required_config.add_option(
+        'products',
+        default='antenna.throttler.MOZILLA_PRODUCTS',
+        doc='Python dotted path to list of supported products',
         parser=parse_attribute
     )
 
@@ -90,7 +106,7 @@ class Throttler(RequiredConfigMixin):
 
         """
         for rule in self.rule_set:
-            match = rule.match(raw_crash)
+            match = rule.match(self, raw_crash)
 
             if match:
                 if rule.percentage is None:
@@ -138,7 +154,9 @@ class Rule:
         """
         self.rule_name = rule_name
         self.key = key
-        self.condition = self._to_handler(condition)
+        if not callable(condition):
+            raise ValueError('condition %r is not callable' % condition)
+        self.condition = condition
         self.percentage = percentage
 
         if not self.RULE_NAME_RE.match(self.rule_name):
@@ -147,38 +165,22 @@ class Rule:
     def __repr__(self):
         return self.rule_name
 
-    def _to_handler(self, condition):
-        # If it's a callable, then it can be a handler
-        if callable(condition):
-            return condition
-
-        # If it's a regexp, then we return a function that does a regexp
-        # search on the value
-        if isinstance(condition, REGEXP_TYPE):
-            def handler(val):
-                return bool(condition.search(val))
-            return handler
-
-        # If we're at this point, then we assume it's a value for
-        # an equality test
-        return lambda val: val == condition
-
-    def match(self, crash):
+    def match(self, throttler, crash):
         if self.key == '*':
-            return self.condition(crash)
+            return self.condition(throttler, crash)
 
         if self.key in crash:
-            return self.condition(crash[self.key])
+            return self.condition(throttler, crash[self.key])
 
         return False
 
 
-def always_match(crash):
+def always_match(throttler, crash):
     """Rule condition that always returns true"""
     return True
 
 
-def match_infobar_true(data):
+def match_infobar_true(throttler, data):
     """Matches crashes we need to filter out due to infobar bug
 
     Bug #1425949.
@@ -200,7 +202,7 @@ def match_infobar_true(data):
     )
 
 
-def match_firefox_pre_57(data):
+def match_firefox_pre_57(throttler, data):
     """Matches crashes for Firefox before 57
 
     Bug #1433316.
@@ -223,26 +225,58 @@ def match_firefox_pre_57(data):
     )
 
 
-accept_all = [
+#: This accepts crash reports for all products
+ALL_PRODUCTS = []
+
+
+#: List of supported products; these have to match the ProductName of the
+#: incoming crash report
+MOZILLA_PRODUCTS = [
+    'Firefox',
+    'Fennec',
+    'Thunderbird',
+    'SeaMonkey'
+]
+
+
+#: Rule set to accept all incoming crashes
+ACCEPT_ALL = [
     # Accept everything
     Rule('accept_everything', '*', always_match, 100)
 ]
 
 
-mozilla_rules = [
-    # Drop browser side of all multi-submission hang crashes
+#: Ruleset for Mozilla's crash collector
+MOZILLA_RULES = [
+    # Reject browser side of all multi-submission hang crashes
     Rule(
         rule_name='has_hangid_and_browser',
         key='*',
-        condition=lambda d: 'HangID' in d and d.get('ProcessType', 'browser') == 'browser',
+        condition=(
+            lambda throttler, d: 'HangID' in d and d.get('ProcessType', 'browser') == 'browser'
+        ),
         percentage=None
     ),
 
-    # Drop infobar=true crashes for certain versions
+    # Reject infobar=true crashes for certain versions of Firefox desktop
     Rule(
         rule_name='infobar_is_true',
         key='*',
         condition=match_infobar_true,
+        percentage=None
+    ),
+
+    # Reject all unsupported products; this does nothing if the list of
+    # supported products is empty
+    Rule(
+        rule_name='unsupported_product',
+        key='ProductName',
+        condition=(
+            lambda throttler, val: (
+                throttler.config('products') and
+                val not in throttler.config('products')
+            )
+        ),
         percentage=None
     ),
 
@@ -258,7 +292,7 @@ mozilla_rules = [
     Rule(
         rule_name='has_email',
         key='Email',
-        condition=lambda x: x and '@' in x,
+        condition=lambda throttler, x: x and '@' in x,
         percentage=100
     ),
 
@@ -266,7 +300,7 @@ mozilla_rules = [
     Rule(
         rule_name='is_alpha_beta_esr',
         key='ReleaseChannel',
-        condition=lambda x: x in ('aurora', 'beta', 'esr'),
+        condition=lambda throttler, x: x in ('aurora', 'beta', 'esr'),
         percentage=100
     ),
 
@@ -274,7 +308,7 @@ mozilla_rules = [
     Rule(
         rule_name='is_nightly',
         key='ReleaseChannel',
-        condition=lambda x: x.startswith('nightly'),
+        condition=lambda throttler, x: x.startswith('nightly'),
         percentage=100
     ),
 
@@ -290,7 +324,7 @@ mozilla_rules = [
     Rule(
         rule_name='is_firefox_desktop',
         key='ProductName',
-        condition='Firefox',
+        condition=lambda throttler, x: x == 'Firefox',
         percentage=10
     ),
 
@@ -298,7 +332,7 @@ mozilla_rules = [
     Rule(
         rule_name='is_fennec',
         key='ProductName',
-        condition='Fennec',
+        condition=lambda throttler, x: x == 'Fennec',
         percentage=100
     ),
 
@@ -306,7 +340,7 @@ mozilla_rules = [
     Rule(
         rule_name='is_version_alpha_beta_special',
         key='Version',
-        condition=re.compile(r'\..*?[a-zA-Z]+'),
+        condition=lambda throttler, x: '.' in x and x[-1].isalpha(),
         percentage=100
     ),
 
@@ -314,7 +348,7 @@ mozilla_rules = [
     Rule(
         rule_name='is_thunderbird_seamonkey',
         key='ProductName',
-        condition=lambda x: x and x[0] in 'TSC',
+        condition=lambda throttler, x: x and x[0] in 'TSC',
         percentage=100
     ),
 

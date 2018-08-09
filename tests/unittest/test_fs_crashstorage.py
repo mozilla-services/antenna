@@ -35,7 +35,8 @@ class TestFSCrashStorage:
         # Rebuild the app the test client is using with relevant configuration.
         client.rebuild_app({
             'BASEDIR': str(tmpdir),
-            'THROTTLE_RULES': 'antenna.throttler.accept_all',
+            'THROTTLE_RULES': 'antenna.throttler.ACCEPT_ALL',
+            'PRODUCTS': 'antenna.throttler.ALL_PRODUCTS',
             'CRASHSTORAGE_CLASS': 'antenna.ext.fs.crashstorage.FSCrashStorage',
             'CRASHSTORAGE_FS_ROOT': str(tmpdir.join('antenna_crashes')),
         })
@@ -113,7 +114,8 @@ class TestFSCrashStorage:
         # Rebuild the app the test client is using with relevant configuration.
         client.rebuild_app({
             'BASEDIR': str(tmpdir),
-            'THROTTLE_RULES': 'antenna.throttler.accept_all',
+            'THROTTLE_RULES': 'antenna.throttler.ACCEPT_ALL',
+            'PRODUCTS': 'antenna.throttler.ALL_PRODUCTS',
             'CRASHSTORAGE_CLASS': 'antenna.ext.fs.crashstorage.FSCrashStorage',
             'CRASHSTORAGE_FS_ROOT': str(tmpdir.join('antenna_crashes')),
         })

@@ -26,7 +26,7 @@ class TestBreakpadSubmitterResource:
 
     def test_submit_crash_report_reply(self, client):
         data, headers = multipart_encode({
-            'ProductName': 'Test',
+            'ProductName': 'Firefox',
             'Version': '1.0',
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
         })
@@ -42,7 +42,7 @@ class TestBreakpadSubmitterResource:
 
     def test_extract_payload(self, request_generator):
         data, headers = multipart_encode({
-            'ProductName': 'Test',
+            'ProductName': 'Firefox',
             'Version': '1.0',
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
         })
@@ -55,7 +55,7 @@ class TestBreakpadSubmitterResource:
 
         bsp = BreakpadSubmitterResource(self.empty_config)
         expected_raw_crash = {
-            'ProductName': 'Test',
+            'ProductName': 'Firefox',
             'Version': '1.0',
         }
         expected_dumps = {
@@ -65,7 +65,7 @@ class TestBreakpadSubmitterResource:
 
     def test_extract_payload_2_dumps(self, request_generator):
         data, headers = multipart_encode({
-            'ProductName': 'Test',
+            'ProductName': 'Firefox',
             'Version': '1',
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'deadbeef')),
             'upload_file_minidump_flash1': ('fakecrash2.dump', io.BytesIO(b'abcd1234')),
@@ -80,7 +80,7 @@ class TestBreakpadSubmitterResource:
 
         bsp = BreakpadSubmitterResource(self.empty_config)
         expected_raw_crash = {
-            'ProductName': 'Test',
+            'ProductName': 'Firefox',
             'Version': '1',
         }
         expected_dumps = {
@@ -91,7 +91,7 @@ class TestBreakpadSubmitterResource:
 
     def test_extract_payload_compressed(self, request_generator):
         data, headers = multipart_encode({
-            'ProductName': 'Test',
+            'ProductName': 'Firefox',
             'Version': '1.0',
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
         })
@@ -108,7 +108,7 @@ class TestBreakpadSubmitterResource:
 
         bsp = BreakpadSubmitterResource(self.empty_config)
         expected_raw_crash = {
-            'ProductName': 'Test',
+            'ProductName': 'Firefox',
             'Version': '1.0',
         }
         expected_dumps = {
@@ -149,7 +149,7 @@ class TestBreakpadSubmitterResource:
         crash_id = 'de1bb258-cbbf-4589-a673-34f800160918'
         data, headers = multipart_encode({
             'uuid': crash_id,
-            'ProductName': 'Test',
+            'ProductName': 'Firefox',
             'Version': '1.0',
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
         })
@@ -215,7 +215,7 @@ class TestBreakpadSubmitterResource:
 
         data, headers = multipart_encode({
             'uuid': 'de1bb258-cbbf-4589-a673-34f800160918',
-            'ProductName': 'Test',
+            'ProductName': 'Firefox',
             'Version': '1.0',
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
         })
@@ -244,7 +244,7 @@ class TestBreakpadSubmitterResource:
         crash_id = 'de1bb258-cbbf-4589-a673-34f800160918'
         data, headers = multipart_encode({
             'uuid': crash_id,
-            'ProductName': 'Test',
+            'ProductName': 'Firefox',
             'Version': '1.0',
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
         })
