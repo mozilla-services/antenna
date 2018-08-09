@@ -30,8 +30,6 @@ RESULT_TO_TEXT = {
     2: 'REJECT'
 }
 
-REGEXP_TYPE = type(re.compile(''))
-
 
 def parse_attribute(val):
     module, attribute_name = val.rsplit('.', 1)
