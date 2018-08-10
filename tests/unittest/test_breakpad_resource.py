@@ -166,11 +166,14 @@ class TestBreakpadSubmitterResource:
         assert result.content.decode('utf-8') == 'CrashID=bp-%s\n' % crash_id
 
     @pytest.mark.parametrize('data, expected', [
-        # uuid has ACCEPT in throttle character position
-        ({'uuid': 'de1bb258-cbbf-4589-a673-34f800160918'}, (0, 'FROM_CRASHID', 100)),
+        # FIXME(willkg): This functionality is commented out so we can test throttling
+        # on stage for bug #1476941.
 
-        # uuid has DEFER in throttle character position
-        ({'uuid': 'de1bb258-cbbf-4589-a673-34f801160918'}, (1, 'FROM_CRASHID', 100)),
+        # # uuid has ACCEPT in throttle character position
+        # ({'uuid': 'de1bb258-cbbf-4589-a673-34f800160918'}, (0, 'FROM_CRASHID', 100)),
+
+        # # uuid has DEFER in throttle character position
+        # ({'uuid': 'de1bb258-cbbf-4589-a673-34f801160918'}, (1, 'FROM_CRASHID', 100)),
 
         # uuid has bad character in throttle character position, so it doesn't use that throttle
         # result
