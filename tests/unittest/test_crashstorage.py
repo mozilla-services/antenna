@@ -14,7 +14,8 @@ class TestCrashStorage:
     def test_flow(self, client):
         """Verify posting a crash gets to crash storage in the right shape"""
         client.rebuild_app({
-            'THROTTLE_RULES': 'antenna.throttler.accept_all'
+            'THROTTLE_RULES': 'antenna.throttler.ACCEPT_ALL',
+            'PRODUCTS': 'antenna.throttler.ALL_PRODUCTS'
         })
 
         data, headers = multipart_encode({
