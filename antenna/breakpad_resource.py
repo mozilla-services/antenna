@@ -20,7 +20,7 @@ import markus
 from antenna.heartbeat import register_for_life, register_for_heartbeat
 from antenna.throttler import (
     ACCEPT,
-    DEFER,
+    # DEFER,
     REJECT,
     RESULT_TO_TEXT,
     Throttler,
