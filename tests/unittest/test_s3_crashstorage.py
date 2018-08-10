@@ -41,7 +41,7 @@ class TestS3Mock:
         )
         data, headers = multipart_encode({
             'uuid': 'de1bb258-cbbf-4589-a673-34f800160918',
-            'ProductName': 'Test',
+            'ProductName': 'Fennec',
             'Version': '1.0',
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
         })
@@ -101,7 +101,7 @@ class TestS3Mock:
         )
         data, headers = multipart_encode({
             'uuid': 'de1bb258-cbbf-4589-a673-34f800160918',
-            'ProductName': 'Test',
+            'ProductName': 'Fennec',
             'Version': '1.0',
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
         })
@@ -202,7 +202,7 @@ class TestS3MockLogging:
         )
         data, headers = multipart_encode({
             'uuid': 'de1bb258-cbbf-4589-a673-34f800160918',
-            'ProductName': 'Test',
+            'ProductName': 'Fennec',
             'Version': '1.0',
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
         })

@@ -20,7 +20,7 @@ import markus
 from antenna.heartbeat import register_for_life, register_for_heartbeat
 from antenna.throttler import (
     ACCEPT,
-    DEFER,
+    # DEFER,
     REJECT,
     RESULT_TO_TEXT,
     Throttler,
@@ -284,36 +284,39 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         :returns tuple: ``(result, rule_name, percentage)``
 
         """
-        # If the raw_crash has a uuid, then that implies throttling, so return
-        # that.
-        if 'uuid' in raw_crash:
-            crash_id = raw_crash['uuid']
-            if crash_id[-7] in (str(ACCEPT), str(DEFER)):
-                result = int(crash_id[-7])
-                throttle_rate = 100
+        # FIXME(willkg): This is commented out so we can test throttling on
+        # stage for bug #1476941.
 
-                # Save the results in the raw_crash itself
-                raw_crash['legacy_processing'] = result
-                raw_crash['throttle_rate'] = throttle_rate
+        # # If the raw_crash has a uuid, then that implies throttling, so return
+        # # that.
+        # if 'uuid' in raw_crash:
+        #     crash_id = raw_crash['uuid']
+        #     if crash_id[-7] in (str(ACCEPT), str(DEFER)):
+        #         result = int(crash_id[-7])
+        #         throttle_rate = 100
 
-                return result, 'FROM_CRASHID', throttle_rate
+        #         # Save the results in the raw_crash itself
+        #         raw_crash['legacy_processing'] = result
+        #         raw_crash['throttle_rate'] = throttle_rate
 
-        # If we have throttle results for this crash, return those.
-        if 'legacy_processing' in raw_crash and 'throttle_rate' in raw_crash:
-            try:
-                result = int(raw_crash['legacy_processing'])
-                if result not in (ACCEPT, DEFER):
-                    raise ValueError('Result is not a valid value: %r', result)
+        #         return result, 'FROM_CRASHID', throttle_rate
 
-                throttle_rate = int(raw_crash['throttle_rate'])
-                if not (0 <= throttle_rate <= 100):
-                    raise ValueError('Throttle rate is not a valid value: %r', result)
-                return result, 'ALREADY_THROTTLED', throttle_rate
+        # # If we have throttle results for this crash, return those.
+        # if 'legacy_processing' in raw_crash and 'throttle_rate' in raw_crash:
+        #     try:
+        #         result = int(raw_crash['legacy_processing'])
+        #         if result not in (ACCEPT, DEFER):
+        #             raise ValueError('Result is not a valid value: %r', result)
 
-            except ValueError:
-                # If we've gotten a ValueError, it means one or both of the
-                # values is bad and we should ignore it and move forward.
-                mymetrics.incr('throttle.bad_throttle_values')
+        #         throttle_rate = int(raw_crash['throttle_rate'])
+        #         if not (0 <= throttle_rate <= 100):
+        #             raise ValueError('Throttle rate is not a valid value: %r', result)
+        #         return result, 'ALREADY_THROTTLED', throttle_rate
+
+        #     except ValueError:
+        #         # If we've gotten a ValueError, it means one or both of the
+        #         # values is bad and we should ignore it and move forward.
+        #         mymetrics.incr('throttle.bad_throttle_values')
 
         # If we have a Throttleable=0, then return that.
         if raw_crash.get('Throttleable', None) == '0':
