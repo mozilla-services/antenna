@@ -230,6 +230,39 @@ class Testmozilla_rules:
         }
         assert throttler.throttle(raw_crash) == (REJECT, 'infobar_is_true', None)
 
+    @pytest.mark.parametrize('productname, expected', [
+        # Test no ProductName
+        (None, (REJECT, 'unsupported_product', None)),
+        # Test empty string
+        ('', (REJECT, 'unsupported_product', None)),
+        # Lowercase of existing product--product names are case-sensitive
+        ('firefox', (REJECT, 'unsupported_product', None)),
+        # This product doesn't exist in the list--unsupported
+        ('testproduct', (REJECT, 'unsupported_product', None)),
+        # NOTE(willkg): Other tests test the case where the product name is fine
+    ])
+    def test_productname(self, productname, expected):
+        """Verify productname rule blocks unsupported products"""
+        # Need a throttler with the default configuration which includes supported
+        # products
+        throttler = Throttler(ConfigManager.from_dict({}))
+        raw_crash = {}
+        if productname:
+            raw_crash['ProductName'] = productname
+        assert throttler.throttle(raw_crash) == expected
+
+    def test_productname_no_unsupported_products(self):
+        """Verify productname rule doesn't do anything if using ALL_PRODUCTS"""
+        throttler = Throttler(ConfigManager.from_dict({
+            'PRODUCTS': 'antenna.throttler.ALL_PRODUCTS'
+        }))
+        raw_crash = {
+            'ProductName': 'testproduct'
+        }
+        # This is an unsupported product, but it's not accepted for processing
+        # by any of the rules, so it falls through the entire rule set.
+        assert throttler.throttle(raw_crash) == (DEFER, 'NO_MATCH', 0)
+
     def test_comments(self, throttler):
         raw_crash = {
             'ProductName': 'Test',

@@ -268,11 +268,11 @@ MOZILLA_RULES = [
     # supported products is empty
     Rule(
         rule_name='unsupported_product',
-        key='ProductName',
+        key='*',
         condition=(
-            lambda throttler, val: (
+            lambda throttler, data: (
                 throttler.config('products') and
-                val not in throttler.config('products')
+                data.get('ProductName', '') not in throttler.config('products')
             )
         ),
         percentage=None
