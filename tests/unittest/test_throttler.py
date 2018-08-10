@@ -334,7 +334,7 @@ class Testmozilla_rules:
     ])
     def test_is_version_alpha_beta_special(self, throttler, version):
         raw_crash = {
-            'ProductName': 'Thunderbird',
+            'ProductName': 'Fennec',
             'Version': version
         }
         assert throttler.throttle(raw_crash) == (ACCEPT, 'is_version_alpha_beta_special', 100)
