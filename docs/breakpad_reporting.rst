@@ -161,7 +161,7 @@ development instance. There are a few options:
    https://developer.mozilla.org/en-US/docs/Environment_variables_affecting_crash_reporting
 
 
-   * (Firefox >= 62) Use ``about:crashparent`` and ``about:crashcontent``.
+   * (Firefox >= 62) Use ``about:crashparent`` or ``about:crashcontent``.
 
    * (Firefox < 62) Then kill the Firefox process using the ``kill`` command.
 
