@@ -156,39 +156,36 @@ development instance. There are a few options:
       $ make shell
       app@c392a11dbfec:/app$ python -m testlib.mini_poster --url URL
 
-2. Use an addon/webextension:
-
-   * **Firefox < 57:** https://addons.mozilla.org/en-US/firefox/addon/crash-me-now-simple/
-   * **Firefox >= 59 nightly/beta:** https://github.com/rhelmer/webext-experiment-crashme
-
-3. Use Firefox and set the ``MOZ_CRASHREPORTER_URL`` environment variable:
+2. Use Firefox and set the ``MOZ_CRASHREPORTER_URL`` environment variable:
 
    https://developer.mozilla.org/en-US/docs/Environment_variables_affecting_crash_reporting
 
 
-   Then kill the Firefox process using the ``kill`` command.
+   * (Firefox >= 62) Use ``about:crashparent`` or ``about:crashcontent``.
 
-   1. Run ``ps -aef | grep firefox``. That will list all the
-      Firefox processes.
+   * (Firefox < 62) Then kill the Firefox process using the ``kill`` command.
 
-      Find the process id of the Firefox process you want to kill.
+     1. Run ``ps -aef | grep firefox``. That will list all the
+        Firefox processes.
 
-      * main process looks something like ``/usr/bin/firefox``
-      * content process looks something like
-        ``/usr/bin/firefox -contentproc -childID ...``
+        Find the process id of the Firefox process you want to kill.
 
-   2. The ``kill`` command lets you pass a signal to the process. By default, it
-      passes ``SIGTERM`` which will kill the process in a way that doesn't
-      launch the crash reporter.
+        * main process looks something like ``/usr/bin/firefox``
+        * content process looks something like
+          ``/usr/bin/firefox -contentproc -childID ...``
 
-      You want to kill the process in a way that *does* launch the crash
-      reporter. I've had success with ``SIGABRT`` and ``SIGFPE``. For example:
+     2. The ``kill`` command lets you pass a signal to the process. By default, it
+        passes ``SIGTERM`` which will kill the process in a way that doesn't
+        launch the crash reporter.
 
-      * ``kill -SIGABRT <PID>``
-      * ``kill -SIGFPE <PID>``
+        You want to kill the process in a way that *does* launch the crash
+        reporter. I've had success with ``SIGABRT`` and ``SIGFPE``. For example:
 
-      What works for you will depend on the operating system and version of
-      Firefox you're using.
+        * ``kill -SIGABRT <PID>``
+        * ``kill -SIGFPE <PID>``
+
+        What works for you will depend on the operating system and version of
+        Firefox you're using.
 
 
 Capturing an HTTP POST payload for a crash report
@@ -202,7 +199,7 @@ capture it this way:
 2. Run ``MOZ_CRASHREPORTER_URL=http://localhost:8000/submit firefox`` in a
    second terminal.
 
-3. Kill a Firefox process using one of the methods in
+3. Crash Firefox using one of the methods in
    :ref:`testing-breakpad-crash-reporting`.
 
 4. The Firefox process will crash and the crash report dialog will pop up.
