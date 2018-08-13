@@ -4,6 +4,7 @@
 
 import contextlib
 from pathlib import Path
+import logging
 import sys
 from unittest import mock
 
@@ -205,3 +206,18 @@ def randommock():
             yield
 
     return _randommock
+
+
+@pytest.yield_fixture
+def caplogpp(caplog):
+    """caplogpp fixes propagation logger values and returns caplog fixture"""
+    changed_loggers = []
+    for logger in logging.Logger.manager.loggerDict.values():
+        if getattr(logger, 'propagate', True) is False:
+            logger.propagate = True
+            changed_loggers.append(logger)
+
+    yield caplog
+
+    for logger in changed_loggers:
+        logger.propagate = False
