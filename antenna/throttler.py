@@ -223,6 +223,18 @@ def match_firefox_pre_57(throttler, data):
     )
 
 
+def match_unsupported_product(throttler, data):
+    is_not_supported = (
+        throttler.config('products') and
+        data.get('ProductName') not in throttler.config('products')
+    )
+
+    if is_not_supported:
+        logger.info('ProductName rejected: %r' % data.get('ProductName'))
+        return True
+    return False
+
+
 #: This accepts crash reports for all products
 ALL_PRODUCTS = []
 
@@ -269,12 +281,7 @@ MOZILLA_RULES = [
     Rule(
         rule_name='unsupported_product',
         key='*',
-        condition=(
-            lambda throttler, data: (
-                throttler.config('products') and
-                data.get('ProductName', '') not in throttler.config('products')
-            )
-        ),
+        condition=match_unsupported_product,
         percentage=None
     ),
 

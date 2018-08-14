@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import logging
+
 from everett.manager import ConfigManager
 import pytest
 
@@ -241,15 +243,19 @@ class Testmozilla_rules:
         ('testproduct', (REJECT, 'unsupported_product', None)),
         # NOTE(willkg): Other tests test the case where the product name is fine
     ])
-    def test_productname(self, productname, expected):
+    def test_productname(self, caplogpp, productname, expected):
         """Verify productname rule blocks unsupported products"""
-        # Need a throttler with the default configuration which includes supported
-        # products
-        throttler = Throttler(ConfigManager.from_dict({}))
-        raw_crash = {}
-        if productname:
-            raw_crash['ProductName'] = productname
-        assert throttler.throttle(raw_crash) == expected
+        with caplogpp.at_level(logging.INFO, logger='antenna'):
+            # Need a throttler with the default configuration which includes supported
+            # products
+            throttler = Throttler(ConfigManager.from_dict({}))
+            raw_crash = {}
+            if productname is not None:
+                raw_crash['ProductName'] = productname
+            assert throttler.throttle(raw_crash) == expected
+            assert caplogpp.record_tuples == [
+                ('antenna.throttler', logging.INFO, 'ProductName rejected: %r' % productname)
+            ]
 
     def test_productname_no_unsupported_products(self):
         """Verify productname rule doesn't do anything if using ALL_PRODUCTS"""
