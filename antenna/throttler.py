@@ -230,7 +230,7 @@ def match_unsupported_product(throttler, data):
     )
 
     if is_not_supported:
-        logger.info('ProductName %r rejected' % data.get('ProductName'))
+        logger.info('ProductName rejected: %r' % data.get('ProductName'))
         return True
     return False
 

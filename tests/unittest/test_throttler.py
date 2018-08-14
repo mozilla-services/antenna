@@ -254,7 +254,7 @@ class Testmozilla_rules:
                 raw_crash['ProductName'] = productname
             assert throttler.throttle(raw_crash) == expected
             assert caplogpp.record_tuples == [
-                ('antenna.throttler', logging.INFO, 'ProductName %r rejected' % productname)
+                ('antenna.throttler', logging.INFO, 'ProductName rejected: %r' % productname)
             ]
 
     def test_productname_no_unsupported_products(self):
