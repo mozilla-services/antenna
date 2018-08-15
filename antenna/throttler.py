@@ -244,8 +244,9 @@ ALL_PRODUCTS = []
 MOZILLA_PRODUCTS = [
     'Firefox',
     'Fennec',
+    'Focus',
     'Thunderbird',
-    'SeaMonkey'
+    'SeaMonkey',
 ]
 
 
