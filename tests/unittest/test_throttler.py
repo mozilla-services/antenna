@@ -269,6 +269,27 @@ class Testmozilla_rules:
         # by any of the rules, so it falls through the entire rule set.
         assert throttler.throttle(raw_crash) == (DEFER, 'NO_MATCH', 0)
 
+    def test_throttleable(self, throttler):
+        # Throttleable=0 should match
+        raw_crash = {
+            'ProductName': 'Test',
+            'Throttleable': '0'
+        }
+        assert throttler.throttle(raw_crash) == (ACCEPT, 'throttleable_0', 100)
+
+        # Any other value than "0" should not match
+        raw_crash = {
+            'ProductName': 'Test',
+            'Throttleable': '1'
+        }
+        assert throttler.throttle(raw_crash) != (ACCEPT, 'throttleable_0', 100)
+
+        raw_crash = {
+            'ProductName': 'Test',
+            'Throttleable': 'foo'
+        }
+        assert throttler.throttle(raw_crash) != (ACCEPT, 'throttleable_0', 100)
+
     def test_comments(self, throttler):
         raw_crash = {
             'ProductName': 'Test',
@@ -331,19 +352,6 @@ class Testmozilla_rules:
             'ProductName': 'Fennec'
         }
         assert throttler.throttle(raw_crash) == (ACCEPT, 'is_fennec', 100)
-
-    @pytest.mark.parametrize('version', [
-        '35.0a',
-        '35.0b',
-        '35.0A',
-        '35.0.0a'
-    ])
-    def test_is_version_alpha_beta_special(self, throttler, version):
-        raw_crash = {
-            'ProductName': 'Test',
-            'Version': version
-        }
-        assert throttler.throttle(raw_crash) == (ACCEPT, 'is_version_alpha_beta_special', 100)
 
     @pytest.mark.parametrize('product', [
         'Thunderbird',

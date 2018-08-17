@@ -190,13 +190,6 @@ class TestBreakpadSubmitterResource:
 
         # throttle_rate is not valid
         ({'legacy_processing': '0', 'throttle_rate': '1000'}, (0, 'has_comments', 100)),
-
-        # throttleable is 0
-        ({'Throttleable': '0'}, (0, 'THROTTLEABLE_0', 100)),
-
-        # throttleable is not 0
-        ({'Throttleable': '1'}, (0, 'has_comments', 100)),
-        ({'Throttleable': 'foo'}, (0, 'has_comments', 100)),
     ])
     def test_get_throttle_result(self, data, expected, request_generator):
         data['ProductName'] = 'Firefox'

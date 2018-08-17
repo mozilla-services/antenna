@@ -277,8 +277,8 @@ MOZILLA_RULES = [
         percentage=None
     ),
 
-    # Reject all unsupported products; this does nothing if the list of
-    # supported products is empty
+    # Reject crash reports for unsupported products; this does nothing if the
+    # list of supported products is empty
     Rule(
         rule_name='unsupported_product',
         key='*',
@@ -286,7 +286,15 @@ MOZILLA_RULES = [
         percentage=None
     ),
 
-    # 100% of crashes that have a comment
+    # Accept 100% of crash reports submitted through about:crashes
+    Rule(
+        rule_name='throttleable_0',
+        key='Throttleable',
+        condition=lambda throttler, x: x == '0',
+        percentage=100
+    ),
+
+    # Accept 100% of crash reports that have a comment
     Rule(
         rule_name='has_comments',
         key='Comments',
@@ -294,7 +302,7 @@ MOZILLA_RULES = [
         percentage=100
     ),
 
-    # 100% of crashes that have an email address with at least an @
+    # Accept 100% of crash reports that have an email address with at least an @
     Rule(
         rule_name='has_email',
         key='Email',
@@ -302,7 +310,7 @@ MOZILLA_RULES = [
         percentage=100
     ),
 
-    # 100% of all ReleaseChannel=aurora, beta, esr channels
+    # Accept 100% of crash reports in ReleaseChannel=aurora, beta, esr channels
     Rule(
         rule_name='is_alpha_beta_esr',
         key='ReleaseChannel',
@@ -310,7 +318,7 @@ MOZILLA_RULES = [
         percentage=100
     ),
 
-    # 100% of all ReleaseChannel=nightly
+    # Accept 100% of crash reports in ReleaseChannel=nightly
     Rule(
         rule_name='is_nightly',
         key='ReleaseChannel',
@@ -318,7 +326,7 @@ MOZILLA_RULES = [
         percentage=100
     ),
 
-    # 20% of Firefox 56 and earlier
+    # Accept 20% of Firefox 56 and earlier
     Rule(
         rule_name='firefox_pre_57',
         key='*',
@@ -326,7 +334,7 @@ MOZILLA_RULES = [
         percentage=20
     ),
 
-    # 10% of ProductName=Firefox
+    # Accept 10% of ProductName=Firefox
     Rule(
         rule_name='is_firefox_desktop',
         key='ProductName',
@@ -334,7 +342,7 @@ MOZILLA_RULES = [
         percentage=10
     ),
 
-    # 100% of ProductName=Fennec
+    # Accept 100% of ProductName=Fennec
     Rule(
         rule_name='is_fennec',
         key='ProductName',
@@ -342,15 +350,7 @@ MOZILLA_RULES = [
         percentage=100
     ),
 
-    # 100% of all Version=alpha, beta or special
-    Rule(
-        rule_name='is_version_alpha_beta_special',
-        key='Version',
-        condition=lambda throttler, x: '.' in x and x[-1].isalpha(),
-        percentage=100
-    ),
-
-    # 100% of ProductName=Thunderbird & SeaMonkey
+    # Accept 100% of ProductName=Thunderbird & SeaMonkey
     Rule(
         rule_name='is_thunderbird_seamonkey',
         key='ProductName',
