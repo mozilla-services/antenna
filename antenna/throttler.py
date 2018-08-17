@@ -113,11 +113,11 @@ class Throttler(RequiredConfigMixin):
                 if rule.percentage == 100 or (random.random() * 100.0) <= rule.percentage:  # nosec
                     response = ACCEPT
                 else:
-                    response = DEFER
+                    response = REJECT
                 return response, rule.rule_name, rule.percentage
 
         # None of the rules matched, so we defer
-        return DEFER, 'NO_MATCH', 0
+        return REJECT, 'NO_MATCH', 0
 
 
 class Rule:
@@ -257,7 +257,7 @@ ACCEPT_ALL = [
 ]
 
 
-#: Ruleset for Mozilla's crash collector
+#: Ruleset for Mozilla's crash collector throttler
 MOZILLA_RULES = [
     # Reject browser side of all multi-submission hang crashes
     Rule(
@@ -326,7 +326,7 @@ MOZILLA_RULES = [
         percentage=100
     ),
 
-    # Accept 20% of Firefox 56 and earlier
+    # Accept 20%, reject 80% of Firefox 56 and earlier (all channels)
     Rule(
         rule_name='firefox_pre_57',
         key='*',
@@ -334,29 +334,22 @@ MOZILLA_RULES = [
         percentage=20
     ),
 
-    # Accept 10% of ProductName=Firefox
+    # Accept 10%, reject 90% of Firefox desktop release channel
     Rule(
         rule_name='is_firefox_desktop',
-        key='ProductName',
-        condition=lambda throttler, x: x == 'Firefox',
+        key='*',
+        condition=lambda throttler, data: (
+            data.get('ProductName', '') == 'Firefox' and
+            data.get('ReleaseChannel', '') == 'release'
+        ),
         percentage=10
     ),
 
-    # Accept 100% of ProductName=Fennec
+    # Accept everything else
     Rule(
-        rule_name='is_fennec',
-        key='ProductName',
-        condition=lambda throttler, x: x == 'Fennec',
+        rule_name='accept_everything',
+        key='*',
+        condition=always_match,
         percentage=100
-    ),
-
-    # Accept 100% of ProductName=Thunderbird & SeaMonkey
-    Rule(
-        rule_name='is_thunderbird_seamonkey',
-        key='ProductName',
-        condition=lambda throttler, x: x and x[0] in 'TSC',
-        percentage=100
-    ),
-
-    # Reject everything else
+    )
 ]

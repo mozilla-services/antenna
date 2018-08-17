@@ -9,7 +9,6 @@ import pytest
 
 from antenna.throttler import (
     ACCEPT,
-    DEFER,
     REJECT,
     Rule,
     Throttler,
@@ -63,7 +62,7 @@ class TestRule:
 
         with randommock(0.55):
             # Above the percentage line, so DEFER!
-            assert throttler.throttle({'ProductName': 'test'}) == (DEFER, 'test', 50)
+            assert throttler.throttle({'ProductName': 'test'}) == (REJECT, 'test', 50)
 
 
 class TestACCEPT_ALL:
@@ -266,8 +265,8 @@ class Testmozilla_rules:
             'ProductName': 'testproduct'
         }
         # This is an unsupported product, but it's not accepted for processing
-        # by any of the rules, so it falls through the entire rule set.
-        assert throttler.throttle(raw_crash) == (DEFER, 'NO_MATCH', 0)
+        # by any of the rules, so it gets caught up by the last rule
+        assert throttler.throttle(raw_crash) == (ACCEPT, 'accept_everything', 100)
 
     def test_throttleable(self, throttler):
         # Throttleable=0 should match
@@ -298,9 +297,9 @@ class Testmozilla_rules:
         assert throttler.throttle(raw_crash) == (ACCEPT, 'has_comments', 100)
 
     @pytest.mark.parametrize('email, expected', [
-        (None, (DEFER, 'NO_MATCH', 0)),
-        ('', (DEFER, 'NO_MATCH', 0)),
-        ('foo', (DEFER, 'NO_MATCH', 0)),
+        (None, (ACCEPT, 'accept_everything', 100)),
+        ('', (ACCEPT, 'accept_everything', 100)),
+        ('foo', (ACCEPT, 'accept_everything', 100)),
         ('foo@example.com', (ACCEPT, 'has_email', 100)),
     ])
     def test_email(self, throttler, email, expected):
@@ -338,38 +337,18 @@ class Testmozilla_rules:
         with randommock(0.09):
             raw_crash = {
                 'ProductName': 'Firefox',
+                'ReleaseChannel': 'release',
             }
             assert throttler.throttle(raw_crash) == (ACCEPT, 'is_firefox_desktop', 10)
 
         with randommock(0.9):
             raw_crash = {
                 'ProductName': 'Firefox',
+                'ReleaseChannel': 'release',
             }
-            assert throttler.throttle(raw_crash) == (DEFER, 'is_firefox_desktop', 10)
-
-    def test_is_fennec(self, throttler):
-        raw_crash = {
-            'ProductName': 'Fennec'
-        }
-        assert throttler.throttle(raw_crash) == (ACCEPT, 'is_fennec', 100)
-
-    @pytest.mark.parametrize('product', [
-        'Thunderbird',
-        'Seamonkey'
-    ])
-    def test_is_thunderbird_seamonkey(self, throttler, product):
-        raw_crash = {
-            'ProductName': product
-        }
-        assert throttler.throttle(raw_crash) == (ACCEPT, 'is_thunderbird_seamonkey', 100)
+            assert throttler.throttle(raw_crash) == (REJECT, 'is_firefox_desktop', 10)
 
     def test_is_nothing(self, throttler):
         # None of the rules will match an empty crash
         raw_crash = {}
-        assert throttler.throttle(raw_crash) == (DEFER, 'NO_MATCH', 0)
-
-    def test_bad_value(self, throttler):
-        raw_crash = {
-            'ProductName': ''
-        }
-        assert throttler.throttle(raw_crash) == (DEFER, 'NO_MATCH', 0)
+        assert throttler.throttle(raw_crash) == (ACCEPT, 'accept_everything', 100)
