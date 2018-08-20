@@ -96,7 +96,7 @@ class Throttler(RequiredConfigMixin):
         self.rule_set = self.config('throttle_rules')
 
     def throttle(self, raw_crash):
-        """Go through rule set to ACCEPT, REJECT or DEFER
+        """Go through rule set to ACCEPT, DEFER, or REJECT
 
         :arg dict raw_crash: the crash to throttle
 
@@ -107,24 +107,24 @@ class Throttler(RequiredConfigMixin):
             match = rule.match(self, raw_crash)
 
             if match:
-                if rule.percentage is None:
-                    return REJECT, rule.rule_name, None
+                if rule.result in (ACCEPT, DEFER, REJECT):
+                    return rule.result, rule.rule_name, 100
 
-                if rule.percentage == 100 or (random.random() * 100.0) <= rule.percentage:  # nosec
-                    response = ACCEPT
+                if (random.random() * 100.0) <= rule.result[0]:  # nosec
+                    response = rule.result[1]
                 else:
-                    response = DEFER
-                return response, rule.rule_name, rule.percentage
+                    response = rule.result[2]
+                return response, rule.rule_name, rule.result[0]
 
         # None of the rules matched, so we defer
-        return DEFER, 'NO_MATCH', 0
+        return REJECT, 'NO_MATCH', 0
 
 
 class Rule:
     """Defines a single rule"""
     RULE_NAME_RE = re.compile(r'^[a-z0-9_]+$', re.I)
 
-    def __init__(self, rule_name, key, condition, percentage):
+    def __init__(self, rule_name, key, condition, result):
         """Creates a Rule
 
         :arg str rule_name: The friendly name for the rule. We use this for
@@ -146,8 +146,24 @@ class Rule:
             This can be any other kind of value which will be compared for equality
             with ``raw_crash[key]``.
 
-        :arg int percentage: The percentage of crashes that match the condition
-            to accept and process.
+        :arg varies result: Can be a single result like ``ACCEPT``, ``DEFER``, or
+            ``REJECT`` in which case any crash report that triggers this rule gets
+            this result.
+
+            Can be a tuple of ``(number, LE_result, GT_result)``. A random number
+            is computed. If it's less than or equal to the number, then the
+            ``LE_result`` is the result. Otherwise the ``GT_result`` is the
+            result.
+
+            Example::
+
+                (10, ACCEPT, REJECT)
+
+                random number: 9 -> ACCEPT
+                              10 -> ACCEPT
+                              11 -> REJECT
+                              72 -> REJECT
+
 
         """
         self.rule_name = rule_name
@@ -155,7 +171,7 @@ class Rule:
         if not callable(condition):
             raise ValueError('condition %r is not callable' % condition)
         self.condition = condition
-        self.percentage = percentage
+        self.result = result
 
         if not self.RULE_NAME_RE.match(self.rule_name):
             raise ValueError('%r is not a valid rule name' % self.rule_name)
@@ -253,11 +269,11 @@ MOZILLA_PRODUCTS = [
 #: Rule set to accept all incoming crashes
 ACCEPT_ALL = [
     # Accept everything
-    Rule('accept_everything', '*', always_match, 100)
+    Rule('accept_everything', '*', always_match, ACCEPT)
 ]
 
 
-#: Ruleset for Mozilla's crash collector
+#: Ruleset for Mozilla's crash collector throttler
 MOZILLA_RULES = [
     # Reject browser side of all multi-submission hang crashes
     Rule(
@@ -266,7 +282,7 @@ MOZILLA_RULES = [
         condition=(
             lambda throttler, d: 'HangID' in d and d.get('ProcessType', 'browser') == 'browser'
         ),
-        percentage=None
+        result=REJECT
     ),
 
     # Reject infobar=true crashes for certain versions of Firefox desktop
@@ -274,89 +290,82 @@ MOZILLA_RULES = [
         rule_name='infobar_is_true',
         key='*',
         condition=match_infobar_true,
-        percentage=None
+        result=REJECT
     ),
 
-    # Reject all unsupported products; this does nothing if the list of
-    # supported products is empty
+    # Reject crash reports for unsupported products; this does nothing if the
+    # list of supported products is empty
     Rule(
         rule_name='unsupported_product',
         key='*',
         condition=match_unsupported_product,
-        percentage=None
+        result=REJECT
     ),
 
-    # 100% of crashes that have a comment
+    # Accept crash reports submitted through about:crashes
+    Rule(
+        rule_name='throttleable_0',
+        key='Throttleable',
+        condition=lambda throttler, x: x == '0',
+        result=ACCEPT
+    ),
+
+    # Accept crash reports that have a comment
     Rule(
         rule_name='has_comments',
         key='Comments',
         condition=always_match,
-        percentage=100
+        result=ACCEPT
     ),
 
-    # 100% of crashes that have an email address with at least an @
+    # Accept crash reports that have an email address with at least an @
     Rule(
         rule_name='has_email',
         key='Email',
         condition=lambda throttler, x: x and '@' in x,
-        percentage=100
+        result=ACCEPT
     ),
 
-    # 100% of all ReleaseChannel=aurora, beta, esr channels
+    # Accept crash reports in ReleaseChannel=aurora, beta, esr channels
     Rule(
         rule_name='is_alpha_beta_esr',
         key='ReleaseChannel',
         condition=lambda throttler, x: x in ('aurora', 'beta', 'esr'),
-        percentage=100
+        result=ACCEPT
     ),
 
-    # 100% of all ReleaseChannel=nightly
+    # Accept crash reports in ReleaseChannel=nightly
     Rule(
         rule_name='is_nightly',
         key='ReleaseChannel',
         condition=lambda throttler, x: x.startswith('nightly'),
-        percentage=100
+        result=ACCEPT
     ),
 
-    # 20% of Firefox 56 and earlier
+    # Accept 20%, reject 80% of Firefox 56 and earlier (all channels)
     Rule(
         rule_name='firefox_pre_57',
         key='*',
         condition=match_firefox_pre_57,
-        percentage=20
+        result=(20, ACCEPT, REJECT)
     ),
 
-    # 10% of ProductName=Firefox
+    # Accept 10%, reject 90% of Firefox desktop release channel
     Rule(
         rule_name='is_firefox_desktop',
-        key='ProductName',
-        condition=lambda throttler, x: x == 'Firefox',
-        percentage=10
+        key='*',
+        condition=lambda throttler, data: (
+            data.get('ProductName', '') == 'Firefox' and
+            data.get('ReleaseChannel', '') == 'release'
+        ),
+        result=(10, ACCEPT, REJECT)
     ),
 
-    # 100% of ProductName=Fennec
+    # Accept everything else
     Rule(
-        rule_name='is_fennec',
-        key='ProductName',
-        condition=lambda throttler, x: x == 'Fennec',
-        percentage=100
-    ),
-
-    # 100% of all Version=alpha, beta or special
-    Rule(
-        rule_name='is_version_alpha_beta_special',
-        key='Version',
-        condition=lambda throttler, x: '.' in x and x[-1].isalpha(),
-        percentage=100
-    ),
-
-    # 100% of ProductName=Thunderbird & SeaMonkey
-    Rule(
-        rule_name='is_thunderbird_seamonkey',
-        key='ProductName',
-        condition=lambda throttler, x: x and x[0] in 'TSC',
-        percentage=100
-    ),
-
-    # Reject everything else
+        rule_name='accept_everything',
+        key='*',
+        condition=always_match,
+        result=ACCEPT
+    )
 ]

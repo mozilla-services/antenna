@@ -10,6 +10,7 @@ import pytest
 from antenna.app import BreakpadSubmitterResource
 from antenna.breakpad_resource import MAX_ATTEMPTS
 from antenna.ext.crashstorage_base import CrashStorageBase
+from antenna.throttler import ACCEPT
 from testlib.mini_poster import compress, multipart_encode
 
 
@@ -27,7 +28,8 @@ class TestBreakpadSubmitterResource:
     def test_submit_crash_report_reply(self, client):
         data, headers = multipart_encode({
             'ProductName': 'Firefox',
-            'Version': '1.0',
+            'Version': '60.0a1',
+            'ReleaseChannel': 'nightly',
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
         })
 
@@ -150,7 +152,8 @@ class TestBreakpadSubmitterResource:
         data, headers = multipart_encode({
             'uuid': crash_id,
             'ProductName': 'Firefox',
-            'Version': '1.0',
+            'Version': '60.0a1',
+            'ReleaseChannel': 'nightly',
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
         })
 
@@ -165,45 +168,16 @@ class TestBreakpadSubmitterResource:
         # crash id we sent
         assert result.content.decode('utf-8') == 'CrashID=bp-%s\n' % crash_id
 
-    @pytest.mark.parametrize('data, expected', [
-        # FIXME(willkg): This functionality is commented out so we can test throttling
-        # on stage for bug #1476941.
-
-        # # uuid has ACCEPT in throttle character position
-        # ({'uuid': 'de1bb258-cbbf-4589-a673-34f800160918'}, (0, 'FROM_CRASHID', 100)),
-
-        # # uuid has DEFER in throttle character position
-        # ({'uuid': 'de1bb258-cbbf-4589-a673-34f801160918'}, (1, 'FROM_CRASHID', 100)),
-
-        # uuid has bad character in throttle character position, so it doesn't use that throttle
-        # result
-        ({'uuid': 'de1bb258-cbbf-4589-a673-34f80f160918'}, (0, 'has_comments', 100)),
-
-        # legacy_processing and/or throttle_rate has bad value, so it doesn't use that throttle
-        # result
-        ({'legacy_processing': 'foo', 'throttle_rate': 'bar'}, (0, 'has_comments', 100)),
-        ({'legacy_processing': '0', 'throttle_rate': 'bar'}, (0, 'has_comments', 100)),
-        ({'legacy_processing': 'foo', 'throttle_rate': '100'}, (0, 'has_comments', 100)),
-
-        # legacy_processing is not a valid value
-        ({'legacy_processing': '1000', 'throttle_rate': '100'}, (0, 'has_comments', 100)),
-
-        # throttle_rate is not valid
-        ({'legacy_processing': '0', 'throttle_rate': '1000'}, (0, 'has_comments', 100)),
-
-        # throttleable is 0
-        ({'Throttleable': '0'}, (0, 'THROTTLEABLE_0', 100)),
-
-        # throttleable is not 0
-        ({'Throttleable': '1'}, (0, 'has_comments', 100)),
-        ({'Throttleable': 'foo'}, (0, 'has_comments', 100)),
-    ])
-    def test_get_throttle_result(self, data, expected, request_generator):
-        data['ProductName'] = 'Firefox'
-        data['Comments'] = 'foo bar baz'
+    def test_get_throttle_result(self):
+        raw_crash = {
+            'ProductName': 'Firefox',
+            'ReleaseChannel': 'nightly'
+        }
 
         bsp = BreakpadSubmitterResource(self.empty_config)
-        assert bsp.get_throttle_result(data) == expected
+        assert bsp.get_throttle_result(raw_crash) == (ACCEPT, 'is_nightly', 100)
+        assert raw_crash['legacy_processing'] == ACCEPT
+        assert raw_crash['throttle_rate'] == 100
 
     def test_queuing(self, client):
         def check_health(crashmover_pool_size, crashmover_save_queue_size):
@@ -219,7 +193,8 @@ class TestBreakpadSubmitterResource:
         data, headers = multipart_encode({
             'uuid': 'de1bb258-cbbf-4589-a673-34f800160918',
             'ProductName': 'Firefox',
-            'Version': '1.0',
+            'Version': '60.0a1',
+            'ReleaseChannel': 'nightly',
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
         })
 
@@ -248,7 +223,8 @@ class TestBreakpadSubmitterResource:
         data, headers = multipart_encode({
             'uuid': crash_id,
             'ProductName': 'Firefox',
-            'Version': '1.0',
+            'Version': '60.0a1',
+            'ReleaseChannel': 'nightly',
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
         })
 
