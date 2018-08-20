@@ -27,7 +27,7 @@ def throttler():
 class TestRule:
     def test_invalid_rule_name(self):
         with pytest.raises(ValueError):
-            Rule('o m g!', '*', lambda throttler, x: True, 100)
+            Rule('o m g!', '*', lambda throttler, x: True, ACCEPT)
 
     def test_star(self, throttler):
         def is_crash(throttler, thing):
@@ -35,25 +35,25 @@ class TestRule:
 
         # Asserts that the is_crash condition function got a crash as an
         # argument.
-        rule = Rule('test', '*', is_crash, 100)
+        rule = Rule('test', '*', is_crash, ACCEPT)
         assert rule.match(throttler, {'ProductName': 'test'}) is True
 
         # Asserts that the is_crash condition function did not get a crash as
         # an argument.
-        rule = Rule('test', 'ProductName', is_crash, 100)
+        rule = Rule('test', 'ProductName', is_crash, ACCEPT)
         assert rule.match(throttler, {'ProductName': 'Test'}) is False
 
     def test_condition_function(self, throttler):
-        rule = Rule('test', '*', lambda throttler, x: True, 100)
+        rule = Rule('test', '*', lambda throttler, x: True, ACCEPT)
         assert rule.match(throttler, {'ProductName': 'test'}) is True
 
-        rule = Rule('test', '*', lambda throttler, x: False, 100)
+        rule = Rule('test', '*', lambda throttler, x: False, ACCEPT)
         assert rule.match(throttler, {'ProductName': 'test'}) is False
 
     def test_percentage(self, throttler, randommock):
         # Overrwrite the rule set for something we need
         throttler.rule_set = [
-            Rule('test', 'ProductName', lambda throttler, x: x == 'test', 50)
+            Rule('test', 'ProductName', lambda throttler, x: x == 'test', (50, ACCEPT, REJECT))
         ]
 
         with randommock(0.45):
@@ -220,7 +220,7 @@ class Testmozilla_rules:
             'HangID': 'xyz'
         }
 
-        assert throttler.throttle(raw_crash) == (REJECT, 'has_hangid_and_browser', None)
+        assert throttler.throttle(raw_crash) == (REJECT, 'has_hangid_and_browser', 100)
 
     def test_infobar(self, throttler):
         raw_crash = {
@@ -229,17 +229,17 @@ class Testmozilla_rules:
             'Version': '52.0.2',
             'BuildID': '20171223222554',
         }
-        assert throttler.throttle(raw_crash) == (REJECT, 'infobar_is_true', None)
+        assert throttler.throttle(raw_crash) == (REJECT, 'infobar_is_true', 100)
 
     @pytest.mark.parametrize('productname, expected', [
         # Test no ProductName
-        (None, (REJECT, 'unsupported_product', None)),
+        (None, (REJECT, 'unsupported_product', 100)),
         # Test empty string
-        ('', (REJECT, 'unsupported_product', None)),
+        ('', (REJECT, 'unsupported_product', 100)),
         # Lowercase of existing product--product names are case-sensitive
-        ('firefox', (REJECT, 'unsupported_product', None)),
+        ('firefox', (REJECT, 'unsupported_product', 100)),
         # This product doesn't exist in the list--unsupported
-        ('testproduct', (REJECT, 'unsupported_product', None)),
+        ('testproduct', (REJECT, 'unsupported_product', 100)),
         # NOTE(willkg): Other tests test the case where the product name is fine
     ])
     def test_productname(self, caplogpp, productname, expected):
