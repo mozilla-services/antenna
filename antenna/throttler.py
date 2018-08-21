@@ -261,6 +261,7 @@ MOZILLA_PRODUCTS = [
     'Firefox',
     'Fennec',
     'Focus',
+    'GeckoView',
     'Thunderbird',
     'SeaMonkey',
 ]
