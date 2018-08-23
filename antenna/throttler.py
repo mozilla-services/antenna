@@ -216,29 +216,6 @@ def match_infobar_true(throttler, data):
     )
 
 
-def match_firefox_pre_57(throttler, data):
-    """Matches crashes for Firefox before 57
-
-    Bug #1433316.
-
-    """
-    product = data.get('ProductName', '')
-    version = data.get('Version', '')
-
-    if not (product and version):
-        return False
-
-    try:
-        major_version = int(version.split('.')[0])
-    except ValueError:
-        return False
-
-    return (
-        product == 'Firefox' and
-        major_version < 57
-    )
-
-
 def match_unsupported_product(throttler, data):
     is_not_supported = (
         throttler.config('products') and
@@ -341,14 +318,6 @@ MOZILLA_RULES = [
         key='ReleaseChannel',
         condition=lambda throttler, x: x.startswith('nightly'),
         result=ACCEPT
-    ),
-
-    # Accept 20%, reject 80% of Firefox 56 and earlier (all channels)
-    Rule(
-        rule_name='firefox_pre_57',
-        key='*',
-        condition=match_firefox_pre_57,
-        result=(20, ACCEPT, REJECT)
     ),
 
     # Accept 10%, reject 90% of Firefox desktop release channel
