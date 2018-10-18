@@ -10,6 +10,7 @@ import pytest
 from antenna.throttler import (
     ACCEPT,
     REJECT,
+    FAKEACCEPT,
     Rule,
     Throttler,
     match_infobar_true,
@@ -195,9 +196,8 @@ class Testmozilla_rules:
         ('firefox', (REJECT, 'unsupported_product', 100)),
         # This product doesn't exist in the list--unsupported
         ('testproduct', (REJECT, 'unsupported_product', 100)),
-        # NOTE(willkg): Other tests test the case where the product name is fine
     ])
-    def test_productname(self, caplogpp, productname, expected):
+    def test_productname_reject(self, caplogpp, productname, expected):
         """Verify productname rule blocks unsupported products"""
         with caplogpp.at_level(logging.INFO, logger='antenna'):
             # Need a throttler with the default configuration which includes supported
@@ -209,6 +209,20 @@ class Testmozilla_rules:
             assert throttler.throttle(raw_crash) == expected
             assert caplogpp.record_tuples == [
                 ('antenna.throttler', logging.INFO, 'ProductName rejected: %r' % productname)
+            ]
+
+    def test_productname_fakeaccept(self, caplogpp):
+        # This product isn't in the list and it's B2G which is the special case
+        with caplogpp.at_level(logging.INFO, logger='antenna'):
+            # Need a throttler with the default configuration which includes supported
+            # products
+            throttler = Throttler(ConfigManager.from_dict({}))
+            raw_crash = {
+                'ProductName': 'b2g'
+            }
+            assert throttler.throttle(raw_crash) == (FAKEACCEPT, 'b2g', 100)
+            assert caplogpp.record_tuples == [
+                ('antenna.throttler', logging.INFO, 'ProductName B2G: fake accept')
             ]
 
     def test_productname_no_unsupported_products(self):

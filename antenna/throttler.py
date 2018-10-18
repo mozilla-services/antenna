@@ -20,14 +20,16 @@ from everett.component import ConfigOptions, RequiredConfigMixin
 logger = logging.getLogger(__name__)
 
 
-ACCEPT = 0   # save and process
-DEFER = 1    # save but don't process
-REJECT = 2   # throw the crash away
+ACCEPT = 0      # save and process
+DEFER = 1       # save but don't process
+REJECT = 2      # throw the crash away
+FAKEACCEPT = 3  # return crashid as if we accepted, but throw away--USE CAUTION!
 
 RESULT_TO_TEXT = {
     0: 'ACCEPT',
     1: 'DEFER',
-    2: 'REJECT'
+    2: 'REJECT',
+    3: 'FAKEACCEPT'
 }
 
 
@@ -107,7 +109,7 @@ class Throttler(RequiredConfigMixin):
             match = rule.match(self, raw_crash)
 
             if match:
-                if rule.result in (ACCEPT, DEFER, REJECT):
+                if rule.result in (ACCEPT, DEFER, REJECT, FAKEACCEPT):
                     return rule.result, rule.rule_name, 100
 
                 if (random.random() * 100.0) <= rule.result[0]:  # nosec
@@ -216,6 +218,17 @@ def match_infobar_true(throttler, data):
     )
 
 
+def match_b2g(throttler, data):
+    is_b2g = (
+        'B2G' not in throttler.config('products') and
+        data.get('ProductName', '').lower() == 'b2g'
+    )
+    if is_b2g:
+        logger.info('ProductName B2G: fake accept')
+        return True
+    return False
+
+
 def match_unsupported_product(throttler, data):
     is_not_supported = (
         throttler.config('products') and
@@ -270,6 +283,15 @@ MOZILLA_RULES = [
         key='*',
         condition=match_infobar_true,
         result=REJECT
+    ),
+
+    # "Fake accept" B2G crash reports because B2G doesn't handle rejection
+    # well and will retry ad infinitum
+    Rule(
+        rule_name='b2g',
+        key='*',
+        condition=match_b2g,
+        result=FAKEACCEPT
     ),
 
     # Reject crash reports for unsupported products; this does nothing if the

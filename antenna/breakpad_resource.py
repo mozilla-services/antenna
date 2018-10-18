@@ -20,6 +20,7 @@ import markus
 from antenna.heartbeat import register_for_life, register_for_heartbeat
 from antenna.throttler import (
     REJECT,
+    FAKEACCEPT,
     RESULT_TO_TEXT,
     Throttler,
 )
@@ -347,6 +348,11 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         if throttle_result is REJECT:
             # If the result is REJECT, then discard it
             resp.body = 'Discarded=1'
+
+        elif throttle_result is FAKEACCEPT:
+            # If the result is a FAKEACCEPT, then we return a crash id, but throw
+            # the crash away
+            resp.body = 'CrashID=%s%s\n' % (self.config('dump_id_prefix'), crash_id)
 
         else:
             # If the result is not REJECT, then save it and return the CrashID to
