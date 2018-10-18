@@ -217,8 +217,9 @@ class Testmozilla_rules:
             # Need a throttler with the default configuration which includes supported
             # products
             throttler = Throttler(ConfigManager.from_dict({}))
-            raw_crash = {}
-            raw_crash['ProductName'] = 'b2g'
+            raw_crash = {
+                'ProductName': 'b2g'
+            }
             assert throttler.throttle(raw_crash) == (FAKEACCEPT, 'b2g', 100)
             assert caplogpp.record_tuples == [
                 ('antenna.throttler', logging.INFO, 'ProductName B2G: fake accept')
