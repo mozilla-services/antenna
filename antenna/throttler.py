@@ -253,6 +253,7 @@ MOZILLA_PRODUCTS = [
     'FirefoxReality',
     'Focus',
     'GeckoView',
+    'ReferenceBrowser',
     'Thunderbird',
     'SeaMonkey',
 ]
