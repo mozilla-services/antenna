@@ -252,7 +252,7 @@ MOZILLA_PRODUCTS = [
     'Fennec',
     'FirefoxReality',
     'Focus',
-    'GeckoView',
+    'GeckoViewExample',
     'ReferenceBrowser',
     'Thunderbird',
     'SeaMonkey',
