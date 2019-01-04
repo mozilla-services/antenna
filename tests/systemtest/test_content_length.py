@@ -96,7 +96,7 @@ class TestContentLength:
         try:
             resp = http_post(posturl, headers, payload)
             status_code = resp.getcode()
-        except RemoteDisconnected as exc:
+        except RemoteDisconnected:
             # If there's an ELB and nginx times out waiting for the rest of the
             # request, then we get an HTTP 504. If there's no ELB (we're
             # connecting directly to nginx), then nginx just drops the
