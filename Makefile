@@ -2,11 +2,11 @@ ANTENNA_ENV ?= "dev.env"
 DC := $(shell which docker-compose)
 HOSTUSER := $(shell id -u):$(shell id -g)
 
-default:
-	@echo "You need to specify a subcommand."
-	@exit 1
+.PHONY: help
+help: default
 
-help:
+.PHONY: default
+default:
 	@echo "build            - build docker containers for dev"
 	@echo "run              - docker-compose up the entire system for dev"
 	@echo ""
@@ -25,16 +25,20 @@ help:
 .docker-build:
 	make build
 
+.PHONY: build
 build:
 	ANTENNA_ENV=empty.env ${DC} build deploy-base
 	touch .docker-build
 
+.PHONY: run
 run: .docker-build
 	ANTENNA_ENV=${ANTENNA_ENV} ${DC} up web
 
+.PHONY: shell
 shell: .docker-build
 	ANTENNA_ENV=empty.env ${DC} run base bash
 
+.PHONY: clean
 clean:
 	# python related things
 	-rm -rf build/
@@ -55,23 +59,27 @@ clean:
 	# state files
 	-rm .docker-build
 
+.PHONY: lint
 lint: .docker-build
 	ANTENNA_ENV=empty.env ${DC} run base flake8 --statistics antenna tests/unittest/
 	ANTENNA_ENV=empty.env ${DC} run base bandit -r antenna/
 
+.PHONY: test
 test: .docker-build
 	ANTENNA_ENV=empty.env ${DC} run base py.test
 
+.PHONY: systemtest
 systemtest: .docker-build
 	ANTENNA_ENV=dev.env ${DC} run systemtest tests/systemtest/run_tests.sh
 
+.PHONY: systemtest-shell
 systemtest-shell: .docker-build
 	ANTENNA_ENV=dev.env ${DC} run systemtest bash
 
+.PHONY: test-coverage
 test-coverage: .docker-build
 	ANTENNA_ENV=empty.env ${DC} run base py.test --cov=antenna --cov-report term-missing
 
+.PHONY: docs
 docs: .docker-build
 	ANTENNA_ENV=empty.env ${DC} run -u ${HOSTUSER} base ./bin/build_docs.sh
-
-.PHONY: default clean build docs lint run shell test test-system test-system-shell test-coverage
