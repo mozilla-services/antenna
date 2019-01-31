@@ -249,6 +249,7 @@ ALL_PRODUCTS = []
 #: incoming crash report
 MOZILLA_PRODUCTS = [
     'Firefox',
+    'Fenix',
     'Fennec',
     'FirefoxReality',
     'Focus',
