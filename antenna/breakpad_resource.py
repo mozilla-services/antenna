@@ -246,7 +246,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         for fs_item in fs.list:
             # NOTE(willkg): We saw some crashes come in where the raw crash ends up with
             # a None as a key. Make sure we can't end up with non-strings as keys.
-            item_name = de_null(fs_item.name or '')
+            item_name = self.de_null(fs_item.name or '')
 
             if item_name == 'dump_checksums':
                 # We don't want to pick up the dump_checksums from a raw
@@ -261,9 +261,18 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
             else:
                 # This isn't a dump, so it's a key/val pair, so we add that.
-                raw_crash[item_name] = de_null(fs_item.value)
+                raw_crash[item_name] = self.de_null(fs_item.value)
 
         return raw_crash, dumps
+
+    def de_null(self, text):
+        """De-nulls text with metrics."""
+        new_text = de_null(text)
+        if new_text != text:
+            mymetrics.incr('denull', tags=['result:different'])
+        else:
+            mymetrics.incr('denull', tags=['result:same'])
+        return new_text
 
     def get_throttle_result(self, raw_crash):
         """Runs raw_crash through throttler for a throttling result
