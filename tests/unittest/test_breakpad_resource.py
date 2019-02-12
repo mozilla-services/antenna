@@ -5,7 +5,6 @@
 import io
 
 from everett.manager import ConfigManager
-import pytest
 
 from antenna.app import BreakpadSubmitterResource
 from antenna.breakpad_resource import MAX_ATTEMPTS
@@ -116,35 +115,6 @@ class TestBreakpadSubmitterResource:
         expected_dumps = {
             'upload_file_minidump': b'abcd1234'
         }
-        assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
-
-    @pytest.mark.parametrize('data, expected_raw_crash, expected_dumps', [
-        ({'ProductName': 'Firefox'}, {'ProductName': 'Firefox'}, {}),
-
-        # In the key...
-        ({'\u0000ProductName': 'Firefox'}, {'ProductName': 'Firefox'}, {}),
-
-        # In the value...
-        ({'ProductName': 'Firefox\u0000'}, {'ProductName': 'Firefox'}, {}),
-
-        # In the dump filename...
-        (
-            {'ProductName': 'Firefox', '\u0000upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'deadbeef'))},
-            {'ProductName': 'Firefox'},
-            {'upload_file_minidump': b'deadbeef'}
-        )
-    ])
-    def test_extract_payload_with_nulls(self, data, expected_raw_crash, expected_dumps, request_generator):
-        data, headers = multipart_encode(data)
-
-        req = request_generator(
-            method='POST',
-            path='/submit',
-            headers=headers,
-            body=data,
-        )
-
-        bsp = BreakpadSubmitterResource(self.empty_config)
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
 
     def test_existing_uuid(self, client):
