@@ -240,13 +240,21 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         # querystring data as well as request body data, but we're not doing
         # that because the query string just duplicates data in the payload.
 
+        denull_same = 0
+        denull_different = 0
         raw_crash = {}
         dumps = {}
 
         for fs_item in fs.list:
             # NOTE(willkg): We saw some crashes come in where the raw crash ends up with
             # a None as a key. Make sure we can't end up with non-strings as keys.
-            item_name = self.de_null(fs_item.name or '')
+            item_name = fs_item.name or ''
+            new_item_name = de_null(item_name)
+            if new_item_name == item_name:
+                denull_same += 1
+            else:
+                denull_different += 1
+            item_name = new_item_name
 
             if item_name == 'dump_checksums':
                 # We don't want to pick up the dump_checksums from a raw
@@ -261,18 +269,19 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
             else:
                 # This isn't a dump, so it's a key/val pair, so we add that.
-                raw_crash[item_name] = self.de_null(fs_item.value)
+                value = fs_item.value
+                new_value = de_null(value)
+                if new_value == value:
+                    denull_same += 1
+                else:
+                    denull_different += 1
+                raw_crash[item_name] = new_value
+
+        # Capture metrics on de-nulling
+        mymetrics.gauge('denull', value=denull_same, tags=['result:same'])
+        mymetrics.gauge('denull', value=denull_different, tags=['result:different'])
 
         return raw_crash, dumps
-
-    def de_null(self, text):
-        """De-nulls text with metrics."""
-        new_text = de_null(text)
-        if new_text != text:
-            mymetrics.incr('denull', tags=['result:different'])
-        else:
-            mymetrics.incr('denull', tags=['result:same'])
-        return new_text
 
     def get_throttle_result(self, raw_crash):
         """Runs raw_crash through throttler for a throttling result
