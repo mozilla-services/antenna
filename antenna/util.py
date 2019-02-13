@@ -62,23 +62,6 @@ def get_version_info(basedir):
     return commit_info
 
 
-def de_null(value):
-    """Remove nulls from bytes and str values
-
-    :arg str/bytes value: The str or bytes to remove nulls from
-
-    :returns: str or bytes without nulls
-
-    """
-    if isinstance(value, bytes) and b'\0' in value:
-        return value.replace(b'\0', b'')
-
-    if isinstance(value, str) and '\0' in value:
-        return value.replace('\0', '')
-
-    return value
-
-
 def json_ordered_dumps(data):
     """Dumps Python data into JSON with sorted_keys
 

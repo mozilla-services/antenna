@@ -10,7 +10,6 @@ import pytest
 from antenna.util import (
     MaxAttemptsError,
     create_crash_id,
-    de_null,
     get_date_from_crash_id,
     get_throttle_from_crash_id,
     get_version_info,
@@ -36,23 +35,6 @@ def test_get_version_info(tmpdir):
         get_version_info(str(tmpdir)) ==
         {'commit': 'd6ac5a5d2acf99751b91b2a3ca651d99af6b9db3'}
     )
-
-
-@pytest.mark.parametrize('data,expected', [
-    # no nulls--just making sure things are good
-    ('abc', 'abc'),
-    (b'abc', b'abc'),
-    (123, 123),
-
-    # has nulls
-    ('abc\u0000', 'abc'),
-    ('abc\0', 'abc'),
-    ('ab\0c\0', 'abc'),
-    (b'abc\0', b'abc'),
-    (b'a\0bc\0', b'abc'),
-])
-def test_de_null(data, expected):
-    assert de_null(data) == expected
 
 
 @freeze_time('2011-09-06 00:00:00', tz_offset=0)
