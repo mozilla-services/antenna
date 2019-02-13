@@ -151,3 +151,35 @@ supported.
 
    Generally, if the default connection class is fine, you don't need to do any
    configuration here.
+
+
+Crash publish
+=============
+
+For crash publishing, you have two options one of which is a no-op.
+
+NoOpCrashPublish
+----------------
+
+The ``NoOpCrashPublish`` class is helpful for debugging and also if you don't
+want Antenna to be publishing crash ids somewhere.
+
+.. autocomponent:: antenna.ext.crashpublish_base.NoOpCrashPublish
+   :show-docstring:
+   :case: upper
+
+
+Pub/Sub
+-------
+
+The ``PubSubCrashPublish`` class will publish crash ids to a Pub/Sub topic.
+
+.. autocomponent:: antenna.ext.pubsub.crashpublish.PubSubCrashPublish
+   :show-docstring:
+   :case: upper
+   :namespace: crashpublish
+
+   When set as the BreakpadSubmitterResource crashpublish class, configuration
+   for this class is in the ``CRASHPUBLISH`` namespace.
+
+   You need to set the project id and topic name.

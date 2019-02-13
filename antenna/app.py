@@ -137,6 +137,21 @@ def log_config(logger, component):
         logger.info(msg)
 
 
+def build_config_manager():
+    config = ConfigManager(
+        environments=[
+            # Pull configuration from environment variables
+            ConfigOSEnv()
+        ],
+        doc=(
+            'For configuration help, see '
+            'https://antenna.readthedocs.io/en/latest/configuration.html'
+        )
+    )
+
+    return config
+
+
 class AppConfig(RequiredConfigMixin):
     """Application-level config.
 
@@ -289,16 +304,7 @@ class AntennaAPI(falcon.API):
 def get_app(config=None):
     """Return AntennaAPI instance."""
     if config is None:
-        config = ConfigManager(
-            environments=[
-                # Pull configuration from environment variables
-                ConfigOSEnv()
-            ],
-            doc=(
-                'For configuration help, see '
-                'https://antenna.readthedocs.io/en/latest/configuration.html'
-            )
-        )
+        config = build_config_manager()
 
     app_config = AppConfig(config)
 

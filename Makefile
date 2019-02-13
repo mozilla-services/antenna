@@ -63,7 +63,7 @@ run: my.env .docker-build
 
 .PHONY: shell
 shell: my.env .docker-build
-	${DC} run base bash
+	${DC} run web bash
 
 .PHONY: my.env clean
 clean:

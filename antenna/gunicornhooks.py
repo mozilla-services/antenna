@@ -2,6 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# Monkey patch stdlib with gevent-friendly bits--need to do this here
+# before we import anything else. Gunicorn does this too late.
+from gevent import monkey
+
+monkey.patch_all()
+
 
 # We set the timeout here to 60 so as to give Antenna enough time to save off
 # any crashes in the queue before the worker goes away and crashes are lost

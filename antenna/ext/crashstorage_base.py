@@ -82,7 +82,7 @@ class NoOpCrashStorage(CrashStorageBase):
     def save_raw_crash(self, crash_id, raw_crash):
         """Save a raw crash."""
         logger.info(
-            'crash no-op: %s raw_crash %s',
+            'crash storage no-op: %s raw_crash %s',
             crash_id,
             self._truncate_raw_crash(raw_crash),
         )
@@ -92,7 +92,7 @@ class NoOpCrashStorage(CrashStorageBase):
         """Save a crash dump."""
         for name, data in dumps.items():
             logger.info(
-                'crash no-op: %s dump %s (%d)',
+                'crash storage no-op: %s dump %s (%d)',
                 crash_id,
                 name,
                 len(data)
