@@ -32,6 +32,7 @@ def pytest_runtest_setup():
     setup_logging(ConfigManager.from_dict({
         'HOST_ID': '',
         'LOGGING_LEVEL': 'DEBUG',
+        'LOCAL_DEV_ENV': 'False',
     }))
     markus.configure([
         {'class': 'markus.backends.logging.LoggingMetrics'}
