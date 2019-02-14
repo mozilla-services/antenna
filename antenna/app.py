@@ -49,6 +49,9 @@ def setup_logging(app_config):
             }
         },
         'formatters': {
+            'socorroapp': {
+                'format': '%(asctime)s %(levelname)s - %(name)s - %(message)s',
+            },
             'mozlog': {
                 '()': 'dockerflow.logging.JsonLogFormatter',
                 'logger_name': 'antenna'
@@ -58,6 +61,7 @@ def setup_logging(app_config):
             'console': {
                 'level': 'DEBUG',
                 'class': 'logging.StreamHandler',
+                'formatter': 'socorroapp',
                 'filters': ['add_hostid'],
             },
             'mozlog': {
@@ -66,10 +70,6 @@ def setup_logging(app_config):
                 'formatter': 'mozlog',
                 'filters': ['add_hostid'],
             },
-        },
-        'root': {
-            'handlers': ['mozlog'],
-            'level': 'WARNING',
         },
     }
     if app_config('local_dev_env'):
@@ -87,6 +87,10 @@ def setup_logging(app_config):
                 'level': 'INFO',
             },
         }
+        dc['root'] = {
+            'handlers': ['console'],
+            'level': 'WARNING',
+        }
     else:
         # In a server environment, we log everything in mozlog format
         dc['loggers'] = {
@@ -95,6 +99,10 @@ def setup_logging(app_config):
                 'handlers': ['mozlog'],
                 'level': app_config('logging_level'),
             },
+        }
+        dc['root'] = {
+            'handlers': ['mozlog'],
+            'level': 'WARNING',
         }
 
     logging.config.dictConfig(dc)
