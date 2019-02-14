@@ -71,10 +71,14 @@ def setup_logging(app_config):
             'handlers': ['mozlog'],
             'level': 'WARNING',
         },
-        'loggers': {
+    }
+    if app_config('local_dev_env'):
+        # In a local development environment, we log to the console in a
+        # human-readable fashion
+        dc['loggers'] = {
             'antenna': {
                 'propagate': False,
-                'handlers': ['mozlog'],
+                'handlers': ['console'],
                 'level': app_config('logging_level'),
             },
             'markus': {
@@ -82,8 +86,17 @@ def setup_logging(app_config):
                 'handlers': ['console'],
                 'level': 'INFO',
             },
-        },
-    }
+        }
+    else:
+        # In a server environment, we log everything in mozlog format
+        dc['loggers'] = {
+            'antenna': {
+                'propagate': False,
+                'handlers': ['mozlog'],
+                'level': app_config('logging_level'),
+            },
+        }
+
     logging.config.dictConfig(dc)
 
 
@@ -162,6 +175,12 @@ class AppConfig(RequiredConfigMixin):
         'logging_level',
         default='DEBUG',
         doc='The logging level to use. DEBUG, INFO, WARNING, ERROR or CRITICAL'
+    )
+    required_config.add_option(
+        'local_dev_env',
+        default='False',
+        parser=bool,
+        doc='Whether or not this is a local development environment.'
     )
     required_config.add_option(
         'metrics_class',
