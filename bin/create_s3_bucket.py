@@ -57,12 +57,12 @@ def main(args):
 
     # We create it in the crashstorage namespace because that's how Antenna
     # uses it. This makes it easier to use existing configuration.
-    conn = S3Connection(config.with_namespace('crashstorage'), no_verify=True)
+    conn = S3Connection(config.with_namespace('crashstorage'))
 
     # First, check to see if the bucket is already created.
     try:
         print('Checking to see if bucket "%s" exists...' % conn.bucket)
-        conn.verify_configuration()
+        conn.verify_bucket_exists()
         print('Bucket exists.')
 
     except ClientError as exc:

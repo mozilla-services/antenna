@@ -7,6 +7,7 @@ import logging
 from everett.component import ConfigOptions
 from everett.manager import parse_class
 
+from antenna.heartbeat import register_for_verification
 from antenna.ext.crashstorage_base import CrashStorageBase
 from antenna.util import get_date_from_crash_id, json_ordered_dumps
 
@@ -45,6 +46,10 @@ class S3CrashStorage(CrashStorageBase):
     def __init__(self, config):
         self.config = config.with_options(self)
         self.conn = self.config('connection_class')(config)
+        register_for_verification(self.verify_bucket_exists)
+
+    def verify_bucket_exists(self):
+        self.conn.verify_bucket_exists()
 
     def get_runtime_config(self, namespace=None):
         for item in super().get_runtime_config(namespace):
