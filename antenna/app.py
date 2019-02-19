@@ -237,7 +237,7 @@ class AntennaAPI(falcon.API):
         self.hb = HeartbeatManager(config)
 
     def add_route(self, name, uri_template, resource, *args, **kwargs):
-        """Adds specified Falcon route
+        """Add specified Falcon route.
 
         :arg str name: friendly name for this route; use alphanumeric characters
 
@@ -250,7 +250,7 @@ class AntennaAPI(falcon.API):
         super().add_route(uri_template, resource, *args, **kwargs)
 
     def get_resource_by_name(self, name):
-        """Returns the registered resource with specified name
+        """Return registered resource with specified name.
 
         :arg str name: the name of the resource to get
 
@@ -260,24 +260,31 @@ class AntennaAPI(falcon.API):
         return self._all_resources[name]
 
     def get_resources(self):
-        """Returns a list of registered resources"""
+        """Return a list of registered resources."""
         return self._all_resources.values()
 
     def get_runtime_config(self, namespace=None):
+        """Return generator of runtime configuration for all resources."""
         for res in self.get_resources():
             if hasattr(res, 'get_runtime_config'):
                 for item in res.get_runtime_config(namespace):
                     yield item
 
+    def verify(self):
+        """Verify that Antenna is ready to start."""
+        self.hb.verify()
+
     def start_heartbeat(self, is_alive):
+        """Start the Antenna heartbeat coroutine."""
         self.hb.start_heartbeat(is_alive)
 
     def join_heartbeat(self):
+        """Join on the Antenna heartbeat coroutine."""
         self.hb.join_heartbeat()
 
 
 def get_app(config=None):
-    """Returns AntennaAPI instance"""
+    """Return AntennaAPI instance."""
     if config is None:
         config = ConfigManager(
             environments=[
@@ -310,16 +317,21 @@ def get_app(config=None):
     # Set up metrics
     setup_metrics(app_config('metrics_class'), config, logger)
 
-    # Build the app, add resources, and log the rest of things
+    # Build the app and heartbeat manager
     app = AntennaAPI(config)
 
+    # Add restources
     app.add_route('breakpad', '/submit', BreakpadSubmitterResource(config))
     app.add_route('version', '/__version__', VersionResource(config, basedir=app_config('basedir')))
     app.add_route('heartbeat', '/__heartbeat__', HeartbeatResource(config, app))
     app.add_route('lbheartbeat', '/__lbheartbeat__', LBHeartbeatResource(config))
     app.add_route('broken', '/__broken__', BrokenResource(config))
 
+    # Finish logging configuration
     log_config(logger, app)
+
+    # Verify that we're ready to start
+    app.verify()
 
     # Wrap the app in some kind of unhandled exception notification mechanism
     app = wsgi_capture_exceptions(app)

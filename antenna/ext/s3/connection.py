@@ -86,6 +86,7 @@ class S3Connection(RequiredConfigMixin):
     retry later. Crashes are never thrown out.
 
     """
+
     required_config = ConfigOptions()
     required_config.add_option(
         'access_key',
@@ -128,17 +129,10 @@ class S3Connection(RequiredConfigMixin):
         )
     )
 
-    def __init__(self, config, no_verify=False):
+    def __init__(self, config):
         self.config = config.with_options(self)
         self.bucket = self.config('bucket_name')
         self.client = self._build_client()
-
-        if not no_verify:
-            # This will throw an exception on startup if things aren't right. The
-            # thinking being that it's better to crash at startup rather than get
-            # into a state where we're handling incoming crashes but can't do
-            # anything with them.
-            self.verify_configuration()
 
     @retry(
         retryable_exceptions=[
@@ -178,7 +172,7 @@ class S3Connection(RequiredConfigMixin):
 
         return session.client(**kwargs)
 
-    def verify_configuration(self):
+    def verify_bucket_exists(self):
         # Verify the bucket exists and that we can access it with our
         # credentials. This doesn't verify we can write to it--to do that we'd
         # either need to orphan a gazillion files or we'd also need DELETE
@@ -191,7 +185,7 @@ class S3Connection(RequiredConfigMixin):
 
     def check_health(self, state):
         try:
-            self.verify_configuration()
+            self.verify_bucket_exists()
         except Exception as exc:
             state.add_error('S3Connection', repr(exc))
 

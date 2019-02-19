@@ -12,7 +12,7 @@ from testlib.mini_poster import multipart_encode
 
 class TestS3Mock:
     def test_crash_storage(self, client, s3mock):
-        # .verify_configuration() calls HEAD on the bucket to verify it exists
+        # .verify_bucket_exists() calls HEAD on the bucket to verify it exists
         # and the configuration is correct.
         s3mock.add_step(
             method='HEAD',
@@ -71,7 +71,7 @@ class TestS3Mock:
         assert s3mock.remaining_conversation() == []
 
     def test_region_and_bucket_with_periods(self, client, s3mock):
-        # .verify_configuration() calls HEAD on the bucket to verify it exists
+        # .verify_bucket_exists() calls HEAD on the bucket to verify it exists
         # and the configuration is correct.
         ROOT = 'https://s3.us-west-1.amazonaws.com/'
         s3mock.add_step(
@@ -131,7 +131,7 @@ class TestS3Mock:
         assert s3mock.remaining_conversation() == []
 
     def test_missing_bucket_halts_startup(self, client, s3mock):
-        # .verify_configuration() calls HEAD on the bucket to verify it exists
+        # .verify_bucket_exists() calls HEAD on the bucket to verify it exists
         # and the configuration is correct. This fails for here.
         s3mock.add_step(
             method='HEAD',
@@ -141,7 +141,7 @@ class TestS3Mock:
 
         with pytest.raises(botocore.exceptions.ClientError) as excinfo:
             # Rebuild the app the test client is using with relevant
-            # configuration. This calls .verify_configuration() which fails.
+            # configuration. This calls .verify_bucket_exists() which fails.
             client.rebuild_app({
                 'CRASHSTORAGE_CLASS': 'antenna.ext.s3.crashstorage.S3CrashStorage',
                 'CRASHSTORAGE_ENDPOINT_URL': 'http://fakes3:4569',
@@ -165,7 +165,7 @@ class TestS3MockLogging:
     def test_retrying(self, client, s3mock, loggingmock):
         ROOT = 'http://fakes3:4569/'
 
-        # .verify_configuration() calls HEAD on the bucket to verify it exists
+        # .verify_bucket_exists() calls HEAD on the bucket to verify it exists
         # and the configuration is correct.
         s3mock.add_step(
             method='HEAD',
