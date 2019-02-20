@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 def wait_times_connect():
-    """Wait time generator for failed connection attempts
+    """Return generator for wait times between failed connection attempts.
 
     We have this problem where we're binding IAM credentials to the EC2 node
     and on startup when boto3 goes to get the credentials, it fails for some
@@ -34,7 +34,7 @@ def wait_times_connect():
 
 
 def wait_times_save():
-    """Wait time generator for failed save
+    """Return generator for wait times between failed save attempts.
 
     This waits 2 seconds between failed save attempts for 5 iterations and then
     gives up.
@@ -173,10 +173,13 @@ class S3Connection(RequiredConfigMixin):
         return session.client(**kwargs)
 
     def verify_bucket_exists(self):
-        # Verify the bucket exists and that we can access it with our
-        # credentials. This doesn't verify we can write to it--to do that we'd
-        # either need to orphan a gazillion files or we'd also need DELETE
-        # permission.
+        """Verify S3 bucket exists and can be accessed with configured credentials.
+
+        NOTE(willkg): This doesn't verify we can write to it--to do that we'd
+        either need to orphan a gazillion files or we'd also need DELETE
+        permission.
+
+        """
         self.client.head_bucket(Bucket=self.bucket)
 
     def _create_bucket(self):
@@ -184,6 +187,7 @@ class S3Connection(RequiredConfigMixin):
         self.client.create_bucket(Bucket=self.bucket)
 
     def check_health(self, state):
+        """Check S3 connection health."""
         try:
             self.verify_bucket_exists()
         except Exception as exc:
@@ -200,7 +204,7 @@ class S3Connection(RequiredConfigMixin):
         module_logger=logger,
     )
     def save_file(self, path, data):
-        """Saves a single file to s3
+        """Save a single file to S3.
 
         This will retry a handful of times in short succession so as to deal
         with some amount of fishiness. After that, the caller should retry
@@ -224,5 +228,6 @@ class S3Connection(RequiredConfigMixin):
         )
 
     def load_file(self, path):
+        """Load a single file from S3."""
         # FIXME(willkg): implement this
         pass

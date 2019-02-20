@@ -22,7 +22,7 @@ UTC = isodate.UTC
 
 
 def utc_now():
-    """Return a timezone aware datetime instance in UTC timezone
+    """Return a timezone aware datetime instance in UTC timezone.
 
     This funciton is mainly for convenience. Compare:
 
@@ -44,7 +44,7 @@ def utc_now():
 
 
 def get_version_info(basedir):
-    """Given a basedir, retrieves version information for this deploy
+    """Given a basedir, retrieves version information for this deploy.
 
     :arg str basedir: the path of the base directory where ``version.json``
         exists
@@ -63,7 +63,7 @@ def get_version_info(basedir):
 
 
 def json_ordered_dumps(data):
-    """Dumps Python data into JSON with sorted_keys
+    """Dump Python data into JSON with sorted_keys.
 
     This returns a str. If you need bytes, do this::
 
@@ -78,7 +78,7 @@ def json_ordered_dumps(data):
 
 
 def create_crash_id(timestamp=None, throttle_result=1):
-    """Generates a crash id
+    """Generate a crash id.
 
     Crash ids have the following format::
 
@@ -120,7 +120,7 @@ CRASH_ID_RE = re.compile(r"""
 
 
 def validate_crash_id(crash_id, strict=True):
-    """Returns whether this is a valid crash id
+    """Return whether this is a valid crash id.
 
     :arg str crash_id: the crash id in question
     :arg boolean strict: whether or not to be strict about the throttle character
@@ -141,7 +141,7 @@ def validate_crash_id(crash_id, strict=True):
 
 
 def get_throttle_from_crash_id(crash_id):
-    """Retrieve the throttle instruction from the crash_id
+    """Retrieve the throttle instruction from the crash_id.
 
     :arg str crash_id: the crash id
 
@@ -152,7 +152,7 @@ def get_throttle_from_crash_id(crash_id):
 
 
 def get_date_from_crash_id(crash_id, as_datetime=False):
-    """Retrieves the date from the crash id
+    """Retrieve the date from the crash id.
 
     :arg str crash_id: the crash id
     :arg bool as_datetime: whether or not to return a datetime; defaults to False
@@ -171,7 +171,7 @@ ALPHA_NUMERIC_UNDERSCORE = string.ascii_letters + string.digits + '_'
 
 
 def sanitize_dump_name(val):
-    """Sanitizes a dump name"""
+    """Sanitize a dump name."""
     # Dump names can only contain ASCII alpha-numeric characters and
     # underscores
     val = ''.join(v for v in val if v in ALPHA_NUMERIC_UNDERSCORE)
@@ -192,12 +192,14 @@ class MaxAttemptsError(Exception):
        The last return value for the function.
 
     """
+
     def __init__(self, msg, ret):
         super().__init__(msg)
         self.return_value = ret
 
 
 def wait_time_generator():
+    """Return generator for wait times."""
     for amt in [1, 1, 5, 10, 30]:
         yield amt
 
@@ -207,7 +209,7 @@ def retry(retryable_exceptions=Exception,
           wait_time_generator=wait_time_generator,
           sleep_function=time.sleep,
           module_logger=None):
-    """Decorator for retrying with wait times, max attempts and logging
+    """Retry decorated function with wait times, max attempts and logging.
 
     Example with defaults::
 

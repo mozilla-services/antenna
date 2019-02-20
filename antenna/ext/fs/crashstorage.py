@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class FSCrashStorage(CrashStorageBase):
-    """Saves raw crash files to the file system.
+    """Save raw crash files to the file system.
 
     This generates a tree something like this which mirrors what we do
     on S3:
@@ -45,6 +45,7 @@ class FSCrashStorage(CrashStorageBase):
     FIXME(willkg): Can we alleviate or reduce the likelihood of the above?
 
     """
+
     required_config = ConfigOptions()
     required_config.add_option(
         'fs_root',
@@ -65,7 +66,7 @@ class FSCrashStorage(CrashStorageBase):
             os.makedirs(self.root)
 
     def _get_raw_crash_path(self, crash_id):
-        """Returns path for where the raw crash should go"""
+        """Return path for where the raw crash should go."""
         return os.path.join(
             self.root,
             get_date_from_crash_id(crash_id),
@@ -74,7 +75,7 @@ class FSCrashStorage(CrashStorageBase):
         )
 
     def _get_dump_names_path(self, crash_id):
-        """Returns path for where the dump_names list should go"""
+        """Return path for where the dump_names list should go."""
         return os.path.join(
             self.root,
             get_date_from_crash_id(crash_id),
@@ -83,7 +84,7 @@ class FSCrashStorage(CrashStorageBase):
         )
 
     def _get_dump_name_path(self, crash_id, dump_name):
-        """Returns path for a given dump"""
+        """Return path for a given dump."""
         return os.path.join(
             self.root,
             get_date_from_crash_id(crash_id),
@@ -112,7 +113,7 @@ class FSCrashStorage(CrashStorageBase):
             fp.write(contents)
 
     def save_raw_crash(self, crash_id, raw_crash):
-        """Saves the raw crash and related dumps
+        """Save the raw crash and related dumps.
 
         FIXME(willkg): How should this method handle exceptions?
 
@@ -123,7 +124,7 @@ class FSCrashStorage(CrashStorageBase):
         self._save_file(self._get_raw_crash_path(crash_id), json_ordered_dumps(raw_crash).encode('utf-8'))
 
     def save_dumps(self, crash_id, dumps):
-        """Saves dump data
+        """Save dump data.
 
         :arg str crash_id: The crash id
         :arg dict dumps: dump name -> dump
@@ -143,7 +144,7 @@ class FSCrashStorage(CrashStorageBase):
             self._save_file(fn, contents)
 
     def load_raw_crash(self, crash_id):
-        """Retrieves all the parts of a crash from the file system
+        """Retrieve all the parts of a crash from the file system.
 
         :arg str crash_id: The crash id as a string.
 

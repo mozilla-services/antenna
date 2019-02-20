@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 def setup_logging(app_config):
-    """Initializes Python logging configuration"""
+    """Initialize Python logging configuration."""
     host_id = app_config('host_id') or socket.gethostname()
 
     class AddHostID(logging.Filter):
@@ -109,7 +109,7 @@ def setup_logging(app_config):
 
 
 def setup_metrics(metrics_classes, config, logger=None):
-    """Initializes and configures the metrics system"""
+    """Initialize and configures the metrics system."""
     logger.info('Setting up metrics: %s', metrics_classes)
 
     markus_configuration = []
@@ -122,7 +122,7 @@ def setup_metrics(metrics_classes, config, logger=None):
 
 
 def log_config(logger, component):
-    """Logs configuration for a given component"""
+    """Log configuration for a given component."""
     for namespace, key, val, opt in component.get_runtime_config():
         if namespace:
             namespaced_key = '%s_%s' % ('_'.join(namespace), key)
@@ -139,7 +139,7 @@ def log_config(logger, component):
 
 
 class AppConfig(RequiredConfigMixin):
-    """Application-level config
+    """Application-level config.
 
     To pull out a config item, you can do this::
 
@@ -173,6 +173,7 @@ class AppConfig(RequiredConfigMixin):
         some_component = SomeComponent(app_config.config_manager, debug)
 
     """
+
     required_config = ConfigOptions()
     required_config.add_option(
         'basedir',
@@ -225,10 +226,13 @@ class AppConfig(RequiredConfigMixin):
         self.config = config.with_options(self)
 
     def __call__(self, key):
+        """Return configuration for given key."""
         return self.config(key)
 
 
 class AntennaAPI(falcon.API):
+    """Falcon API for Antenna."""
+
     def __init__(self, config):
         super().__init__()
         self.config = config
