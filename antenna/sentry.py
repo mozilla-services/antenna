@@ -2,9 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-"""Infrastructure for optionally wrapping things in Sentry contexts to capture
-unhandled exceptions
+"""Module holding Sentry-related functions.
 
+Infrastructure for optionally wrapping things in Sentry contexts to capture
+unhandled exceptions.
 """
 
 import logging
@@ -25,13 +26,13 @@ _sentry_client = None
 
 
 def setup_sentry_logging():
-    """Set up sentry logging of exceptions"""
+    """Set up sentry logging of exceptions."""
     if _sentry_client:
         setup_logging(SentryHandler(_sentry_client))
 
 
 def set_sentry_client(sentry_dsn, basedir):
-    """Sets a Sentry client using a given sentry_dsn
+    """Set a Sentry client using a given sentry_dsn.
 
     To clear the client, pass in something falsey like ``''`` or ``None``.
 
@@ -53,13 +54,15 @@ def set_sentry_client(sentry_dsn, basedir):
 
 
 class WSGILoggingMiddleware(object):
-    """WSGI middleware that logs unhandled exceptions"""
+    """WSGI middleware that logs unhandled exceptions."""
+
     def __init__(self, application):
         # NOTE(willkg): This has to match how the Sentry middleware works so
         # that we can (ab)use that fact and access the underlying application.
         self.application = application
 
     def __call__(self, environ, start_response):
+        """Wrap application in exception capture code."""
         try:
             return self.application(environ, start_response)
 
@@ -75,7 +78,7 @@ class WSGILoggingMiddleware(object):
 
 
 def wsgi_capture_exceptions(app):
-    """Wraps a WSGI app with some kind of unhandled exception capture
+    """Wrap a WSGI app with some kind of unhandled exception capture.
 
     If a Sentry client is configured, then this will send unhandled exceptions
     to Sentry. Otherwise, it will send them as part of the middleware.

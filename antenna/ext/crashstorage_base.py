@@ -11,14 +11,15 @@ logger = logging.getLogger(__name__)
 
 
 class CrashStorageBase(RequiredConfigMixin):
-    """Crash storage base class"""
+    """Crash storage base class."""
+
     required_config = ConfigOptions()
 
     def __init__(self, config):
         self.config = config.with_options(self)
 
     def save_raw_crash(self, crash_id, raw_crash, dumps):
-        """Saves the raw crash and related dumps
+        """Save the raw crash and related dumps.
 
         FIXME(willkg): How should this method handle exceptions?
 
@@ -29,7 +30,7 @@ class CrashStorageBase(RequiredConfigMixin):
         raise NotImplementedError
 
     def save_dumps(self, crash_id, dumps):
-        """Saves dump data
+        """Save dump data.
 
         :arg str crash_id: The crash id
         :arg dict dumps: dump name -> dump
@@ -38,7 +39,7 @@ class CrashStorageBase(RequiredConfigMixin):
         raise NotImplementedError
 
     def load_raw_crash(self, crash_id):
-        """Loads and thaws out a raw crash
+        """Load and thaw out a raw crash.
 
         :arg str crash_id: crash id of the crash as a string
 
@@ -49,18 +50,19 @@ class CrashStorageBase(RequiredConfigMixin):
 
 
 class NoOpCrashStorage(CrashStorageBase):
-    """This is a no-op crash storage that logs crashes it would have stored
+    """This is a no-op crash storage that logs crashes it would have stored.
 
     It keeps track of the last 10 crashes in ``.crashes`` instance attribute
     with the most recently stored crash at the end of the list. This helps
     when writing unit tests for Antenna.
 
     """
+
     def __init__(self, config):
         super().__init__(config)
         self.saved_things = []
 
-    def add_saved_thing(self, crash_id, type_, data):
+    def _add_saved_thing(self, crash_id, type_, data):
         self.saved_things.append({
             'crash_id': crash_id,
             'type': type_,
@@ -70,22 +72,24 @@ class NoOpCrashStorage(CrashStorageBase):
         self.saved_things = self.saved_things[-10:]
 
     def _truncate_raw_crash(self, raw_crash):
-        """Truncates a raw crash to something printable in a log"""
+        """Truncate a raw crash to something printable in a log."""
         return sorted(raw_crash.items())[:10]
 
     def _truncate_dumps(self, dumps):
-        """Truncates dumps information to something printable to a log"""
+        """Truncate dumps information to something printable to a log."""
         return sorted(dumps.keys())
 
     def save_raw_crash(self, crash_id, raw_crash):
+        """Save a raw crash."""
         logger.info(
             'crash no-op: %s raw_crash %s',
             crash_id,
             self._truncate_raw_crash(raw_crash),
         )
-        self.add_saved_thing(crash_id, 'raw_crash', raw_crash)
+        self._add_saved_thing(crash_id, 'raw_crash', raw_crash)
 
     def save_dumps(self, crash_id, dumps):
+        """Save a crash dump."""
         for name, data in dumps.items():
             logger.info(
                 'crash no-op: %s dump %s (%d)',
@@ -93,4 +97,4 @@ class NoOpCrashStorage(CrashStorageBase):
                 name,
                 len(data)
             )
-            self.add_saved_thing(crash_id, name, data)
+            self._add_saved_thing(crash_id, name, data)

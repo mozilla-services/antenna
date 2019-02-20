@@ -41,6 +41,8 @@ MAX_ATTEMPTS = 20
 
 
 class CrashReport:
+    """Crash report structure."""
+
     def __init__(self, raw_crash, dumps, crash_id, errors=0):
         self.raw_crash = raw_crash
         self.dumps = dumps
@@ -49,7 +51,7 @@ class CrashReport:
 
 
 def positive_int(val):
-    """Everett parser that enforces val >= 1"""
+    """Everett parser that enforces val >= 1."""
     val = int(val)
     if val < 1:
         raise ValueError('val must be greater than 1: %s' % val)
@@ -57,7 +59,7 @@ def positive_int(val):
 
 
 class BreakpadSubmitterResource(RequiredConfigMixin):
-    """Handles incoming breakpad crash reports and saves to crashstorage
+    """Handles incoming breakpad crash reports and saves to crashstorage.
 
     This handles incoming HTTP POST requests containing breakpad-style crash
     reports in multipart/form-data format.
@@ -84,6 +86,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         CRASHSTORAGE_CLASS=antenna.ext.s3.crashstorage.S3CrashStorage
 
     """
+
     required_config = ConfigOptions()
     required_config.add_option(
         'dump_field', default='upload_file_minidump',
@@ -129,6 +132,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         register_for_life(self.has_work_to_do)
 
     def get_runtime_config(self, namespace=None):
+        """Return generator of runtime configuration."""
         for item in super().get_runtime_config():
             yield item
 
@@ -139,16 +143,19 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             yield item
 
     def check_health(self, state):
+        """Return health state."""
         if hasattr(self.crashstorage, 'check_health'):
             self.crashstorage.check_health(state)
 
     def hb_report_health_stats(self):
+        """Heartbeat function to report health stats."""
         # The number of crash reports sitting in the queue; this is a direct
         # measure of the health of this process--a number that's going up means
         # impending doom
         mymetrics.gauge('save_queue_size', value=len(self.crashmover_save_queue))
 
     def has_work_to_do(self):
+        """Return whether this still has work to do."""
         work_to_do = len(self.crashmover_save_queue) + len(self.crashmover_pool)
         logger.info('work left to do: %s' % work_to_do)
         # Indicates whether or not we're sitting on crashes to save--this helps
@@ -156,7 +163,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         return bool(work_to_do)
 
     def extract_payload(self, req):
-        """Parses the HTTP POST payload
+        """Parse HTTP POST payload.
 
         Decompresses the payload if necessary and then walks through the
         FieldStorage converting from multipart/form-data to Python datatypes.
@@ -265,7 +272,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         return raw_crash, dumps
 
     def get_throttle_result(self, raw_crash):
-        """Runs raw_crash through throttler for a throttling result
+        """Run raw_crash through throttler for a throttling result.
 
         :arg dict raw_crash: the raw crash to throttle
 
@@ -284,7 +291,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
     @mymetrics.timer_decorator('on_post.time')
     def on_post(self, req, resp):
-        """Handles incoming HTTP POSTs
+        """Handle incoming HTTP POSTs.
 
         Note: This is executed by the WSGI app, so it and anything it does is
         covered by the Sentry middleware.
@@ -361,14 +368,14 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             resp.body = 'CrashID=%s%s\n' % (self.config('dump_id_prefix'), crash_id)
 
     def hb_run_crashmover(self):
-        """Checks to see if it should spawn a crashmover and does if appropriate"""
+        """Check to see if it should spawn a crashmover and does if appropriate."""
         # Spawn a new crashmover if there's stuff in the queue and there isn't
         # one currently running
         if self.crashmover_save_queue and self.crashmover_pool.free_count() > 0:
             self.crashmover_pool.spawn(self.crashmover_process_queue)
 
     def crashmover_process_queue(self):
-        """Processes the queue of crashes to save until it's empty
+        """Process the queue of crashes to save until it's empty.
 
         Note: This has to be super careful not to lose crash reports. If
         there's any kind of problem, this must return the crash to the queue.
@@ -399,7 +406,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
                     mymetrics.incr('save_crash_dropped.count')
 
     def crashmover_save(self, crash_report):
-        """Saves a crash to storage
+        """Save a crash report to storage.
 
         If this raises an error, then that bubbles up and the caller can figure
         out what to do with it and retry again later.
@@ -429,7 +436,9 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         logger.info('%s saved', crash_id)
 
     def join_pool(self):
-        """Joins the pool--use only in tests!
+        """Join the pool.
+
+        NOTE(willkg): Only use this in tests!
 
         This is helpful for forcing all the coroutines in the pool to complete
         so that we can verify outcomes in the test suite for work that might

@@ -34,19 +34,19 @@ RESULT_TO_TEXT = {
 
 
 def parse_attribute(val):
+    """Everett parser for module attributes."""
     module, attribute_name = val.rsplit('.', 1)
     module = importlib.import_module(module)
     try:
         return getattr(module, attribute_name)
     except AttributeError:
         raise ValueError(
-            '%s is not a valid attribute of %s' %
-            (attribute_name, module)
+            '%s is not a valid attribute of %s' % (attribute_name, module)
         )
 
 
 class Throttler(RequiredConfigMixin):
-    """Accepts/rejects incoming crashes based on specified rule set
+    """Accept or reject incoming crashes based on specified rule set.
 
     The throttler can throttle incoming crashes using the content of the crash.
     To throttle, you set up a rule set which is a list of ``Rule`` instances.
@@ -79,6 +79,7 @@ class Throttler(RequiredConfigMixin):
     FIXME(willkg): Flesh this out.
 
     """
+
     required_config = ConfigOptions()
     required_config.add_option(
         'throttle_rules',
@@ -98,7 +99,10 @@ class Throttler(RequiredConfigMixin):
         self.rule_set = self.config('throttle_rules')
 
     def throttle(self, raw_crash):
-        """Go through rule set to ACCEPT, DEFER, or REJECT
+        """Throttle an incoming crash report.
+
+        This goes through the rule set and returns one of ACCEPT, DEFER, or
+        REJECT.
 
         :arg dict raw_crash: the crash to throttle
 
@@ -123,11 +127,12 @@ class Throttler(RequiredConfigMixin):
 
 
 class Rule:
-    """Defines a single rule"""
+    """Defines a single rule."""
+
     RULE_NAME_RE = re.compile(r'^[a-z0-9_]+$', re.I)
 
     def __init__(self, rule_name, key, condition, result):
-        """Creates a Rule
+        """Create a Rule.
 
         :arg str rule_name: The friendly name for the rule. We use this for
             logging and statsd. Rule names must contain only alphanumeric
@@ -179,9 +184,11 @@ class Rule:
             raise ValueError('%r is not a valid rule name' % self.rule_name)
 
     def __repr__(self):
+        """Return programmer-friendly representation."""
         return self.rule_name
 
     def match(self, throttler, crash):
+        """Apply this rule to the crash report."""
         if self.key == '*':
             return self.condition(throttler, crash)
 
@@ -192,12 +199,12 @@ class Rule:
 
 
 def always_match(throttler, crash):
-    """Rule condition that always returns true"""
+    """Rule condition that always returns true."""
     return True
 
 
 def match_infobar_true(throttler, data):
-    """Matches crashes we need to filter out due to infobar bug
+    """Match crashes we need to filter out due to infobar bug.
 
     Bug #1425949.
 
@@ -219,6 +226,7 @@ def match_infobar_true(throttler, data):
 
 
 def match_b2g(throttler, data):
+    """Match crash reports for B2G."""
     is_b2g = (
         'B2G' not in throttler.config('products') and
         data.get('ProductName', '').lower() == 'b2g'
@@ -230,6 +238,7 @@ def match_b2g(throttler, data):
 
 
 def match_unsupported_product(throttler, data):
+    """Match unsupported products."""
     is_not_supported = (
         throttler.config('products') and
         data.get('ProductName') not in throttler.config('products')

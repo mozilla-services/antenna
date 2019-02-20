@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class S3CrashStorage(CrashStorageBase):
-    """Saves raw crash files to S3.
+    """Save raw crash files to S3.
 
     This will save raw crash files to S3 in a pseudo-tree something like this:
 
@@ -35,6 +35,7 @@ class S3CrashStorage(CrashStorageBase):
                            <CRASHID>
 
     """
+
     required_config = ConfigOptions()
     required_config.add_option(
         'connection_class',
@@ -49,9 +50,15 @@ class S3CrashStorage(CrashStorageBase):
         register_for_verification(self.verify_bucket_exists)
 
     def verify_bucket_exists(self):
+        """Verify S3 bucket exists.
+
+        Raises an exception if it doesn't.
+
+        """
         self.conn.verify_bucket_exists()
 
     def get_runtime_config(self, namespace=None):
+        """Return generator for items in runtime configuration."""
         for item in super().get_runtime_config(namespace):
             yield item
 
@@ -59,6 +66,7 @@ class S3CrashStorage(CrashStorageBase):
             yield item
 
     def check_health(self, state):
+        """Check connection health."""
         self.conn.check_health(state)
 
     def _get_raw_crash_path(self, crash_id):
@@ -84,7 +92,7 @@ class S3CrashStorage(CrashStorageBase):
         )
 
     def save_raw_crash(self, crash_id, raw_crash):
-        """Saves the raw crash and related dumps
+        """Save the raw crash and related dumps.
 
         .. Note::
 
@@ -109,7 +117,7 @@ class S3CrashStorage(CrashStorageBase):
         )
 
     def save_dumps(self, crash_id, dumps):
-        """Saves dump data
+        """Save dump data.
 
         :arg str crash_id: The crash id
         :arg dict dumps: dump name -> dump
@@ -132,7 +140,7 @@ class S3CrashStorage(CrashStorageBase):
             )
 
     def load_raw_crash(self, crash_id):
-        """Loads and thaws out a raw crash
+        """Load and thaws out a raw crash.
 
         :arg str crash_id: crash id of the crash as a string
 

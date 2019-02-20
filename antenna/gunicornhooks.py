@@ -9,7 +9,7 @@ timeout = 60
 
 
 def post_worker_init(worker):
-    """Gunicorn post_worker_init hook handler
+    """Gunicorn post_worker_init hook handler.
 
     This kicks off the heartbeat for the app.
 
@@ -24,7 +24,7 @@ def post_worker_init(worker):
 
 
 def worker_exit(server, worker):
-    """Gunicorn worker_exit hook handler
+    """Gunicorn worker_exit hook handler.
 
     This kicks off after a worker has exited, but before the process is gone.
 
