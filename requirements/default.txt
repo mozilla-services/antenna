@@ -116,8 +116,6 @@ pytest==4.0.2 \
 pytest-cov==2.6.0 \
     --hash=sha256:513c425e931a0344944f84ea47f3956be0e416d95acbd897a44970c8d926d5d7 \
     --hash=sha256:e360f048b7dae3f2f2a9a4d067b2dd6b6a015d384d1577c994a43f3f7cbad762
-pytest-env==0.6.2 \
-    --hash=sha256:7e94956aef7f2764f3c147d216ce066bf6c42948bb9e293169b1b1c880a580c2
 pytest-wholenodeid==0.2 \
     --hash=sha256:6bc4edaf560c8b45ac4669bb8b99d8fbbb7f6e5af8dc7727200cd4d3ef4668c2 \
     --hash=sha256:bdcb4df88ca182a19752ef95150c0881deaafc2c593ef67c61515894e5309206

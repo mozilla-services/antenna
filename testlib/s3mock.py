@@ -5,9 +5,10 @@
 """This module holds bits to make it easier to test Antenna and related scripts.
 
 This contains ``S3Mock`` which is the mocking system we use for recording AWS
-S3 HTTP conversations and writing tests that enforce those conversations. It's
-in this module because at some point, it might make sense to extract this into
-a separate library.
+S3 HTTP conversations and writing tests that enforce those conversations.
+
+It's in this module because at some point, it might make sense to extract this
+into a separate library.
 
 """
 
@@ -235,12 +236,12 @@ class RecordingAdapterShim:
 
 
 class S3Mock:
-    """Provides a configurable mock for Boto3's S3 bits
+    """Provide a configurable mock for Boto3's S3 bits.
 
     Boto3 uses botocore which uses s3transfer which uses requests to do REST
     API calls.
 
-    S3Mock mocks requests by creating a fake adapter which allows it to
+    ``S3Mock`` mocks requests by creating a fake adapter which allows it to
     intercept all outgoing HTTP requests. This lets us do two things:
 
     1. assert HTTP conversations happen in a specified way in tests
@@ -251,7 +252,7 @@ class S3Mock:
 
     **Usage**
 
-    S3Mock is used as a context manager.
+    ``S3Mock`` is used as a context manager.
 
     Basic use::
 
@@ -304,7 +305,7 @@ class S3Mock:
 
     One of the difficulties with writing tests that assert HTTP conversations
     happen in a certain way is that if the conversation happens over SSL, then
-    it's not readable using network sniffing tools. Thus S3Mock provides a
+    it's not readable using network sniffing tools. Thus ``S3Mock`` provides a
     record feature that spits out what's going on to the specified file or
     ``s3mock.log``.
 
@@ -316,12 +317,16 @@ class S3Mock:
             # Do stuff here
 
     """
+
     def __init__(self):
         self.adapter = FakeAdapter()
 
     def __enter__(self):
         self.start_mock()
         return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.stop_mock()
 
     def _get_recording_adapter(self, session, url):
         recording_adapter = RecordingAdapterShim()
@@ -397,9 +402,6 @@ class S3Mock:
     def start_mock(self):
         self._real_get_adapter = requests.Session.get_adapter
         requests.Session.get_adapter = lambda session, url: self.adapter
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.stop_mock()
 
     def stop_mock(self):
         requests.Session.get_adapter = self._real_get_adapter
