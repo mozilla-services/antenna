@@ -61,24 +61,27 @@ clean:
 
 .PHONY: lint
 lint: .docker-build
-	ANTENNA_ENV=empty.env ${DC} run base flake8 --statistics antenna tests/unittest/
-	ANTENNA_ENV=empty.env ${DC} run base bandit -r antenna/
+	ANTENNA_ENV=empty.env ${DC} run --rm --no-deps base  /bin/bash ./docker/run_lint.sh
 
 .PHONY: test
 test: .docker-build
-	ANTENNA_ENV=empty.env ${DC} run base py.test
+	ANTENNA_ENV=${ANTENNA_ENV} ./docker/run_tests_in_docker.sh ${ARGS}
+
+.PHONY: testshell
+testshell: .docker-build
+	ANTENNA_ENV=${ANTENNA_ENV} ./docker/run_tests_in_docker.sh --shell
 
 .PHONY: systemtest
 systemtest: .docker-build
-	ANTENNA_ENV=dev.env ${DC} run systemtest tests/systemtest/run_tests.sh
+	ANTENNA_ENV=${ANTENNA_ENV} ${DC} run systemtest tests/systemtest/run_tests.sh
 
 .PHONY: systemtest-shell
 systemtest-shell: .docker-build
-	ANTENNA_ENV=dev.env ${DC} run systemtest bash
+	ANTENNA_ENV=${ANTENNA_ENV} ${DC} run systemtest bash
 
 .PHONY: test-coverage
 test-coverage: .docker-build
-	ANTENNA_ENV=empty.env ${DC} run base py.test --cov=antenna --cov-report term-missing
+	ANTENNA_ENV=${ANTENNA_ENV} ${DC} run base py.test --cov=antenna --cov-report term-missing
 
 .PHONY: docs
 docs: .docker-build

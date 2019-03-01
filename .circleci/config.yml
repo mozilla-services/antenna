@@ -34,11 +34,12 @@ jobs:
             docker build -t ${APP_NAME}:build .
 
       - run:
-          name: Run tests in Docker image
-          command: |
-            docker run ${APP_NAME}:build py.test
-            docker run ${APP_NAME}:build flake8
-            docker run ${APP_NAME}:build bandit -r antenna/
+          name: Lint
+          command: docker run local/antenna_deploy_base /bin/bash ./docker/run_lint.sh
+
+      - run:
+          name: Run tests
+          command: make test
 
       - run:
           name: Push to Dockerhub
