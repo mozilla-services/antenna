@@ -4,11 +4,10 @@
 
 import logging
 import logging.config
-import os
 from pathlib import Path
 import socket
 
-from everett.manager import ConfigManager, ConfigEnvFileEnv, ConfigOSEnv, ListOf, parse_class
+from everett.manager import ConfigManager, ConfigOSEnv, ListOf, parse_class
 from everett.component import ConfigOptions, RequiredConfigMixin
 import falcon
 import markus
@@ -292,8 +291,6 @@ def get_app(config=None):
     if config is None:
         config = ConfigManager(
             environments=[
-                # Pull configuration from env file specified as ANTENNA_ENV
-                ConfigEnvFileEnv([os.environ.get('ANTENNA_ENV')]),
                 # Pull configuration from environment variables
                 ConfigOSEnv()
             ],

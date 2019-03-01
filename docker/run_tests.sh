@@ -19,19 +19,14 @@ set -v -e -x
 echo ">>> pytest"
 # Set up environment variables
 
-# NOTE(willkg): This has to be "database_url" all lowercase because configman.
-# DATABASE_URL=${database_url:-"postgres://postgres:aPassword@postgresql:5432/socorro_test"}
-
-# NOTE(willkg): This has to be "elasticsearch_url" all lowercase because configman.
-# ELASTICSEARCH_URL=${elasticsearch_url:-"http://elasticsearch:9200"}
+LOCALSTACK_S3_URL=http://localstack-s3:5000
 
 export PYTHONPATH=/app/:$PYTHONPATH
 PYTEST="$(which pytest)"
 PYTHON="$(which python)"
 
-# Wait for postgres and elasticsearch services to be ready
-# urlwait "${DATABASE_URL}" 10
-# urlwait "${ELASTICSEARCH_URL}" 10
+# Wait for services to be ready
+urlwait "${LOCALSTACK_S3_URL}" 10
 
 # Run tests
 "${PYTEST}"

@@ -25,7 +25,6 @@ logging.basicConfig(level=logging.DEBUG)
 @pytest.fixture
 def config():
     cfg = ConfigManager([
-        ConfigEnvFileEnv([os.environ.get('ANTENNA_ENV')]),
         ConfigOSEnv()
     ])
     return cfg

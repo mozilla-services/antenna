@@ -28,8 +28,9 @@ services:
   web:
     extends:
       service: base
-    environment:
-      - ANTENNA_ENV=${ANTENNA_ENV}
+    env_file:
+      - docker/config/local_dev.env
+      - my.env
     ports:
       - "8000:8000"
     command: ./bin/run_web.sh
@@ -41,8 +42,10 @@ services:
   systemtest:
     extends:
       service: base
+    env_file:
+      - docker/config/local_dev.env
+      - my.env
     environment:
-      - ANTENNA_ENV=${ANTENNA_ENV}
       - POSTURL=http://web:8000/submit
       - NONGINX=1
     links:

@@ -12,9 +12,6 @@
 #
 #     $ ./tests/systemtests/run_tests.sh
 #
-# Set ANTENNA_ENV to the env file to use. It can be the same one used
-# for running Antenna. It needs to have the S3 information in it.
-#
 # Set POSTURL to the url to post to.
 #
 # Set NONGINX=1 if you're running against a local dev environment. This
@@ -28,22 +25,12 @@ if [ -z "${POSTURL}" ]; then
     export POSTURL="http://web:8000/submit"
 fi
 echo "POSTURL: ${POSTURL}"
-if [ -z "${ANTENNA_ENV}" ]; then
-    # This is the env file for running against a local dev environment
-    export ANTENNA_ENV="dev.env"
-fi
-echo "ANTENNA_ENV: ${ANTENNA_ENV}"
 
 cmd_required() {
     command -v "$1" > /dev/null 2>&1 || { echo >&2 "$1 required, but not on PATH. Exiting."; exit 1; }
 }
 
 echo "Setting up system tests."
-# Verify ANTENNA_ENV is defined
-if [ -z "${ANTENNA_ENV}" ]; then
-    echo "Please the ANTENNA_ENV variable to the path of a .env file with configuration. Exiting."
-    exit 1
-fi
 
 # Verify python3 exists
 cmd_required python3

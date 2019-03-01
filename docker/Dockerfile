@@ -1,7 +1,12 @@
 FROM python:3.6.8-slim
 
+# Set up user and group
+ARG groupid=10001
+ARG userid=10001
+
 WORKDIR /app/
-RUN groupadd --gid 10001 app && useradd -g app --uid 10001 --shell /usr/sbin/nologin app
+RUN groupadd --gid $groupid app && \
+    useradd -g app --uid $userid --shell /usr/sbin/nologin app
 
 RUN apt-get update && \
     apt-get install -y gcc apt-transport-https build-essential graphviz
