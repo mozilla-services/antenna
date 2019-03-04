@@ -22,7 +22,7 @@ jobs:
                     py-pip
             pip install docker-compose
 
-      - checkout
+      - checkout:
           path: /antenna
 
       - run:
