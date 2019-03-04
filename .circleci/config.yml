@@ -90,7 +90,7 @@ jobs:
             # push on master or git tag
             if [ "${CIRCLE_BRANCH}" == "master" ] || [ -n "${CIRCLE_TAG}" ]; then
                 echo "${DOCKER_PASSWORD}" | docker login -u="${DOCKER_USERNAME}" --password-stdin
-                retry docker tag "${APP_NAME}:build" "${DOCKER_IMAGE}"
+                retry docker tag local/antenna_deploy_base "${DOCKER_IMAGE}"
                 retry docker push "${DOCKER_IMAGE}"
             fi
 
