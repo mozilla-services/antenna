@@ -52,3 +52,5 @@ target/
 # Docker things
 /.docker-build
 /fakes3_root/
+docker-compose.override.yml
+my.env

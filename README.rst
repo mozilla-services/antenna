@@ -55,7 +55,7 @@ production, see docs_.
 
       You should see a lot of output. It'll start out with something like this::
 
-         ANTENNA_ENV="dev.env" /usr/bin/docker-compose up web
+         /usr/bin/docker-compose up web
          antenna_statsd_1 is up-to-date
          antenna_localstack-s3_1 is up-to-date
          Recreating antenna_web_1
@@ -146,15 +146,10 @@ production, see docs_.
       docker web container.
 
 
-   If you want to run with a different Antenna configuration, put the
-   configuration in an env file and then set ``ANTENNA_ENV``. For example:
+   If you want to run with a different Antenna configuration in the local
+   dev environment, adjust your ``my.env`` file.
 
-   .. code-block:: shell
-
-      $ ANTENNA_ENV=my.env make run
-
-
-   See ``dev.env`` and the docs_ for configuration options.
+   See docs_ for configuration options.
 
 5. Run tests:
 

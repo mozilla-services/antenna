@@ -45,17 +45,16 @@ you're testing against.
 
 Run::
 
-    ANTENNA_ENV=my.env make test-system
+    make systemtest
 
 
 You can run specific tests or groups of tests or with different py.test
 options::
 
-    ANTENNA_ENV=my.env make test-system-shell
+    make systemtest-shell
 
 
-Make sure to set ``ANTENNA_ENV`` as the path to the env file with the
-following items defined in it:
+You can adjust configuration using your ``my.env`` file:
 
 ``POSTURL``
     The full URL to post to.

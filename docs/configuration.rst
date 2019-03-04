@@ -8,9 +8,13 @@ Antenna configuration
 Introduction
 ============
 
-Configuration Antenna is not too hard. You have some basic choices to make. You
-codify the configuration into an env file. Then set ``ANTENNA_ENV`` environment
-variable to the path to the env file and you're done.
+Antenna uses environment configuration to define its behavior.
+
+The local development environment is configured in the ``my.env`` and
+``docker/config/local_dev.env`` env files and that configuration is pulled in
+when you run Antenna using ``docker-compose``.
+
+In a server environment, configuration is pulled in from the process environment.
 
 Here's an example. This uses Datadog installed on the EC2 node for metrics and
 also IAM bound to the EC2 node that Antenna is running on so it doesn't need S3

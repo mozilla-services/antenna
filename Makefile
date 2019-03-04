@@ -1,6 +1,25 @@
-ANTENNA_ENV ?= "dev.env"
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Include my.env and export it so variables set in there are available
+# in Makefile.
+include my.env
+export
+
+# Set these in the environment to override them. This is helpful for
+# development if you have file ownership problems because the user
+# in the container doesn't match the user on your host.
+ANTENNA_UID ?= 10001
+ANTENNA_GID ?= 10001
+
+# Set this in the environment to force --no-cache docker builds.
+DOCKER_BUILD_OPTS :=
+ifeq (1, ${NOCACHE})
+DOCKER_BUILD_OPTS := --no-cache
+endif
+
 DC := $(shell which docker-compose)
-HOSTUSER := $(shell id -u):$(shell id -g)
 
 .PHONY: help
 help: default
@@ -14,31 +33,39 @@ default:
 	@echo "clean            - remove all build, test, coverage and Python artifacts"
 	@echo "lint             - check style with flake8"
 	@echo "test             - run unit tests"
+	@echo "testshell        - open a shell in the test container"
 	@echo "systemtest       - run system tests against a running Antenna instance"
 	@echo "systemtest-shell - open a shell in the systemtest container"
 	@echo "test-coverage    - run tests and generate coverage report in cover/"
 	@echo "docs             - generate Sphinx HTML documentation, including API docs"
 	@echo ""
-	@echo "Set ANTENNA_ENV=/path/to/env/file for configuration."
+	@echo "Adjust your my.env file to set configuration."
 
 # Dev configuration steps
 .docker-build:
 	make build
 
+my.env:
+	@if [ ! -f my.env ]; \
+	then \
+	echo "Copying my.env.dist to my.env..."; \
+	cp docker/config/my.env.dist my.env; \
+	fi
+
 .PHONY: build
-build:
-	ANTENNA_ENV=empty.env ${DC} build deploy-base
+build: my.env
+	${DC} build ${DOCKER_BUILD_OPTS} --build-arg userid=${ANTENNA_UID} --build-arg groupid=${ANTENNA_GID} deploy-base
 	touch .docker-build
 
 .PHONY: run
-run: .docker-build
-	ANTENNA_ENV=${ANTENNA_ENV} ${DC} up web
+run: my.env .docker-build
+	${DC} up web
 
 .PHONY: shell
-shell: .docker-build
-	ANTENNA_ENV=empty.env ${DC} run base bash
+shell: my.env .docker-build
+	${DC} run base bash
 
-.PHONY: clean
+.PHONY: my.env clean
 clean:
 	# python related things
 	-rm -rf build/
@@ -60,26 +87,29 @@ clean:
 	-rm .docker-build
 
 .PHONY: lint
-lint: .docker-build
-	ANTENNA_ENV=empty.env ${DC} run base flake8 --statistics antenna tests/unittest/
-	ANTENNA_ENV=empty.env ${DC} run base bandit -r antenna/
+lint: my.env .docker-build
+	${DC} run --rm --no-deps base  /bin/bash ./docker/run_lint.sh
 
 .PHONY: test
-test: .docker-build
-	ANTENNA_ENV=empty.env ${DC} run base py.test
+test: my.env .docker-build
+	./docker/run_tests_in_docker.sh ${ARGS}
+
+.PHONY: testshell
+testshell: my.env .docker-build
+	./docker/run_tests_in_docker.sh --shell
 
 .PHONY: systemtest
-systemtest: .docker-build
-	ANTENNA_ENV=dev.env ${DC} run systemtest tests/systemtest/run_tests.sh
+systemtest: my.env .docker-build
+	${DC} run systemtest tests/systemtest/run_tests.sh
 
 .PHONY: systemtest-shell
-systemtest-shell: .docker-build
-	ANTENNA_ENV=dev.env ${DC} run systemtest bash
+systemtest-shell: my.env .docker-build
+	${DC} run systemtest bash
 
 .PHONY: test-coverage
-test-coverage: .docker-build
-	ANTENNA_ENV=empty.env ${DC} run base py.test --cov=antenna --cov-report term-missing
+test-coverage: my.env .docker-build
+	${DC} run base py.test --cov=antenna --cov-report term-missing
 
 .PHONY: docs
-docs: .docker-build
-	ANTENNA_ENV=empty.env ${DC} run -u ${HOSTUSER} base ./bin/build_docs.sh
+docs: my.env .docker-build
+	${DC} run -u ${ANTENNA_UID} base ./bin/build_docs.sh
