@@ -44,6 +44,7 @@ jobs:
 
       - run:
           name: Build Docker image
+          working_directory: /antenna
           command: |
             docker info
             make build
