@@ -3,21 +3,31 @@ jobs:
   build_test_push:
     docker:
       - image: docker:stable
+    working_directory: /
     environment:
       APP_NAME: "socorro_collector"
     steps:
       - run:
-          name: Install checkout deps
+          name: Install essential packages
           command: |
-            set -x
             apk update
-            apk add git openssh
+            apk add --update --no-cache \
+                    ca-certificates \
+                    build-base \
+                    bash \
+                    make \
+                    git \
+                    openssh \
+                    docker \
+                    py-pip
+            pip install docker-compose
 
       - checkout
-      - setup_remote_docker
+          path: /antenna
 
       - run:
           name: Create version.json
+          working_directory: /antenna
           command: |
             # create a version.json per https://github.com/mozilla-services/Dockerflow/blob/master/docs/version_object.md
             printf '{"commit":"%s","version":"%s","source":"https://github.com/%s/%s","build":"%s"}\n' \
@@ -25,24 +35,32 @@ jobs:
             "$CIRCLE_TAG" \
             "$CIRCLE_PROJECT_USERNAME" \
             "$CIRCLE_PROJECT_REPONAME" \
-            "$CIRCLE_BUILD_URL" > version.json
+            "$CIRCLE_BUILD_URL" > /antenna/version.json
+
+      - store_artifacts:
+          path: /antenna/version.json
+
+      - setup_remote_docker
 
       - run:
           name: Build Docker image
           command: |
             docker info
-            docker build -t ${APP_NAME}:build .
+            make build
 
       - run:
           name: Lint
+          working_directory: /antenna
           command: docker run local/antenna_deploy_base /bin/bash ./docker/run_lint.sh
 
       - run:
           name: Run tests
+          working_directory: /antenna
           command: make test
 
       - run:
           name: Push to Dockerhub
+          working_directory: /antenna
           command: |
             function retry {
                 set +e
