@@ -10,7 +10,9 @@ import pytest
 from testlib.mini_poster import multipart_encode
 
 
-class TestS3Mock:
+class TestS3CrashStorageIntegration:
+    logging_names = ['antenna']
+
     def test_crash_storage(self, client, s3mock):
         # .verify_bucket_exists() calls HEAD on the bucket to verify it exists
         # and the configuration is correct.
@@ -157,10 +159,6 @@ class TestS3Mock:
 
         # Assert we did the entire s3 conversation
         assert s3mock.remaining_conversation() == []
-
-
-class TestS3MockLogging:
-    logging_names = ['antenna']
 
     def test_retrying(self, client, s3mock, loggingmock):
         ROOT = 'http://fakes3:4569/'

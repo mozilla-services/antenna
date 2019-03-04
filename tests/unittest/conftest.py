@@ -104,8 +104,9 @@ def client():
     This creates an app and a test client that uses that app to submit HTTP
     GET/POST requests.
 
-    If you need it to use an app with a different configuration, you can
-    rebuild the app::
+    The app that's created uses configuration defaults. If you need it to use
+    an app with a different configuration, you can rebuild the app with
+    different configuration::
 
         def test_foo(client, tmpdir):
             client.rebuild_app({
