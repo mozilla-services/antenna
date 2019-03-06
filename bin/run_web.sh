@@ -14,9 +14,6 @@
 # Otherwise it's not going to use the gevent WSGI app and then you're not going
 # to be able to handle multiple network connections concurrently.
 
-# If you're having problems getting the app to start, add ``--preload`` to the
-# args list.
-
 set -e
 
 # First, create the bucket if it doesn't already exist
@@ -27,7 +24,7 @@ set -e
 
 # Launch the web-app
 gunicorn \
-    --reload \
+    --preload \
     --bind=0.0.0.0:8000 \
     --workers=1 \
     --worker-connections=2 \
