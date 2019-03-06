@@ -110,8 +110,9 @@ class PubSubCrashPublish(CrashPublishBase):
         future = self.publisher.publish(self.topic_path, data=b'test')
         future.result()
 
-    def publish_crash(self, crash_id):
+    def publish_crash(self, crash_report):
         """Publish a crash id to a Pub/Sub topic."""
+        crash_id = crash_report.crash_id
         data = crash_id.encode('utf-8')
         future = self.publisher.publish(self.topic_path, data=data)
         future.result()

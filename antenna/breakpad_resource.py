@@ -394,17 +394,18 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
     def hb_run_crashmover(self):
         """Spawn a crashmover if there's work to do."""
-        # Spawn a new crashmover if there's stuff in the queue and there isn't
-        # one currently running
-        if self.crashmover_save_queue and self.crashmover_pool.free_count() > 0:
+        # Spawn a new crashmover if there's stuff in the queue and we haven't
+        # hit the limit of how many we can run
+        stuff_to_do = (self.crashmover_save_queue or self.crashmover_publish_queue)
+        if stuff_to_do and self.crashmover_pool.free_count() > 0:
             self.crashmover_pool.spawn(self.crashmover_process_queues)
 
     def crashmover_process_queues(self):
         """Process crashmover work.
 
-        Note: This has to be super careful not to lose crash reports. If
-        there's any kind of problem, this must return the crash report to the
-        save queue.
+        NOTE(willkg): This has to be super careful not to lose crash reports.
+        If there's any kind of problem, this must return the crash report to
+        the relevant queue.
 
         """
         while self.crashmover_save_queue or self.crashmover_publish_queue:
@@ -441,7 +442,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             if self.crashmover_publish_queue:
                 crash_report = self.crashmover_publish_queue.popleft()
                 try:
-                    self.crashmover_publish(crash_report.crash_id)
+                    self.crashmover_publish(crash_report)
                 except Exception:
                     mymetrics.incr('publish_crash_exception.count')
                     crash_report.errors += 1
@@ -491,10 +492,10 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         mymetrics.incr('save_crash.count')
         logger.info('%s saved', crash_id)
 
-    def crashmover_publish(self, crash_id):
+    def crashmover_publish(self, crash_report):
         """Publish crash_id in publish queue."""
-        self.crashpublish.publish_crash(crash_id)
-        logger.info('%s published', crash_id)
+        self.crashpublish.publish_crash(crash_report)
+        logger.info('%s published', crash_report.crash_id)
 
     def join_pool(self):
         """Join the pool.

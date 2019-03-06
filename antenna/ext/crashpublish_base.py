@@ -18,7 +18,7 @@ class CrashPublishBase(RequiredConfigMixin):
     def __init__(self, config):
         self.config = config.with_options(self)
 
-    def publish_crash(self, crash_id):
+    def publish_crash(self, crash_report):
         """Publish the crash id.
 
         This should retry exceptions related to the specific service. Anything
@@ -26,7 +26,7 @@ class CrashPublishBase(RequiredConfigMixin):
         breakpad resource which will put it back in the queue to try again
         later.
 
-        :arg str crash_id: The crash id as a string.
+        :arg CrashReport crash_report: The crash report instance.
 
         """
         raise NotImplementedError
@@ -45,8 +45,9 @@ class NoOpCrashPublish(CrashPublishBase):
         super().__init__(config)
         self.published_things = []
 
-    def publish_crash(self, crash_id):
+    def publish_crash(self, crash_report):
         """Publish the crash id."""
+        crash_id = crash_report.crash_id
         logger.info('crash publish no-op: %s', crash_id)
 
         self.published_things.append({
