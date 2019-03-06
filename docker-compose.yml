@@ -55,10 +55,11 @@ services:
   # Google Pub/Sub emulator
   pubsub:
     build:
-      context: pubsub
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/Dockerfile.pubsub
     environment:
-      - PUBSUB_PROJECT_ID=socorro
+      # This should match docker/config/local_dev.env value
+      - PUBSUB_PROJECT_ID=local_dev_socorro
       - PUBSUB_PORT=5010
     ports:
       - "5010:5010"
