@@ -35,7 +35,6 @@ class PubSubHelper:
 
         self._publisher.create_topic(topic_path)
         self._topics.append(topic_path)
-        print('created topic %r' % topic_path)
         return topic_path
 
     def create_subscription(self, project_id, topic_name, subscription_name):
@@ -45,22 +44,7 @@ class PubSubHelper:
 
         self._subscriber.create_subscription(subscription_path, topic_path)
         self._subscriptions.append(subscription_path)
-        print('created subscription %r for %r' % (subscription_path, topic_path))
         return subscription_path
-
-    def commit(self, client, topic_path):
-        """Commit batch of published messages."""
-        # This is crazy, but we need to get the Batch object for the pubsub
-        # publisher so we can force-commit the batch
-        publisher = (
-            client
-            .get_resource_by_name('breakpad')
-            .crashpublish
-            .publisher
-        )
-
-        batch = publisher._batch(topic_path, create=False)
-        batch._commit()
 
     def get_published_crashids(self, subscription_path):
         """Get crash ids published to the subscribed topic.
@@ -70,7 +54,6 @@ class PubSubHelper:
 
         """
         self._subscriber.get_subscription(subscription_path)
-        print('get for %r' % subscription_path)
         crashids = []
         while True:
             resp = self._subscriber.pull(subscription_path, max_messages=1, return_immediately=True)
@@ -109,25 +92,36 @@ class TestPubSubCrashPublishIntegration:
             })
 
     def test_verify_topic_with_topic(self, client, pubsub):
+        PROJECT = 'test_socorro'
+        TOPIC = 'test_socorro_normal'
+        SUB = 'test_subscription'
+
+        pubsub.create_topic(PROJECT, TOPIC)
+        subscription_path = pubsub.create_subscription(PROJECT, TOPIC, SUB)
+
         # Set up topic and subscription
-        pubsub.create_topic('test_socorro', 'test_socorro_normal')
-        pubsub.create_subscription('test_socorro', 'test_socorro_normal', 'test_subscription')
 
         # Rebuild the app the test client is using with relevant configuration--this
         # will call verify_topic() which will work fine.
         client.rebuild_app({
             'LOCAL_DEV_ENV': 'True',
             'CRASHPUBLISH_CLASS': 'antenna.ext.pubsub.crashpublish.PubSubCrashPublish',
-            'CRASHPUBLISH_PROJECT_ID': 'test_socorro',
-            'CRASHPUBLISH_TOPIC_NAME': 'test_socorro_normal',
+            'CRASHPUBLISH_PROJECT_ID': PROJECT,
+            'CRASHPUBLISH_TOPIC_NAME': TOPIC,
         })
+
+        # Assert "test" crash id was published
+        crashids = pubsub.get_published_crashids(subscription_path)
+        assert crashids == [
+            b'test'
+        ]
 
     def test_crash_publish(self, client, pubsub):
         PROJECT = 'test_socorro'
         TOPIC = 'test_socorro_normal'
         SUB = 'test_subscription'
 
-        topic_path = pubsub.create_topic(PROJECT, TOPIC)
+        pubsub.create_topic(PROJECT, TOPIC)
         subscription_path = pubsub.create_subscription(PROJECT, TOPIC, SUB)
 
         data, headers = multipart_encode({
@@ -145,6 +139,9 @@ class TestPubSubCrashPublishIntegration:
             'CRASHPUBLISH_TOPIC_NAME': TOPIC
         })
 
+        # Slurp off the "test" crash id from verification
+        pubsub.get_published_crashids(subscription_path)
+
         result = client.simulate_post(
             '/submit',
             headers=headers,
@@ -158,7 +155,6 @@ class TestPubSubCrashPublishIntegration:
         assert result.content == b'CrashID=bp-de1bb258-cbbf-4589-a673-34f800160918\n'
 
         # Assert crash id was published
-        pubsub.commit(client, topic_path)
         crashids = pubsub.get_published_crashids(subscription_path)
         assert crashids == [
             b'de1bb258-cbbf-4589-a673-34f800160918'

@@ -13,21 +13,47 @@ from antenna.heartbeat import register_for_verification
 
 logger = logging.getLogger(__name__)
 
+# This is the maximum time in seconds that a batch will sit around for before
+# getting published. Since .pubish_crash() is synchronous (it blocks on the
+# result), I think we want this short-ish. But it's nice to batch publishing.
+#
+# NOTE(willkg): Maybe think about making this configurable so we can find a
+# more optimal value? Maybe calculate it based on concurrant crashmovers value?
+BATCH_MAX_LATENCY = 0.5
+
 
 class PubSubCrashPublish(CrashPublishBase):
     """Publisher to Pub/Sub.
 
-    This does **not** create a topic if one does not exist. Instead, it'll
-    throw errors when it tries to publish to a topic that does not exist.
-    Whoever sets up infrastructure is in charge of creating the topic.
+    Required GCP things
+    ===================
 
-    This will retry publishing several times, then give up. If it gives up, the
-    crashpublisher will put the crash id back in the queue to retry again
-    later.
+    To use this, you need to create:
 
-    This creates a ``PublisherClient`` which will connect to a local Pub/Sub
-    emulator if ``PUBSUB_EMULATOR_HOST=host:port`` is defined in the
-    environment. Otherwise, it'll connect to Google Cloud Pub/Sub.
+    1. Google Compute project
+    2. topic in that project
+    3. service account with publisher permissions to the topic
+    4. JSON creds file for the service account placed in
+    5. subscription for that topic so you can consume queued items
+
+    You need to set the environment variable ``GOOGLE_APPLICATION_CREDENTIALS``
+    to the absolute path of the JSON creds file for the service account.
+
+    If something in the above isn't created, then Antenna may not start.
+
+
+    Verification
+    ============
+
+    This component verifies that it can publish to the topic by publishing a
+    fake crash id of ``test``. Downstream consumer should throw this out.
+
+
+    Local emulaior
+    ==============
+
+    If you set the environment variable ``PUBSUB_EMULATOR_HOST=host:port``,
+    then this will connect to a local Pub/Sub emulator.
 
     """
 
@@ -47,29 +73,28 @@ class PubSubCrashPublish(CrashPublishBase):
         self.project_id = self.config('project_id')
         self.topic_name = self.config('topic_name')
 
-        # Batches crash_ids for up 1024 bytes or a second
-        self.batch_settings = pubsub_v1.types.BatchSettings(
-            max_bytes=1024,
-            max_latency=1,
-        )
+        # Batches crash_ids for at most BATCH_MAX_LATENCY seconds
+        self.batch_settings = pubsub_v1.types.BatchSettings(max_latency=BATCH_MAX_LATENCY)
         self.publisher = pubsub_v1.PublisherClient(self.batch_settings)
         self.topic_path = self.publisher.topic_path(self.project_id, self.topic_name)
 
         register_for_verification(self.verify_topic)
 
     def verify_topic(self):
-        """Verify topic exists and can be viewed.
+        """Verify topic exists and can be viewed."""
+        # Publish a fake crash id
+        future = self.publisher.publish(self.topic_path, data=b'test')
 
-        NOTE(willkg): This requires View permissions and doesn't actually
-        guarantee we can write to the topic. To do that, we'd change what's in
-        the queue and that's not great.
+        # This will block until the crash has been published; if it publishes
+        # we're good to go
+        future.result()
 
-        """
-        self.publisher.get_topic(self.topic_path)
-
-    # FIXME(willkg): In what circumstances should this retry? Also, how
-    # does failure work with batching?
     def publish_crash(self, crash_id):
         """Publish a crash id to a Pub/Sub topic."""
         data = crash_id.encode('utf-8')
-        self.publisher.publish(self.topic_path, data=data)
+        future = self.publisher.publish(self.topic_path, data=data)
+
+        # This forces publishing to be synchronous so if there are problems,
+        # this will raise an exception and that'll get handled by the retry
+        # logic.
+        future.result()

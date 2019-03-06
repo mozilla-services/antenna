@@ -74,3 +74,11 @@ class TestCrashStorage:
                 }
             }
         )
+
+        crashpublish = bsr.crashpublish
+        # 1 crash id
+        assert (
+            crashpublish.published_things == [
+                {'crash_id': 'de1bb258-cbbf-4589-a673-34f800160918'}
+            ]
+        )

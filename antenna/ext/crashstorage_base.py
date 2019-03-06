@@ -52,9 +52,9 @@ class CrashStorageBase(RequiredConfigMixin):
 class NoOpCrashStorage(CrashStorageBase):
     """This is a no-op crash storage that logs crashes it would have stored.
 
-    It keeps track of the last 10 crashes in ``.crashes`` instance attribute
-    with the most recently stored crash at the end of the list. This helps
-    when writing unit tests for Antenna.
+    It keeps track of the last 10 crashes in ``.saved_things`` instance
+    attribute with the most recently stored crash at the end of the list. This
+    helps when writing unit tests for Antenna.
 
     """
 
@@ -91,10 +91,5 @@ class NoOpCrashStorage(CrashStorageBase):
     def save_dumps(self, crash_id, dumps):
         """Save a crash dump."""
         for name, data in dumps.items():
-            logger.info(
-                'crash storage no-op: %s dump %s (%d)',
-                crash_id,
-                name,
-                len(data)
-            )
+            logger.info('crash storage no-op: %s dump %s (%d)', crash_id, name, len(data))
             self._add_saved_thing(crash_id, name, data)

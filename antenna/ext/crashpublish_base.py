@@ -19,9 +19,12 @@ class CrashPublishBase(RequiredConfigMixin):
         self.config = config.with_options(self)
 
     def publish_crash(self, crash_id):
-        """Publish the crash id
+        """Publish the crash id.
 
-        FIXME(willkg): How should this method handle exceptions?
+        This should retry exceptions related to the specific service. Anything
+        not handled by this method will bubble up and get handled by the
+        breakpad resource which will put it back in the queue to try again
+        later.
 
         :arg str crash_id: The crash id as a string.
 
@@ -30,11 +33,11 @@ class CrashPublishBase(RequiredConfigMixin):
 
 
 class NoOpCrashPublish(CrashPublishBase):
-    """This is a no-op crash publish class that logs crashes it would have published.
+    """No-op crash publish class that logs crashes it would have published.
 
-    It keeps track of the last 10 crash ids in ``.crashes`` instance attribute
-    with the most recently published crash id at the end of the list. This
-    helps when writing unit tests for Antenna.
+    It keeps track of the last 10 crash ids in ``.published_things`` instance
+    attribute with the most recently published crash id at the end of the list.
+    This helps when writing unit tests for Antenna.
 
     """
 
@@ -42,16 +45,12 @@ class NoOpCrashPublish(CrashPublishBase):
         super().__init__(config)
         self.published_things = []
 
-    def add_published_thing(self, crash_id):
+    def publish_crash(self, crash_id):
+        """Publish the crash id."""
+        logger.info('crash publish no-op: %s', crash_id)
+
         self.published_things.append({
             'crash_id': crash_id,
         })
         # Nix all but the last 10 crashes
         self.published_things = self.published_things[-10:]
-
-    def publish_crash(self, crash_id):
-        logger.info(
-            'crash publish no-op: %s',
-            crash_id,
-        )
-        self.add_published_thing(crash_id)
