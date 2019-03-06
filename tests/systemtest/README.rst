@@ -36,55 +36,11 @@ If you want to run individual tests, or use different py.test options, do::
 This gives you a bash shell in the docker container where you can more easily
 run system tests and debugging.
 
-
-Running tests against Antenna in -dev
-=====================================
-
-Set up a ``.env`` file with the correct configuration for the environment
-you're testing against.
-
-Run::
-
-    make systemtest
-
-
-You can run specific tests or groups of tests or with different py.test
-options::
-
-    make systemtest-shell
-
-
-You can adjust configuration using your ``my.env`` file:
-
-``POSTURL``
-    The full URL to post to.
-
-    Example: ``POSTURL=http://localhost:8000/submit``
+Relevant configuration:
 
 ``NONGINX``
     Set ``NONGINX=1`` if you're running against a local dev environment
     that isn't using Nginx. This will skip tests that require Nginx.
-
-``CRASHSTORAGE_ACCESS_KEY`` and ``CRASHSTORAGE_SECRET_ACCESS_KEY``
-    The systemtest will use these if supplied to access AWS S3. There
-    are other ways to provide credentials, too. See the Boto3 documentation
-    for details:
-
-    http://boto3.readthedocs.io/en/latest/guide/configuration.html
-
-    The credentials supplied must have the following permission:
-
-    * ``s3:ListBucket``
-
-``CRASHSTORAGE_ENDPOINT_URL``
-    If you're using a fake s3 (for example, localstack), you need to define
-    this.
-
-``CRASHSTORAGE_REGION``
-    The regeion you're using. Defaults to ``us-west-2``.
-
-``CRASHSTORAGE_BUCKET_NAME``
-    The name of the bucket that Antenna is saving to.
 
 
 Rules of systemtest
@@ -105,3 +61,6 @@ Rules of systemtest
 
 3. Tests can check S3 to see if a file exists by listing objects, but
    cannot get the file.
+
+4. Tests won't check Pub/Sub at all unless they're using the Pub/Sub
+   emulator.

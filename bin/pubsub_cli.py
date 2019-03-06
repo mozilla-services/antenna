@@ -77,13 +77,13 @@ def list_subscriptions(project_id, topic_name, subscription_name):
 
 
 def create_topic(project_id, topic_name, subscription_name):
-    """Create a topic."""
+    """Create topic and subscription."""
     publisher = pubsub_v1.PublisherClient()
     topic_path = publisher.topic_path(project_id, topic_name)
 
     try:
         publisher.create_topic(topic_path)
-        print('Topic created: %s' % topic_name)
+        print('Topic created: %s' % topic_path)
     except AlreadyExists:
         print('Topic already created.')
 
@@ -91,8 +91,9 @@ def create_topic(project_id, topic_name, subscription_name):
     subscription_path = subscriber.subscription_path(project_id, subscription_name)
     try:
         subscriber.create_subscription(subscription_path, topic_path)
+        print('Subscription created: %s' % subscription_path)
     except AlreadyExists:
-        print('Topic already created.')
+        print('Subscription already created.')
         pass
 
 

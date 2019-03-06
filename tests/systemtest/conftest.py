@@ -10,6 +10,7 @@ import sys
 import boto3
 from botocore.client import Config
 from everett.manager import ConfigManager, ConfigEnvFileEnv, ConfigOSEnv
+from google.cloud import pubsub_v1
 import pytest
 
 
@@ -78,7 +79,7 @@ class S3Connection:
         return client
 
     def list_objects(self, prefix):
-        """Returns list of keys in the bucket"""
+        """Return list of keys in S3 bucket."""
         self.logger.info('listing "%s" for prefix "%s"', self.bucket, prefix)
         resp = self.conn.list_objects(Bucket=self.bucket, Prefix=prefix, RequestPayer='requester')
         return [obj['Key'] for obj in resp['Contents']]
@@ -86,20 +87,49 @@ class S3Connection:
 
 @pytest.fixture
 def s3conn(config):
-    """Generates and returns an S3 connection"""
-    # NOTE(willkg): These env keys match what Antenna uses so we can have one
-    # .env file that works for Antenna and the system configuration.
+    """Generate and returns an S3 connection using env config."""
     return S3Connection(
-        # The s3 access key.
         access_key=config('crashstorage_access_key', default=''),
-        # The s3 secret access key.
         secret_access_key=config('crashstorage_secret_access_key', default=''),
-        # The s3 endpoint url to use.
         endpointurl=config('crashstorage_endpoint_url', default=''),
-        # The s3 region to use.
         region=config('crashstorage_region', default='us-west-2'),
-        # The s3 bucket to use.
         bucket=config('crashstorage_bucket_name'),
+    )
+
+
+class PubSubHelper:
+    def __init__(self, project_id, topic_name, subscription_name):
+        self.subscription = pubsub_v1.SubscriberClient()
+        self.topic_path = self.subscription.topic_path(project_id, topic_name)
+        self.subscription_path = self.subscription.subscription_path(project_id, subscription_name)
+
+    def list_crashids(self):
+        """Return crash ids in the Pub/Sub topic."""
+        crashids = []
+        while True:
+            response = self.subscription.pull(
+                self.subscription_path, max_messages=1, return_immediately=True
+            )
+            if not response.received_messages:
+                break
+
+            ack_ids = []
+            for msg in response.received_messages:
+                crashids.append(msg.message.data)
+                ack_ids.append(msg.ack_id)
+
+            # Acknowledges the received messages so they will not be sent again.
+            self.subscription.acknowledge(self.subscription_path, ack_ids)
+        return crashids
+
+
+@pytest.fixture
+def pubsub(config):
+    """Generate and returns a PubSub helper using env config."""
+    return PubSubHelper(
+        project_id=config('crashpublish_project_id', default=''),
+        topic_name=config('crashpublish_topic_name', default=''),
+        subscription_name=config('crashpublish_subscription_name', default=''),
     )
 
 
