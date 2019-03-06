@@ -139,27 +139,14 @@ class S3CrashStorage(CrashStorageBase):
                 dump
             )
 
-    def load_raw_crash(self, crash_id):
-        """Load and thaws out a raw crash.
+    def save_crash(self, crash_report):
+        """Save crash data."""
+        crash_id = crash_report.crash_id
+        raw_crash = crash_report.raw_crash
+        dumps = crash_report.dumps
 
-        :arg str crash_id: crash id of the crash as a string
+        # Save dumps first
+        self.save_dumps(crash_id, dumps)
 
-        :returns: tuple of (raw_crash dict, dumps dict)
-
-        """
-        raw_crash = self.conn.load_file(
-            self._get_raw_crash_path(crash_id)
-        )
-        dump_names = self.conn.load_file(
-            self._get_dump_names_path(crash_id)
-        )
-
-        dumps = dict(
-            (
-                dump_name,
-                self.conn.load_file(self._get_dump_name_path(crash_id, dump_name))
-            )
-            for dump_name in dump_names
-        )
-
-        return raw_crash, dumps
+        # Save raw crash
+        self.save_raw_crash(crash_id, raw_crash)
