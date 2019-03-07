@@ -38,39 +38,19 @@ class TestCrashStorage:
         # Now we've got the BreakpadSubmitterResource, so we can pull out the
         # crashstorage, verify there's only one crash in it and then verify the
         # contents of the crash.
-        crashstorage = bsr.crashstorage
-        # 1 raw crash and 1 dump
-        assert len(crashstorage.saved_things) == 2
 
-        # First thing is the dump
+        # Verify things got saved
+        crashstorage = bsr.crashstorage
         assert (
-            crashstorage.saved_things[0] ==
-            {
-                'crash_id': 'de1bb258-cbbf-4589-a673-34f800160918',
-                'type': 'upload_file_minidump',
-                'data': b'abcd1234'
-            }
+            crashstorage.saved_things == [
+                {'crash_id': 'de1bb258-cbbf-4589-a673-34f800160918'}
+            ]
         )
 
-        # Second thing is the raw crash metadata
+        # Verify things got published
+        crashpublish = bsr.crashpublish
         assert (
-            crashstorage.saved_things[1] ==
-            {
-                'crash_id': 'de1bb258-cbbf-4589-a673-34f800160918',
-                'type': 'raw_crash',
-                'data': {
-                    'ProductName': 'Test',
-                    'Version': '1.0',
-                    'dump_checksums': {
-                        'upload_file_minidump': 'e9cee71ab932fde863338d08be4de9dfe39ea049bdafb342ce659ec5450b69ae'
-                    },
-                    'legacy_processing': 0,
-                    'MinidumpSha256Hash': 'e9cee71ab932fde863338d08be4de9dfe39ea049bdafb342ce659ec5450b69ae',
-                    'throttle_rate': 100,
-                    'submitted_timestamp': '2011-09-06T00:00:00+00:00',
-                    'timestamp': 1315267200.0,
-                    'type_tag': 'bp',
-                    'uuid': 'de1bb258-cbbf-4589-a673-34f800160918'
-                }
-            }
+            crashpublish.published_things == [
+                {'crash_id': 'de1bb258-cbbf-4589-a673-34f800160918'}
+            ]
         )

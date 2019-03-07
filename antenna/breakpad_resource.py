@@ -39,6 +39,10 @@ mymetrics = markus.get_metrics('breakpad_resource')
 #: Maximum number of attempts to save a crash before we give up
 MAX_ATTEMPTS = 20
 
+#: SAVE and PUBLISH states of the crash mover
+STATE_SAVE = 'save'
+STATE_PUBLISH = 'publish'
+
 
 class CrashReport:
     """Crash report structure."""
@@ -48,6 +52,13 @@ class CrashReport:
         self.dumps = dumps
         self.crash_id = crash_id
         self.errors = errors
+
+        self.state = None
+
+    def set_state(self, state):
+        """Set new state and reset errors."""
+        self.state = state
+        self.errors = 0
 
 
 def positive_int(val):
@@ -90,39 +101,51 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
     required_config = ConfigOptions()
     required_config.add_option(
         'dump_field', default='upload_file_minidump',
-        doc='the name of the field in the POST data for dumps'
+        doc='The name of the field in the POST data for dumps.'
     )
     required_config.add_option(
         'dump_id_prefix', default='bp-',
-        doc='the crash type prefix'
+        doc='The crash type prefix.'
     )
+    required_config.add_option(
+        'concurrent_crashmovers',
+        default='2',
+        parser=positive_int,
+        doc=(
+            'The number of crashes concurrently being saved and published. '
+            'Each process gets this many concurrent crashmovers, so if you\'re '
+            'running 5 processes on the node, then it\'s '
+            '(5 * concurrent_crashmovers) sharing upload bandwidth.'
+        )
+    )
+
+    # crashstorage things
     required_config.add_option(
         'crashstorage_class',
         default='antenna.ext.crashstorage_base.NoOpCrashStorage',
         parser=parse_class,
-        doc='the class in charge of storing crashes'
+        doc='The class in charge of storing crashes.'
     )
 
-    # Maximum number of concurrent crashmover workers; each process gets this
-    # many concurrent crashmovers, so if you're running 5 processes on the node
-    # then it's (5 * concurrent_crashmovers) fighting for upload bandwidth
+    # crashpublish things
     required_config.add_option(
-        'concurrent_crashmovers',
-        default='2',
-        parser=int,
-        doc='the number of crashes concurrently being saved to s3'
+        'crashpublish_class',
+        default='antenna.ext.crashpublish_base.NoOpCrashPublish',
+        parser=parse_class,
+        doc='The class in charge of publishing crashes.'
     )
 
     def __init__(self, config):
         self.config = config.with_options(self)
         self.crashstorage = self.config('crashstorage_class')(config.with_namespace('crashstorage'))
+        self.crashpublish = self.config('crashpublish_class')(config.with_namespace('crashpublish'))
         self.throttler = Throttler(config)
 
         # Gevent pool for crashmover workers
         self.crashmover_pool = Pool(size=self.config('concurrent_crashmovers'))
 
-        # Queue for crashmover of crashes to save
-        self.crashmover_save_queue = deque()
+        # Queue for crashmover work
+        self.crashmover_queue = deque()
 
         # Register hb functions with heartbeat manager
         register_for_heartbeat(self.hb_report_health_stats)
@@ -142,21 +165,29 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         for item in self.crashstorage.get_runtime_config(['crashstorage']):
             yield item
 
+        for item in self.crashpublish.get_runtime_config(['crashpublish']):
+            yield item
+
     def check_health(self, state):
         """Return health state."""
         if hasattr(self.crashstorage, 'check_health'):
             self.crashstorage.check_health(state)
+        if hasattr(self.crashpublish, 'check_health'):
+            self.crashpublish.check_health(state)
 
     def hb_report_health_stats(self):
         """Heartbeat function to report health stats."""
-        # The number of crash reports sitting in the queue; this is a direct
-        # measure of the health of this process--a number that's going up means
-        # impending doom
-        mymetrics.gauge('save_queue_size', value=len(self.crashmover_save_queue))
+        # The number of crash reports sitting in the work queue; this is a
+        # direct measure of the health of this process--a number that's going
+        # up means impending doom
+        mymetrics.gauge('work_queue_size', value=len(self.crashmover_queue))
 
     def has_work_to_do(self):
         """Return whether this still has work to do."""
-        work_to_do = len(self.crashmover_save_queue) + len(self.crashmover_pool)
+        work_to_do = (
+            len(self.crashmover_pool) +
+            len(self.crashmover_queue)
+        )
         logger.info('work left to do: %s' % work_to_do)
         # Indicates whether or not we're sitting on crashes to save--this helps
         # keep Antenna alive until we're done saving crashes
@@ -363,77 +394,87 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         else:
             # If the result is not REJECT, then save it and return the CrashID to
             # the client
-            self.crashmover_save_queue.append(CrashReport(raw_crash, dumps, crash_id))
+            crash_report = CrashReport(raw_crash, dumps, crash_id)
+            crash_report.set_state(STATE_SAVE)
+            self.crashmover_queue.append(crash_report)
             self.hb_run_crashmover()
             resp.body = 'CrashID=%s%s\n' % (self.config('dump_id_prefix'), crash_id)
 
     def hb_run_crashmover(self):
-        """Check to see if it should spawn a crashmover and does if appropriate."""
-        # Spawn a new crashmover if there's stuff in the queue and there isn't
-        # one currently running
-        if self.crashmover_save_queue and self.crashmover_pool.free_count() > 0:
+        """Spawn a crashmover if there's work to do."""
+        # Spawn a new crashmover if there's stuff in the queue and we haven't
+        # hit the limit of how many we can run
+        if self.crashmover_queue and self.crashmover_pool.free_count() > 0:
             self.crashmover_pool.spawn(self.crashmover_process_queue)
 
     def crashmover_process_queue(self):
-        """Process the queue of crashes to save until it's empty.
+        """Process crashmover work.
 
-        Note: This has to be super careful not to lose crash reports. If
-        there's any kind of problem, this must return the crash to the queue.
+        NOTE(willkg): This has to be super careful not to lose crash reports.
+        If there's any kind of problem, this must return the crash report to
+        the relevant queue.
 
         """
-        # Process crashes until the queue is empty
-        while self.crashmover_save_queue:
-            crash_report = self.crashmover_save_queue.popleft()
+        while self.crashmover_queue:
+            crash_report = self.crashmover_queue.popleft()
 
             try:
-                self.crashmover_save(crash_report)
+                if crash_report.state == STATE_SAVE:
+                    # Save crash and then toss crash_id in the publish queue
+                    self.crashmover_save(crash_report)
+                    crash_report.set_state(STATE_PUBLISH)
+                    self.crashmover_queue.append(crash_report)
+
+                elif crash_report.state == STATE_PUBLISH:
+                    # Publish crash and we're done
+                    self.crashmover_publish(crash_report)
+                    self.crashmover_finish(crash_report)
 
             except Exception:
-                mymetrics.incr('save_crash_exception.count')
+                mymetrics.incr('%s_crash_exception.count' % crash_report.state)
                 crash_report.errors += 1
                 logger.exception(
-                    'Exception when processing save queue (%s); error %d/%d',
+                    'Exception when processing queue (%s), state: %s; error %d/%d',
                     crash_report.crash_id,
+                    crash_report.state,
                     crash_report.errors,
                     MAX_ATTEMPTS
                 )
 
                 # After MAX_ATTEMPTS, we give up on this crash and move on
                 if crash_report.errors < MAX_ATTEMPTS:
-                    self.crashmover_save_queue.append(crash_report)
+                    self.crashmover_queue.append(crash_report)
                 else:
-                    logger.error('%s: too many errors trying to save; dropped', crash_report.crash_id)
-                    mymetrics.incr('save_crash_dropped.count')
+                    logger.error(
+                        '%s: too many errors trying to %s; dropped',
+                        crash_report.crash_id,
+                        crash_report.state
+                    )
+                    mymetrics.incr('%s_crash_dropped.count' % crash_report.state)
 
-    def crashmover_save(self, crash_report):
-        """Save a crash report to storage.
-
-        If this raises an error, then that bubbles up and the caller can figure
-        out what to do with it and retry again later.
-
-        """
-        crash_id = crash_report.crash_id
-        dumps = crash_report.dumps
-        raw_crash = crash_report.raw_crash
-
-        # Capture total time it takes to save the crash
-        with mymetrics.timer('crash_save.time'):
-            # Save dumps to crashstorage
-            self.crashstorage.save_dumps(crash_id, dumps)
-
-            # Save the raw crash metadata to crashstorage
-            self.crashstorage.save_raw_crash(crash_id, raw_crash)
-
+    def crashmover_finish(self, crash_report):
+        """Finish bookkeeping on crash report."""
         # Capture the total time it took for this crash to be handled from
         # being received from breakpad client to saving to s3.
         #
         # NOTE(willkg): time.time returns seconds, but .timing() wants
         # milliseconds, so we multiply!
-        delta = (time.time() - raw_crash['timestamp']) * 1000
-        mymetrics.timing('crash_handling.time', value=delta)
+        delta = (time.time() - crash_report.raw_crash['timestamp']) * 1000
 
+        mymetrics.timing('crash_handling.time', value=delta)
         mymetrics.incr('save_crash.count')
-        logger.info('%s saved', crash_id)
+
+    @mymetrics.timer('crash_save.time')
+    def crashmover_save(self, crash_report):
+        """Save crash report to storage."""
+        self.crashstorage.save_crash(crash_report)
+        logger.info('%s saved', crash_report.crash_id)
+
+    @mymetrics.timer('crash_publish.time')
+    def crashmover_publish(self, crash_report):
+        """Publish crash_id in publish queue."""
+        self.crashpublish.publish_crash(crash_report)
+        logger.info('%s published', crash_report.crash_id)
 
     def join_pool(self):
         """Join the pool.

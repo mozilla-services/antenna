@@ -8,6 +8,7 @@ from everett.manager import ConfigManager
 
 from antenna.app import BreakpadSubmitterResource
 from antenna.breakpad_resource import MAX_ATTEMPTS
+from antenna.ext.crashpublish_base import CrashPublishBase
 from antenna.ext.crashstorage_base import CrashStorageBase
 from antenna.throttler import ACCEPT
 from testlib.mini_poster import compress, multipart_encode
@@ -18,6 +19,11 @@ class BadCrashStorage(CrashStorageBase):
         raise Exception
 
     def save_raw_crash(self, crash_id, raw_crash):
+        raise Exception
+
+
+class BadCrashPublish(CrashPublishBase):
+    def publish_crash(self, crash_id):
         raise Exception
 
 
@@ -150,9 +156,9 @@ class TestBreakpadSubmitterResource:
         assert raw_crash['throttle_rate'] == 100
 
     def test_queuing(self, client):
-        def check_health(crashmover_pool_size, crashmover_save_queue_size):
+        def check_health(crashmover_pool_size, crashmover_queue_size):
             bpr = client.get_resource_by_name('breakpad')
-            assert len(bpr.crashmover_save_queue) == crashmover_save_queue_size
+            assert len(bpr.crashmover_queue) == crashmover_queue_size
             assert len(bpr.crashmover_pool) == crashmover_pool_size
 
         # Rebuild the app so the client only saves one crash at a time to s3
@@ -169,26 +175,26 @@ class TestBreakpadSubmitterResource:
         })
 
         # Verify initial conditions are correct--no active coroutines and
-        # nothing in the save queue
-        check_health(crashmover_pool_size=0, crashmover_save_queue_size=0)
+        # nothing in the queue
+        check_health(crashmover_pool_size=0, crashmover_queue_size=0)
 
         # Submit a crash
         client.simulate_post('/submit', headers=headers, body=data)
-        # Now there's one coroutine active and one item in the save queue
-        check_health(crashmover_pool_size=1, crashmover_save_queue_size=1)
+        # Now there's one coroutine active and one item in the queue
+        check_health(crashmover_pool_size=1, crashmover_queue_size=1)
 
         # Submit another crash
         client.simulate_post('/submit', headers=headers, body=data)
         # The coroutine hasn't run yet (we haven't called .join), so there's
-        # one coroutine and two queued crashes
-        check_health(crashmover_pool_size=2, crashmover_save_queue_size=2)
+        # one coroutine and two queued crashes to be saved
+        check_health(crashmover_pool_size=2, crashmover_queue_size=2)
 
         # Now join the app and let the coroutines run and make sure the queue clears
         client.join_app()
-        # No more coroutines and no more save queue
-        check_health(crashmover_pool_size=0, crashmover_save_queue_size=0)
+        # No more coroutines and no more queue
+        check_health(crashmover_pool_size=0, crashmover_queue_size=0)
 
-    def test_retry(self, client, loggingmock):
+    def test_retry_storage(self, client, loggingmock):
         crash_id = 'de1bb258-cbbf-4589-a673-34f800160918'
         data, headers = multipart_encode({
             'uuid': crash_id,
@@ -220,8 +226,50 @@ class TestBreakpadSubmitterResource:
                     name='antenna.breakpad_resource',
                     levelname='ERROR',
                     msg_contains=(
-                        'Exception when processing save queue (%s); error %d/%d' % (
+                        'Exception when processing queue (%s), state: %s; error %d/%d' % (
                             crash_id,
+                            'save',
+                            i,
+                            MAX_ATTEMPTS
+                        )
+                    )
+                )
+
+    def test_retry_publish(self, client, loggingmock):
+        crash_id = 'de1bb258-cbbf-4589-a673-34f800160918'
+        data, headers = multipart_encode({
+            'uuid': crash_id,
+            'ProductName': 'Firefox',
+            'Version': '60.0a1',
+            'ReleaseChannel': 'nightly',
+            'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
+        })
+
+        client.rebuild_app({
+            'CRASHPUBLISH_CLASS': BadCrashPublish.__module__ + '.' + BadCrashPublish.__name__,
+        })
+
+        with loggingmock(['antenna']) as lm:
+            result = client.simulate_post(
+                '/submit',
+                headers=headers,
+                body=data
+            )
+            assert result.status_code == 200
+
+            # The publish is bad, so this should raise errors and then log something
+            client.join_app()
+
+            # We're using BadCrashPublish so the crashmover should retry 20
+            # times logging a message each time and then give up
+            for i in range(1, MAX_ATTEMPTS):
+                assert lm.has_record(
+                    name='antenna.breakpad_resource',
+                    levelname='ERROR',
+                    msg_contains=(
+                        'Exception when processing queue (%s), state: %s; error %d/%d' % (
+                            crash_id,
+                            'publish',
                             i,
                             MAX_ATTEMPTS
                         )

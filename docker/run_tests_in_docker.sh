@@ -27,7 +27,7 @@ TESTIMAGE="local/antenna_deploy_base"
 
 # Start services in background (this is idempotent)
 echo "Starting services needed by tests in the background..."
-${DC} up -d localstack-s3 statsd
+${DC} up -d localstack-s3 statsd pubsub
 
 # If we're running a shell, then we start up a test container with . mounted
 # to /app.
@@ -42,6 +42,7 @@ if [ "$1" == "--shell" ]; then
            --network antenna_default \
            --link antenna_localstack-s3_1 \
            --link antenna_statsd_1 \
+           --env-file ./docker/config/local_dev.env \
            --tty \
            --interactive \
            --entrypoint="" \
@@ -91,6 +92,7 @@ docker run \
        --network antenna_default \
        --link antenna_localstack-s3_1 \
        --link antenna_statsd_1 \
+       --env-file ./docker/config/local_dev.env \
        --tty \
        --interactive \
        --entrypoint= \

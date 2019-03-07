@@ -226,8 +226,3 @@ class S3Connection(RequiredConfigMixin):
             Bucket=self.bucket,
             Key=path,
         )
-
-    def load_file(self, path):
-        """Load a single file from S3."""
-        # FIXME(willkg): implement this
-        pass

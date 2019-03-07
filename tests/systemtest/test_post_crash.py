@@ -4,6 +4,7 @@
 
 import datetime
 import logging
+import os
 import time
 
 import isodate
@@ -19,12 +20,6 @@ def utc_now():
 
 
 class CrashVerifier:
-    def __init__(self):
-        self.errors = []
-
-    def add_error(self, msg):
-        self.errors.append(msg)
-
     def raw_crash_key(self, crash_id):
         return 'v2/raw_crash/{entropy}/{date}/{crashid}'.format(
             entropy=crash_id[0:3],
@@ -46,7 +41,7 @@ class CrashVerifier:
             crashid=crash_id
         )
 
-    def verify_crash_data(self, crash_id, raw_crash, dumps, s3conn):
+    def verify_stored_data(self, crash_id, raw_crash, dumps, s3conn):
         # Verify the raw crash file made it
         key = self.raw_crash_key(crash_id)
         assert key in s3conn.list_objects(prefix=key)
@@ -59,6 +54,15 @@ class CrashVerifier:
         for name, dump in dumps.items():
             key = self.dump_key(crash_id, name)
             assert key in s3conn.list_objects(prefix=key)
+
+    def verify_published_data(self, crash_id, pubsub):
+        # Verify crash id was published--this might pick up a bunch of stuff,
+        # so we just verify it's one of the things we picked up
+        if 'PUBSUB_EMULATOR_HOST' in os.environ:
+            crash_ids = [crash_id.decode('utf-8') for crash_id in pubsub.list_crashids()]
+            assert crash_id in crash_ids
+        else:
+            print('SKIPPING PUBLISH CHECK--NOT USING EMULATOR')
 
 
 def content_to_crashid(content):
@@ -75,8 +79,8 @@ SLEEP_TIME = 5
 
 
 class TestPostCrash:
-    def test_regular(self, posturl, s3conn, crash_generator):
-        """Post a valid crash and verify the contents made it to S3"""
+    def test_regular(self, posturl, s3conn, pubsub, crash_generator):
+        """Post a valid crash and verify the contents made it to S3."""
         raw_crash, dumps = crash_generator.generate()
         crash_payload = mini_poster.assemble_crash_payload_dict(raw_crash, dumps)
         resp = mini_poster.post_crash(posturl, crash_payload, dumps)
@@ -88,17 +92,13 @@ class TestPostCrash:
         logger.debug('Crash ID is: %s', crash_id)
         logger.debug('S3conn: %s', s3conn.get_config())
 
+        # Verify stored and published crash data
         verifier = CrashVerifier()
-        verifier.verify_crash_data(crash_id, raw_crash, dumps, s3conn)
+        verifier.verify_stored_data(crash_id, raw_crash, dumps, s3conn)
+        verifier.verify_published_data(crash_id, pubsub)
 
-        if verifier.errors:
-            for error in verifier.errors:
-                logger.error(error)
-
-        assert not verifier.errors
-
-    def test_compressed_crash(self, posturl, s3conn, crash_generator):
-        """Post a compressed crash and verify contents made it to s3"""
+    def test_compressed_crash(self, posturl, s3conn, pubsub, crash_generator):
+        """Post a compressed crash and verify contents made it to S3."""
         raw_crash, dumps = crash_generator.generate()
         crash_payload = mini_poster.assemble_crash_payload_dict(raw_crash, dumps)
         resp = mini_poster.post_crash(posturl, crash_payload, compressed=True)
@@ -110,11 +110,7 @@ class TestPostCrash:
         logger.debug('Crash ID is: %s', crash_id)
         logger.debug('S3conn: %s', s3conn.get_config())
 
+        # Verify stored and published crash data
         verifier = CrashVerifier()
-        verifier.verify_crash_data(crash_id, raw_crash, dumps, s3conn)
-
-        if verifier.errors:
-            for error in verifier.errors:
-                logger.error(error)
-
-        assert not verifier.errors
+        verifier.verify_stored_data(crash_id, raw_crash, dumps, s3conn)
+        verifier.verify_published_data(crash_id, pubsub)

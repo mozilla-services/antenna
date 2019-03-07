@@ -5,10 +5,8 @@
 import io
 import os
 
-from everett.manager import ConfigManager
 from freezegun import freeze_time
 
-from antenna.ext.fs.crashstorage import FSCrashStorage
 from testlib.mini_poster import multipart_encode
 
 
@@ -98,61 +96,3 @@ class TestFSCrashStorage:
             contents['/antenna_crashes/20160918/upload_file_minidump/de1bb258-cbbf-4589-a673-34f800160918'] ==
             b'abcd1234'
         )
-
-    @freeze_time('2011-09-06 00:00:00', tz_offset=0)
-    def test_load_files(self, client, tmpdir):
-        """Verify we can rebuild the crash from the fs"""
-        crash_id = 'de1bb258-cbbf-4589-a673-34f800160918'
-
-        data, headers = multipart_encode({
-            'uuid': crash_id,
-            'ProductName': 'Test',
-            'Version': '1.0',
-            'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
-        })
-
-        # Rebuild the app the test client is using with relevant configuration.
-        client.rebuild_app({
-            'BASEDIR': str(tmpdir),
-            'THROTTLE_RULES': 'antenna.throttler.ACCEPT_ALL',
-            'PRODUCTS': 'antenna.throttler.ALL_PRODUCTS',
-            'CRASHSTORAGE_CLASS': 'antenna.ext.fs.crashstorage.FSCrashStorage',
-            'CRASHSTORAGE_FS_ROOT': str(tmpdir.join('antenna_crashes')),
-        })
-
-        result = client.simulate_post(
-            '/submit',
-            headers=headers,
-            body=data
-        )
-        client.join_app()
-
-        assert result.status_code == 200
-
-        config = ConfigManager.from_dict({
-            'FS_ROOT': str(tmpdir.join('antenna_crashes')),
-        })
-
-        fscrashstore = FSCrashStorage(config)
-
-        raw_crash, dumps = fscrashstore.load_raw_crash(crash_id)
-
-        assert (
-            raw_crash ==
-            {
-                'uuid': crash_id,
-                'ProductName': 'Test',
-                'MinidumpSha256Hash': 'e9cee71ab932fde863338d08be4de9dfe39ea049bdafb342ce659ec5450b69ae',
-                'Version': '1.0',
-                'dump_checksums': {
-                    'upload_file_minidump': 'e9cee71ab932fde863338d08be4de9dfe39ea049bdafb342ce659ec5450b69ae'
-                },
-                'legacy_processing': 0,
-                'throttle_rate': 100,
-                'submitted_timestamp': '2011-09-06T00:00:00+00:00',
-                'timestamp': 1315267200.0,
-                'type_tag': 'bp',
-            }
-        )
-
-        assert dumps == {'upload_file_minidump': b'abcd1234'}
