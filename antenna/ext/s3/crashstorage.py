@@ -47,15 +47,11 @@ class S3CrashStorage(CrashStorageBase):
     def __init__(self, config):
         self.config = config.with_options(self)
         self.conn = self.config('connection_class')(config)
-        register_for_verification(self.verify_bucket_exists)
+        register_for_verification(self.verify_write_to_bucket)
 
-    def verify_bucket_exists(self):
-        """Verify S3 bucket exists.
-
-        Raises an exception if it doesn't.
-
-        """
-        self.conn.verify_bucket_exists()
+    def verify_write_to_bucket(self):
+        """Verify S3 bucket exists and can be written to."""
+        self.conn.verify_write_to_bucket()
 
     def get_runtime_config(self, namespace=None):
         """Return generator for items in runtime configuration."""

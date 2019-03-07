@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import io
+from unittest.mock import patch
 
 import botocore
 import pytest
@@ -10,15 +11,23 @@ import pytest
 from testlib.mini_poster import multipart_encode
 
 
+@pytest.fixture
+def mock_generate_test_filepath():
+    with patch('antenna.ext.s3.connection.generate_test_filepath') as gtfp:
+        gtfp.return_value = 'test/testwrite.txt'
+        yield
+
+
 class TestS3CrashStorageIntegration:
     logging_names = ['antenna']
 
-    def test_crash_storage(self, client, s3mock):
-        # .verify_bucket_exists() calls HEAD on the bucket to verify it exists
-        # and the configuration is correct.
+    def test_crash_storage(self, client, s3mock, mock_generate_test_filepath):
+        # .verify_write_to_bucket() writes to the bucket to verify Antenna can
+        # write to it and the configuration is correct
         s3mock.add_step(
-            method='HEAD',
-            url='http://fakes3:4569/fakebucket',
+            method='PUT',
+            url='http://fakes3:4569/fakebucket/test/testwrite.txt',
+            body=b'test',
             resp=s3mock.fake_response(status_code=200)
         )
 
@@ -72,13 +81,15 @@ class TestS3CrashStorageIntegration:
         # Assert we did the entire s3 conversation
         assert s3mock.remaining_conversation() == []
 
-    def test_region_and_bucket_with_periods(self, client, s3mock):
-        # .verify_bucket_exists() calls HEAD on the bucket to verify it exists
-        # and the configuration is correct.
+    def test_region_and_bucket_with_periods(self, client, s3mock, mock_generate_test_filepath):
         ROOT = 'https://s3.us-west-1.amazonaws.com/'
+
+        # .verify_write_to_bucket() writes to the bucket to verify Antenna can
+        # write to it and the configuration is correct
         s3mock.add_step(
-            method='HEAD',
-            url=ROOT + 'fakebucket.with.periods',
+            method='PUT',
+            url=ROOT + 'fakebucket.with.periods/test/testwrite.txt',
+            body=b'test',
             resp=s3mock.fake_response(status_code=200)
         )
 
@@ -132,18 +143,19 @@ class TestS3CrashStorageIntegration:
         # Assert we did the entire s3 conversation
         assert s3mock.remaining_conversation() == []
 
-    def test_missing_bucket_halts_startup(self, client, s3mock):
-        # .verify_bucket_exists() calls HEAD on the bucket to verify it exists
-        # and the configuration is correct. This fails for here.
+    def test_missing_bucket_halts_startup(self, client, s3mock, mock_generate_test_filepath):
+        # .verify_write_to_bucket() writes to the bucket to verify Antenna can
+        # write to it and the configuration is correct
         s3mock.add_step(
-            method='HEAD',
-            url='http://fakes3:4569/fakebucket',
+            method='PUT',
+            url='http://fakes3:4569/fakebucket/test/testwrite.txt',
+            body=b'test',
             resp=s3mock.fake_response(status_code=404)
         )
 
         with pytest.raises(botocore.exceptions.ClientError) as excinfo:
             # Rebuild the app the test client is using with relevant
-            # configuration. This calls .verify_bucket_exists() which fails.
+            # configuration. This calls .verify_write_to_bucket() which fails.
             client.rebuild_app({
                 'CRASHSTORAGE_CLASS': 'antenna.ext.s3.crashstorage.S3CrashStorage',
                 'CRASHSTORAGE_ENDPOINT_URL': 'http://fakes3:4569',
@@ -153,21 +165,22 @@ class TestS3CrashStorageIntegration:
             })
 
         assert (
-            'An error occurred (404) when calling the HeadBucket operation: Not Found'
+            'An error occurred (404) when calling the PutObject operation: Not Found'
             in str(excinfo.value)
         )
 
         # Assert we did the entire s3 conversation
         assert s3mock.remaining_conversation() == []
 
-    def test_retrying(self, client, s3mock, loggingmock):
+    def test_retrying(self, client, s3mock, loggingmock, mock_generate_test_filepath):
         ROOT = 'http://fakes3:4569/'
 
-        # .verify_bucket_exists() calls HEAD on the bucket to verify it exists
-        # and the configuration is correct.
+        # .verify_write_to_bucket() writes to the bucket to verify Antenna can
+        # write to it and the configuration is correct
         s3mock.add_step(
-            method='HEAD',
-            url=ROOT + 'fakebucket',
+            method='PUT',
+            url=ROOT + 'fakebucket/test/testwrite.txt',
+            body=b'test',
             resp=s3mock.fake_response(status_code=200)
         )
 

@@ -111,6 +111,13 @@ class PubSubCrashPublish(CrashPublishBase):
         future = self.publisher.publish(self.topic_path, data=b'test')
         future.result()
 
+    def check_health(self, state):
+        """Check Pub/Sub connection health."""
+        try:
+            self.publisher.get_topic(self.topic_path)
+        except Exception as exc:
+            state.add_error('PubSubCrashPublish', repr(exc))
+
     def publish_crash(self, crash_report):
         """Publish a crash id to a Pub/Sub topic."""
         crash_id = crash_report.crash_id
