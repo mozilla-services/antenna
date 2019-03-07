@@ -466,12 +466,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
     @mymetrics.timer('crash_save.time')
     def crashmover_save(self, crash_report):
-        """Save crash report to storage.
-
-        If this raises an error, then that bubbles up and the caller can figure
-        out what to do with it and retry again later.
-
-        """
+        """Save crash report to storage."""
         self.crashstorage.save_crash(crash_report)
         logger.info('%s saved', crash_report.crash_id)
 
