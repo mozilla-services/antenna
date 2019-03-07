@@ -59,14 +59,14 @@ def main(args):
     # First, check to see if the bucket is already created.
     try:
         print('Checking to see if bucket "%s" exists...' % conn.bucket)
-        conn.verify_bucket_exists()
+        conn.verify_write_to_bucket()
         print('Bucket exists.')
 
     except ClientError as exc:
         print(str(exc))
-        if 'HeadBucket operation: Not Found' in str(exc):
+        if '(NoSuchBucket)' in str(exc):
             print('Bucket not found. Creating %s ...' % conn.bucket)
-            conn._create_bucket()
+            conn.client.create_bucket(Bucket=conn.bucket)
             print('Bucket created.')
         else:
             raise

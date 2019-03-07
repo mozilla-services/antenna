@@ -6,6 +6,7 @@
 import io
 import logging
 import random
+import uuid
 
 import boto3
 from botocore.client import ClientError, Config
@@ -16,6 +17,11 @@ from antenna.util import retry
 
 
 logger = logging.getLogger(__name__)
+
+
+def generate_test_filepath():
+    """Generate a unique-ish test filepath."""
+    return 'test/testfile-%s.txt' % uuid.uuid4()
 
 
 def wait_times_connect():
@@ -61,22 +67,16 @@ class S3Connection(RequiredConfigMixin):
 
     * ``s3:ListBucket``
 
-      When Antenna starts up, ``S3Connection`` will call ``HEAD`` on the bucket
-      verifying the bucket exists, the endpoint url is good, it's accessible
-      and the credentials are valid. This means that the credentials you use
-      must have "list" permissions on the bucket.
-
-      If that fails, then this will raise an error and will halt startup.
-
-      .. Warning::
-
-         This does not verify that it has write permissions to the bucket. Make
-         sure to test your configuration by sending a test crash and watch your
-         logs at startup!
+      Antenna periodically checks its health and during that health check, it
+      will HEAD the S3 Bucket. This requires ``s3:ListBucket`` permissions.
 
     * ``s3:PutObject``
 
       This permission is used to save items to the bucket.
+
+      Additionally, at startup, Antenna will attempt to save a test file to the
+      bucket. If that fails, then this will raise an error and will halt
+      startup.
 
 
     **Retrying saves**
@@ -172,24 +172,23 @@ class S3Connection(RequiredConfigMixin):
 
         return session.client(**kwargs)
 
-    def verify_bucket_exists(self):
-        """Verify S3 bucket exists and can be accessed with configured credentials.
+    def verify_write_to_bucket(self):
+        """Verify S3 bucket exists and can be written to.
 
-        NOTE(willkg): This doesn't verify we can write to it--to do that we'd
-        either need to orphan a gazillion files or we'd also need DELETE
-        permission.
+        This will do multiple attempts and then give up and throw an exception.
 
         """
-        self.client.head_bucket(Bucket=self.bucket)
-
-    def _create_bucket(self):
-        # NOTE(willkg): Don't use this except with a fake s3 and dev environments.
-        self.client.create_bucket(Bucket=self.bucket)
+        self.client.upload_fileobj(
+            Fileobj=io.BytesIO(b'test'),
+            Bucket=self.bucket,
+            Key=generate_test_filepath()
+        )
 
     def check_health(self, state):
         """Check S3 connection health."""
         try:
-            self.verify_bucket_exists()
+            # HEAD the bucket to verify S3 is up and we can connect to it.
+            self.client.head_bucket(Bucket=self.bucket)
         except Exception as exc:
             state.add_error('S3Connection', repr(exc))
 
