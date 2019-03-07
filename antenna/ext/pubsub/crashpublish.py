@@ -30,6 +30,7 @@ class SynchronousBatch:
         self._client = client
         self._topic = topic
         self._settings = settings
+        self._autocommit = autocommit
 
     def publish(self, message):
         """Publish message.
