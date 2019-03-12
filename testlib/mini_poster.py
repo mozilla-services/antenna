@@ -42,9 +42,13 @@ def _log_everything():
     logging.getLogger('requests.packages.urllib3').setLevel(logging.DEBUG)
 
 
-def assemble_crash_payload_dict(raw_crash, dumps):
-    """Returns a dict form of the payload"""
-    crash_data = dict(raw_crash)
+def assemble_crash_payload_dict(raw_crash, dumps, use_json):
+    """Return a dict form of the payload."""
+    crash_data = {}
+    if use_json:
+        crash_data['extra'] = json.dumps(raw_crash)
+    else:
+        crash_data.update(raw_crash)
 
     if dumps:
         for name, contents in dumps.items():
@@ -55,6 +59,7 @@ def assemble_crash_payload_dict(raw_crash, dumps):
             else:
                 contents = six.text_type(contents).encode('utf-8')
             crash_data[name] = ('fakecrash.dump', io.BytesIO(contents))
+
     return crash_data
 
 
@@ -84,10 +89,10 @@ def multipart_encode(raw_crash, boundary=None):
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
         }
 
-    You can also pass in JSON blobs::
+    You can also pass in the extra information as a JSON blob::
 
         {
-            'extra': ('extra.json', '{"ProductName":"Test","Version":"1.0"}'),
+            'extra': '{"ProductName":"Test","Version":"1.0"}',
         }
 
     You can also pass in file pointers for files::
@@ -203,9 +208,22 @@ def get_json_data(fn):
 def cmdline(args):
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--url', dest='url', default='http://localhost:8000/submit')
-    parser.add_argument('--compressed', dest='compressed', action='store_true')
-    parser.add_argument('--raw_crash', dest='raw_crash', default='')
+    parser.add_argument(
+        '--url', dest='url', default='http://localhost:8000/submit',
+        help='Submission url.'
+    )
+    parser.add_argument(
+        '--compressed', dest='compressed', action='store_true',
+        help='Whether or not to compress the HTTP payload.'
+    )
+    parser.add_argument(
+        '--use-json', dest='use_json', action='store_true',
+        help='Whether or not to put metadata in a single JSON blob value.'
+    )
+    parser.add_argument(
+        '--raw_crash', dest='raw_crash', default='',
+        help='Path to raw_crash JSON file.'
+    )
     parser.add_argument(
         '--dump', dest='dumps', action='append',
         help=(
@@ -226,6 +244,7 @@ def cmdline(args):
 
     url = parsed.url
     compressed = parsed.compressed
+    use_json = parsed.use_json
 
     if parsed.raw_crash:
         logger.info('Using raw crash %s...' % parsed.raw_crash)
@@ -257,7 +276,7 @@ def cmdline(args):
 
     elif 'v2' in parsed.raw_crash:
         # If there's a 'v2' in the raw_crash filename, then it's probably the
-        # case that willkg wants all the pieces for a crash he pulled from s3.
+        # case that willkg wants all the pieces for a crash he pulled from S3.
         # We like willkg, so we'll help him out by doing the legwork.
         raw_crash_path = Path(parsed.raw_crash)
         if str(raw_crash_path.parents[3]).endswith('v2'):
@@ -288,13 +307,16 @@ def cmdline(args):
     logger.info('Assembling payload...')
     crash_payload = assemble_crash_payload_dict(
         raw_crash=raw_crash,
-        dumps=dumps
+        dumps=dumps,
+        use_json=use_json
     )
 
     if compressed:
         logger.info('Posting compressed crash report...')
-    else:
-        logger.info('Posting uncompressed crash report...')
+
+    if use_json:
+        logger.info('Sending metadata in single JSON field...')
+
     resp = post_crash(
         url=url,
         crash_payload=crash_payload,
