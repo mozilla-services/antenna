@@ -123,6 +123,52 @@ class TestBreakpadSubmitterResource:
         }
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
 
+    def test_extract_payload_json(self, request_generator):
+        data, headers = multipart_encode({
+            'extra': '{"ProductName":"Firefox","Version":"1.0"}',
+            'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
+        })
+        req = request_generator(
+            method='POST',
+            path='/submit',
+            headers=headers,
+            body=data,
+        )
+
+        bsp = BreakpadSubmitterResource(self.empty_config)
+        expected_raw_crash = {
+            'ProductName': 'Firefox',
+            'Version': '1.0',
+        }
+        expected_dumps = {
+            'upload_file_minidump': b'abcd1234'
+        }
+        assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
+
+    def text_extract_payload_kvpairs_and_json(self, request_generator, metricsmock):
+        # If there's a JSON blob and also kv pairs, then that's a malformed
+        # crash
+        data, headers = multipart_encode({
+            'extra': '{"ProductName":"Firefox","Version":"1.0"}',
+            'BadKey': 'BadValue',
+            'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
+        })
+        req = request_generator(
+            method='POST',
+            path='/submit',
+            headers=headers,
+            body=data,
+        )
+
+        bsp = BreakpadSubmitterResource(self.empty_config)
+        with metricsmock as metrics:
+            result = bsp.extract_payload(req)
+            assert result == ({}, {})
+            assert metrics.has_record(
+                stat='malformed',
+                tags=['reason:has_json_and_kv']
+            )
+
     def test_existing_uuid(self, client):
         crash_id = 'de1bb258-cbbf-4589-a673-34f800160918'
         data, headers = multipart_encode({

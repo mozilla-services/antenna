@@ -84,6 +84,12 @@ def multipart_encode(raw_crash, boundary=None):
             'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
         }
 
+    You can also pass in JSON blobs::
+
+        {
+            'extra': ('extra.json', '{"ProductName":"Test","Version":"1.0"}'),
+        }
+
     You can also pass in file pointers for files::
 
         {
@@ -99,8 +105,11 @@ def multipart_encode(raw_crash, boundary=None):
     2. a dict of headers with ``Content-Type`` and ``Content-Length`` in it
 
 
-    :arg params: Python dict of name -> value pairs. Values must be either
-         strings or a tuple of (filename, file-like objects with ``.read()``).
+    :arg params: Python dict of name -> value pairs. Values must be one of:
+
+         1. strings,
+         2. tuple of ``("extra.json", JSON blob as string)``
+         3. tuple of ``(filename, file-like object with .read())``
 
     :arg boundary: The MIME boundary string to use. Otherwise this will be
         generated.
@@ -122,8 +131,12 @@ def multipart_encode(raw_crash, boundary=None):
         ]
 
         if isinstance(val, (float, int, str)):
-            block.append('Content-Disposition: form-data; name="%s"' % Header(key).encode())
-            block.append('Content-Type: text/plain; charset=utf-8')
+            if key == 'extra':
+                block.append('Content-Disposition: form-data; name="extra"; filename="extra.json"')
+                block.append('Content-Type: application/json')
+            else:
+                block.append('Content-Disposition: form-data; name="%s"' % Header(key).encode())
+                block.append('Content-Type: text/plain; charset=utf-8')
         elif isinstance(val, tuple):
             block.append('Content-Disposition: form-data; name="%s"; filename="%s"' % (
                 (Header(key).encode(), Header(val[0]).encode())))

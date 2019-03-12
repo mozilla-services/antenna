@@ -7,6 +7,7 @@ from collections import deque
 import hashlib
 import io
 import logging
+import json
 import time
 import zlib
 
@@ -213,6 +214,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         """
         # If we don't have a content type, return an empty crash
         if not req.content_type:
+            mymetrics.incr('malformed', tags=['reason:no_content_type'])
             return {}, {}
 
         # If it's the wrong content type or there's no boundary section, return
@@ -221,12 +223,17 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         if ((len(content_type) != 2 or
              content_type[0] != 'multipart/form-data' or
              not content_type[1].startswith('boundary='))):
+            if content_type[0] != 'multipart/form-data':
+                mymetrics.incr('malformed', tags=['reason:wrong_content_type'])
+            else:
+                mymetrics.incr('malformed', tags=['reason:no_boundary'])
             return {}, {}
 
         content_length = req.content_length or 0
 
         # If there's no content, return an empty crash
         if content_length == 0:
+            mymetrics.incr('malformed', tags=['reason:no_content_length'])
             return {}, {}
 
         # Decompress payload if it's compressed
@@ -243,7 +250,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
                 # This indicates this isn't a valid compressed stream. Given
                 # that the HTTP request insists it is, we're just going to
                 # assume it's junk and not try to process any further.
-                mymetrics.incr('bad_gzipped_crash')
+                mymetrics.incr('malformed', tags=['reason:bad_gzip'])
                 return {}, {}
 
             # Stomp on the content length to correct it because we've changed
@@ -280,6 +287,9 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         raw_crash = {}
         dumps = {}
 
+        has_json = False
+        has_kvpairs = False
+
         for fs_item in fs.list:
             # NOTE(willkg): We saw some crashes come in where the raw crash ends up with
             # a None as a key. Make sure we can't end up with non-strings as keys.
@@ -290,6 +300,12 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
                 # crash that was re-submitted.
                 continue
 
+            elif fs_item.type and fs_item.type.startswith('application/json'):
+                # This is a JSON blob, so load it and override raw_crash with
+                # it.
+                has_json = True
+                raw_crash = json.loads(fs_item.value)
+
             elif fs_item.type and (fs_item.type.startswith('application/octet-stream') or isinstance(fs_item.value, bytes)):
                 # This is a dump, so add it to dumps using a sanitized dump
                 # name.
@@ -298,7 +314,14 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
             else:
                 # This isn't a dump, so it's a key/val pair, so we add that.
+                has_kvpairs = True
                 raw_crash[item_name] = fs_item.value
+
+        if has_json and has_kvpairs:
+            # If the crash payload has both kvpairs and a JSON blob, then it's
+            # malformed and we should dump it.
+            mymetrics.incr('malformed', tags=['reason:has_json_and_kv'])
+            return {}, {}
 
         return raw_crash, dumps
 
