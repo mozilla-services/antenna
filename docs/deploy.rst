@@ -128,17 +128,9 @@ What happens after Antenna collects a crash?
 Antenna saves the crash to the crash storage system you specify. We save our
 crashes to AWS S3.
 
-So, yay--we have raw crash data on AWS S3. What happens next?
-
-Currently, we have ``s3:PutObject`` events for ``v2/raw_crash`` prefix trigger
-an AWS Lambda function `socorro-pigeon
-<https://github.com/mozilla-services/socorro-pigeon>`_. That takes the crash
-id andadds it to a RabbitMQ queue. We have a processor that watches that queue,
-pulls the crash data from AWS S3, processes it and then the crash continues
-through our crash ingestion pipeline.
-
-You could do something along these lines. You could write your own crash storage
-class that does other things.
+Then it publishes the crash to the designated crash queue. We queue crashes
+for processing with Pub/Sub. The processor subscribes to that topic and
+processes incoming crashes.
 
 
 Troubleshooting
