@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import logging
+import os
 
 from everett.component import ConfigOptions
 from google.cloud import pubsub_v1
@@ -63,9 +64,6 @@ class PubSubCrashPublish(CrashPublishBase):
     4. JSON creds file for the service account placed in
     5. subscription for that topic so you can consume queued items
 
-    You need to set the environment variable ``GOOGLE_APPLICATION_CREDENTIALS``
-    to the absolute path of the JSON creds file for the service account.
-
     If something in the above isn't created, then Antenna may not start.
 
 
@@ -86,6 +84,11 @@ class PubSubCrashPublish(CrashPublishBase):
 
     required_config = ConfigOptions()
     required_config.add_option(
+        'service_account_file',
+        default='',
+        doc='The absolute path to the Google Cloud service account credentials file.'
+    )
+    required_config.add_option(
         'project_id',
         doc='Google Cloud project id.'
     )
@@ -100,7 +103,12 @@ class PubSubCrashPublish(CrashPublishBase):
         self.project_id = self.config('project_id')
         self.topic_name = self.config('topic_name')
 
-        self.publisher = pubsub_v1.PublisherClient()
+        if os.environ.get('PUBSUB_EMULATOR_HOST', ''):
+            self.publisher = pubsub_v1.PublisherClient()
+        else:
+            self.publisher = pubsub_v1.PublisherClient.from_service_account_file(
+                self.config('service_account_file')
+            )
         self.publisher._batch_class = SynchronousBatch
         self.topic_path = self.publisher.topic_path(self.project_id, self.topic_name)
 
