@@ -35,7 +35,6 @@ EXPOSE $PORT
 
 CMD $CMD_PREFIX \
     gunicorn \
-    --preload \
     --workers=$GUNICORN_WORKERS \
     --worker-connections=$GUNICORN_WORKER_CONNECTIONS \
     --worker-class=$GUNICORN_WORKER_CLASS \
