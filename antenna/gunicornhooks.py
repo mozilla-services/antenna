@@ -5,8 +5,7 @@
 # Monkey patch stdlib with gevent-friendly bits--need to do this here
 # before we import anything else. Gunicorn does this too late.
 from gevent import monkey
-
-monkey.patch_all()
+monkey.patch_all()  # noqa
 
 
 # We set the timeout here to 60 so as to give Antenna enough time to save off
