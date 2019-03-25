@@ -42,7 +42,7 @@ def _log_everything():
     logging.getLogger('requests.packages.urllib3').setLevel(logging.DEBUG)
 
 
-def assemble_crash_payload_dict(raw_crash, dumps, use_json):
+def assemble_crash_payload_dict(raw_crash, dumps, use_json=False):
     """Return a dict form of the payload."""
     crash_data = {}
     if use_json:
