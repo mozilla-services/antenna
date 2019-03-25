@@ -115,7 +115,8 @@ class PubSubHelper:
 
             ack_ids = []
             for msg in response.received_messages:
-                crashids.append(msg.message.data)
+                if msg.message.data != 'test':
+                    crashids.append(msg.message.data)
                 ack_ids.append(msg.ack_id)
 
             # Acknowledges the received messages so they will not be sent again.
