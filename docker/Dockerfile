@@ -25,7 +25,6 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PORT 8000
 ENV GUNICORN_WORKERS 1
 ENV GUNICORN_WORKER_CONNECTIONS 4
-ENV GUNICORN_WORKER_CLASS gevent
 ENV GUNICORN_MAX_REQUESTS 0
 ENV GUNICORN_MAX_REQUESTS_JITTER 0
 ENV CMD_PREFIX ""
@@ -37,7 +36,7 @@ CMD $CMD_PREFIX \
     gunicorn \
     --workers=$GUNICORN_WORKERS \
     --worker-connections=$GUNICORN_WORKER_CONNECTIONS \
-    --worker-class=$GUNICORN_WORKER_CLASS \
+    --worker-class=antenna.gunicornworker.GeventGrpcWorker \
     --max-requests=$GUNICORN_MAX_REQUESTS \
     --max-requests-jitter=$GUNICORN_MAX_REQUESTS_JITTER \
     --config=antenna/gunicornhooks.py \
