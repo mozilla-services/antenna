@@ -2,25 +2,18 @@ version: 2
 jobs:
   build_test_push:
     docker:
-      - image: docker:stable
+      - image: mozilla/cidockerbases:docker-latest
     working_directory: /
     environment:
       APP_NAME: "socorro_collector"
     steps:
       - run:
+          name: Host info
+          command: uname -v
+
+      - run:
           name: Install essential packages
-          command: |
-            apk update
-            apk add --update --no-cache \
-                    ca-certificates \
-                    build-base \
-                    bash \
-                    make \
-                    git \
-                    openssh \
-                    docker \
-                    py-pip
-            pip install docker-compose
+          command: apt-get install make
 
       - checkout:
           path: /antenna
@@ -43,11 +36,16 @@ jobs:
       - setup_remote_docker
 
       - run:
-          name: Build Docker image
-          working_directory: /antenna
+          name: Get info
           command: |
             docker info
-            make build
+            which docker-compose
+            docker-compose --version
+
+      - run:
+          name: Build Docker image
+          working_directory: /antenna
+          command: make build
 
       - run:
           name: Lint
