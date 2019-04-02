@@ -13,6 +13,7 @@ other things.
 * Free software: Mozilla Public License version 2.0
 * Code: https://github.com/mozilla-services/antenna/
 * Documentation: https://antenna.readthedocs.io/
+* Community Participation Guidelines: `Guidelines <https://github.com/mozilla-services/antenna/blob/master/CODE_OF_CONDUCT.md>`_
 
 
 Contents
