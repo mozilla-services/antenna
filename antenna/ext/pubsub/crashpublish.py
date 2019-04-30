@@ -53,8 +53,7 @@ class SynchronousBatch:
 class PubSubCrashPublish(CrashPublishBase):
     """Publisher to Pub/Sub.
 
-    Required GCP things
-    ===================
+    **Required GCP things**
 
     To use this, you need to create:
 
@@ -67,15 +66,13 @@ class PubSubCrashPublish(CrashPublishBase):
     If something in the above isn't created, then Antenna may not start.
 
 
-    Verification
-    ============
+    **Verification**
 
     This component verifies that it can publish to the topic by publishing a
     fake crash id of ``test``. Downstream consumer should throw this out.
 
 
-    Local emulaior
-    ==============
+    **Local emulaior**
 
     If you set the environment variable ``PUBSUB_EMULATOR_HOST=host:port``,
     then this will connect to a local Pub/Sub emulator.
