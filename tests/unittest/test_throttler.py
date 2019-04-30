@@ -279,6 +279,20 @@ class Testmozilla_rules:
             raw_crash['Email'] = email
         assert throttler.throttle(raw_crash) == expected
 
+    @pytest.mark.parametrize('processtype, expected', [
+        (None, (ACCEPT, 'accept_everything', 100)),
+        ('', (ACCEPT, 'accept_everything', 100)),
+        ('content', (ACCEPT, 'accept_everything', 100)),
+        ('gpu', (ACCEPT, 'is_gpu', 100))
+    ])
+    def test_gpu(self, throttler, processtype, expected):
+        raw_crash = {
+            'ProductName': 'BarTest',
+        }
+        if processtype:
+            raw_crash['ProcessType'] = processtype
+        assert throttler.throttle(raw_crash) == expected
+
     @pytest.mark.parametrize('channel', [
         'aurora',
         'beta',

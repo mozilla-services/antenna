@@ -338,6 +338,15 @@ MOZILLA_RULES = [
         result=ACCEPT
     ),
 
+    # Bug #1547804: Accept crash reports from gpu crashes; we don't get many
+    # and our sampling reduces that to a handful that's hard to do things with
+    Rule(
+        rule_name='is_gpu',
+        key='ProcessType',
+        condition=lambda throttler, x: x == 'gpu',
+        result=ACCEPT
+    ),
+
     # Accept crash reports in ReleaseChannel=aurora, beta, esr channels
     Rule(
         rule_name='is_alpha_beta_esr',
