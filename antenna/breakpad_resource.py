@@ -225,8 +225,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         """
         # If we don't have a content type, raise MalformedCrashReport
         if not req.content_type:
-            mymetrics.incr('malformed', tags=['reason:no_content_type'])
-            raise MalformedCrashReport('nocontenttype')
+            raise MalformedCrashReport('no_content_type')
 
         # If it's the wrong content type or there's no boundary section, raise
         # MalformedCrashReport
@@ -235,18 +234,15 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
              content_type[0] != 'multipart/form-data' or
              not content_type[1].startswith('boundary='))):
             if content_type[0] != 'multipart/form-data':
-                mymetrics.incr('malformed', tags=['reason:wrong_content_type'])
-                raise MalformedCrashReport('wrongcontenttype')
+                raise MalformedCrashReport('wrong_content_type')
             else:
-                mymetrics.incr('malformed', tags=['reason:no_boundary'])
-                raise MalformedCrashReport('noboundary')
+                raise MalformedCrashReport('no_boundary')
 
         content_length = req.content_length or 0
 
         # If there's no content, raise MalformedCrashReport
         if content_length == 0:
-            mymetrics.incr('malformed', tags=['reason:no_content_length'])
-            raise MalformedCrashReport('nocontentlength')
+            raise MalformedCrashReport('no_content_length')
 
         # Decompress payload if it's compressed
         if req.env.get('HTTP_CONTENT_ENCODING') == 'gzip':
@@ -262,8 +258,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
                 # This indicates this isn't a valid compressed stream. Given
                 # that the HTTP request insists it is, we're just going to
                 # assume it's junk and not try to process any further.
-                mymetrics.incr('malformed', tags=['reason:bad_gzip'])
-                raise MalformedCrashReport('decompressfailure')
+                raise MalformedCrashReport('bad_gzip')
 
             # Stomp on the content length to correct it because we've changed
             # the payload size by decompressing it. We save the original value
@@ -332,8 +327,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         if has_json and has_kvpairs:
             # If the crash payload has both kvpairs and a JSON blob, then it's
             # malformed and we should dump it.
-            mymetrics.incr('malformed', tags=['reason:has_json_and_kv'])
-            raise MalformedCrashReport('hasjsonandkv')
+            raise MalformedCrashReport('has_json_and_kv')
 
         return raw_crash, dumps
 
@@ -375,7 +369,9 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         except MalformedCrashReport as exc:
             # If this is malformed, then reject it with malformed error code.
-            resp.body = 'Discarded=%s' % str(exc)
+            msg = str(exc)
+            mymetrics.incr('malformed', tags=['reason:' % msg])
+            resp.body = 'Discarded=%s' % msg
             return
 
         mymetrics.incr('incoming_crash')
