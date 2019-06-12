@@ -370,7 +370,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         except MalformedCrashReport as exc:
             # If this is malformed, then reject it with malformed error code.
             msg = str(exc)
-            mymetrics.incr('malformed', tags=['reason:' % msg])
+            mymetrics.incr('malformed', tags=['reason:%s' % msg])
             resp.body = 'Discarded=%s' % msg
             return
 
