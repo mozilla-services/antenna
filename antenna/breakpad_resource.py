@@ -45,6 +45,15 @@ STATE_SAVE = 'save'
 STATE_PUBLISH = 'publish'
 
 
+class MalformedCrashReport(Exception):
+    """Exception raised when the crash report payload is malformed.
+
+    Message should be an alpha-numeric error code with no spaces.
+
+    """
+    pass
+
+
 class CrashReport:
     """Crash report structure."""
 
@@ -204,18 +213,20 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         has a list attribute that is a list of FieldStorage items--one for each
         key/val in the form. For attached files, the FieldStorage will have a
         name, value and filename and the type should be
-        application/octet-stream. Thus we parse it looking for things of type
-        text/plain and application/octet-stream.
+        ``application/octet-stream``. Thus we parse it looking for things of type
+        ``text/plain``, ``application/json``, and application/octet-stream.
 
         :arg falcon.request.Request req: a Falcon Request instance
 
         :returns: (raw_crash dict, dumps dict)
 
+        :raises MalformedCrashReport:
+
         """
-        # If we don't have a content type, return an empty crash
+        # If we don't have a content type, raise MalformedCrashReport
         if not req.content_type:
             mymetrics.incr('malformed', tags=['reason:no_content_type'])
-            return {}, {}
+            raise MalformedCrashReport('nocontenttype')
 
         # If it's the wrong content type or there's no boundary section, return
         # an empty crash
@@ -225,16 +236,17 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
              not content_type[1].startswith('boundary='))):
             if content_type[0] != 'multipart/form-data':
                 mymetrics.incr('malformed', tags=['reason:wrong_content_type'])
+                raise MalformedCrashReport('wrongcontenttype')
             else:
                 mymetrics.incr('malformed', tags=['reason:no_boundary'])
-            return {}, {}
+                raise MalformedCrashReport('noboundary')
 
         content_length = req.content_length or 0
 
         # If there's no content, return an empty crash
         if content_length == 0:
             mymetrics.incr('malformed', tags=['reason:no_content_length'])
-            return {}, {}
+            raise MalformedCrashReport('nocontentlength')
 
         # Decompress payload if it's compressed
         if req.env.get('HTTP_CONTENT_ENCODING') == 'gzip':
@@ -251,7 +263,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
                 # that the HTTP request insists it is, we're just going to
                 # assume it's junk and not try to process any further.
                 mymetrics.incr('malformed', tags=['reason:bad_gzip'])
-                return {}, {}
+                raise MalformedCrashReport('decompressfailure')
 
             # Stomp on the content length to correct it because we've changed
             # the payload size by decompressing it. We save the original value
@@ -321,7 +333,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             # If the crash payload has both kvpairs and a JSON blob, then it's
             # malformed and we should dump it.
             mymetrics.incr('malformed', tags=['reason:has_json_and_kv'])
-            return {}, {}
+            raise MalformedCrashReport('hasjsonandkv')
 
         return raw_crash, dumps
 
@@ -358,12 +370,12 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         # breakpad clients expect.
         resp.content_type = 'text/plain'
 
-        raw_crash, dumps = self.extract_payload(req)
+        try:
+            raw_crash, dumps = self.extract_payload(req)
 
-        # If we didn't get any crash data, then just drop it and move on--don't
-        # count this as an incoming crash and don't do any more work on it
-        if not raw_crash:
-            resp.body = 'Discarded=1'
+        except MalformedCrashReport as exc:
+            # If this is malformed, then reject it with malformed error code.
+            resp.body = 'Discarded=%s' % str(exc)
             return
 
         mymetrics.incr('incoming_crash')
@@ -407,7 +419,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         if throttle_result is REJECT:
             # If the result is REJECT, then discard it
-            resp.body = 'Discarded=1'
+            resp.body = 'Discarded=rule_%s' % rule_name
 
         elif throttle_result is FAKEACCEPT:
             # If the result is a FAKEACCEPT, then we return a crash id, but throw

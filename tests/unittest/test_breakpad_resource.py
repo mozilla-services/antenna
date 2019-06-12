@@ -5,9 +5,10 @@
 import io
 
 from everett.manager import ConfigManager
+import pytest
 
 from antenna.app import BreakpadSubmitterResource
-from antenna.breakpad_resource import MAX_ATTEMPTS
+from antenna.breakpad_resource import MAX_ATTEMPTS, MalformedCrashReport
 from antenna.ext.crashpublish_base import CrashPublishBase
 from antenna.ext.crashstorage_base import CrashStorageBase
 from antenna.throttler import ACCEPT
@@ -95,6 +96,21 @@ class TestBreakpadSubmitterResource:
             'upload_file_minidump_flash1': b'abcd1234'
         }
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
+
+    def test_extract_payload_bad_content_type(self, request_generator):
+        headers = {
+            'Content-Type': 'application/json'
+        }
+        req = request_generator(
+            method='POST',
+            path='/submit',
+            headers=headers,
+            body='{}',
+        )
+
+        bsp = BreakpadSubmitterResource(self.empty_config)
+        with pytest.raises(MalformedCrashReport):
+            bsp.extract_payload(req)
 
     def test_extract_payload_compressed(self, request_generator):
         data, headers = multipart_encode({
