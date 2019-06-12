@@ -228,8 +228,8 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             mymetrics.incr('malformed', tags=['reason:no_content_type'])
             raise MalformedCrashReport('nocontenttype')
 
-        # If it's the wrong content type or there's no boundary section, return
-        # an empty crash
+        # If it's the wrong content type or there's no boundary section, raise
+        # MalformedCrashReport
         content_type = [part.strip() for part in req.content_type.split(';', 1)]
         if ((len(content_type) != 2 or
              content_type[0] != 'multipart/form-data' or
@@ -243,7 +243,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         content_length = req.content_length or 0
 
-        # If there's no content, return an empty crash
+        # If there's no content, raise MalformedCrashReport
         if content_length == 0:
             mymetrics.incr('malformed', tags=['reason:no_content_length'])
             raise MalformedCrashReport('nocontentlength')
