@@ -1,8 +1,0 @@
-schedule: "every day"
-search: False
-update: insecure
-requirements:
-  - requirements/default.txt:
-      update: security
-  - requirements/constraints.txt:
-      update: security
