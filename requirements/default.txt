@@ -132,6 +132,6 @@ urlwait==0.4 \
 sphinx-rtd-theme==0.4.3 \
     --hash=sha256:00cf895504a7895ee433807c62094cf1e95f065843bf3acd17037c3e9a2becd4 \
     --hash=sha256:728607e34d60456d736cc7991fd236afb828b21b82f956c5ea75f94c8414040a
-google-cloud-pubsub==0.39.1 \
-    --hash=sha256:32dbaf9b8c16d4a14b7e1eca2805689f82f69f542a68bf1516b9c77a3ef54b73 \
-    --hash=sha256:4186386aec02752e982eeb1e399d76f1cf70eed56312934df04bfa68d8cfabf0
+google-cloud-pubsub==0.41.0 \
+    --hash=sha256:91e2d1ccef131224fb570bc72127de3a723a865cb0d5bac10f6db41e895d14d4 \
+    --hash=sha256:ca8dc397f214419182f72c61bd90d7ba9cf41d2be41bc5df98d46f26a7e11506
