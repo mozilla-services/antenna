@@ -220,8 +220,8 @@ grpcio==1.18.0 \
     --hash=sha256:eed5edb8f2620ad1157c8c5786809fb0a2d885969287a758752ce514274e3be0 \
     --hash=sha256:f7a9fc2dfbbc0e838c79f908262638fb86ab326b0fbc0ea2c3dd063b3561e9e2 \
     --hash=sha256:f9df2e626f1a8d8114a9dc05a489bdf26a8e926fbbe43112669700f25fe0abb3
-googleapis-common-protos==1.5.8 \
-    --hash=sha256:d56ca712f67fff216d3be9eeeb8360ca59066d0365ba70b137b9e1801813747e
+googleapis-common-protos==1.6.0 \
+    --hash=sha256:e61b8ed5e36b976b487c6e7b15f31bb10c7a0ca7bd5c0e837f4afab64b53a0c6
 google-auth==1.6.3 \
     --hash=sha256:0f7c6a64927d34c1a474da92cfc59e552a5d3b940d3266606c6a28b72888b9e4 \
     --hash=sha256:20705f6803fd2c4d1cc2dcb0df09d4dfcb9a7d51fd59e94a3a28231fd93119ed
