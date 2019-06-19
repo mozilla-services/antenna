@@ -294,6 +294,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         raw_crash = {}
         dumps = {}
 
+        field_info = []
         has_json = False
         has_kvpairs = False
 
@@ -301,6 +302,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             # NOTE(willkg): We saw some crashes come in where the raw crash ends up with
             # a None as a key. Make sure we can't end up with non-strings as keys.
             item_name = fs_item.name or ''
+            field_info.append('%s: %s' % (item_name, fs_item.type))
 
             if item_name == 'dump_checksums':
                 # We don't want to pick up the dump_checksums from a raw
@@ -327,6 +329,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         if has_json and has_kvpairs:
             # If the crash payload has both kvpairs and a JSON blob, then it's
             # malformed and we should dump it.
+            logger.info('has_json_and_kv: keys: %r', field_info)
             raise MalformedCrashReport('has_json_and_kv')
 
         return raw_crash, dumps
