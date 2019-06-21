@@ -285,26 +285,24 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
             mymetrics.histogram('crash_size', value=content_length, tags=['payload:uncompressed'])
 
-        fs = cgi.FieldStorage(fp=data, environ=req.env, keep_blank_values=1)
+        # Stomp on querystring so we don't pull it in
+        request_env = dict(req.env)
+        request_env['QUERY_STRING'] = ''
 
-        # NOTE(willkg): In the original collector, this returned request
-        # querystring data as well as request body data, but we're not doing
-        # that because the query string just duplicates data in the payload.
+        fs = cgi.FieldStorage(fp=data, environ=request_env, keep_blank_values=1)
 
         raw_crash = {}
         dumps = {}
 
-        field_info = []
         has_json = False
         has_kvpairs = False
 
         for fs_item in fs.list:
-            # NOTE(willkg): We saw some crashes come in where the raw crash ends up with
-            # a None as a key. Make sure we can't end up with non-strings as keys.
-            item_name = fs_item.name or ''
-            field_info.append('%s: %s' % (item_name, fs_item.type))
+            # If the field has no name, then it's probably junk, so let's drop it.
+            if not fs_item.name:
+                continue
 
-            if item_name == 'dump_checksums':
+            if fs_item.name == 'dump_checksums':
                 # We don't want to pick up the dump_checksums from a raw
                 # crash that was re-submitted.
                 continue
@@ -318,18 +316,17 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             elif fs_item.type and (fs_item.type.startswith('application/octet-stream') or isinstance(fs_item.value, bytes)):
                 # This is a dump, so add it to dumps using a sanitized dump
                 # name.
-                dump_name = sanitize_dump_name(item_name)
+                dump_name = sanitize_dump_name(fs_item.name)
                 dumps[dump_name] = fs_item.value
 
             else:
                 # This isn't a dump, so it's a key/val pair, so we add that.
                 has_kvpairs = True
-                raw_crash[item_name] = fs_item.value
+                raw_crash[fs_item.name] = fs_item.value
 
         if has_json and has_kvpairs:
             # If the crash payload has both kvpairs and a JSON blob, then it's
             # malformed and we should dump it.
-            logger.info('has_json_and_kv: keys: %r', field_info)
             raise MalformedCrashReport('has_json_and_kv')
 
         return raw_crash, dumps
