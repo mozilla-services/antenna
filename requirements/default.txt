@@ -72,9 +72,9 @@ botocore==1.12.180 \
 
 
 # Development things
-bandit==1.6.1 \
-    --hash=sha256:f89adaff792d1f9b72859784c5f7964c6b5a5f32ca0ca458c9643e02d4fdceac \
-    --hash=sha256:fa1fee3cb60a3dca89b7a86c0be82af0e830def961728aba9290854fe18c1f90
+bandit==1.6.2 \
+    --hash=sha256:336620e220cf2d3115877685e264477ff9d9abaeb0afe3dc7264f55fa17a3952 \
+    --hash=sha256:41e75315853507aa145d62a78a2a6c5e3240fe14ee7c601459d0df9418196065
 coverage==4.5.3 \
     --hash=sha256:0c5fe441b9cfdab64719f24e9684502a59432df7570521563d7b1aff27ac755f \
     --hash=sha256:2b412abc4c7d6e019ce7c27cbc229783035eef6d5401695dccba80f481be4eb3 \
