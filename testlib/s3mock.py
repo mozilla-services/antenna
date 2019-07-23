@@ -19,27 +19,27 @@ import os
 from botocore.vendored import requests
 from botocore.vendored.requests.adapters import BaseAdapter
 from botocore.vendored.requests.models import Response
+
 # Note: DOUBLE-VENDORED!
 from botocore.vendored.requests.packages.urllib3.response import HTTPResponse
 
 
 class ThouShaltNotPass(Exception):
-    """Raised when an unhandled HTTP request is run"""
+    """Raised when an unhandled HTTP request is run."""
+
     pass
 
 
 # Map of status code -> reason
 CODE_TO_REASON = {
-    200: 'OK',
-    201: 'Created',
-    204: 'No Content',
-    206: 'Partial Content',
-
-    304: 'Not Modified',
-    307: 'Temporary Redirect',
-
-    403: 'Forbidden',
-    404: 'Not Found',
+    200: "OK",
+    201: "Created",
+    204: "No Content",
+    206: "Partial Content",
+    304: "Not Modified",
+    307: "Temporary Redirect",
+    403: "Forbidden",
+    404: "Not Found",
 }
 
 
@@ -62,23 +62,23 @@ class Step:
             return self.body == body
 
         return (
-            self.method == request.method and
-            self.url == request.url and
-            check_body(request.body)
+            self.method == request.method
+            and self.url == request.url
+            and check_body(request.body)
         )
 
     def build_response(self, request):
-        status_code = self.resp['status_code']
-        headers = self.resp['headers']
-        body = self.resp['body']
+        status_code = self.resp["status_code"]
+        headers = self.resp["headers"]
+        body = self.resp["body"]
 
         response = Response()
         response.status_code = status_code
 
-        if 'content-type' not in headers:
-            headers['content-type'] = 'text/xml'
-        if 'content-length' not in headers:
-            headers['content-length'] = len(body)
+        if "content-type" not in headers:
+            headers["content-type"] = "text/xml"
+        if "content-length" not in headers:
+            headers["content-length"] = len(body)
 
         response.raw = HTTPResponse(
             body=io.BytesIO(body),
@@ -86,7 +86,7 @@ class Step:
             status=status_code,
             reason=CODE_TO_REASON[status_code],
             preload_content=False,
-            decode_content=False
+            decode_content=False,
         )
         response.reason = response.raw.reason
 
@@ -116,22 +116,27 @@ class FakeAdapter(BaseAdapter):
         if self.expected_conv and self.expected_conv[0].match(request):
             step = self.expected_conv.pop(0)
             resp = step.build_response(request)
-            self.conv.append(
-                (request, step, resp)
-            )
+            self.conv.append((request, step, resp))
             return resp
 
         # NOTE(willkg): We use print here because fiddling with the logging
         # framework inside test scaffolding is "tricky".
-        print('THWARTED SEND: %s\nargs: %r\nkwargs: %r' % (
-            (request.method, request.url, request.body.read() if request.body is not None else b''),
-            args,
-            kwargs
-        ))
-        raise ThouShaltNotPass('Preventing unexpected .send() call')
+        print(
+            "THWARTED SEND: %s\nargs: %r\nkwargs: %r"
+            % (
+                (
+                    request.method,
+                    request.url,
+                    request.body.read() if request.body is not None else b"",
+                ),
+                args,
+                kwargs,
+            )
+        )
+        raise ThouShaltNotPass("Preventing unexpected .send() call")
 
     def close(self):
-        raise ThouShaltNotPass('Preventing unexpected .close() call')
+        raise ThouShaltNotPass("Preventing unexpected .close() call")
 
     def remaining_conversation(self):
         """Returns the remaining conversation to happen"""
@@ -152,22 +157,22 @@ def serialize_request(request):
 
     def ln(part):
         if isinstance(part, str):
-            part = part.encode('utf-8')
+            part = part.encode("utf-8")
         output.append(part)
 
-    ln('%s %s' % (request.method, request.url))
+    ln("%s %s" % (request.method, request.url))
     for key, val in request.headers.items():
-        ln('%s: %s' % (key, val))
-    ln('')
+        ln("%s: %s" % (key, val))
+    ln("")
     if request.body is not None:
         data = request.body.read()
         request.body.seek(0)
     else:
-        data = b''
+        data = b""
     ln(data)
-    ln('')
+    ln("")
 
-    return b'\n'.join(output)
+    return b"\n".join(output)
 
 
 def serialize_response(response):
@@ -184,17 +189,17 @@ def serialize_response(response):
 
     def ln(part):
         if isinstance(part, str):
-            part = part.encode('utf-8')
+            part = part.encode("utf-8")
         output.append(part)
 
-    ln('%s %s' % (response.status_code, response.reason))
+    ln("%s %s" % (response.status_code, response.reason))
     for key, val in response.headers.items():
-        ln('%s: %s' % (key, val))
-    ln('')
+        ln("%s: %s" % (key, val))
+    ln("")
     ln(response.content)
-    ln('')
+    ln("")
 
-    return b'\n'.join(output)
+    return b"\n".join(output)
 
 
 class RecordingAdapterShim:
@@ -216,17 +221,18 @@ class RecordingAdapterShim:
         adapter = recording_adapter
 
     """
+
     def send(self, request, *args, **kwargs):
-        with open(self.filename, 'ab') as fp:
-            fp.write(b'===================================\n')
-            fp.write(b'REQUEST>>>\n')
+        with open(self.filename, "ab") as fp:
+            fp.write(b"===================================\n")
+            fp.write(b"REQUEST>>>\n")
             fp.write(serialize_request(request))
-            fp.write(b'-----\n')
+            fp.write(b"-----\n")
 
         response = self.wrapped_adapter.send(request, *args, **kwargs)
 
-        with open(self.filename, 'ab') as fp:
-            fp.write(b'RESPONSE<<<\n')
+        with open(self.filename, "ab") as fp:
+            fp.write(b"RESPONSE<<<\n")
             fp.write(serialize_response(response))
 
         return response
@@ -330,11 +336,13 @@ class S3Mock:
 
     def _get_recording_adapter(self, session, url):
         recording_adapter = RecordingAdapterShim()
-        recording_adapter.wrapped_adapter = self._real_get_adapter(self=session, url=url)
+        recording_adapter.wrapped_adapter = self._real_get_adapter(
+            self=session, url=url
+        )
         recording_adapter.filename = self._filename_to_record
         return recording_adapter
 
-    def record(self, filename='s3mock.log'):
+    def record(self, filename="s3mock.log"):
         """Starts an HTTP conversation recording session
 
         :arg str filename: The name of the file to log to.
@@ -347,12 +355,14 @@ class S3Mock:
         # instance variable and passing it that way.
         self._filename_to_record = filename
 
-        requests.Session.get_adapter = lambda session, url: self._get_recording_adapter(session, url)
+        requests.Session.get_adapter = lambda session, url: self._get_recording_adapter(
+            session, url
+        )
 
     def stop_recording(self):
         requests.Session.get_adapter = lambda session, url: self.adapter
 
-    def fake_response(self, status_code, headers=None, body=b''):
+    def fake_response(self, status_code, headers=None, body=b""):
         """Generates a fake response for a step in an HTTP conversation
 
         Example::
@@ -368,11 +378,7 @@ class S3Mock:
         if headers is None:
             headers = {}
 
-        return {
-            'status_code': status_code,
-            'headers': headers,
-            'body': body
-        }
+        return {"status_code": status_code, "headers": headers, "body": body}
 
     def add_step(self, method, url, body=None, resp=None):
         """Adds a step to the expected HTTP conversation
@@ -405,7 +411,7 @@ class S3Mock:
 
     def stop_mock(self):
         requests.Session.get_adapter = self._real_get_adapter
-        delattr(self, '_real_get_adapter')
+        delattr(self, "_real_get_adapter")
 
     def remaining_conversation(self):
         """Returns remaining conversation"""

@@ -36,29 +36,30 @@ logger = logging.getLogger(__name__)
 def _log_everything():
     # Set up all the debug logging for grossest possible output
     from http.client import HTTPConnection
+
     HTTPConnection.debuglevel = 1
 
-    logging.getLogger('requests').setLevel(logging.DEBUG)
-    logging.getLogger('requests.packages.urllib3').setLevel(logging.DEBUG)
+    logging.getLogger("requests").setLevel(logging.DEBUG)
+    logging.getLogger("requests.packages.urllib3").setLevel(logging.DEBUG)
 
 
 def assemble_crash_payload_dict(raw_crash, dumps, use_json=False):
     """Return a dict form of the payload."""
     crash_data = {}
     if use_json:
-        crash_data['extra'] = json.dumps(raw_crash)
+        crash_data["extra"] = json.dumps(raw_crash)
     else:
         crash_data.update(raw_crash)
 
     if dumps:
         for name, contents in dumps.items():
             if isinstance(contents, six.text_type):
-                contents = contents.encode('utf-8')
+                contents = contents.encode("utf-8")
             elif isinstance(contents, six.binary_type):
                 contents = contents
             else:
-                contents = six.text_type(contents).encode('utf-8')
-            crash_data[name] = ('fakecrash.dump', io.BytesIO(contents))
+                contents = six.text_type(contents).encode("utf-8")
+            crash_data[name] = ("fakecrash.dump", io.BytesIO(contents))
 
     return crash_data
 
@@ -72,7 +73,7 @@ def compress(multipart):
 
     """
     bio = io.BytesIO()
-    g = gzip.GzipFile(fileobj=bio, mode='w')
+    g = gzip.GzipFile(fileobj=bio, mode="w")
     g.write(multipart)
     g.close()
     return bio.getbuffer()
@@ -126,49 +127,51 @@ def multipart_encode(raw_crash, boundary=None):
         boundary = uuid.uuid4().hex
 
     output = io.BytesIO()
-    headers = {
-        'Content-Type': 'multipart/form-data; boundary=%s' % boundary,
-    }
+    headers = {"Content-Type": "multipart/form-data; boundary=%s" % boundary}
 
     for key, val in sorted(raw_crash.items()):
-        block = [
-            '--%s' % boundary
-        ]
+        block = ["--%s" % boundary]
 
         if isinstance(val, (float, int, str)):
-            if key == 'extra':
-                block.append('Content-Disposition: form-data; name="extra"; filename="extra.json"')
-                block.append('Content-Type: application/json')
+            if key == "extra":
+                block.append(
+                    'Content-Disposition: form-data; name="extra"; filename="extra.json"'
+                )
+                block.append("Content-Type: application/json")
             else:
-                block.append('Content-Disposition: form-data; name="%s"' % Header(key).encode())
-                block.append('Content-Type: text/plain; charset=utf-8')
+                block.append(
+                    'Content-Disposition: form-data; name="%s"' % Header(key).encode()
+                )
+                block.append("Content-Type: text/plain; charset=utf-8")
         elif isinstance(val, tuple):
-            block.append('Content-Disposition: form-data; name="%s"; filename="%s"' % (
-                (Header(key).encode(), Header(val[0]).encode())))
-            block.append('Content-Type: application/octet-stream')
+            block.append(
+                'Content-Disposition: form-data; name="%s"; filename="%s"'
+                % ((Header(key).encode(), Header(val[0]).encode()))
+            )
+            block.append("Content-Type: application/octet-stream")
         else:
-            logger.info('Skipping %r' % key)
+            logger.info("Skipping %r" % key)
             continue
 
-        block.append('')
-        block.append('')
+        block.append("")
+        block.append("")
 
-        output.write('\r\n'.join(block).encode('utf-8'))
+        output.write("\r\n".join(block).encode("utf-8"))
 
         if isinstance(val, str):
-            output.write(val.encode('utf-8'))
+            output.write(val.encode("utf-8"))
         elif isinstance(val, (float, int)):
-            output.write(str(val).encode('utf-8'))
+            output.write(str(val).encode("utf-8"))
         else:
             output.write(val[1].read())
 
-        output.write(b'\r\n')
+        output.write(b"\r\n")
 
     # Add end boundary and convert to bytes.
-    output.write(('--%s--\r\n' % boundary).encode('utf-8'))
+    output.write(("--%s--\r\n" % boundary).encode("utf-8"))
     output = output.getvalue()
 
-    headers['Content-Length'] = str(len(output))
+    headers["Content-Length"] = str(len(output))
 
     return output, headers
 
@@ -187,21 +190,17 @@ def post_crash(url, crash_payload, compressed=False):
     """
     payload, headers = multipart_encode(crash_payload)
 
-    logger.info('Posting crash of size %d' % len(payload))
+    logger.info("Posting crash of size %d" % len(payload))
 
     if compressed:
         payload = compress(payload)
-        headers['Content-Encoding'] = 'gzip'
+        headers["Content-Encoding"] = "gzip"
 
-    return requests.post(
-        url,
-        headers=headers,
-        data=payload
-    )
+    return requests.post(url, headers=headers, data=payload)
 
 
 def get_json_data(fn):
-    with open(fn, 'r') as fp:
+    with open(fn, "r") as fp:
         return json.load(fp)
 
 
@@ -209,34 +208,41 @@ def cmdline(args):
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        '--url', dest='url', default='http://localhost:8000/submit',
-        help='Submission url.'
+        "--url",
+        dest="url",
+        default="http://localhost:8000/submit",
+        help="Submission url.",
     )
     parser.add_argument(
-        '--compressed', dest='compressed', action='store_true',
-        help='Whether or not to compress the HTTP payload.'
+        "--compressed",
+        dest="compressed",
+        action="store_true",
+        help="Whether or not to compress the HTTP payload.",
     )
     parser.add_argument(
-        '--use-json', dest='use_json', action='store_true',
-        help='Whether or not to put metadata in a single JSON blob value.'
+        "--use-json",
+        dest="use_json",
+        action="store_true",
+        help="Whether or not to put metadata in a single JSON blob value.",
     )
     parser.add_argument(
-        '--raw_crash', dest='raw_crash', default='',
-        help='Path to raw_crash JSON file.'
+        "--raw_crash", dest="raw_crash", default="", help="Path to raw_crash JSON file."
     )
     parser.add_argument(
-        '--dump', dest='dumps', action='append',
+        "--dump",
+        dest="dumps",
+        action="append",
         help=(
-            'This is in name:path form. You can have multple dumps, but they have to '
-            'have different names.'
-        )
+            "This is in name:path form. You can have multple dumps, but they have to "
+            "have different names."
+        ),
     )
-    parser.add_argument('--verbose', dest='verbose', action='store_true')
+    parser.add_argument("--verbose", dest="verbose", action="store_true")
     parsed = parser.parse_args(args)
 
-    print('URL:         %s' % parsed.url)
-    print('Compressed?: %s' % parsed.compressed)
-    print('Verbose?:    %s' % parsed.verbose)
+    print("URL:         %s" % parsed.url)
+    print("Compressed?: %s" % parsed.compressed)
+    print("Verbose?:    %s" % parsed.verbose)
 
     logging.basicConfig(level=logging.DEBUG)
     if parsed.verbose:
@@ -247,40 +253,40 @@ def cmdline(args):
     use_json = parsed.use_json
 
     if parsed.raw_crash:
-        logger.info('Using raw crash %s...' % parsed.raw_crash)
-        raw_crash = json.load(open(parsed.raw_crash, 'r'))
+        logger.info("Using raw crash %s..." % parsed.raw_crash)
+        raw_crash = json.load(open(parsed.raw_crash, "r"))
 
         # Remove this if it's there--it gets generated by the collector
-        if 'dump_checksums' in raw_crash:
-            del raw_crash['dump_checksums']
+        if "dump_checksums" in raw_crash:
+            del raw_crash["dump_checksums"]
 
         # FIXME(willkg): Should we remove other things, too?
 
     else:
-        logger.info('Generating crash...')
+        logger.info("Generating crash...")
         # FIXME(willkg): Generate a crash here
-        raw_crash = {'ProductName': 'Firefox', 'Version': '1'}
+        raw_crash = {"ProductName": "Firefox", "Version": "1"}
 
     dumps = {}
     if parsed.dumps:
         # If the user specified dump files to add, then add those.
         for dump in parsed.dumps:
-            if ':' in dump:
+            if ":" in dump:
                 # This is name:path form
-                dump_name, dump_path = dump.split(':')
+                dump_name, dump_path = dump.split(":")
             else:
-                dump_name, dump_path = 'upload_file_minidump', dump
+                dump_name, dump_path = "upload_file_minidump", dump
 
-            logger.info('Adding dump %s -> %s...' % (dump_name, dump_path))
-            dumps[dump_name] = open(dump_path, 'rb').read()
+            logger.info("Adding dump %s -> %s..." % (dump_name, dump_path))
+            dumps[dump_name] = open(dump_path, "rb").read()
 
-    elif 'v2' in parsed.raw_crash:
+    elif "v2" in parsed.raw_crash:
         # If there's a 'v2' in the raw_crash filename, then it's probably the
         # case that willkg wants all the pieces for a crash he pulled from S3.
         # We like willkg, so we'll help him out by doing the legwork.
         raw_crash_path = Path(parsed.raw_crash)
-        if str(raw_crash_path.parents[3]).endswith('v2'):
-            logger.info('Trying to find dump_names and dumps...')
+        if str(raw_crash_path.parents[3]).endswith("v2"):
+            logger.info("Trying to find dump_names and dumps...")
             crashid = str(Path(parsed.raw_crash).name)
 
             # First, raw_crash is ROOT/v2/raw_crash/ENTROPY/DATE/CRASHID, so
@@ -288,44 +294,38 @@ def cmdline(args):
             root_path = Path(parsed.raw_crash).parents[4]
 
             # First find dump_names which tells us about all the dumps.
-            logger.info('Looking for dumps listed in dump_names...')
-            dump_names_path = root_path / 'v1' / 'dump_names' / crashid
+            logger.info("Looking for dumps listed in dump_names...")
+            dump_names_path = root_path / "v1" / "dump_names" / crashid
             dump_names = get_json_data(str(dump_names_path))
 
             for dump_name in dump_names:
-                logger.info('Adding dump %s...' % dump_name)
-                if dump_name == 'upload_file_minidump':
-                    fn = root_path / 'v1' / 'dump' / crashid
+                logger.info("Adding dump %s..." % dump_name)
+                if dump_name == "upload_file_minidump":
+                    fn = root_path / "v1" / "dump" / crashid
                 else:
-                    fn = root_path / 'v1' / dump_name / crashid
+                    fn = root_path / "v1" / dump_name / crashid
 
-                with open(str(fn), 'rb') as fp:
+                with open(str(fn), "rb") as fp:
                     data = fp.read()
 
                 dumps[dump_name] = data
 
-    logger.info('Assembling payload...')
+    logger.info("Assembling payload...")
     crash_payload = assemble_crash_payload_dict(
-        raw_crash=raw_crash,
-        dumps=dumps,
-        use_json=use_json
+        raw_crash=raw_crash, dumps=dumps, use_json=use_json
     )
 
     if compressed:
-        logger.info('Posting compressed crash report...')
+        logger.info("Posting compressed crash report...")
 
     if use_json:
-        logger.info('Sending metadata in single JSON field...')
+        logger.info("Sending metadata in single JSON field...")
 
-    resp = post_crash(
-        url=url,
-        crash_payload=crash_payload,
-        compressed=compressed
-    )
+    resp = post_crash(url=url, crash_payload=crash_payload, compressed=compressed)
 
-    logger.info('Post response: %s %r' % (resp.status_code, resp.content))
+    logger.info("Post response: %s %r" % (resp.status_code, resp.content))
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(cmdline(sys.argv[1:]))

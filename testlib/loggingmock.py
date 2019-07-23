@@ -65,9 +65,9 @@ class LoggingMock(logging.Handler):
 
         for record in self.records:
             if (
-                    match_name(record.name) and
-                    match_levelname(record.levelname) and
-                    match_message(record.getMessage())
+                match_name(record.name)
+                and match_levelname(record.levelname)
+                and match_message(record.getMessage())
             ):
                 return True
 
@@ -82,7 +82,7 @@ class LoggingMock(logging.Handler):
             for record in records:
                 print((record.name, record.levelname, record.getMessage()))
         else:
-            print('NO RECORDS')
+            print("NO RECORDS")
 
     def clear(self):
         self.records = []
