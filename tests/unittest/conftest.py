@@ -29,14 +29,12 @@ from testlib.s3mock import S3Mock  # noqa
 
 def pytest_runtest_setup():
     # Make sure we set up logging and metrics to sane default values.
-    setup_logging(ConfigManager.from_dict({
-        'HOST_ID': '',
-        'LOGGING_LEVEL': 'DEBUG',
-        'LOCAL_DEV_ENV': 'False',
-    }))
-    markus.configure([
-        {'class': 'markus.backends.logging.LoggingMetrics'}
-    ])
+    setup_logging(
+        ConfigManager.from_dict(
+            {"HOST_ID": "", "LOGGING_LEVEL": "DEBUG", "LOCAL_DEV_ENV": "False"}
+        )
+    )
+    markus.configure([{"class": "markus.backends.logging.LoggingMetrics"}])
 
     # Wipe any registered heartbeat functions
     reset_hb_funs()
@@ -45,11 +43,12 @@ def pytest_runtest_setup():
 @pytest.fixture
 def request_generator():
     """Returns a Falcon Request generator"""
+
     def _request_generator(method, path, query_string=None, headers=None, body=None):
         env = create_environ(
             method=method,
             path=path,
-            query_string=(query_string or ''),
+            query_string=(query_string or ""),
             headers=headers,
             body=body,
         )
@@ -60,6 +59,7 @@ def request_generator():
 
 class AntennaTestClient(TestClient):
     """Test client to ease testing with Antenna API"""
+
     def rebuild_app(self, new_config):
         """Rebuilds the app
 
@@ -87,7 +87,7 @@ class AntennaTestClient(TestClient):
         """
         # FIXME(willkg): This is hard-coded for now. We can fix that later if
         # we add other pools to the system.
-        bsr = self.get_resource_by_name('breakpad')
+        bsr = self.get_resource_by_name("breakpad")
         bsr.join_pool()
 
     def get_resource_by_name(self, name):
@@ -163,10 +163,12 @@ def loggingmock():
                 )
 
     """
+
     @contextlib.contextmanager
     def _loggingmock(names=None):
         with LoggingMock(names=names) as loggingmock:
             yield loggingmock
+
     return _loggingmock
 
 
@@ -201,9 +203,10 @@ def randommock():
                 # test stuff...
 
     """
+
     @contextlib.contextmanager
     def _randommock(value):
-        with mock.patch('random.random') as mock_random:
+        with mock.patch("random.random") as mock_random:
             mock_random.return_value = value
             yield
 
@@ -215,7 +218,7 @@ def caplogpp(caplog):
     """caplogpp fixes propagation logger values and returns caplog fixture"""
     changed_loggers = []
     for logger in logging.Logger.manager.loggerDict.values():
-        if getattr(logger, 'propagate', True) is False:
+        if getattr(logger, "propagate", True) is False:
             logger.propagate = True
             changed_loggers.append(logger)
 

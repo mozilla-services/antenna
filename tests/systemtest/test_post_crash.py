@@ -21,25 +21,18 @@ def utc_now():
 
 class CrashVerifier:
     def raw_crash_key(self, crash_id):
-        return 'v2/raw_crash/{entropy}/{date}/{crashid}'.format(
-            entropy=crash_id[0:3],
-            date='20' + crash_id[-6:],
-            crashid=crash_id
+        return "v2/raw_crash/{entropy}/{date}/{crashid}".format(
+            entropy=crash_id[0:3], date="20" + crash_id[-6:], crashid=crash_id
         )
 
     def dump_names_key(self, crash_id):
-        return 'v1/dump_names/{crashid}'.format(
-            crashid=crash_id
-        )
+        return "v1/dump_names/{crashid}".format(crashid=crash_id)
 
     def dump_key(self, crash_id, name):
-        if name in (None, '', 'upload_file_minidump'):
-            name = 'dump'
+        if name in (None, "", "upload_file_minidump"):
+            name = "dump"
 
-        return 'v1/{name}/{crashid}'.format(
-            name=name,
-            crashid=crash_id
-        )
+        return "v1/{name}/{crashid}".format(name=name, crashid=crash_id)
 
     def verify_stored_data(self, crash_id, raw_crash, dumps, s3conn):
         # Verify the raw crash file made it
@@ -58,19 +51,21 @@ class CrashVerifier:
     def verify_published_data(self, crash_id, pubsub):
         # Verify crash id was published--this might pick up a bunch of stuff,
         # so we just verify it's one of the things we picked up
-        if 'PUBSUB_EMULATOR_HOST' in os.environ:
-            crash_ids = [crash_id.decode('utf-8') for crash_id in pubsub.list_crashids()]
+        if "PUBSUB_EMULATOR_HOST" in os.environ:
+            crash_ids = [
+                crash_id.decode("utf-8") for crash_id in pubsub.list_crashids()
+            ]
             assert crash_id in crash_ids
         else:
-            print('SKIPPING PUBLISH CHECK--NOT USING EMULATOR')
+            print("SKIPPING PUBLISH CHECK--NOT USING EMULATOR")
 
 
 def content_to_crashid(content):
     if not isinstance(content, str):
-        content = str(content, encoding='utf-8')
+        content = str(content, encoding="utf-8")
 
     crash_id = content.strip()
-    crash_id = crash_id[len('CrashID=bp-'):]
+    crash_id = crash_id[len("CrashID=bp-") :]
     return crash_id
 
 
@@ -89,8 +84,8 @@ class TestPostCrash:
         time.sleep(SLEEP_TIME)
 
         crash_id = content_to_crashid(resp.content)
-        logger.debug('Crash ID is: %s', crash_id)
-        logger.debug('S3conn: %s', s3conn.get_config())
+        logger.debug("Crash ID is: %s", crash_id)
+        logger.debug("S3conn: %s", s3conn.get_config())
 
         # Verify stored and published crash data
         verifier = CrashVerifier()
@@ -107,8 +102,8 @@ class TestPostCrash:
         time.sleep(SLEEP_TIME)
 
         crash_id = content_to_crashid(resp.content)
-        logger.debug('Crash ID is: %s', crash_id)
-        logger.debug('S3conn: %s', s3conn.get_config())
+        logger.debug("Crash ID is: %s", crash_id)
+        logger.debug("S3conn: %s", s3conn.get_config())
 
         # Verify stored and published crash data
         verifier = CrashVerifier()

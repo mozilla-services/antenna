@@ -195,8 +195,8 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
     def has_work_to_do(self):
         """Return whether this still has work to do."""
         work_to_do = (
-            len(self.crashmover_pool) +
-            len(self.crashmover_queue)
+            len(self.crashmover_pool)
+            + len(self.crashmover_queue)
         )
         logger.info('work left to do: %s' % work_to_do)
         # Indicates whether or not we're sitting on crashes to save--this helps
@@ -230,9 +230,9 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         # If it's the wrong content type or there's no boundary section, raise
         # MalformedCrashReport
         content_type = [part.strip() for part in req.content_type.split(';', 1)]
-        if ((len(content_type) != 2 or
-             content_type[0] != 'multipart/form-data' or
-             not content_type[1].startswith('boundary='))):
+        if ((len(content_type) != 2
+             or content_type[0] != 'multipart/form-data'
+             or not content_type[1].startswith('boundary='))):
             if content_type[0] != 'multipart/form-data':
                 raise MalformedCrashReport('wrong_content_type')
             else:

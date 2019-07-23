@@ -10,30 +10,30 @@ from testlib.mini_poster import multipart_encode
 
 
 class TestCrashStorage:
-    @freeze_time('2011-09-06 00:00:00', tz_offset=0)
+    @freeze_time("2011-09-06 00:00:00", tz_offset=0)
     def test_flow(self, client):
         """Verify posting a crash gets to crash storage in the right shape"""
-        client.rebuild_app({
-            'THROTTLE_RULES': 'antenna.throttler.ACCEPT_ALL',
-            'PRODUCTS': 'antenna.throttler.ALL_PRODUCTS'
-        })
-
-        data, headers = multipart_encode({
-            'uuid': 'de1bb258-cbbf-4589-a673-34f800160918',
-            'ProductName': 'Test',
-            'Version': '1.0',
-            'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
-        })
-
-        result = client.simulate_post(
-            '/submit',
-            headers=headers,
-            body=data
+        client.rebuild_app(
+            {
+                "THROTTLE_RULES": "antenna.throttler.ACCEPT_ALL",
+                "PRODUCTS": "antenna.throttler.ALL_PRODUCTS",
+            }
         )
+
+        data, headers = multipart_encode(
+            {
+                "uuid": "de1bb258-cbbf-4589-a673-34f800160918",
+                "ProductName": "Test",
+                "Version": "1.0",
+                "upload_file_minidump": ("fakecrash.dump", io.BytesIO(b"abcd1234")),
+            }
+        )
+
+        result = client.simulate_post("/submit", headers=headers, body=data)
         client.join_app()
         assert result.status_code == 200
 
-        bsr = client.get_resource_by_name('breakpad')
+        bsr = client.get_resource_by_name("breakpad")
 
         # Now we've got the BreakpadSubmitterResource, so we can pull out the
         # crashstorage, verify there's only one crash in it and then verify the
@@ -41,16 +41,12 @@ class TestCrashStorage:
 
         # Verify things got saved
         crashstorage = bsr.crashstorage
-        assert (
-            crashstorage.saved_things == [
-                {'crash_id': 'de1bb258-cbbf-4589-a673-34f800160918'}
-            ]
-        )
+        assert crashstorage.saved_things == [
+            {"crash_id": "de1bb258-cbbf-4589-a673-34f800160918"}
+        ]
 
         # Verify things got published
         crashpublish = bsr.crashpublish
-        assert (
-            crashpublish.published_things == [
-                {'crash_id': 'de1bb258-cbbf-4589-a673-34f800160918'}
-            ]
-        )
+        assert crashpublish.published_things == [
+            {"crash_id": "de1bb258-cbbf-4589-a673-34f800160918"}
+        ]

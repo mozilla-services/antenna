@@ -218,18 +218,18 @@ def match_infobar_true(throttler, data):
         return False
 
     return (
-        product == 'Firefox' and
-        infobar == 'true' and
-        version.startswith(('52.', '53.', '54.', '55.', '56.', '57.', '58.', '59.')) and
-        buildid < '20171226'
+        product == 'Firefox'
+        and infobar == 'true'
+        and version.startswith(('52.', '53.', '54.', '55.', '56.', '57.', '58.', '59.'))
+        and buildid < '20171226'
     )
 
 
 def match_b2g(throttler, data):
     """Match crash reports for B2G."""
     is_b2g = (
-        'B2G' not in throttler.config('products') and
-        data.get('ProductName', '').lower() == 'b2g'
+        'B2G' not in throttler.config('products')
+        and data.get('ProductName', '').lower() == 'b2g'
     )
     if is_b2g:
         logger.info('ProductName B2G: fake accept')
@@ -240,8 +240,8 @@ def match_b2g(throttler, data):
 def match_unsupported_product(throttler, data):
     """Match unsupported products."""
     is_not_supported = (
-        throttler.config('products') and
-        data.get('ProductName') not in throttler.config('products')
+        throttler.config('products')
+        and data.get('ProductName') not in throttler.config('products')
     )
 
     if is_not_supported:
@@ -368,8 +368,8 @@ MOZILLA_RULES = [
         rule_name='is_firefox_desktop',
         key='*',
         condition=lambda throttler, data: (
-            data.get('ProductName', '') == 'Firefox' and
-            data.get('ReleaseChannel', '') == 'release'
+            data.get('ProductName', '') == 'Firefox'
+            and data.get('ReleaseChannel', '') == 'release'
         ),
         result=(10, ACCEPT, REJECT)
     ),
