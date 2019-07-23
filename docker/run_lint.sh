@@ -16,14 +16,14 @@ BLACKARGS=("--line-length=88" "--target-version=py36" antenna bin testlib tests)
 
 if [[ $1 == "--fix" ]]; then
     echo ">>> black fix"
-    black --check "${BLACKARGS[@]}"
+    black "${BLACKARGS[@]}"
 
 else
     echo ">>> flake8"
     flake8 --statistics antenna tests/unittest/
 
     echo ">>> black"
-    black "${BLACKARGS[@]}"
+    black --check "${BLACKARGS[@]}"
 
     echo ">>> bandit"
     bandit -r antenna/
