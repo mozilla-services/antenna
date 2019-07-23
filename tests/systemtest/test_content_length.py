@@ -60,7 +60,7 @@ class TestContentLength:
         resp = http_post(posturl, headers, payload)
 
         assert resp.getcode() == 200
-        assert str(resp.read(), encoding="utf-8") == "Discarded=1"
+        assert str(resp.read(), encoding="utf-8") == "Discarded=no_content_length"
 
     def test_content_length_20(self, posturl, crash_generator):
         """Post a crash with a content-length 20"""
@@ -75,7 +75,7 @@ class TestContentLength:
         resp = http_post(posturl, headers, payload)
 
         assert resp.getcode() == 200
-        assert str(resp.read(), encoding="utf-8") == "Discarded=1"
+        assert str(resp.read(), encoding="utf-8") == "Discarded=no_annotations"
 
     @pytest.mark.skipif(
         bool(os.environ.get("NONGINX")),
