@@ -79,7 +79,7 @@ class TestContentLength:
 
     @pytest.mark.skipif(
         bool(os.environ.get("NONGINX")),
-        reason=("Requires nginx which you probably do not have running via localhost"),
+        reason="Requires nginx which you probably do not have running via localhost",
     )
     def test_content_length_1000(self, posturl, crash_generator):
         """Post a crash with a content-length greater than size of payload."""

@@ -61,9 +61,7 @@ class Test20mbLimit:
 
     @pytest.mark.skipif(
         bool(os.environ.get("NONGINX")),
-        reason=(
-            "Requires nginx which you probably do not have running " "via localhost"
-        ),
+        reason="Requires nginx which you probably do not have running via localhost",
     )
     @pytest.mark.parametrize(
         "size, status_code",
@@ -82,9 +80,7 @@ class Test20mbLimit:
 
     @pytest.mark.skipif(
         bool(os.environ.get("NONGINX")),
-        reason=(
-            "Requires nginx which you probably do not have running " "via localhost"
-        ),
+        reason="Requires nginx which you probably do not have running via localhost",
     )
     def test_21mb_and_low_content_length(self, posturl, crash_generator):
         # Generate a crash that exceeds nginx's max size
