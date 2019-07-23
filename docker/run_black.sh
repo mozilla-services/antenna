@@ -4,17 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Runs linting.
+# Runs black which formats Python code.
 #
 # This should be called from inside a container.
 
 set -e
-
-echo ">>> flake8"
-flake8 --statistics antenna tests/unittest/
-
-echo ">>> black"
-docker/run_black.sh --check
-
-echo ">>> bandit"
-bandit -r antenna/
+black --line-length=88 --target-version py36 testlib tests $@
