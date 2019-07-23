@@ -325,6 +325,9 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
                 has_kvpairs = True
                 raw_crash[fs_item.name] = fs_item.value
 
+        if not raw_crash:
+            raise MalformedCrashReport("no_annotations")
+
         if has_json and has_kvpairs:
             # If the crash payload has both kvpairs and a JSON blob, then it's
             # malformed and we should dump it.
