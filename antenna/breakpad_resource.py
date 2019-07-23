@@ -19,30 +19,20 @@ from gevent.pool import Pool
 import markus
 
 from antenna.heartbeat import register_for_life, register_for_heartbeat
-from antenna.throttler import (
-    REJECT,
-    FAKEACCEPT,
-    RESULT_TO_TEXT,
-    Throttler,
-)
-from antenna.util import (
-    create_crash_id,
-    sanitize_dump_name,
-    utc_now,
-    validate_crash_id,
-)
+from antenna.throttler import REJECT, FAKEACCEPT, RESULT_TO_TEXT, Throttler
+from antenna.util import create_crash_id, sanitize_dump_name, utc_now, validate_crash_id
 
 
 logger = logging.getLogger(__name__)
-mymetrics = markus.get_metrics('breakpad_resource')
+mymetrics = markus.get_metrics("breakpad_resource")
 
 
 #: Maximum number of attempts to save a crash before we give up
 MAX_ATTEMPTS = 20
 
 #: SAVE and PUBLISH states of the crash mover
-STATE_SAVE = 'save'
-STATE_PUBLISH = 'publish'
+STATE_SAVE = "save"
+STATE_PUBLISH = "publish"
 
 
 class MalformedCrashReport(Exception):
@@ -51,6 +41,7 @@ class MalformedCrashReport(Exception):
     Message should be an alpha-numeric error code with no spaces.
 
     """
+
     pass
 
 
@@ -75,7 +66,7 @@ def positive_int(val):
     """Everett parser that enforces val >= 1."""
     val = int(val)
     if val < 1:
-        raise ValueError('val must be greater than 1: %s' % val)
+        raise ValueError("val must be greater than 1: %s" % val)
     return val
 
 
@@ -110,49 +101,53 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
     required_config = ConfigOptions()
     required_config.add_option(
-        'dump_field', default='upload_file_minidump',
-        doc='The name of the field in the POST data for dumps.'
+        "dump_field",
+        default="upload_file_minidump",
+        doc="The name of the field in the POST data for dumps.",
     )
     required_config.add_option(
-        'dump_id_prefix', default='bp-',
-        doc='The crash type prefix.'
+        "dump_id_prefix", default="bp-", doc="The crash type prefix."
     )
     required_config.add_option(
-        'concurrent_crashmovers',
-        default='2',
+        "concurrent_crashmovers",
+        default="2",
         parser=positive_int,
         doc=(
-            'The number of crashes concurrently being saved and published. '
-            'Each process gets this many concurrent crashmovers, so if you\'re '
-            'running 5 processes on the node, then it\'s '
-            '(5 * concurrent_crashmovers) sharing upload bandwidth.'
-        )
+            "The number of crashes concurrently being saved and published. "
+            "Each process gets this many concurrent crashmovers, so if you're "
+            "running 5 processes on the node, then it's "
+            "(5 * concurrent_crashmovers) sharing upload bandwidth."
+        ),
     )
 
     # crashstorage things
     required_config.add_option(
-        'crashstorage_class',
-        default='antenna.ext.crashstorage_base.NoOpCrashStorage',
+        "crashstorage_class",
+        default="antenna.ext.crashstorage_base.NoOpCrashStorage",
         parser=parse_class,
-        doc='The class in charge of storing crashes.'
+        doc="The class in charge of storing crashes.",
     )
 
     # crashpublish things
     required_config.add_option(
-        'crashpublish_class',
-        default='antenna.ext.crashpublish_base.NoOpCrashPublish',
+        "crashpublish_class",
+        default="antenna.ext.crashpublish_base.NoOpCrashPublish",
         parser=parse_class,
-        doc='The class in charge of publishing crashes.'
+        doc="The class in charge of publishing crashes.",
     )
 
     def __init__(self, config):
         self.config = config.with_options(self)
-        self.crashstorage = self.config('crashstorage_class')(config.with_namespace('crashstorage'))
-        self.crashpublish = self.config('crashpublish_class')(config.with_namespace('crashpublish'))
+        self.crashstorage = self.config("crashstorage_class")(
+            config.with_namespace("crashstorage")
+        )
+        self.crashpublish = self.config("crashpublish_class")(
+            config.with_namespace("crashpublish")
+        )
         self.throttler = Throttler(config)
 
         # Gevent pool for crashmover workers
-        self.crashmover_pool = Pool(size=self.config('concurrent_crashmovers'))
+        self.crashmover_pool = Pool(size=self.config("concurrent_crashmovers"))
 
         # Queue for crashmover work
         self.crashmover_queue = deque()
@@ -172,17 +167,17 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         for item in self.throttler.get_runtime_config():
             yield item
 
-        for item in self.crashstorage.get_runtime_config(['crashstorage']):
+        for item in self.crashstorage.get_runtime_config(["crashstorage"]):
             yield item
 
-        for item in self.crashpublish.get_runtime_config(['crashpublish']):
+        for item in self.crashpublish.get_runtime_config(["crashpublish"]):
             yield item
 
     def check_health(self, state):
         """Return health state."""
-        if hasattr(self.crashstorage, 'check_health'):
+        if hasattr(self.crashstorage, "check_health"):
             self.crashstorage.check_health(state)
-        if hasattr(self.crashpublish, 'check_health'):
+        if hasattr(self.crashpublish, "check_health"):
             self.crashpublish.check_health(state)
 
     def hb_report_health_stats(self):
@@ -190,15 +185,12 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         # The number of crash reports sitting in the work queue; this is a
         # direct measure of the health of this process--a number that's going
         # up means impending doom
-        mymetrics.gauge('work_queue_size', value=len(self.crashmover_queue))
+        mymetrics.gauge("work_queue_size", value=len(self.crashmover_queue))
 
     def has_work_to_do(self):
         """Return whether this still has work to do."""
-        work_to_do = (
-            len(self.crashmover_pool)
-            + len(self.crashmover_queue)
-        )
-        logger.info('work left to do: %s' % work_to_do)
+        work_to_do = len(self.crashmover_pool) + len(self.crashmover_queue)
+        logger.info("work left to do: %s" % work_to_do)
         # Indicates whether or not we're sitting on crashes to save--this helps
         # keep Antenna alive until we're done saving crashes
         return bool(work_to_do)
@@ -225,28 +217,30 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         """
         # If we don't have a content type, raise MalformedCrashReport
         if not req.content_type:
-            raise MalformedCrashReport('no_content_type')
+            raise MalformedCrashReport("no_content_type")
 
         # If it's the wrong content type or there's no boundary section, raise
         # MalformedCrashReport
-        content_type = [part.strip() for part in req.content_type.split(';', 1)]
-        if ((len(content_type) != 2
-             or content_type[0] != 'multipart/form-data'
-             or not content_type[1].startswith('boundary='))):
-            if content_type[0] != 'multipart/form-data':
-                raise MalformedCrashReport('wrong_content_type')
+        content_type = [part.strip() for part in req.content_type.split(";", 1)]
+        if (
+            len(content_type) != 2
+            or content_type[0] != "multipart/form-data"
+            or not content_type[1].startswith("boundary=")
+        ):
+            if content_type[0] != "multipart/form-data":
+                raise MalformedCrashReport("wrong_content_type")
             else:
-                raise MalformedCrashReport('no_boundary')
+                raise MalformedCrashReport("no_boundary")
 
         content_length = req.content_length or 0
 
         # If there's no content, raise MalformedCrashReport
         if content_length == 0:
-            raise MalformedCrashReport('no_content_length')
+            raise MalformedCrashReport("no_content_length")
 
         # Decompress payload if it's compressed
-        if req.env.get('HTTP_CONTENT_ENCODING') == 'gzip':
-            mymetrics.incr('gzipped_crash')
+        if req.env.get("HTTP_CONTENT_ENCODING") == "gzip":
+            mymetrics.incr("gzipped_crash")
 
             # If the content is gzipped, we pull it out and decompress it. We
             # have to do that here because nginx doesn't have a good way to do
@@ -258,17 +252,19 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
                 # This indicates this isn't a valid compressed stream. Given
                 # that the HTTP request insists it is, we're just going to
                 # assume it's junk and not try to process any further.
-                raise MalformedCrashReport('bad_gzip')
+                raise MalformedCrashReport("bad_gzip")
 
             # Stomp on the content length to correct it because we've changed
             # the payload size by decompressing it. We save the original value
             # in case we need to debug something later on.
-            req.env['ORIG_CONTENT_LENGTH'] = content_length
+            req.env["ORIG_CONTENT_LENGTH"] = content_length
             content_length = len(data)
-            req.env['CONTENT_LENGTH'] = str(content_length)
+            req.env["CONTENT_LENGTH"] = str(content_length)
 
             data = io.BytesIO(data)
-            mymetrics.histogram('crash_size', value=content_length, tags=['payload:compressed'])
+            mymetrics.histogram(
+                "crash_size", value=content_length, tags=["payload:compressed"]
+            )
         else:
             # NOTE(willkg): At this point, req.stream is either a
             # falcon.request_helper.BoundedStream (in tests) or a
@@ -283,11 +279,13 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             else:
                 data = req.stream
 
-            mymetrics.histogram('crash_size', value=content_length, tags=['payload:uncompressed'])
+            mymetrics.histogram(
+                "crash_size", value=content_length, tags=["payload:uncompressed"]
+            )
 
         # Stomp on querystring so we don't pull it in
         request_env = dict(req.env)
-        request_env['QUERY_STRING'] = ''
+        request_env["QUERY_STRING"] = ""
 
         fs = cgi.FieldStorage(fp=data, environ=request_env, keep_blank_values=1)
 
@@ -302,18 +300,21 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             if not fs_item.name:
                 continue
 
-            if fs_item.name == 'dump_checksums':
+            if fs_item.name == "dump_checksums":
                 # We don't want to pick up the dump_checksums from a raw
                 # crash that was re-submitted.
                 continue
 
-            elif fs_item.type and fs_item.type.startswith('application/json'):
+            elif fs_item.type and fs_item.type.startswith("application/json"):
                 # This is a JSON blob, so load it and override raw_crash with
                 # it.
                 has_json = True
                 raw_crash = json.loads(fs_item.value)
 
-            elif fs_item.type and (fs_item.type.startswith('application/octet-stream') or isinstance(fs_item.value, bytes)):
+            elif fs_item.type and (
+                fs_item.type.startswith("application/octet-stream")
+                or isinstance(fs_item.value, bytes)
+            ):
                 # This is a dump, so add it to dumps using a sanitized dump
                 # name.
                 dump_name = sanitize_dump_name(fs_item.name)
@@ -327,7 +328,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         if has_json and has_kvpairs:
             # If the crash payload has both kvpairs and a JSON blob, then it's
             # malformed and we should dump it.
-            raise MalformedCrashReport('has_json_and_kv')
+            raise MalformedCrashReport("has_json_and_kv")
 
         return raw_crash, dumps
 
@@ -344,12 +345,12 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         result, rule_name, throttle_rate = self.throttler.throttle(raw_crash)
 
         # Save the results in the raw_crash itself
-        raw_crash['legacy_processing'] = result
-        raw_crash['throttle_rate'] = throttle_rate
+        raw_crash["legacy_processing"] = result
+        raw_crash["throttle_rate"] = throttle_rate
 
         return result, rule_name, throttle_rate
 
-    @mymetrics.timer_decorator('on_post.time')
+    @mymetrics.timer_decorator("on_post.time")
     def on_post(self, req, resp):
         """Handle incoming HTTP POSTs.
 
@@ -362,7 +363,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         start_time = time.time()
         # NOTE(willkg): This has to return text/plain since that's what the
         # breakpad clients expect.
-        resp.content_type = 'text/plain'
+        resp.content_type = "text/plain"
 
         try:
             raw_crash, dumps = self.extract_payload(req)
@@ -370,23 +371,25 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         except MalformedCrashReport as exc:
             # If this is malformed, then reject it with malformed error code.
             msg = str(exc)
-            mymetrics.incr('malformed', tags=['reason:%s' % msg])
-            resp.body = 'Discarded=%s' % msg
+            mymetrics.incr("malformed", tags=["reason:%s" % msg])
+            resp.body = "Discarded=%s" % msg
             return
 
-        mymetrics.incr('incoming_crash')
+        mymetrics.incr("incoming_crash")
 
         # Add timestamps
         current_timestamp = utc_now()
-        raw_crash['submitted_timestamp'] = current_timestamp.isoformat()
-        raw_crash['timestamp'] = start_time
+        raw_crash["submitted_timestamp"] = current_timestamp.isoformat()
+        raw_crash["timestamp"] = start_time
 
         # Add checksums and MinidumpSha256Hash
-        raw_crash['dump_checksums'] = {
+        raw_crash["dump_checksums"] = {
             dump_name: hashlib.sha256(dump).hexdigest()
             for dump_name, dump in dumps.items()
         }
-        raw_crash['MinidumpSha256Hash'] = raw_crash['dump_checksums'].get('upload_file_minidump', '')
+        raw_crash["MinidumpSha256Hash"] = raw_crash["dump_checksums"].get(
+            "upload_file_minidump", ""
+        )
 
         # First throttle the crash which gives us the information we need
         # to generate a crash id.
@@ -394,33 +397,38 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         # Use a uuid if they gave us one and it's valid--otherwise create a new
         # one.
-        if 'uuid' in raw_crash and validate_crash_id(raw_crash['uuid']):
-            crash_id = raw_crash['uuid']
-            logger.info('%s has existing crash_id', crash_id)
+        if "uuid" in raw_crash and validate_crash_id(raw_crash["uuid"]):
+            crash_id = raw_crash["uuid"]
+            logger.info("%s has existing crash_id", crash_id)
 
         else:
             crash_id = create_crash_id(
-                timestamp=current_timestamp,
-                throttle_result=throttle_result
+                timestamp=current_timestamp, throttle_result=throttle_result
             )
-            raw_crash['uuid'] = crash_id
+            raw_crash["uuid"] = crash_id
 
-        raw_crash['type_tag'] = self.config('dump_id_prefix').strip('-')
+        raw_crash["type_tag"] = self.config("dump_id_prefix").strip("-")
 
         # Log the throttle result
-        logger.info('%s: matched by %s; returned %s', crash_id, rule_name,
-                    RESULT_TO_TEXT[throttle_result])
-        mymetrics.incr('throttle_rule', tags=['rule:%s' % rule_name])
-        mymetrics.incr('throttle', tags=['result:%s' % RESULT_TO_TEXT[throttle_result].lower()])
+        logger.info(
+            "%s: matched by %s; returned %s",
+            crash_id,
+            rule_name,
+            RESULT_TO_TEXT[throttle_result],
+        )
+        mymetrics.incr("throttle_rule", tags=["rule:%s" % rule_name])
+        mymetrics.incr(
+            "throttle", tags=["result:%s" % RESULT_TO_TEXT[throttle_result].lower()]
+        )
 
         if throttle_result is REJECT:
             # If the result is REJECT, then discard it
-            resp.body = 'Discarded=rule_%s' % rule_name
+            resp.body = "Discarded=rule_%s" % rule_name
 
         elif throttle_result is FAKEACCEPT:
             # If the result is a FAKEACCEPT, then we return a crash id, but throw
             # the crash away
-            resp.body = 'CrashID=%s%s\n' % (self.config('dump_id_prefix'), crash_id)
+            resp.body = "CrashID=%s%s\n" % (self.config("dump_id_prefix"), crash_id)
 
         else:
             # If the result is not REJECT, then save it and return the CrashID to
@@ -429,7 +437,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             crash_report.set_state(STATE_SAVE)
             self.crashmover_queue.append(crash_report)
             self.hb_run_crashmover()
-            resp.body = 'CrashID=%s%s\n' % (self.config('dump_id_prefix'), crash_id)
+            resp.body = "CrashID=%s%s\n" % (self.config("dump_id_prefix"), crash_id)
 
     def hb_run_crashmover(self):
         """Spawn a crashmover if there's work to do."""
@@ -462,14 +470,14 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
                     self.crashmover_finish(crash_report)
 
             except Exception:
-                mymetrics.incr('%s_crash_exception.count' % crash_report.state)
+                mymetrics.incr("%s_crash_exception.count" % crash_report.state)
                 crash_report.errors += 1
                 logger.exception(
-                    'Exception when processing queue (%s), state: %s; error %d/%d',
+                    "Exception when processing queue (%s), state: %s; error %d/%d",
                     crash_report.crash_id,
                     crash_report.state,
                     crash_report.errors,
-                    MAX_ATTEMPTS
+                    MAX_ATTEMPTS,
                 )
 
                 # After MAX_ATTEMPTS, we give up on this crash and move on
@@ -477,11 +485,11 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
                     self.crashmover_queue.append(crash_report)
                 else:
                     logger.error(
-                        '%s: too many errors trying to %s; dropped',
+                        "%s: too many errors trying to %s; dropped",
                         crash_report.crash_id,
-                        crash_report.state
+                        crash_report.state,
                     )
-                    mymetrics.incr('%s_crash_dropped.count' % crash_report.state)
+                    mymetrics.incr("%s_crash_dropped.count" % crash_report.state)
 
     def crashmover_finish(self, crash_report):
         """Finish bookkeeping on crash report."""
@@ -490,22 +498,22 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         #
         # NOTE(willkg): time.time returns seconds, but .timing() wants
         # milliseconds, so we multiply!
-        delta = (time.time() - crash_report.raw_crash['timestamp']) * 1000
+        delta = (time.time() - crash_report.raw_crash["timestamp"]) * 1000
 
-        mymetrics.timing('crash_handling.time', value=delta)
-        mymetrics.incr('save_crash.count')
+        mymetrics.timing("crash_handling.time", value=delta)
+        mymetrics.incr("save_crash.count")
 
-    @mymetrics.timer('crash_save.time')
+    @mymetrics.timer("crash_save.time")
     def crashmover_save(self, crash_report):
         """Save crash report to storage."""
         self.crashstorage.save_crash(crash_report)
-        logger.info('%s saved', crash_report.crash_id)
+        logger.info("%s saved", crash_report.crash_id)
 
-    @mymetrics.timer('crash_publish.time')
+    @mymetrics.timer("crash_publish.time")
     def crashmover_publish(self, crash_report):
         """Publish crash_id in publish queue."""
         self.crashpublish.publish_crash(crash_report)
-        logger.info('%s published', crash_report.crash_id)
+        logger.info("%s published", crash_report.crash_id)
 
     def join_pool(self):
         """Join the pool.

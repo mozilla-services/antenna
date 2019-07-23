@@ -36,10 +36,11 @@ from antenna.ext.s3.connection import S3Connection
 def _log_everything():
     # Set up all the debug logging for grossest possible output
     from http.client import HTTPConnection
+
     HTTPConnection.debuglevel = 1
 
-    logging.getLogger('requests').setLevel(logging.DEBUG)
-    logging.getLogger('requests.packages.urllib3').setLevel(logging.DEBUG)
+    logging.getLogger("requests").setLevel(logging.DEBUG)
+    logging.getLogger("requests.packages.urllib3").setLevel(logging.DEBUG)
 
 
 # _log_everything()
@@ -47,30 +48,32 @@ def _log_everything():
 
 def main(args):
     # Build configuration object just like we do in Antenna.
-    config = ConfigManager([
-        # Pull configuration from environment variables
-        ConfigOSEnv()
-    ])
+    config = ConfigManager(
+        [
+            # Pull configuration from environment variables
+            ConfigOSEnv()
+        ]
+    )
 
     # We create it in the crashstorage namespace because that's how Antenna
     # uses it. This makes it easier to use existing configuration.
-    conn = S3Connection(config.with_namespace('crashstorage'))
+    conn = S3Connection(config.with_namespace("crashstorage"))
 
     # First, check to see if the bucket is already created.
     try:
         print('Checking to see if bucket "%s" exists...' % conn.bucket)
         conn.verify_write_to_bucket()
-        print('Bucket exists.')
+        print("Bucket exists.")
 
     except ClientError as exc:
         print(str(exc))
-        if '(NoSuchBucket)' in str(exc):
-            print('Bucket not found. Creating %s ...' % conn.bucket)
+        if "(NoSuchBucket)" in str(exc):
+            print("Bucket not found. Creating %s ..." % conn.bucket)
             conn.client.create_bucket(Bucket=conn.bucket)
-            print('Bucket created.')
+            print("Bucket created.")
         else:
             raise
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

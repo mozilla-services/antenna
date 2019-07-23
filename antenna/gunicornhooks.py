@@ -5,6 +5,7 @@
 # Monkey patch stdlib with gevent-friendly bits--need to do this here
 # before we import anything else. Gunicorn does this too late.
 from gevent import monkey
+
 monkey.patch_all()  # noqa
 
 
@@ -37,6 +38,6 @@ def worker_exit(server, worker):
     on those things until they're done.
 
     """
-    if hasattr(worker, 'wsgi'):
+    if hasattr(worker, "wsgi"):
         app = worker.wsgi.application
         app.join_heartbeat()

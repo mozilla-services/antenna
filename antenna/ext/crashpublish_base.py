@@ -48,8 +48,8 @@ class NoOpCrashPublish(CrashPublishBase):
     def publish_crash(self, crash_report):
         """Publish the crash id."""
         crash_id = crash_report.crash_id
-        logger.info('crash publish no-op: %s', crash_id)
-        self.published_things.append({'crash_id': crash_id})
+        logger.info("crash publish no-op: %s", crash_id)
+        self.published_things.append({"crash_id": crash_id})
 
         # Nix all but the last 10 crashes
         self.published_things = self.published_things[-10:]

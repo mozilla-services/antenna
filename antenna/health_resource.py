@@ -14,7 +14,7 @@ from antenna.util import get_version_info
 
 
 logger = logging.getLogger(__name__)
-mymetrics = markus.get_metrics('health')
+mymetrics = markus.get_metrics("health")
 
 
 class BrokenResource(RequiredConfigMixin):
@@ -25,9 +25,9 @@ class BrokenResource(RequiredConfigMixin):
 
     def on_get(self, req, resp):
         """Implement GET HTTP request."""
-        mymetrics.incr('broken.count')
+        mymetrics.incr("broken.count")
         # This is intentional breakage
-        raise Exception('intentional exception')
+        raise Exception("intentional exception")
 
 
 class VersionResource:
@@ -39,10 +39,10 @@ class VersionResource:
 
     def on_get(self, req, resp):
         """Implement GET HTTP request."""
-        mymetrics.incr('version.count')
+        mymetrics.incr("version.count")
         version_info = json.dumps(get_version_info(self.basedir))
 
-        resp.content_type = 'application/json; charset=utf-8'
+        resp.content_type = "application/json; charset=utf-8"
         resp.status = falcon.HTTP_200
         resp.body = version_info
 
@@ -55,8 +55,8 @@ class LBHeartbeatResource:
 
     def on_get(self, req, resp):
         """Implement GET HTTP request."""
-        mymetrics.incr('lbheartbeat.count')
-        resp.content_type = 'application/json; charset=utf-8'
+        mymetrics.incr("lbheartbeat.count")
+        resp.content_type = "application/json; charset=utf-8"
         resp.status = falcon.HTTP_200
 
 
@@ -71,13 +71,13 @@ class HealthState:
         """Add a key -> value gauge."""
         if not isinstance(name, str):
             name = name.__class__.__name__
-        self.statsd['%s.%s' % (name, key)] = value
+        self.statsd["%s.%s" % (name, key)] = value
 
     def add_error(self, name, msg):
         """Add an error."""
         # Use an OrderedDict here so we can maintain key order when converting
         # to JSON.
-        d = OrderedDict([('name', name), ('msg', msg)])
+        d = OrderedDict([("name", name), ("msg", msg)])
         self.errors.append(d)
 
     def is_healthy(self):
@@ -86,10 +86,7 @@ class HealthState:
 
     def to_dict(self):
         """Convert state to a dict."""
-        return OrderedDict([
-            ('errors', self.errors),
-            ('info', self.statsd)
-        ])
+        return OrderedDict([("errors", self.errors), ("info", self.statsd)])
 
 
 class HeartbeatResource:
@@ -101,7 +98,7 @@ class HeartbeatResource:
 
     def on_get(self, req, resp):
         """Implement GET HTTP request."""
-        mymetrics.incr('heartbeat.count')
+        mymetrics.incr("heartbeat.count")
         state = HealthState()
 
         # So we're going to think of Antenna like a big object graph and
@@ -109,7 +106,7 @@ class HeartbeatResource:
         # traversing the object graph, we'll tally everything up and deliver
         # the news.
         for resource in self.antenna_app.get_resources():
-            if hasattr(resource, 'check_health'):
+            if hasattr(resource, "check_health"):
                 resource.check_health(state)
 
         # Go through and call gauge for each statsd item.

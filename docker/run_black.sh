@@ -9,4 +9,4 @@
 # This should be called from inside a container.
 
 set -e
-black --line-length=88 --target-version py36 testlib tests $@
+black --line-length=88 --target-version py36 antenna bin testlib tests $@

@@ -39,8 +39,8 @@ class NoOpCrashStorage(CrashStorageBase):
     def save_crash(self, crash_report):
         """Save a raw crash."""
         crash_id = crash_report.crash_id
-        logger.info('crash storage no-op: %s', crash_id)
-        self.saved_things.append({'crash_id': crash_id})
+        logger.info("crash storage no-op: %s", crash_id)
+        self.saved_things.append({"crash_id": crash_id})
 
         # Nix all but the last 10 crashes
         self.saved_things = self.saved_things[-10:]

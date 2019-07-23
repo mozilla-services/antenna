@@ -38,15 +38,15 @@ class S3CrashStorage(CrashStorageBase):
 
     required_config = ConfigOptions()
     required_config.add_option(
-        'connection_class',
-        default='antenna.ext.s3.connection.S3Connection',
+        "connection_class",
+        default="antenna.ext.s3.connection.S3Connection",
         parser=parse_class,
-        doc='S3 connection class to use'
+        doc="S3 connection class to use",
     )
 
     def __init__(self, config):
         self.config = config.with_options(self)
-        self.conn = self.config('connection_class')(config)
+        self.conn = self.config("connection_class")(config)
         register_for_verification(self.verify_write_to_bucket)
 
     def verify_write_to_bucket(self):
@@ -66,25 +66,24 @@ class S3CrashStorage(CrashStorageBase):
         self.conn.check_health(state)
 
     def _get_raw_crash_path(self, crash_id):
-        return 'v2/raw_crash/{entropy}/{date}/{crash_id}'.format(
+        return "v2/raw_crash/{entropy}/{date}/{crash_id}".format(
             entropy=crash_id[:3],
             date=get_date_from_crash_id(crash_id),
-            crash_id=crash_id
+            crash_id=crash_id,
         )
 
     def _get_dump_names_path(self, crash_id):
-        return 'v1/dump_names/{crash_id}'.format(crash_id=crash_id)
+        return "v1/dump_names/{crash_id}".format(crash_id=crash_id)
 
     def _get_dump_name_path(self, crash_id, dump_name):
         # NOTE(willkg): This is something that Socorro collector did. I'm not
         # really sure why, but in order to maintain backwards compatability, we
         # need to keep doing it.
-        if dump_name in (None, '', 'upload_file_minidump'):
-            dump_name = 'dump'
+        if dump_name in (None, "", "upload_file_minidump"):
+            dump_name = "dump"
 
-        return 'v1/{dump_name}/{crash_id}'.format(
-            dump_name=dump_name,
-            crash_id=crash_id
+        return "v1/{dump_name}/{crash_id}".format(
+            dump_name=dump_name, crash_id=crash_id
         )
 
     def save_raw_crash(self, crash_id, raw_crash):
@@ -109,7 +108,7 @@ class S3CrashStorage(CrashStorageBase):
         # Save raw_crash
         self.conn.save_file(
             self._get_raw_crash_path(crash_id),
-            json_ordered_dumps(raw_crash).encode('utf-8')
+            json_ordered_dumps(raw_crash).encode("utf-8"),
         )
 
     def save_dumps(self, crash_id, dumps):
@@ -125,15 +124,12 @@ class S3CrashStorage(CrashStorageBase):
         # Save dump_names even if there are no dumps
         self.conn.save_file(
             self._get_dump_names_path(crash_id),
-            json_ordered_dumps(list(sorted(dumps.keys()))).encode('utf-8')
+            json_ordered_dumps(list(sorted(dumps.keys()))).encode("utf-8"),
         )
 
         # Save dumps
         for dump_name, dump in dumps.items():
-            self.conn.save_file(
-                self._get_dump_name_path(crash_id, dump_name),
-                dump
-            )
+            self.conn.save_file(self._get_dump_name_path(crash_id, dump_name), dump)
 
     def save_crash(self, crash_report):
         """Save crash data."""
