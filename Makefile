@@ -31,7 +31,8 @@ default:
 	@echo ""
 	@echo "shell            - open a shell in the base container"
 	@echo "clean            - remove all build, test, coverage and Python artifacts"
-	@echo "lint             - check style with flake8"
+	@echo "lint             - lint code"
+	@echo "lintfix          - reformat code"
 	@echo "test             - run unit tests"
 	@echo "testshell        - open a shell in the test container"
 	@echo "systemtest       - run system tests against a running Antenna instance"
@@ -88,7 +89,11 @@ clean:
 
 .PHONY: lint
 lint: my.env .docker-build
-	${DC} run --rm --no-deps base  /bin/bash ./docker/run_lint.sh
+	${DC} run --rm --no-deps base /bin/bash ./docker/run_lint.sh
+
+.PHONY: black
+lintfix: my.env .docker-build
+	${DC} run --rm --no-deps base /bin/bash ./docker/run_lint.sh --fix
 
 .PHONY: test
 test: my.env .docker-build

@@ -17,20 +17,13 @@ class DogStatsdMetrics(RequiredConfigMixin):
 
     required_config = ConfigOptions()
     required_config.add_option(
-        'statsd_host',
-        default='localhost',
-        doc='Hostname for the statsd server'
+        "statsd_host", default="localhost", doc="Hostname for the statsd server"
     )
     required_config.add_option(
-        'statsd_port',
-        default='8125',
-        doc='Port for the statsd server',
-        parser=int
+        "statsd_port", default="8125", doc="Port for the statsd server", parser=int
     )
     required_config.add_option(
-        'statsd_namespace',
-        default='',
-        doc='Namespace for these metrics'
+        "statsd_namespace", default="", doc="Namespace for these metrics"
     )
 
     def __init__(self, config):
@@ -39,12 +32,12 @@ class DogStatsdMetrics(RequiredConfigMixin):
     def to_markus(self):
         """Convert to Markus configuration."""
         return {
-            'class': 'markus.backends.datadog.DatadogMetrics',
-            'options': {
-                'statsd_host': self.config('statsd_host'),
-                'statsd_port': self.config('statsd_port'),
-                'statsd_namespace': self.config('statsd_namespace'),
-            }
+            "class": "markus.backends.datadog.DatadogMetrics",
+            "options": {
+                "statsd_host": self.config("statsd_host"),
+                "statsd_port": self.config("statsd_port"),
+                "statsd_namespace": self.config("statsd_namespace"),
+            },
         }
 
 
@@ -58,6 +51,4 @@ class LoggingMetrics(RequiredConfigMixin):
 
     def to_markus(self):
         """Convert to Markus configuration."""
-        return {
-            'class': 'markus.backends.logging.LoggingMetrics'
-        }
+        return {"class": "markus.backends.logging.LoggingMetrics"}

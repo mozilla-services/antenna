@@ -16,10 +16,11 @@ logger = logging.getLogger(__name__)
 
 class Test20mbLimit:
     """Post a crash that's too big--it should be rejected"""
+
     def _generate_sized_crash(self, size, crash_generator):
         raw_crash, dumps = crash_generator.generate()
 
-        dumps['upload_file_minidump'] = ''
+        dumps["upload_file_minidump"] = ""
 
         crash_payload = mini_poster.assemble_crash_payload_dict(raw_crash, dumps)
         payload, headers = mini_poster.multipart_encode(crash_payload)
@@ -27,7 +28,7 @@ class Test20mbLimit:
 
         # Create a "dump file" which is really just a bunch of 'a' such that
         # the entire payload is equal to size
-        dumps['upload_file_minidump'] = 'a' * (size - base_size)
+        dumps["upload_file_minidump"] = "a" * (size - base_size)
 
         return mini_poster.assemble_crash_payload_dict(raw_crash, dumps)
 
@@ -36,7 +37,7 @@ class Test20mbLimit:
         payload, headers = mini_poster.multipart_encode(crash_payload)
 
         if len(payload) != size:
-            raise ValueError('payload size %s', len(payload))
+            raise ValueError("payload size %s", len(payload))
 
         try:
             resp = requests.post(posturl, headers=headers, data=payload)
@@ -51,7 +52,7 @@ class Test20mbLimit:
             # to make sure we get a ConnectionError with a broken pipe.
             #
             # https://github.com/kennethreitz/requests/issues/2422
-            if 'Broken pipe' in str(exc):
+            if "Broken pipe" in str(exc):
                 # Treating this as a 413
                 return 413
             raise
@@ -59,42 +60,40 @@ class Test20mbLimit:
         return 200
 
     @pytest.mark.skipif(
-        bool(os.environ.get('NONGINX')),
-        reason=(
-            'Requires nginx which you probably do not have running '
-            'via localhost'
-        ))
-    @pytest.mark.parametrize('size, status_code', [
-        # up to and including 20mb should get an HTTP 200
-        ((20 * 1024 * 1024) - 1, 200),
-        ((20 * 1024 * 1024), 200),
-
-        # past 20mb, so this should fail with an HTTP 413
-        ((20 * 1024 * 1024) + 1, 413)
-    ])
+        bool(os.environ.get("NONGINX")),
+        reason="Requires nginx which you probably do not have running via localhost",
+    )
+    @pytest.mark.parametrize(
+        "size, status_code",
+        [
+            # up to and including 20mb should get an HTTP 200
+            ((20 * 1024 * 1024) - 1, 200),
+            ((20 * 1024 * 1024), 200),
+            # past 20mb, so this should fail with an HTTP 413
+            ((20 * 1024 * 1024) + 1, 413),
+        ],
+    )
     def test_crash_size(self, posturl, size, status_code, crash_generator):
         # mini_poster._log_everything()
         result = self._test_crash_size(posturl, size, crash_generator)
         assert result == status_code
 
     @pytest.mark.skipif(
-        bool(os.environ.get('NONGINX')),
-        reason=(
-            'Requires nginx which you probably do not have running '
-            'via localhost'
-        ))
+        bool(os.environ.get("NONGINX")),
+        reason="Requires nginx which you probably do not have running via localhost",
+    )
     def test_21mb_and_low_content_length(self, posturl, crash_generator):
         # Generate a crash that exceeds nginx's max size
         crash_payload = self._generate_sized_crash(21 * 1024 * 1024, crash_generator)
         payload, headers = mini_poster.multipart_encode(crash_payload)
 
         # Reduce the size of the content length
-        headers['Content-Length'] = str(19 * 1024 * 1024)
+        headers["Content-Length"] = str(19 * 1024 * 1024)
         try:
             resp = requests.post(posturl, headers=headers, data=payload)
             status_code = resp.status_code
         except requests.exceptions.ConnectionError as exc:
-            if 'Broken pipe' not in str(exc):
+            if "Broken pipe" not in str(exc):
                 raise
             status_code = 413
 

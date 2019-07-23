@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 def setup_logging(app_config):
     """Initialize Python logging configuration."""
-    host_id = app_config('host_id') or socket.gethostname()
+    host_id = app_config("host_id") or socket.gethostname()
 
     class AddHostID(logging.Filter):
         def filter(self, record):
@@ -40,76 +40,62 @@ def setup_logging(app_config):
             return True
 
     dc = {
-        'version': 1,
-        'disable_existing_loggers': True,
-        'filters': {
-            'add_hostid': {
-                '()': AddHostID
-            }
-        },
-        'formatters': {
-            'socorroapp': {
-                'format': '%(asctime)s %(levelname)s - %(name)s - %(message)s',
+        "version": 1,
+        "disable_existing_loggers": True,
+        "filters": {"add_hostid": {"()": AddHostID}},
+        "formatters": {
+            "socorroapp": {
+                "format": "%(asctime)s %(levelname)s - %(name)s - %(message)s"
             },
-            'mozlog': {
-                '()': 'dockerflow.logging.JsonLogFormatter',
-                'logger_name': 'antenna'
+            "mozlog": {
+                "()": "dockerflow.logging.JsonLogFormatter",
+                "logger_name": "antenna",
             },
         },
-        'handlers': {
-            'console': {
-                'level': 'DEBUG',
-                'class': 'logging.StreamHandler',
-                'formatter': 'socorroapp',
-                'filters': ['add_hostid'],
+        "handlers": {
+            "console": {
+                "level": "DEBUG",
+                "class": "logging.StreamHandler",
+                "formatter": "socorroapp",
+                "filters": ["add_hostid"],
             },
-            'mozlog': {
-                'level': 'DEBUG',
-                'class': 'logging.StreamHandler',
-                'formatter': 'mozlog',
-                'filters': ['add_hostid'],
+            "mozlog": {
+                "level": "DEBUG",
+                "class": "logging.StreamHandler",
+                "formatter": "mozlog",
+                "filters": ["add_hostid"],
             },
         },
     }
-    if app_config('local_dev_env'):
+    if app_config("local_dev_env"):
         # In a local development environment, we log to the console in a
         # human-readable fashion
-        dc['loggers'] = {
-            'antenna': {
-                'propagate': False,
-                'handlers': ['console'],
-                'level': app_config('logging_level'),
+        dc["loggers"] = {
+            "antenna": {
+                "propagate": False,
+                "handlers": ["console"],
+                "level": app_config("logging_level"),
             },
-            'markus': {
-                'propagate': False,
-                'handlers': ['console'],
-                'level': 'INFO',
-            },
+            "markus": {"propagate": False, "handlers": ["console"], "level": "INFO"},
         }
-        dc['root'] = {
-            'handlers': ['console'],
-            'level': 'WARNING',
-        }
+        dc["root"] = {"handlers": ["console"], "level": "WARNING"}
     else:
         # In a server environment, we log everything in mozlog format
-        dc['loggers'] = {
-            'antenna': {
-                'propagate': False,
-                'handlers': ['mozlog'],
-                'level': app_config('logging_level'),
-            },
+        dc["loggers"] = {
+            "antenna": {
+                "propagate": False,
+                "handlers": ["mozlog"],
+                "level": app_config("logging_level"),
+            }
         }
-        dc['root'] = {
-            'handlers': ['mozlog'],
-            'level': 'WARNING',
-        }
+        dc["root"] = {"handlers": ["mozlog"], "level": "WARNING"}
 
     logging.config.dictConfig(dc)
 
 
 def setup_metrics(metrics_classes, config, logger=None):
     """Initialize and configures the metrics system."""
-    logger.info('Setting up metrics: %s', metrics_classes)
+    logger.info("Setting up metrics: %s", metrics_classes)
 
     markus_configuration = []
     for cls in metrics_classes:
@@ -124,16 +110,16 @@ def log_config(logger, component):
     """Log configuration for a given component."""
     for namespace, key, val, opt in component.get_runtime_config():
         if namespace:
-            namespaced_key = '%s_%s' % ('_'.join(namespace), key)
+            namespaced_key = "%s_%s" % ("_".join(namespace), key)
         else:
             namespaced_key = key
 
         namespaced_key = namespaced_key.upper()
 
-        if 'secret' in opt.key.lower() and val:
-            msg = '%s=*****' % namespaced_key
+        if "secret" in opt.key.lower() and val:
+            msg = "%s=*****" % namespaced_key
         else:
-            msg = '%s=%s' % (namespaced_key, val)
+            msg = "%s=%s" % (namespaced_key, val)
         logger.info(msg)
 
 
@@ -144,9 +130,9 @@ def build_config_manager():
             ConfigOSEnv()
         ],
         doc=(
-            'For configuration help, see '
-            'https://antenna.readthedocs.io/en/latest/configuration.html'
-        )
+            "For configuration help, see "
+            "https://antenna.readthedocs.io/en/latest/configuration.html"
+        ),
     )
 
     return config
@@ -190,49 +176,49 @@ class AppConfig(RequiredConfigMixin):
 
     required_config = ConfigOptions()
     required_config.add_option(
-        'basedir',
+        "basedir",
         default=str(Path(__file__).parent.parent),
-        doc='The root directory for this application to find and store things.'
+        doc="The root directory for this application to find and store things.",
     )
     required_config.add_option(
-        'logging_level',
-        default='DEBUG',
-        doc='The logging level to use. DEBUG, INFO, WARNING, ERROR or CRITICAL'
+        "logging_level",
+        default="DEBUG",
+        doc="The logging level to use. DEBUG, INFO, WARNING, ERROR or CRITICAL",
     )
     required_config.add_option(
-        'local_dev_env',
-        default='False',
+        "local_dev_env",
+        default="False",
         parser=bool,
-        doc='Whether or not this is a local development environment.'
+        doc="Whether or not this is a local development environment.",
     )
     required_config.add_option(
-        'metrics_class',
-        default='antenna.metrics.LoggingMetrics',
+        "metrics_class",
+        default="antenna.metrics.LoggingMetrics",
         doc=(
-            'Comma-separated list of metrics backends to use. Possible options: '
+            "Comma-separated list of metrics backends to use. Possible options: "
             '"antenna.metrics.LoggingMetrics" and "antenna.metrics.DatadogMetrics"',
         ),
-        parser=ListOf(parse_class)
+        parser=ListOf(parse_class),
     )
     required_config.add_option(
-        'secret_sentry_dsn',
-        default='',
+        "secret_sentry_dsn",
+        default="",
         doc=(
-            'Sentry DSN to use. See https://docs.sentry.io/quickstart/#configure-the-dsn '
-            'for details. If this is not set an unhandled exception logging middleware '
-            'will be used instead.'
-        )
+            "Sentry DSN to use. See https://docs.sentry.io/quickstart/#configure-the-dsn "
+            "for details. If this is not set an unhandled exception logging middleware "
+            "will be used instead."
+        ),
     )
     required_config.add_option(
-        'host_id',
-        default='',
+        "host_id",
+        default="",
         doc=(
-            'Identifier for the host that is running Antenna. This identifies this Antenna '
-            'instance in the logs and makes it easier to correlate Antenna logs with '
-            'other data. For example, the value could be a public hostname, an instance id, '
-            'or something like that. If you do not set this, then socket.gethostname() is '
-            'used instead.'
-        )
+            "Identifier for the host that is running Antenna. This identifies this Antenna "
+            "instance in the logs and makes it easier to correlate Antenna logs with "
+            "other data. For example, the value could be a public hostname, an instance id, "
+            "or something like that. If you do not set this, then socket.gethostname() is "
+            "used instead."
+        ),
     )
 
     def __init__(self, config):
@@ -284,7 +270,7 @@ class AntennaAPI(falcon.API):
     def get_runtime_config(self, namespace=None):
         """Return generator of runtime configuration for all resources."""
         for res in self.get_resources():
-            if hasattr(res, 'get_runtime_config'):
+            if hasattr(res, "get_runtime_config"):
                 for item in res.get_runtime_config(namespace):
                     yield item
 
@@ -309,7 +295,7 @@ def get_app(config=None):
     app_config = AppConfig(config)
 
     # Set a Sentry client if we're so configured
-    set_sentry_client(app_config('secret_sentry_dsn'), app_config('basedir'))
+    set_sentry_client(app_config("secret_sentry_dsn"), app_config("basedir"))
 
     # Set up logging and sentry first, so we have something to log to. Then
     # build and log everything else.
@@ -322,17 +308,21 @@ def get_app(config=None):
     setup_sentry_logging()
 
     # Set up metrics
-    setup_metrics(app_config('metrics_class'), config, logger)
+    setup_metrics(app_config("metrics_class"), config, logger)
 
     # Build the app and heartbeat manager
     app = AntennaAPI(config)
 
     # Add restources
-    app.add_route('breakpad', '/submit', BreakpadSubmitterResource(config))
-    app.add_route('version', '/__version__', VersionResource(config, basedir=app_config('basedir')))
-    app.add_route('heartbeat', '/__heartbeat__', HeartbeatResource(config, app))
-    app.add_route('lbheartbeat', '/__lbheartbeat__', LBHeartbeatResource(config))
-    app.add_route('broken', '/__broken__', BrokenResource(config))
+    app.add_route("breakpad", "/submit", BreakpadSubmitterResource(config))
+    app.add_route(
+        "version",
+        "/__version__",
+        VersionResource(config, basedir=app_config("basedir")),
+    )
+    app.add_route("heartbeat", "/__heartbeat__", HeartbeatResource(config, app))
+    app.add_route("lbheartbeat", "/__lbheartbeat__", LBHeartbeatResource(config))
+    app.add_route("broken", "/__broken__", BrokenResource(config))
 
     # Finish logging configuration
     log_config(logger, app)

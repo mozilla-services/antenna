@@ -7,45 +7,34 @@ class TestHealthChecks:
     def test_no_version(self, client, tmpdir):
         # Set basedir here to tmpdir which we *know* doesn't have a
         # version.json in it.
-        client.rebuild_app({
-            'BASEDIR': str(tmpdir)
-        })
+        client.rebuild_app({"BASEDIR": str(tmpdir)})
 
-        result = client.simulate_get('/__version__')
-        assert result.content == b'{}'
+        result = client.simulate_get("/__version__")
+        assert result.content == b"{}"
 
     def test_version(self, client, tmpdir):
-        client.rebuild_app({
-            'BASEDIR': str(tmpdir)
-        })
+        client.rebuild_app({"BASEDIR": str(tmpdir)})
 
         # NOTE(willkg): The actual version.json has other things in it,
         # but our endpoint just spits out the file verbatim, so we
         # can test with whatever.
-        version_path = tmpdir.join('/version.json')
+        version_path = tmpdir.join("/version.json")
         version_path.write('{"commit": "ou812"}')
 
-        result = client.simulate_get('/__version__')
+        result = client.simulate_get("/__version__")
         assert result.content == b'{"commit": "ou812"}'
 
     def test_lb_heartbeat(self, client):
-        resp = client.simulate_get('/__lbheartbeat__')
+        resp = client.simulate_get("/__lbheartbeat__")
         assert resp.status_code == 200
 
     def test_heartbeat(self, client):
-        resp = client.simulate_get('/__heartbeat__')
+        resp = client.simulate_get("/__heartbeat__")
         assert resp.status_code == 200
         # NOTE(willkg): This isn't mocked out, so it's entirely likely that
         # this expected result will change over time.
-        assert (
-            resp.json ==
-            {
-                'errors': [],
-                'info': {
-                }
-            }
-        )
+        assert resp.json == {"errors": [], "info": {}}
 
     def test_broken(self, client):
-        resp = client.simulate_get('/__broken__')
+        resp = client.simulate_get("/__broken__")
         assert resp.status_code == 500

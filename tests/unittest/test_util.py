@@ -22,28 +22,32 @@ from antenna.util import (
 
 def test_utc_now():
     res = utc_now()
-    assert res.strftime('%Z') == 'UTC'
-    assert res.strftime('%z') == '+0000'
+    assert res.strftime("%Z") == "UTC"
+    assert res.strftime("%z") == "+0000"
     assert res.tzinfo
 
 
 def test_get_version_info(tmpdir):
-    fn = tmpdir.join('/version.json')
-    fn.write_text('{"commit": "d6ac5a5d2acf99751b91b2a3ca651d99af6b9db3"}', encoding='utf-8')
-
-    assert (
-        get_version_info(str(tmpdir)) ==
-        {'commit': 'd6ac5a5d2acf99751b91b2a3ca651d99af6b9db3'}
+    fn = tmpdir.join("/version.json")
+    fn.write_text(
+        '{"commit": "d6ac5a5d2acf99751b91b2a3ca651d99af6b9db3"}', encoding="utf-8"
     )
 
+    assert get_version_info(str(tmpdir)) == {
+        "commit": "d6ac5a5d2acf99751b91b2a3ca651d99af6b9db3"
+    }
 
-@freeze_time('2011-09-06 00:00:00', tz_offset=0)
+
+@freeze_time("2011-09-06 00:00:00", tz_offset=0)
 def test_crash_id():
     """Tests creating crash ids"""
     crash_id = create_crash_id()
 
-    assert get_date_from_crash_id(crash_id) == '20110906'
-    assert get_date_from_crash_id(crash_id, as_datetime=True).strftime('%Y%m%d') == '20110906'
+    assert get_date_from_crash_id(crash_id) == "20110906"
+    assert (
+        get_date_from_crash_id(crash_id, as_datetime=True).strftime("%Y%m%d")
+        == "20110906"
+    )
 
     # Defaults to 1
     assert get_throttle_from_crash_id(crash_id) == 1
@@ -59,50 +63,56 @@ def test_crash_id_with_date():
     """Tests creating a crash id with a timestamp"""
     crash_id = create_crash_id(datetime(2016, 10, 4))
 
-    assert get_date_from_crash_id(crash_id) == '20161004'
+    assert get_date_from_crash_id(crash_id) == "20161004"
 
 
-@pytest.mark.parametrize('data, strict, expected', [
-    # Test shape
-    ('', True, False),
-    ('aaa', True, False),
-    ('de1bb258cbbf4589a67334f800160918', True, False),
-    ('DE1BB258-CBBF-4589-A673-34F800160918', True, False),
-    ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', True, False),
-    ('00000000-0000-0000-0000-000000000000', True, True),
-
-    # Test throttle character
-    ('de1bb258-cbbf-4589-a673-34f800160918', True, True),
-    ('de1bb258-cbbf-4589-a673-34f801160918', True, True),
-    ('de1bb258-cbbf-4589-a673-34f802160918', True, False),
-    ('de1bb258-cbbf-4589-a673-34f802160918', False, True),
-])
+@pytest.mark.parametrize(
+    "data, strict, expected",
+    [
+        # Test shape
+        ("", True, False),
+        ("aaa", True, False),
+        ("de1bb258cbbf4589a67334f800160918", True, False),
+        ("DE1BB258-CBBF-4589-A673-34F800160918", True, False),
+        ("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", True, False),
+        ("00000000-0000-0000-0000-000000000000", True, True),
+        # Test throttle character
+        ("de1bb258-cbbf-4589-a673-34f800160918", True, True),
+        ("de1bb258-cbbf-4589-a673-34f801160918", True, True),
+        ("de1bb258-cbbf-4589-a673-34f802160918", True, False),
+        ("de1bb258-cbbf-4589-a673-34f802160918", False, True),
+    ],
+)
 def test_validate_crash_id(data, strict, expected):
     assert validate_crash_id(data, strict=strict) == expected
 
 
-@pytest.mark.parametrize('data, expected', [
-    ('', ''),
-    ('dump_name', 'dump_name'),
-    ('dump', 'dump'),
-    ('upload_file_minidump', 'upload_file_minidump'),
-    ('upload_file_minidump_browser', 'upload_file_minidump_browser'),
-    ('upload_file_minidump_content', 'upload_file_minidump_content'),
-    ('upload_file_minidump_flash1', 'upload_file_minidump_flash1'),
-    ('upload_file_minidump_flash2', 'upload_file_minidump_flash2'),
-
-    # Sanitize non-ascii characters
-    ('upload\u0394_file_minidump', 'upload_file_minidump'),
-    ('upload_file_m\xef\xbf\xbdnidump', 'upload_file_mnidump'),
-])
+@pytest.mark.parametrize(
+    "data, expected",
+    [
+        ("", ""),
+        ("dump_name", "dump_name"),
+        ("dump", "dump"),
+        ("upload_file_minidump", "upload_file_minidump"),
+        ("upload_file_minidump_browser", "upload_file_minidump_browser"),
+        ("upload_file_minidump_content", "upload_file_minidump_content"),
+        ("upload_file_minidump_flash1", "upload_file_minidump_flash1"),
+        ("upload_file_minidump_flash2", "upload_file_minidump_flash2"),
+        # Sanitize non-ascii characters
+        ("upload\u0394_file_minidump", "upload_file_minidump"),
+        ("upload_file_m\xef\xbf\xbdnidump", "upload_file_mnidump"),
+    ],
+)
 def test_sanitize_dump_name(data, expected):
     assert sanitize_dump_name(data) == expected
 
 
 class Test_retry:
     """Tests for the retry decorator"""
+
     def test_retry(self):
         """Test that retry doesn't affect function return"""
+
         @retry()
         def some_thing():
             return 1

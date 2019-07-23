@@ -31,7 +31,7 @@ Local dev environment Pub/Sub emulator manipulation script.
 
 def list_crashids(project_id, topic_name, subscription_name):
     """List crashids."""
-    print('Listing crashids in %r for %r:' % (topic_name, subscription_name))
+    print("Listing crashids in %r for %r:" % (topic_name, subscription_name))
     subscriber = pubsub_v1.SubscriberClient()
     topic_path = subscriber.topic_path(project_id, topic_name)
     subscription_path = subscriber.subscription_path(project_id, subscription_name)
@@ -43,13 +43,15 @@ def list_crashids(project_id, topic_name, subscription_name):
         subscriber.get_subscription(subscription_path)
 
     while True:
-        response = subscriber.pull(subscription_path, max_messages=1, return_immediately=True)
+        response = subscriber.pull(
+            subscription_path, max_messages=1, return_immediately=True
+        )
         if not response.received_messages:
             break
 
         ack_ids = []
         for msg in response.received_messages:
-            print('crash id: %s' % msg.message.data)
+            print("crash id: %s" % msg.message.data)
             ack_ids.append(msg.ack_id)
 
         # Acknowledges the received messages so they will not be sent again.
@@ -58,7 +60,7 @@ def list_crashids(project_id, topic_name, subscription_name):
 
 def list_topics(project_id, topic_name, subscription_name):
     """List topics for this project."""
-    print('Listing topics in project %s:' % project_id)
+    print("Listing topics in project %s:" % project_id)
     publisher = pubsub_v1.PublisherClient()
     project_path = publisher.project_path(project_id)
 
@@ -83,17 +85,17 @@ def create_topic(project_id, topic_name, subscription_name):
 
     try:
         publisher.create_topic(topic_path)
-        print('Topic created: %s' % topic_path)
+        print("Topic created: %s" % topic_path)
     except AlreadyExists:
-        print('Topic already created.')
+        print("Topic already created.")
 
     subscriber = pubsub_v1.SubscriberClient()
     subscription_path = subscriber.subscription_path(project_id, subscription_name)
     try:
         subscriber.create_subscription(subscription_path, topic_path)
-        print('Subscription created: %s' % subscription_path)
+        print("Subscription created: %s" % subscription_path)
     except AlreadyExists:
-        print('Subscription already created.')
+        print("Subscription already created.")
         pass
 
 
@@ -105,13 +107,13 @@ def delete_topic(project_id, topic_name, subscription_name):
 
     # Delete all subscriptions
     for subscription in publisher.list_topic_subscriptions(topic_path):
-        print('Deleting %s...' % subscription)
+        print("Deleting %s..." % subscription)
         subscriber.delete_subscription(subscription)
 
     # Delete topic
     try:
         publisher.delete_topic(topic_path)
-        print('Topic deleted: %s' % topic_name)
+        print("Topic deleted: %s" % topic_name)
     except NotFound:
         pass
 
@@ -120,17 +122,17 @@ def print_help():
     """Print help text."""
     print(HELP_TEXT)
     for cmd, fun in SUBCOMMANDS.items():
-        print('%s: %s' % (cmd, fun.__doc__.splitlines()[0].strip()))
+        print("%s: %s" % (cmd, fun.__doc__.splitlines()[0].strip()))
     return 0
 
 
 SUBCOMMANDS = {
-    'create_topic': create_topic,
-    'delete_topic': delete_topic,
-    'list_subscriptions': list_subscriptions,
-    'list_crashids': list_crashids,
-    'list_topics': list_topics,
-    'help': print_help,
+    "create_topic": create_topic,
+    "delete_topic": delete_topic,
+    "list_subscriptions": list_subscriptions,
+    "list_crashids": list_crashids,
+    "list_topics": list_topics,
+    "help": print_help,
 }
 
 
@@ -142,19 +144,19 @@ def main():
 
     config = build_config_manager()
 
-    if not config('PUBSUB_EMULATOR_HOST', default=''):
-        print('WARNING: You are running against the real GCP and not the emulator.')
+    if not config("PUBSUB_EMULATOR_HOST", default=""):
+        print("WARNING: You are running against the real GCP and not the emulator.")
 
-    project_id = config('CRASHPUBLISH_PROJECT_ID')
-    topic_name = config('CRASHPUBLISH_TOPIC_NAME')
-    subscription_name = config('CRASHPUBLISH_SUBSCRIPTION_NAME')
+    project_id = config("CRASHPUBLISH_PROJECT_ID")
+    topic_name = config("CRASHPUBLISH_TOPIC_NAME")
+    subscription_name = config("CRASHPUBLISH_SUBSCRIPTION_NAME")
 
     if args[0] in SUBCOMMANDS:
         return SUBCOMMANDS[args[0]](project_id, topic_name, subscription_name)
 
-    print('Subcommand %s does not exist.' % args[0])
+    print("Subcommand %s does not exist." % args[0])
     return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

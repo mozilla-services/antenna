@@ -81,30 +81,26 @@ class PubSubCrashPublish(CrashPublishBase):
 
     required_config = ConfigOptions()
     required_config.add_option(
-        'service_account_file',
-        default='',
-        doc='The absolute path to the Google Cloud service account credentials file.'
+        "service_account_file",
+        default="",
+        doc="The absolute path to the Google Cloud service account credentials file.",
     )
+    required_config.add_option("project_id", doc="Google Cloud project id.")
     required_config.add_option(
-        'project_id',
-        doc='Google Cloud project id.'
-    )
-    required_config.add_option(
-        'topic_name',
-        doc='The Pub/Sub topic name to publish to.'
+        "topic_name", doc="The Pub/Sub topic name to publish to."
     )
 
     def __init__(self, config):
         super().__init__(config)
 
-        self.project_id = self.config('project_id')
-        self.topic_name = self.config('topic_name')
+        self.project_id = self.config("project_id")
+        self.topic_name = self.config("topic_name")
 
-        if os.environ.get('PUBSUB_EMULATOR_HOST', ''):
+        if os.environ.get("PUBSUB_EMULATOR_HOST", ""):
             self.publisher = pubsub_v1.PublisherClient()
         else:
             self.publisher = pubsub_v1.PublisherClient.from_service_account_file(
-                self.config('service_account_file')
+                self.config("service_account_file")
             )
         self.publisher._batch_class = SynchronousBatch
         self.topic_path = self.publisher.topic_path(self.project_id, self.topic_name)
@@ -113,7 +109,7 @@ class PubSubCrashPublish(CrashPublishBase):
 
     def verify_topic(self):
         """Verify topic can be published to by publishing fake crash id."""
-        future = self.publisher.publish(self.topic_path, data=b'test')
+        future = self.publisher.publish(self.topic_path, data=b"test")
         future.result()
 
     def check_health(self, state):
@@ -121,11 +117,11 @@ class PubSubCrashPublish(CrashPublishBase):
         try:
             self.publisher.get_topic(self.topic_path)
         except Exception as exc:
-            state.add_error('PubSubCrashPublish', repr(exc))
+            state.add_error("PubSubCrashPublish", repr(exc))
 
     def publish_crash(self, crash_report):
         """Publish a crash id to a Pub/Sub topic."""
         crash_id = crash_report.crash_id
-        data = crash_id.encode('utf-8')
+        data = crash_id.encode("utf-8")
         future = self.publisher.publish(self.topic_path, data=data)
         future.result()

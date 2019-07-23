@@ -40,17 +40,15 @@ def set_sentry_client(sentry_dsn, basedir):
     global _sentry_client
     if sentry_dsn:
         version_info = get_version_info(basedir)
-        commit = version_info.get('commit')[:8]
+        commit = version_info.get("commit")[:8]
 
         _sentry_client = Client(
-            dsn=sentry_dsn,
-            include_paths=['antenna'],
-            tags={'commit': commit}
+            dsn=sentry_dsn, include_paths=["antenna"], tags={"commit": commit}
         )
-        logger.info('Set up sentry client')
+        logger.info("Set up sentry client")
     else:
         _sentry_client = None
-        logger.info('Removed sentry client')
+        logger.info("Removed sentry client")
 
 
 class WSGILoggingMiddleware(object):
@@ -67,12 +65,12 @@ class WSGILoggingMiddleware(object):
             return self.application(environ, start_response)
 
         except Exception:
-            logger.exception('Unhandled exception')
+            logger.exception("Unhandled exception")
             exc_info = sys.exc_info()
             start_response(
-                '500 Internal Server Error',
-                [('content-type', 'application/json; charset=utf-8')],
-                exc_info
+                "500 Internal Server Error",
+                [("content-type", "application/json; charset=utf-8")],
+                exc_info,
             )
             return [b'{"msg": "COUGH! Internal Server Error"}']
 

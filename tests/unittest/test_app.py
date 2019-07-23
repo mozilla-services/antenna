@@ -5,6 +5,6 @@
 
 class TestBasic:
     def test_404(self, client):
-        result = client.simulate_get('/foo')
+        result = client.simulate_get("/foo")
         assert result.status_code == 404
-        assert result.headers['Content-Type'].startswith('application/json')
+        assert result.headers["Content-Type"].startswith("application/json")

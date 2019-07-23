@@ -17,17 +17,17 @@ logger = logging.getLogger(__name__)
 
 def http_post(posturl, headers, data):
     parsed = urllib.parse.urlparse(posturl)
-    if ':' in parsed.netloc:
-        host, port = parsed.netloc.split(':')
+    if ":" in parsed.netloc:
+        host, port = parsed.netloc.split(":")
     else:
         host = parsed.netloc
-        port = '443' if posturl.startswith('https') else '80'
+        port = "443" if posturl.startswith("https") else "80"
 
-    if posturl.startswith('https'):
+    if posturl.startswith("https"):
         conn = HTTPSConnection(host, int(port))
     else:
         conn = HTTPConnection(host, int(port))
-    conn.request('POST', parsed.path, headers=headers, body=data)
+    conn.request("POST", parsed.path, headers=headers, body=data)
     return conn.getresponse()
 
 
@@ -39,13 +39,13 @@ class TestContentLength:
         # Generate the payload and headers for a crash with no dumps
         payload, headers = mini_poster.multipart_encode(raw_crash)
 
-        del headers['Content-Length']
+        del headers["Content-Length"]
 
         # Do an HTTP POST with no Content-Length
         resp = http_post(posturl, headers, payload)
 
         assert resp.getcode() == 200
-        assert str(resp.read(), encoding='utf-8').startswith('CrashID=')
+        assert str(resp.read(), encoding="utf-8").startswith("CrashID=")
 
     def test_content_length_0(self, posturl, crash_generator):
         """Post a crash with a content-length 0"""
@@ -55,12 +55,12 @@ class TestContentLength:
         payload, headers = mini_poster.multipart_encode(raw_crash)
 
         # Add wrong content-length
-        headers['Content-Length'] = '0'
+        headers["Content-Length"] = "0"
 
         resp = http_post(posturl, headers, payload)
 
         assert resp.getcode() == 200
-        assert str(resp.read(), encoding='utf-8') == 'Discarded=1'
+        assert str(resp.read(), encoding="utf-8") == "Discarded=1"
 
     def test_content_length_20(self, posturl, crash_generator):
         """Post a crash with a content-length 20"""
@@ -70,28 +70,26 @@ class TestContentLength:
         payload, headers = mini_poster.multipart_encode(raw_crash)
 
         # Add wrong content-length
-        headers['Content-Length'] = '20'
+        headers["Content-Length"] = "20"
 
         resp = http_post(posturl, headers, payload)
 
         assert resp.getcode() == 200
-        assert str(resp.read(), encoding='utf-8') == 'Discarded=1'
+        assert str(resp.read(), encoding="utf-8") == "Discarded=1"
 
     @pytest.mark.skipif(
-        bool(os.environ.get('NONGINX')),
-        reason=(
-            'Requires nginx which you probably do not have running '
-            'via localhost'
-        ))
+        bool(os.environ.get("NONGINX")),
+        reason="Requires nginx which you probably do not have running via localhost",
+    )
     def test_content_length_1000(self, posturl, crash_generator):
-        """Post a crash with a content-length greater than size of payload"""
+        """Post a crash with a content-length greater than size of payload."""
         raw_crash, dumps = crash_generator.generate()
 
         # Generate the payload and headers for a crash with no dumps
         payload, headers = mini_poster.multipart_encode(raw_crash)
 
         # Add wrong content-length
-        headers['Content-Length'] = '1000'
+        headers["Content-Length"] = "1000"
 
         try:
             resp = http_post(posturl, headers, payload)
@@ -116,7 +114,7 @@ class TestContentLength:
         payload, headers = mini_poster.multipart_encode(raw_crash)
 
         # Add wrong content-length
-        headers['Content-Length'] = 'foo'
+        headers["Content-Length"] = "foo"
 
         resp = http_post(posturl, headers, payload)
 

@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 class GeventGrpcWorker(gunicorn.workers.ggevent.GeventWorker):
     """Gevent worker that also patches grpc."""
+
     def patch(self):
         super().patch()
         grpc_gevent.init_gevent()

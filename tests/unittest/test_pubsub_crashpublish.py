@@ -40,7 +40,9 @@ class PubSubHelper:
     def create_subscription(self, project_id, topic_name, subscription_name):
         """Create a subscription for a given topic and return subscription path."""
         topic_path = self._subscriber.topic_path(project_id, topic_name)
-        subscription_path = self._subscriber.subscription_path(project_id, subscription_name)
+        subscription_path = self._subscriber.subscription_path(
+            project_id, subscription_name
+        )
 
         self._subscriber.create_subscription(subscription_path, topic_path)
         self._subscriptions.append(subscription_path)
@@ -56,7 +58,9 @@ class PubSubHelper:
         self._subscriber.get_subscription(subscription_path)
         crashids = []
         while True:
-            resp = self._subscriber.pull(subscription_path, max_messages=1, return_immediately=True)
+            resp = self._subscriber.pull(
+                subscription_path, max_messages=1, return_immediately=True
+            )
             if not resp.received_messages:
                 break
 
@@ -84,17 +88,19 @@ class TestPubSubCrashPublishIntegration:
         # configuration--this will call verify_topic() which will balk because
         # the topic doesn't exist.
         with pytest.raises(NotFound):
-            client.rebuild_app({
-                'LOCAL_DEV_ENV': 'True',
-                'CRASHPUBLISH_CLASS': 'antenna.ext.pubsub.crashpublish.PubSubCrashPublish',
-                'CRASHPUBLISH_PROJECT_ID': 'test_socorro',
-                'CRASHPUBLISH_TOPIC_NAME': 'test_socorro_normal',
-            })
+            client.rebuild_app(
+                {
+                    "LOCAL_DEV_ENV": "True",
+                    "CRASHPUBLISH_CLASS": "antenna.ext.pubsub.crashpublish.PubSubCrashPublish",
+                    "CRASHPUBLISH_PROJECT_ID": "test_socorro",
+                    "CRASHPUBLISH_TOPIC_NAME": "test_socorro_normal",
+                }
+            )
 
     def test_verify_topic_with_topic(self, client, pubsub):
-        PROJECT = 'test_socorro'
-        TOPIC = 'test_socorro_normal'
-        SUB = 'test_subscription'
+        PROJECT = "test_socorro"
+        TOPIC = "test_socorro_normal"
+        SUB = "test_subscription"
 
         pubsub.create_topic(PROJECT, TOPIC)
         subscription_path = pubsub.create_subscription(PROJECT, TOPIC, SUB)
@@ -103,59 +109,57 @@ class TestPubSubCrashPublishIntegration:
 
         # Rebuild the app the test client is using with relevant configuration--this
         # will call verify_topic() which will work fine.
-        client.rebuild_app({
-            'LOCAL_DEV_ENV': 'True',
-            'CRASHPUBLISH_CLASS': 'antenna.ext.pubsub.crashpublish.PubSubCrashPublish',
-            'CRASHPUBLISH_PROJECT_ID': PROJECT,
-            'CRASHPUBLISH_TOPIC_NAME': TOPIC,
-        })
+        client.rebuild_app(
+            {
+                "LOCAL_DEV_ENV": "True",
+                "CRASHPUBLISH_CLASS": "antenna.ext.pubsub.crashpublish.PubSubCrashPublish",
+                "CRASHPUBLISH_PROJECT_ID": PROJECT,
+                "CRASHPUBLISH_TOPIC_NAME": TOPIC,
+            }
+        )
 
         # Assert "test" crash id was published
         crashids = pubsub.get_published_crashids(subscription_path)
-        assert crashids == [
-            b'test'
-        ]
+        assert crashids == [b"test"]
 
     def test_crash_publish(self, client, pubsub):
-        PROJECT = 'test_socorro'
-        TOPIC = 'test_socorro_normal'
-        SUB = 'test_subscription'
+        PROJECT = "test_socorro"
+        TOPIC = "test_socorro_normal"
+        SUB = "test_subscription"
 
         pubsub.create_topic(PROJECT, TOPIC)
         subscription_path = pubsub.create_subscription(PROJECT, TOPIC, SUB)
 
-        data, headers = multipart_encode({
-            'uuid': 'de1bb258-cbbf-4589-a673-34f800160918',
-            'ProductName': 'Fennec',
-            'Version': '1.0',
-            'upload_file_minidump': ('fakecrash.dump', io.BytesIO(b'abcd1234'))
-        })
+        data, headers = multipart_encode(
+            {
+                "uuid": "de1bb258-cbbf-4589-a673-34f800160918",
+                "ProductName": "Fennec",
+                "Version": "1.0",
+                "upload_file_minidump": ("fakecrash.dump", io.BytesIO(b"abcd1234")),
+            }
+        )
 
         # Rebuild the app the test client is using with relevant configuration
-        client.rebuild_app({
-            'LOCAL_DEV_ENV': 'True',
-            'CRASHPUBLISH_CLASS': 'antenna.ext.pubsub.crashpublish.PubSubCrashPublish',
-            'CRASHPUBLISH_PROJECT_ID': PROJECT,
-            'CRASHPUBLISH_TOPIC_NAME': TOPIC
-        })
+        client.rebuild_app(
+            {
+                "LOCAL_DEV_ENV": "True",
+                "CRASHPUBLISH_CLASS": "antenna.ext.pubsub.crashpublish.PubSubCrashPublish",
+                "CRASHPUBLISH_PROJECT_ID": PROJECT,
+                "CRASHPUBLISH_TOPIC_NAME": TOPIC,
+            }
+        )
 
         # Slurp off the "test" crash id from verification
         pubsub.get_published_crashids(subscription_path)
 
-        result = client.simulate_post(
-            '/submit',
-            headers=headers,
-            body=data
-        )
+        result = client.simulate_post("/submit", headers=headers, body=data)
         client.join_app()
 
         # Verify the collector returns a 200 status code and the crash id
         # we fed it.
         assert result.status_code == 200
-        assert result.content == b'CrashID=bp-de1bb258-cbbf-4589-a673-34f800160918\n'
+        assert result.content == b"CrashID=bp-de1bb258-cbbf-4589-a673-34f800160918\n"
 
         # Assert crash id was published
         crashids = pubsub.get_published_crashids(subscription_path)
-        assert crashids == [
-            b'de1bb258-cbbf-4589-a673-34f800160918'
-        ]
+        assert crashids == [b"de1bb258-cbbf-4589-a673-34f800160918"]

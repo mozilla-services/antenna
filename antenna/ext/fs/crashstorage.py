@@ -47,9 +47,9 @@ class FSCrashStorage(CrashStorageBase):
 
     required_config = ConfigOptions()
     required_config.add_option(
-        'fs_root',
-        default='/tmp/antenna_crashes',  # nosec
-        doc='path to where files should be stored'
+        "fs_root",
+        default="/tmp/antenna_crashes",  # nosec
+        doc="path to where files should be stored",
     )
 
     # FIXME(willkg): umask
@@ -57,7 +57,7 @@ class FSCrashStorage(CrashStorageBase):
     def __init__(self, config):
         self.config = config.with_options(self)
 
-        self.root = os.path.abspath(self.config('fs_root')).rstrip(os.sep)
+        self.root = os.path.abspath(self.config("fs_root")).rstrip(os.sep)
 
         # FIXME(willkg): We should probably do more to validate fs_root. Can we
         # write files to it?
@@ -67,10 +67,7 @@ class FSCrashStorage(CrashStorageBase):
     def _get_raw_crash_path(self, crash_id):
         """Return path for where the raw crash should go."""
         return os.path.join(
-            self.root,
-            get_date_from_crash_id(crash_id),
-            'raw_crash',
-            crash_id + '.json'
+            self.root, get_date_from_crash_id(crash_id), "raw_crash", crash_id + ".json"
         )
 
     def _get_dump_names_path(self, crash_id):
@@ -78,21 +75,18 @@ class FSCrashStorage(CrashStorageBase):
         return os.path.join(
             self.root,
             get_date_from_crash_id(crash_id),
-            'dump_names',
-            crash_id + '.json'
+            "dump_names",
+            crash_id + ".json",
         )
 
     def _get_dump_name_path(self, crash_id, dump_name):
         """Return path for a given dump."""
         return os.path.join(
-            self.root,
-            get_date_from_crash_id(crash_id),
-            dump_name,
-            crash_id
+            self.root, get_date_from_crash_id(crash_id), dump_name, crash_id
         )
 
     def _save_file(self, fn, contents):
-        logger.debug('Saving file %r', fn)
+        logger.debug("Saving file %r", fn)
         path = os.path.dirname(fn)
 
         # FIXME(willkg): What happens if there is something here already and
@@ -101,14 +95,14 @@ class FSCrashStorage(CrashStorageBase):
             try:
                 os.makedirs(path)
             except OSError:
-                logger.exception('Threw exception while trying to make path %r', path)
+                logger.exception("Threw exception while trying to make path %r", path)
                 # FIXME(willkg): If we ever make this production-ready, we
                 # need a better option here.
                 return
 
         # FIXME(willkg): This will stomp on existing crashes. Is that ok?
         # Should we detect and do something different somehow?
-        with open(fn, 'wb') as fp:
+        with open(fn, "wb") as fp:
             fp.write(contents)
 
     def save_raw_crash(self, crash_id, raw_crash):
@@ -120,7 +114,10 @@ class FSCrashStorage(CrashStorageBase):
         :arg dict raw_crash: dict The raw crash as a dict.
 
         """
-        self._save_file(self._get_raw_crash_path(crash_id), json_ordered_dumps(raw_crash).encode('utf-8'))
+        self._save_file(
+            self._get_raw_crash_path(crash_id),
+            json_ordered_dumps(raw_crash).encode("utf-8"),
+        )
 
     def save_dumps(self, crash_id, dumps):
         """Save dump data.
@@ -133,7 +130,9 @@ class FSCrashStorage(CrashStorageBase):
 
         # Add dump_names to the list of files to save. We always generate this
         # even if there are no dumps.
-        files[self._get_dump_names_path(crash_id)] = json_ordered_dumps(list(sorted(dumps.keys()))).encode('utf-8')
+        files[self._get_dump_names_path(crash_id)] = json_ordered_dumps(
+            list(sorted(dumps.keys()))
+        ).encode("utf-8")
 
         # Add the dump files if there are any.
         for dump_name, dump in dumps.items():

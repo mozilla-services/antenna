@@ -53,11 +53,11 @@ def get_version_info(basedir):
 
     """
     try:
-        path = Path(basedir) / 'version.json'
-        with open(str(path), 'r') as fp:
+        path = Path(basedir) / "version.json"
+        with open(str(path), "r") as fp:
             commit_info = json.loads(fp.read().strip())
     except (IOError, OSError):
-        logger.error('Exception thrown when retrieving version.json', exc_info=True)
+        logger.error("Exception thrown when retrieving version.json", exc_info=True)
         commit_info = {}
     return commit_info
 
@@ -103,11 +103,16 @@ def create_crash_id(timestamp=None, throttle_result=1):
 
     id_ = str(uuid.uuid4())
     return "%s%d%02d%02d%02d" % (
-        id_[:-7], throttle_result, timestamp.year % 100, timestamp.month, timestamp.day
+        id_[:-7],
+        throttle_result,
+        timestamp.year % 100,
+        timestamp.month,
+        timestamp.day,
     )
 
 
-CRASH_ID_RE = re.compile(r"""
+CRASH_ID_RE = re.compile(
+    r"""
     ^
     [a-f0-9]{8}-
     [a-f0-9]{4}-
@@ -116,7 +121,9 @@ CRASH_ID_RE = re.compile(r"""
     [a-f0-9]{6}
     [0-9]{6}      # date in YYMMDD
     $
-""", re.VERBOSE)
+""",
+    re.VERBOSE,
+)
 
 
 def validate_crash_id(crash_id, strict=True):
@@ -134,7 +141,7 @@ def validate_crash_id(crash_id, strict=True):
 
     # Check throttle character
     if strict:
-        if crash_id[-7] not in ('0', '1'):
+        if crash_id[-7] not in ("0", "1"):
             return False
 
     return True
@@ -161,20 +168,20 @@ def get_date_from_crash_id(crash_id, as_datetime=False):
     :returns: string or datetime depending on ``as_datetime`` value
 
     """
-    s = '20' + crash_id[-6:]
+    s = "20" + crash_id[-6:]
     if as_datetime:
         return datetime.datetime(int(s[:4]), int(s[4:6]), int(s[6:8]), tzinfo=UTC)
     return s
 
 
-ALPHA_NUMERIC_UNDERSCORE = string.ascii_letters + string.digits + '_'
+ALPHA_NUMERIC_UNDERSCORE = string.ascii_letters + string.digits + "_"
 
 
 def sanitize_dump_name(val):
     """Sanitize a dump name."""
     # Dump names can only contain ASCII alpha-numeric characters and
     # underscores
-    val = ''.join(v for v in val if v in ALPHA_NUMERIC_UNDERSCORE)
+    val = "".join(v for v in val if v in ALPHA_NUMERIC_UNDERSCORE)
 
     # Dump names can't be longer than 30 characters
     val = val[:30]
@@ -204,11 +211,13 @@ def wait_time_generator():
         yield amt
 
 
-def retry(retryable_exceptions=Exception,
-          retryable_return=None,
-          wait_time_generator=wait_time_generator,
-          sleep_function=time.sleep,
-          module_logger=None):
+def retry(
+    retryable_exceptions=Exception,
+    retryable_return=None,
+    wait_time_generator=wait_time_generator,
+    sleep_function=time.sleep,
+    module_logger=None,
+):
     """Retry decorated function with wait times, max attempts and logging.
 
     Example with defaults::
@@ -286,24 +295,24 @@ def retry(retryable_exceptions=Exception,
                     # do another iteration.
                     if module_logger is not None:
                         module_logger.warning(
-                            '%s: bad return, retry attempt %s',
+                            "%s: bad return, retry attempt %s",
                             fun.__qualname__,
-                            attempts
+                            attempts,
                         )
 
                     # If last attempt, then raise MaxAttemptsError
                     if next_wait is None:
-                        raise MaxAttemptsError('Maximum retry attempts.', ret)
+                        raise MaxAttemptsError("Maximum retry attempts.", ret)
 
                 except retryable_exceptions as exc:
                     # Retryable exception is thrown, so we log something and
                     # then do another iteration.
                     if module_logger is not None:
                         module_logger.warning(
-                            '%s: exception %s, retry attempt %s',
+                            "%s: exception %s, retry attempt %s",
                             fun.__qualname__,
                             exc,
-                            attempts
+                            attempts,
                         )
 
                     # If last attempt, re-raise the exception thrown
@@ -314,4 +323,5 @@ def retry(retryable_exceptions=Exception,
                 attempts += 1
 
         return _retry_fun
+
     return _retry_inner
