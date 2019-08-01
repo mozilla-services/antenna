@@ -66,9 +66,9 @@ six==1.12.0 \
 boto3==1.9.199 \
     --hash=sha256:0cd4a3e158f40eedb54b36b3fbe60d135db74a245f0ca8eead1af2eb6d46a649 \
     --hash=sha256:68e9eba6f846cf8e01973ec565afdb1adfb9612b531c15bb5c5524394db4df5b
-botocore==1.10.84 \
-    --hash=sha256:380852e1adb9ba4ba9ff096af61f88a6888197b86e580e1bd786f04ebe6f9c0c \
-    --hash=sha256:d3e4b5a2c903ea30d19d41ea2f65d0e51dce54f4f4c4dfd6ecd7b04f240844a8
+botocore==1.12.199 \
+    --hash=sha256:25d87047241b7b775443570c0e790ca952f9f7491d4d6472430a4b006383a257 \
+    --hash=sha256:e4729c1acaa936d4c5c948a18d279f92bbf61fad9b5fb03942c753ec405e427d
 
 
 # Development things
