@@ -126,9 +126,9 @@ pytest-wholenodeid==0.2 \
 requests==2.22.0 \
     --hash=sha256:11e007a8a2aa0323f5a921e9e6a2d7e4e67d9877e85773fba9ba6419025cbeb4 \
     --hash=sha256:9cf5292fcd0f598c671cfc1e0d7d1a7f13bb8085e9a590f48c010551dc6c4b31
-Sphinx==2.1.2 \
-    --hash=sha256:22538e1bbe62b407cf5a8aabe1bb15848aa66bb79559f42f5202bbce6b757a69 \
-    --hash=sha256:f9a79e746b87921cabc3baa375199c6076d1270cee53915dbd24fdbeaaacc427
+Sphinx==2.2.0 \
+    --hash=sha256:0d586b0f8c2fc3cc6559c5e8fd6124628110514fda0e5d7c82e682d749d2e845 \
+    --hash=sha256:839a3ed6f6b092bb60f492024489cc9e6991360fb9f52ed6361acd510d261069
 urlwait==0.4 \
     --hash=sha256:395fc0c2a7f9736858a2c2f449aa20c6e9da1f86bfc2d1fda4f2f5b78a5c115a \
     --hash=sha256:fc39ff2c8abbcaad5043e1f79699dcb15a036cc4b0ff4d1aa825ea105d4889ff
