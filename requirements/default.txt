@@ -8,6 +8,8 @@ dockerflow==2019.6.0 \
 everett==1.0.2 \
     --hash=sha256:66c7991c056fd9b1de54c29e2b5004a30209530faef698d6ecfbf24bfbbdd1fb \
     --hash=sha256:8a5ee8cdde0ed6b3bbb63249e0e0703d4ad91921107ff198e0868ffce5f7b6bc
+# NOTE(willkg): Falcon 2.0 changes a bunch of things, so there's some non-trivial
+# rewrite work to upgrade to Falcon 2+.
 falcon==1.4.1 \
     --hash=sha256:0a66b33458fab9c1e400a9be1a68056abda178eb02a8cb4b8f795e9df20b053b \
     --hash=sha256:3981f609c0358a9fcdb25b0e7fab3d9e23019356fb429c635ce4133135ae1bc4 # pyup: <2.0.0
@@ -51,12 +53,14 @@ six==1.12.0 \
     --hash=sha256:3350809f0555b11f552448330d0b52d5f24c91a322ea4a15ef22629740f3761c \
     --hash=sha256:d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73
 
+# NOTE(willkg): In order to update these, we have to redo how the s3mock works
+# in the tests.
 boto3==1.7.84 \
     --hash=sha256:0ed4b107c3b4550547aaec3c9bb17df068ff92d1f6f4781205800e2cb8a66de5 \
-    --hash=sha256:64496f2c814e454e26c024df86bd08fb4643770d0e2b7a8fd70055fc6683eb9d
+    --hash=sha256:64496f2c814e454e26c024df86bd08fb4643770d0e2b7a8fd70055fc6683eb9d # pyup:ignore <1.8.0
 botocore==1.10.84 \
     --hash=sha256:380852e1adb9ba4ba9ff096af61f88a6888197b86e580e1bd786f04ebe6f9c0c \
-    --hash=sha256:d3e4b5a2c903ea30d19d41ea2f65d0e51dce54f4f4c4dfd6ecd7b04f240844a8
+    --hash=sha256:d3e4b5a2c903ea30d19d41ea2f65d0e51dce54f4f4c4dfd6ecd7b04f240844a8 # pyup:ignore <1.11.0
 
 
 # Development things
@@ -102,9 +106,9 @@ flake8==3.7.8 \
 freezegun==0.3.12 \
     --hash=sha256:2a4d9c8cd3c04a201e20c313caf8b6338f1cfa4cda43f46a94cc4a9fd13ea5e7 \
     --hash=sha256:edfdf5bc6040969e6ed2e36eafe277963bdc8b7c01daeda96c5c8594576c9390
-pytest==5.0.1 \
-    --hash=sha256:6ef6d06de77ce2961156013e9dff62f1b2688aa04d0dc244299fe7d67e09370d \
-    --hash=sha256:a736fed91c12681a7b34617c8fcefe39ea04599ca72c608751c31d89579a3f77
+pytest==5.1.2 \
+    --hash=sha256:95d13143cc14174ca1a01ec68e84d76ba5d9d493ac02716fd9706c949a505210 \
+    --hash=sha256:b78fe2881323bd44fd9bd76e5317173d4316577e7b1cddebae9136a4495ec865
 pytest-cov==2.7.1 \
     --hash=sha256:2b097cde81a302e1047331b48cadacf23577e431b61e9c6f49a1170bbe3d3da6 \
     --hash=sha256:e00ea4fdde970725482f1f35630d12f074e121a23801aabf2ae154ec6bdd343a
@@ -114,18 +118,18 @@ pytest-wholenodeid==0.2 \
 requests==2.22.0 \
     --hash=sha256:11e007a8a2aa0323f5a921e9e6a2d7e4e67d9877e85773fba9ba6419025cbeb4 \
     --hash=sha256:9cf5292fcd0f598c671cfc1e0d7d1a7f13bb8085e9a590f48c010551dc6c4b31
-Sphinx==2.1.2 \
-    --hash=sha256:22538e1bbe62b407cf5a8aabe1bb15848aa66bb79559f42f5202bbce6b757a69 \
-    --hash=sha256:f9a79e746b87921cabc3baa375199c6076d1270cee53915dbd24fdbeaaacc427
+Sphinx==2.2.0 \
+    --hash=sha256:0d586b0f8c2fc3cc6559c5e8fd6124628110514fda0e5d7c82e682d749d2e845 \
+    --hash=sha256:839a3ed6f6b092bb60f492024489cc9e6991360fb9f52ed6361acd510d261069
 urlwait==0.4 \
     --hash=sha256:395fc0c2a7f9736858a2c2f449aa20c6e9da1f86bfc2d1fda4f2f5b78a5c115a \
     --hash=sha256:fc39ff2c8abbcaad5043e1f79699dcb15a036cc4b0ff4d1aa825ea105d4889ff
 sphinx-rtd-theme==0.4.3 \
     --hash=sha256:00cf895504a7895ee433807c62094cf1e95f065843bf3acd17037c3e9a2becd4 \
     --hash=sha256:728607e34d60456d736cc7991fd236afb828b21b82f956c5ea75f94c8414040a
-google-cloud-pubsub==0.45.0 \
-    --hash=sha256:260ec6ab8bf8fe9d21cb11b445160eeead0d6578978afbe48769c7088c702be9 \
-    --hash=sha256:44074123276fd040fce246e408280d90d530b936012490ec6e6547868564659d
+google-cloud-pubsub==1.0.0 \
+    --hash=sha256:a052a67c3f0ae86716626ab0a3b83fdb0613df86d69aece43f905bf04672caf2 \
+    --hash=sha256:a922cd96474b0acbb1d03aa50e1db782800c5bb3e2731bc0feb93816d547ab17
 black==19.3b0 \
     --hash=sha256:09a9dcb7c46ed496a9850b76e4e825d6049ecd38b611f1224857a79bd985a8cf \
     --hash=sha256:68950ffd4d9169716bcb8719a56c07a2f4485354fec061cdd5910aa07369731c
