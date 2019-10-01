@@ -1,7 +1,7 @@
 # Production requirements
-datadog==0.29.3 \
-    --hash=sha256:0e33727bd9ef0b8201359accdf12f61fb58ab541bf4062693aca16653f8e7a0a \
-    --hash=sha256:995e51d142ae3624c86c78369b268f23386bb207df5345d718c241718387875c
+datadog==0.30.0 \
+    --hash=sha256:07c053e39c6509023d69bc2f3b8e3d5d101b4e75baf2da2b9fc707391c3e773d \
+    --hash=sha256:bbfd8c3a13e87b9c15fb982dff269b983ad9fb5ab610e7f17d92b0bc001fbe0f
 dockerflow==2019.6.0 \
     --hash=sha256:3342654c419492fa16dc5872546c893433fefce8fd9ba90da9bc9cfcafaecac1 \
     --hash=sha256:885e4e32ebedc87a86c0d9c16fe4797f9ffe70622eb3a056615e37611eb983fd
