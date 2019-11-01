@@ -106,9 +106,9 @@ flake8==3.7.9 \
 freezegun==0.3.12 \
     --hash=sha256:2a4d9c8cd3c04a201e20c313caf8b6338f1cfa4cda43f46a94cc4a9fd13ea5e7 \
     --hash=sha256:edfdf5bc6040969e6ed2e36eafe277963bdc8b7c01daeda96c5c8594576c9390
-pytest==5.2.0 \
-    --hash=sha256:13c1c9b22127a77fc684eee24791efafcef343335d855e3573791c68588fe1a5 \
-    --hash=sha256:d8ba7be9466f55ef96ba203fc0f90d0cf212f2f927e69186e1353e30bc7f62e5
+pytest==5.2.2 \
+    --hash=sha256:27abc3fef618a01bebb1f0d6d303d2816a99aa87a5968ebc32fe971be91eb1e6 \
+    --hash=sha256:58cee9e09242937e136dbb3dab466116ba20d6b7828c7620f23947f37eb4dae4
 pytest-cov==2.7.1 \
     --hash=sha256:2b097cde81a302e1047331b48cadacf23577e431b61e9c6f49a1170bbe3d3da6 \
     --hash=sha256:e00ea4fdde970725482f1f35630d12f074e121a23801aabf2ae154ec6bdd343a
