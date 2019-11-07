@@ -20,4 +20,4 @@ insert_final_newline = false
 indent_style = tab
 
 [*.py]
-max_line_length = 100
+max_line_length = 88
