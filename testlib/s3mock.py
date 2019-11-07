@@ -236,6 +236,12 @@ class S3Mock:
     execute the urlopen and tell you want the response was. It'll also tell you
     what it expected. This helps debugging assertions on HTTP conversations.
 
+    Usage::
+
+        with S3Mock() as s3:
+            s3.run_on_error()
+            # ... add steps, etc
+
     """
 
     def __init__(self):
