@@ -4,24 +4,19 @@
 
 """This module holds bits to make it easier to test Antenna and related scripts.
 
-This contains ``S3Mock`` which is the mocking system we use for recording AWS
-S3 HTTP conversations and writing tests that enforce those conversations.
+This contains ``S3Mock`` which is the mocking system we use for writing tests
+that enforce HTTP conversations.
 
 It's in this module because at some point, it might make sense to extract this
 into a separate library.
 
 """
 
+import dataclasses
 import io
-import os
+import unittest
 
-# boto has a vendored version of requests--we want to mock that one.
-from botocore.vendored import requests
-from botocore.vendored.requests.adapters import BaseAdapter
-from botocore.vendored.requests.models import Response
-
-# Note: DOUBLE-VENDORED!
-from botocore.vendored.requests.packages.urllib3.response import HTTPResponse
+from urllib3.response import HTTPResponse
 
 
 class ThouShaltNotPass(Exception):
@@ -41,6 +36,17 @@ CODE_TO_REASON = {
     403: "Forbidden",
     404: "Not Found",
 }
+
+
+@dataclasses.dataclass
+class Request:
+    method: str
+    url: str
+    body: io.BytesIO
+    headers: dict
+    scheme: str
+    host: str
+    port: int
 
 
 class Step:
@@ -63,7 +69,15 @@ class Step:
 
         return (
             self.method == request.method
-            and self.url == request.url
+            # The url can be any one of /path, scheme://host/path, or
+            # scheme://host:port/path
+            and self.url
+            in (
+                request.url,
+                "%s://%s%s" % (request.scheme, request.host, request.url),
+                "%s://%s:%s%s"
+                % (request.scheme, request.host, request.port, request.url),
+            )
             and check_body(request.body)
         )
 
@@ -72,75 +86,25 @@ class Step:
         headers = self.resp["headers"]
         body = self.resp["body"]
 
-        response = Response()
-        response.status_code = status_code
+        response = HTTPResponse(
+            body=io.BytesIO(body),
+            headers=headers,
+            status=status_code,
+            request_url=request.url,
+            request_method=request.method,
+            reason=CODE_TO_REASON[status_code],
+            preload_content=False,
+            decode_content=False,
+        )
 
         if "content-type" not in headers:
             headers["content-type"] = "text/xml"
         if "content-length" not in headers:
             headers["content-length"] = len(body)
 
-        response.raw = HTTPResponse(
-            body=io.BytesIO(body),
-            headers=headers,
-            status=status_code,
-            reason=CODE_TO_REASON[status_code],
-            preload_content=False,
-            decode_content=False,
-        )
-        response.reason = response.raw.reason
-
-        # From the request
-        response.url = request.url
         response.request = request
 
-        response.connection = self
-
         return response
-
-
-class FakeAdapter(BaseAdapter):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # The expected conversation specified by the developer
-        self.expected_conv = []
-
-        # The actual conversation that happened
-        self.conv = []
-
-    def add_step(self, **kwargs):
-        self.expected_conv.append(Step(**kwargs))
-
-    def send(self, request, *args, **kwargs):
-        if self.expected_conv and self.expected_conv[0].match(request):
-            step = self.expected_conv.pop(0)
-            resp = step.build_response(request)
-            self.conv.append((request, step, resp))
-            return resp
-
-        # NOTE(willkg): We use print here because fiddling with the logging
-        # framework inside test scaffolding is "tricky".
-        print(
-            "THWARTED SEND: %s\nargs: %r\nkwargs: %r"
-            % (
-                (
-                    request.method,
-                    request.url,
-                    request.body.read() if request.body is not None else b"",
-                ),
-                args,
-                kwargs,
-            )
-        )
-        raise ThouShaltNotPass("Preventing unexpected .send() call")
-
-    def close(self):
-        raise ThouShaltNotPass("Preventing unexpected .close() call")
-
-    def remaining_conversation(self):
-        """Returns the remaining conversation to happen"""
-        return self.expected_conv
 
 
 def serialize_request(request):
@@ -180,7 +144,7 @@ def serialize_response(response):
 
     This can be printed and is HTTP-response-like.
 
-    :arg response; ``requests.model.Response``
+    :arg response; ``urllib3.response.HTTPResponse``
 
     :returns: bytes of serialized response
 
@@ -202,58 +166,16 @@ def serialize_response(response):
     return b"\n".join(output)
 
 
-class RecordingAdapterShim:
-    """Adapter wrapper for recording requests and responses
-
-    Usage::
-
-        # This is the original adapter
-        adapter = get_adapter()
-
-        # Generate the shim, wrap the adapter and set the
-        # log filename.
-        recording_adapter = RecordingAdapterShim()
-        recording_adapter.wrapped_adapter = adapter
-        recording_adapter.filename = 's3mock.log'
-
-        # Now you have a wrapped adapter that will record HTTP
-        # conversations.
-        adapter = recording_adapter
-
-    """
-
-    def send(self, request, *args, **kwargs):
-        with open(self.filename, "ab") as fp:
-            fp.write(b"===================================\n")
-            fp.write(b"REQUEST>>>\n")
-            fp.write(serialize_request(request))
-            fp.write(b"-----\n")
-
-        response = self.wrapped_adapter.send(request, *args, **kwargs)
-
-        with open(self.filename, "ab") as fp:
-            fp.write(b"RESPONSE<<<\n")
-            fp.write(serialize_response(response))
-
-        return response
-
-    def __getattr__(self, name):
-        return getattr(self.wrapped_adapter, name)
-
-
 class S3Mock:
     """Provide a configurable mock for Boto3's S3 bits.
 
-    Boto3 uses botocore which uses s3transfer which uses requests to do REST
-    API calls.
+    Boto3 uses botocore which uses s3transfer which uses urllib3 to do REST API calls.
 
-    ``S3Mock`` mocks requests by creating a fake adapter which allows it to
-    intercept all outgoing HTTP requests. This lets us do two things:
+    ``S3Mock`` mocks urlopen which allows it to intercept all outgoing HTTP requests.
+    This lets us do two things:
 
     1. assert HTTP conversations happen in a specified way in tests
     2. prevent any unexpected HTTP requests from hitting the network
-    3. record HTTP conversations so we can verify things are happening
-       correctly and write tests
 
 
     **Usage**
@@ -307,25 +229,61 @@ class S3Mock:
     After all the steps and other things that you want to do are done, then you
     can assert that the entire expected conversation has occurred.
 
-    **Recording**
 
-    One of the difficulties with writing tests that assert HTTP conversations
-    happen in a certain way is that if the conversation happens over SSL, then
-    it's not readable using network sniffing tools. Thus ``S3Mock`` provides a
-    record feature that spits out what's going on to the specified file or
-    ``s3mock.log``.
+    **Troubleshooting**
+
+    If ``S3Mock`` is thwarting you, you can tell it to ``run_on_error`` and it'll
+    execute the urlopen and tell you want the response was. It'll also tell you
+    what it expected. This helps debugging assertions on HTTP conversations.
 
     Usage::
 
         with S3Mock() as s3:
-            s3.record(filename='s3mock.log')
-
-            # Do stuff here
+            s3.run_on_error()
+            # ... add steps, etc
 
     """
 
     def __init__(self):
-        self.adapter = FakeAdapter()
+        # The expected conversation specified by the developer
+        self.expected_conv = []
+
+        # The actual conversation that happened
+        self.conv = []
+
+        self._patcher = None
+
+        self._run_on_error = False
+
+    def mocked_urlopen(self, pool, method, url, body=None, headers=None, **kwargs):
+        req = Request(method, url, body, headers, pool.scheme, pool.host, pool.port)
+
+        if self.expected_conv and self.expected_conv[0].match(req):
+            step = self.expected_conv.pop(0)
+            resp = step.build_response(req)
+            self.conv.append((req, step, resp))
+            return resp
+
+        # NOTE(willkg): We use print here because fiddling with the logging
+        # framework inside test scaffolding is "tricky".
+        print("THWARTED SEND:\nHTTP Request:\n%s" % serialize_request(req))
+        if self.expected_conv:
+            step = self.expected_conv[0]
+            print("Expected:\n%s %s\n%s" % (step.method, step.url, step.body))
+        else:
+            print("Expected: nothing")
+
+        if self._patcher and self._run_on_error:
+            resp = self._patcher.get_original()[0](
+                pool, method=method, url=url, body=body, headers=headers, **kwargs
+            )
+            print("HTTP Response:\n%s" % serialize_response(resp))
+
+        raise ThouShaltNotPass("Preventing unexpected urlopen call")
+
+    def run_on_error(self):
+        """Set S3Mock to run the HTTP request if it hits a conversation error."""
+        self._run_on_error = True
 
     def __enter__(self):
         self.start_mock()
@@ -333,34 +291,6 @@ class S3Mock:
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.stop_mock()
-
-    def _get_recording_adapter(self, session, url):
-        recording_adapter = RecordingAdapterShim()
-        recording_adapter.wrapped_adapter = self._real_get_adapter(
-            self=session, url=url
-        )
-        recording_adapter.filename = self._filename_to_record
-        return recording_adapter
-
-    def record(self, filename="s3mock.log"):
-        """Starts an HTTP conversation recording session
-
-        :arg str filename: The name of the file to log to.
-
-        """
-        if os.path.isfile(filename):
-            os.remove(filename)
-
-        # FIXME(willkg): Better to curry this instead of saving it as an
-        # instance variable and passing it that way.
-        self._filename_to_record = filename
-
-        requests.Session.get_adapter = lambda session, url: self._get_recording_adapter(
-            session, url
-        )
-
-    def stop_recording(self):
-        requests.Session.get_adapter = lambda session, url: self.adapter
 
     def fake_response(self, status_code, headers=None, body=b""):
         """Generates a fake response for a step in an HTTP conversation
@@ -403,16 +333,20 @@ class S3Mock:
             build this
 
         """
-        self.adapter.add_step(method=method, url=url, body=body, resp=resp)
-
-    def start_mock(self):
-        self._real_get_adapter = requests.Session.get_adapter
-        requests.Session.get_adapter = lambda session, url: self.adapter
-
-    def stop_mock(self):
-        requests.Session.get_adapter = self._real_get_adapter
-        delattr(self, "_real_get_adapter")
+        self.expected_conv.append(Step(method=method, url=url, body=body, resp=resp))
 
     def remaining_conversation(self):
-        """Returns remaining conversation"""
-        return self.adapter.remaining_conversation()
+        """Returns the remaining conversation to happen"""
+        return self.expected_conv
+
+    def start_mock(self):
+        def _mocked_urlopen(pool, *args, **kwargs):
+            return self.mocked_urlopen(pool, *args, **kwargs)
+
+        path = "urllib3.connectionpool.HTTPConnectionPool.urlopen"
+        self._patcher = unittest.mock.patch(path, _mocked_urlopen)
+        self._patcher.start()
+
+    def stop_mock(self):
+        self._patcher.stop()
+        self._patcher = None
