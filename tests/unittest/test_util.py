@@ -210,7 +210,7 @@ class Test_retry:
         with pytest.raises(Exception):
             some_thing()
 
-        assert fake_sleep.sleeps == [1, 1, 5, 10, 10]
+        assert fake_sleep.sleeps == [2, 2, 2, 2, 2]
 
     def test_wait_time_generator(self):
         fake_sleep = make_fake_sleep()
