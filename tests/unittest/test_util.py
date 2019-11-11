@@ -107,70 +107,74 @@ def test_sanitize_dump_name(data, expected):
     assert sanitize_dump_name(data) == expected
 
 
+def make_fake_sleep():
+    sleeps = []
+
+    def _fake_sleep(attempt):
+        sleeps.append(attempt)
+
+    _fake_sleep.sleeps = sleeps
+    return _fake_sleep
+
+
 class Test_retry:
     """Tests for the retry decorator"""
 
-    def test_retry(self):
-        """Test that retry doesn't affect function return"""
-
+    def test_retry_returns_correct_value(self):
         @retry()
         def some_thing():
             return 1
 
         assert some_thing() == 1
 
-    def test_retry_retryable_exceptions(self):
-        """Test retry retryable_exceptions arg does the right thing"""
-        sleeps = []
+    def test_retryable_exceptions(self):
+        # This will fail on the first attempt and raise MyException because MyException
+        # is not in the list of retryable exceptions
+        class MyException(Exception):
+            pass
 
-        def fake_sleep(attempt):
-            sleeps.append(attempt)
+        fake_sleep = make_fake_sleep()
 
-        # This will fail on the first attempt because Exception is not
-        # in the list of retryable exceptions.
-        @retry(retryable_exceptions=ValueError, sleep_function=fake_sleep)
+        @retry(retryable_exceptions=ValueError, sleep_function=make_fake_sleep)
         def some_thing():
-            raise Exception
+            raise MyException
 
-        with pytest.raises(Exception):
+        with pytest.raises(MyException):
             some_thing()
-        assert len(sleeps) == 0
+        assert fake_sleep.sleeps == []
 
-        sleeps = []
+        # This will fail on the first attempt because MyException is not in the list of
+        # retryable exceptions
+        fake_sleep = make_fake_sleep()
 
-        # This will fail on the first attempt because Exception is not
-        # in the list of retryable exceptions.
         @retry(retryable_exceptions=[ValueError, IndexError], sleep_function=fake_sleep)
         def some_thing():
-            raise Exception
+            raise MyException
 
-        with pytest.raises(Exception):
+        with pytest.raises(MyException):
             some_thing()
-        assert len(sleeps) == 0
+        assert fake_sleep.sleeps == []
 
-        sleeps = []
+        # This will retry until the max attempts and then raise MaxAttemptsError--the
+        # actual exception is chained
+        fake_sleep = make_fake_sleep()
 
-        # This will retry until the max attempts and then reraise the exception
         @retry(retryable_exceptions=ValueError, sleep_function=fake_sleep)
         def some_thing():
             raise ValueError
 
-        with pytest.raises(ValueError):
+        with pytest.raises(MaxAttemptsError):
             some_thing()
-        assert len(sleeps) == 5
+        assert fake_sleep.sleeps == [2, 2, 2, 2, 2]
 
-    def test_retry_retryable_return(self):
-        """Tests retry retryable_return arg does the right thing"""
-        sleeps = []
-
-        def fake_sleep(attempt):
-            sleeps.append(attempt)
-
+    def test_retryable_return(self):
+        # Will keep retrying until max_attempts and then raise an error that includes
+        # the last function return
         def is_not_200(ret):
             return ret != 200
 
-        # Will keep retrying until max_attempts and then raise an error that includes
-        # the last function return
+        fake_sleep = make_fake_sleep()
+
         @retry(retryable_return=is_not_200, sleep_function=fake_sleep)
         def some_thing():
             return 404
@@ -179,23 +183,36 @@ class Test_retry:
             some_thing()
 
         assert excinfo.value.return_value == 404
-        assert len(sleeps) == 5
+        assert len(fake_sleep.sleeps) == 5
 
-        sleeps = []
+        # Will retry a couple of times
+        fake_sleep = make_fake_sleep()
+
+        def make_some_thing(fake_sleep):
+            returns = [404, 404, 200]
+
+            @retry(retryable_return=is_not_200, sleep_function=fake_sleep)
+            def some_thing():
+                return returns.pop(0)
+
+            return some_thing
+
+        some_thing = make_some_thing(fake_sleep)
+        some_thing()
+        assert fake_sleep.sleeps == [2, 2]
 
         # Will succeed and not retry because the return value is fine
+        fake_sleep = make_fake_sleep()
+
         @retry(retryable_return=is_not_200, sleep_function=fake_sleep)
         def some_thing():
             return 200
 
         some_thing()
-        assert len(sleeps) == 0
+        assert fake_sleep.sleeps == []
 
-    def test_retry_amounts(self):
-        sleeps = []
-
-        def fake_sleep(attempt):
-            sleeps.append(attempt)
+    def test_retries_correct_number_of_times(self):
+        fake_sleep = make_fake_sleep()
 
         @retry(sleep_function=fake_sleep)
         def some_thing():
@@ -204,27 +221,14 @@ class Test_retry:
         with pytest.raises(Exception):
             some_thing()
 
-        assert sleeps == [1, 1, 5, 10, 30]
+        assert fake_sleep.sleeps == [2, 2, 2, 2, 2]
 
     def test_wait_time_generator(self):
-        sleeps = []
-
-        def fake_sleep(attempt):
-            sleeps.append(attempt)
-
-        @retry(sleep_function=fake_sleep)
-        def some_thing():
-            raise Exception
-
-        with pytest.raises(Exception):
-            some_thing()
-        assert len(sleeps) == 5
-
-        sleeps = []
-
         def waits():
             for i in [1, 1, 2, 2, 1, 1]:
                 yield i
+
+        fake_sleep = make_fake_sleep()
 
         @retry(wait_time_generator=waits, sleep_function=fake_sleep)
         def some_thing():
@@ -232,4 +236,4 @@ class Test_retry:
 
         with pytest.raises(Exception):
             some_thing()
-        assert sleeps == [1, 1, 2, 2, 1, 1]
+        assert fake_sleep.sleeps == [1, 1, 2, 2, 1, 1]
