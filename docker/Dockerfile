@@ -14,7 +14,8 @@ RUN apt-get update && \
 COPY ./requirements /app/requirements
 
 RUN pip install -U 'pip>=10' && \
-    pip install --no-cache-dir -r requirements/default.txt -c requirements/constraints.txt
+    pip install --no-cache-dir -r requirements/default.txt -c requirements/constraints.txt && \
+    pip check --disable-pip-version-check
 
 # Install the app
 COPY . /app/
