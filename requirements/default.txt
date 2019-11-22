@@ -52,15 +52,12 @@ raven==6.10.0 \
 six==1.13.0 \
     --hash=sha256:1f1b7d42e254082a9db6279deae68afb421ceba6158efa6131de7b3003ee93fd \
     --hash=sha256:30f610279e8b2578cab6db20741130331735c781b56053c59c4076da27f06b66
-
-# NOTE(willkg): In order to update these, we have to redo how the s3mock works
-# in the tests.
-boto3==1.10.12 \
-    --hash=sha256:4f231c746d2acba8b458897f7a0a2f4b9d75656eeeba9c78d17f60fa0cc2cb68 \
-    --hash=sha256:e3c67a3b0140b903cc2d64ee9e68a392961a205dc54290000baf928e6a65e25c
-botocore==1.13.12 \
-    --hash=sha256:0095818b1f1e2698c3fe0ccc6bd4ed8c735fce37d9a99d7f304047bfd8272ec8 \
-    --hash=sha256:9303675e019b4a7389bfbec264068435d2111739b46baa7ebd08391e64dddfb4
+boto3==1.10.26 \
+    --hash=sha256:3fe790bf548c5a6a816779cf38eb844b7126c24d0c56be6561dab177f3bb5fba \
+    --hash=sha256:653f0a7d91783d2267017c905ae6252aa9148c6bd1bd333c727de950007860d7
+botocore==1.13.26 \
+    --hash=sha256:9fefb42c6d4fa0079a52b49e5491fa0738cca63649f68be180b3ed6c253d2622 \
+    --hash=sha256:ee55ce128056c5120680d25c8e8dfa3a08dbe7ac3445dc16997daaa68ae4060e
 
 
 # Development things
