@@ -86,7 +86,7 @@ production, see docs_.
          web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: CRASHSTORAGE_ACCESS_KEY=foo
          web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: CRASHSTORAGE_SECRET_ACCESS_KEY=*****
          web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: CRASHSTORAGE_REGION=us-east-1
-         web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: CRASHSTORAGE_ENDPOINT_URL=http://localstack-s3:5000
+         web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: CRASHSTORAGE_ENDPOINT_URL=http://localstack-s3:4572
          web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: CRASHSTORAGE_BUCKET_NAME=antennabucket
 
 

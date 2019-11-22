@@ -19,16 +19,14 @@ set -v -e -x
 echo ">>> pytest"
 # Set up environment variables
 
-LOCALSTACK_S3_URL=http://localstack-s3:5000
-PUBSUB_URL=http://pubsub:5010
-
 export PYTHONPATH=/app/:$PYTHONPATH
 PYTEST="$(which pytest)"
 PYTHON="$(which python)"
 
 # Wait for services to be ready
-urlwait "${LOCALSTACK_S3_URL}" 10
-urlwait "${PUBSUB_URL}" 10
+urlwait "${CRASHSTORAGE_ENDPOINT_URL}" 10
+urlwait "http://${PUBSUB_EMULATOR_HOST}" 10
+urlwait "http://localstack-sqs:4576" 10
 
 # Run tests
 "${PYTEST}"
