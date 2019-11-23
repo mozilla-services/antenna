@@ -45,7 +45,16 @@ production, see docs_.
 
    Anytime you want to update the containers, you can run ``make build``.
 
-4. Run with a prod-like fully-functional configuration.
+4. Set up local Pub/Sub and S3 services:
+
+   .. code-block:: shell
+
+      $ make setup
+
+   Anytime you want to wipe service state and recreate them, you can run ``make
+   setup``.
+
+5. Run with a prod-like fully-functional configuration.
 
    1. Running:
 
@@ -152,7 +161,7 @@ production, see docs_.
 
    See docs_ for configuration options.
 
-5. Run tests:
+6. Run tests:
 
    .. code-block:: shell
 

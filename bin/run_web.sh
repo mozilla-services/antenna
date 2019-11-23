@@ -16,12 +16,6 @@
 
 set -e
 
-# First, create the bucket if it doesn't already exist
-./bin/create_s3_bucket.py
-
-# Create Pub/Sub topic and subscription if they don't already exist
-./bin/pubsub_cli.py create_topic
-
 # Launch the web-app
 gunicorn \
     --bind=0.0.0.0:8000 \
