@@ -27,6 +27,7 @@ help: default
 .PHONY: default
 default:
 	@echo "build            - build docker containers for dev"
+	@echo "setup            - setup services"
 	@echo "run              - docker-compose up the entire system for dev"
 	@echo ""
 	@echo "shell            - open a shell in the base container"
@@ -57,6 +58,10 @@ my.env:
 build: my.env
 	${DC} build ${DOCKER_BUILD_OPTS} --build-arg userid=${ANTENNA_UID} --build-arg groupid=${ANTENNA_GID} deploy-base
 	touch .docker-build
+
+.PHONY: setup
+setup: my.env .docker-build
+	${DC} run web bash ./docker/run_setup.sh
 
 .PHONY: run
 run: my.env .docker-build
