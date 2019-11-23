@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "bin"))
 
 
 class TestS3Cli:
-    def test_runs(self):
+    def test_basic(self):
         """Basic test to make sure s3_cli imports and runs at all."""
         from s3_cli import s3_group
 
@@ -21,10 +21,20 @@ class TestS3Cli:
 
 
 class TestPubSubCli:
-    def test_runs(self):
+    def test_basic(self):
         """Basic test to make sure pubsub_cli imports and runs at all."""
         from pubsub_cli import pubsub_group
 
         runner = CliRunner()
         result = runner.invoke(pubsub_group, [])
+        assert result.exit_code == 0
+
+
+class TestSQSCli:
+    def test_basic(self):
+        """Basic test to make sure sqs_cli imports and runs at all."""
+        from sqs_cli import sqs_group
+
+        runner = CliRunner()
+        result = runner.invoke(sqs_group, [])
         assert result.exit_code == 0
