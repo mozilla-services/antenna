@@ -90,7 +90,6 @@ class TestPubSubCrashPublishIntegration:
         with pytest.raises(NotFound):
             client.rebuild_app(
                 {
-                    "LOCAL_DEV_ENV": "True",
                     "CRASHPUBLISH_CLASS": "antenna.ext.pubsub.crashpublish.PubSubCrashPublish",
                     "CRASHPUBLISH_PROJECT_ID": "test_socorro",
                     "CRASHPUBLISH_TOPIC_NAME": "test_socorro_normal",
@@ -111,7 +110,6 @@ class TestPubSubCrashPublishIntegration:
         # will call verify_topic() which will work fine.
         client.rebuild_app(
             {
-                "LOCAL_DEV_ENV": "True",
                 "CRASHPUBLISH_CLASS": "antenna.ext.pubsub.crashpublish.PubSubCrashPublish",
                 "CRASHPUBLISH_PROJECT_ID": PROJECT,
                 "CRASHPUBLISH_TOPIC_NAME": TOPIC,
@@ -142,7 +140,6 @@ class TestPubSubCrashPublishIntegration:
         # Rebuild the app the test client is using with relevant configuration
         client.rebuild_app(
             {
-                "LOCAL_DEV_ENV": "True",
                 "CRASHPUBLISH_CLASS": "antenna.ext.pubsub.crashpublish.PubSubCrashPublish",
                 "CRASHPUBLISH_PROJECT_ID": PROJECT,
                 "CRASHPUBLISH_TOPIC_NAME": TOPIC,

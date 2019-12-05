@@ -55,7 +55,8 @@ class S3Connection(RequiredConfigMixin):
 
     **Credentials and permissions**
 
-    When configuring this connection object, you can do one of two things:
+    When configuring credentials for this connection object, you can do one of two
+    things:
 
     1. provide ``ACCESS_KEY`` and ``SECRET_ACCESS_KEY`` in the configuration, OR
     2. use one of the other methods described in the boto3 docs
