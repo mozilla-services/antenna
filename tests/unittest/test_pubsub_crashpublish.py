@@ -92,13 +92,13 @@ class TestPubSubCrashPublishIntegration:
                 {
                     "CRASHPUBLISH_CLASS": "antenna.ext.pubsub.crashpublish.PubSubCrashPublish",
                     "CRASHPUBLISH_PROJECT_ID": "test_socorro",
-                    "CRASHPUBLISH_TOPIC_NAME": "test_socorro_normal",
+                    "CRASHPUBLISH_TOPIC_NAME": "test_socorro_standard",
                 }
             )
 
     def test_verify_topic_with_topic(self, client, pubsub):
         PROJECT = "test_socorro"
-        TOPIC = "test_socorro_normal"
+        TOPIC = "test_socorro_standard"
         SUB = "test_subscription"
 
         pubsub.create_topic(PROJECT, TOPIC)
@@ -122,7 +122,7 @@ class TestPubSubCrashPublishIntegration:
 
     def test_crash_publish(self, client, pubsub):
         PROJECT = "test_socorro"
-        TOPIC = "test_socorro_normal"
+        TOPIC = "test_socorro_standard"
         SUB = "test_subscription"
 
         pubsub.create_topic(PROJECT, TOPIC)
