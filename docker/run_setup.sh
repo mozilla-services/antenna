@@ -22,3 +22,7 @@ python ./bin/pubsub_cli.py delete_topic "${CRASHPUBLISH_PROJECT_ID}" "${CRASHPUB
 python ./bin/pubsub_cli.py create_topic "${CRASHPUBLISH_PROJECT_ID}" "${CRASHPUBLISH_TOPIC_NAME}"
 python ./bin/pubsub_cli.py create_subscription "${CRASHPUBLISH_PROJECT_ID}" "${CRASHPUBLISH_TOPIC_NAME}" "${CRASHPUBLISH_SUBSCRIPTION_NAME}"
 python ./bin/pubsub_cli.py list_topics "${CRASHPUBLISH_PROJECT_ID}"
+
+echo "Delete and create SQS queue..."
+python ./bin/sqs_cli.py delete "${CRASHPUBLISH_QUEUE_NAME}"
+python ./bin/sqs_cli.py create "${CRASHPUBLISH_QUEUE_NAME}"

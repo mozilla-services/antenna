@@ -122,6 +122,11 @@ def list_queues(ctx):
 @click.pass_context
 def create(ctx, queue):
     """Create SQS queue."""
+    queue = queue.strip()
+    if not queue:
+        click.echo("Queue name required.")
+        return
+
     conn = get_client()
     validate_queue_name(queue)
     try:
@@ -139,6 +144,11 @@ def create(ctx, queue):
 @click.pass_context
 def delete(ctx, queue):
     """Delete SQS queue."""
+    queue = queue.strip()
+    if not queue:
+        click.echo("Queue name required.")
+        return
+
     conn = get_client()
     try:
         resp = conn.get_queue_url(QueueName=queue)

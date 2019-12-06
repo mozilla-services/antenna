@@ -75,7 +75,8 @@ class AntennaTestClient(TestClient):
         This is helpful if you've changed configuration and need to rebuild the
         app so that components pick up the new configuration.
 
-        :arg new_config: dict of configuration to build the new app with
+        :arg new_config: dict of configuration to override normal values to build the
+            new app with
 
         """
         self.app = get_app(self.build_config(new_config))

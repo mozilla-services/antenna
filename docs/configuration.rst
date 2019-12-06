@@ -169,10 +169,11 @@ want Antenna to be publishing crash ids somewhere.
    :case: upper
 
 
-Pub/Sub
--------
+Google Pub/Sub
+--------------
 
-The ``PubSubCrashPublish`` class will publish crash ids to a Pub/Sub topic.
+The ``PubSubCrashPublish`` class will publish crash ids to a Google Pub/Sub
+topic.
 
 .. autocomponent:: antenna.ext.pubsub.crashpublish.PubSubCrashPublish
    :show-docstring:
@@ -183,3 +184,17 @@ The ``PubSubCrashPublish`` class will publish crash ids to a Pub/Sub topic.
    for this class is in the ``CRASHPUBLISH`` namespace.
 
    You need to set the project id and topic name.
+
+
+AWS SQS
+-------
+
+The ``SQSCrashPublish`` class will publish crash ids to an AWS SQS queue.
+
+.. autocomponent:: antenna.ext.sqs.crashpublish.SQSCrashPublish
+   :show-docstring:
+   :case: upper
+   :namespace: crashpublish
+
+   When set as the BreakpadSubmitterResource crashpublish class, configuration
+   for this class is in the ``CRASHPUBLISH`` namespace.
