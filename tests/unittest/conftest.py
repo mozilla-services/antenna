@@ -65,7 +65,7 @@ class AntennaTestClient(TestClient):
         """Build ConfigManager using environment and overrides."""
         new_config = new_config or {}
         config_manager = ConfigManager(
-            environments=[ConfigDictEnv(new_config), ConfigOSEnv(),]
+            environments=[ConfigDictEnv(new_config), ConfigOSEnv()]
         )
         return config_manager
 
