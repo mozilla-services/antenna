@@ -84,13 +84,11 @@ class TestS3CrashStorageIntegration:
     def test_region_and_bucket_with_periods(
         self, client, s3mock, mock_generate_test_filepath
     ):
-        ROOT = "https://s3.us-west-1.amazonaws.com/"
-
         # .verify_write_to_bucket() writes to the bucket to verify Antenna can
         # write to it and the configuration is correct
         s3mock.add_step(
             method="PUT",
-            url=ROOT + "fakebucket.with.periods/test/testwrite.txt",
+            url="http://fakes3:4569/fakebucket.with.periods/test/testwrite.txt",
             body=b"test",
             resp=s3mock.fake_response(status_code=200),
         )
@@ -98,22 +96,28 @@ class TestS3CrashStorageIntegration:
         # We want to verify these files are saved in this specific order.
         s3mock.add_step(
             method="PUT",
-            url=ROOT
-            + "fakebucket.with.periods/v1/dump_names/de1bb258-cbbf-4589-a673-34f800160918",
+            url=(
+                "http://fakes3:4569/fakebucket.with.periods/v1/dump_names/"
+                "de1bb258-cbbf-4589-a673-34f800160918"
+            ),
             body=b'["upload_file_minidump"]',
             resp=s3mock.fake_response(status_code=200),
         )
         s3mock.add_step(
             method="PUT",
-            url=ROOT
-            + "fakebucket.with.periods/v1/dump/de1bb258-cbbf-4589-a673-34f800160918",
+            url=(
+                "http://fakes3:4569/fakebucket.with.periods/v1/dump/"
+                "de1bb258-cbbf-4589-a673-34f800160918"
+            ),
             body=b"abcd1234",
             resp=s3mock.fake_response(status_code=200),
         )
         s3mock.add_step(
             method="PUT",
-            url=ROOT
-            + "fakebucket.with.periods/v2/raw_crash/de1/20160918/de1bb258-cbbf-4589-a673-34f800160918",
+            url=(
+                "http://fakes3:4569/fakebucket.with.periods/v2/raw_crash/de1/20160918/"
+                "de1bb258-cbbf-4589-a673-34f800160918"
+            ),
             # Not going to compare the body here because it's just the raw crash
             resp=s3mock.fake_response(status_code=200),
         )
@@ -130,6 +134,7 @@ class TestS3CrashStorageIntegration:
         client.rebuild_app(
             {
                 "CRASHSTORAGE_CLASS": "antenna.ext.s3.crashstorage.S3CrashStorage",
+                "CRASHSTORAGE_ENDPOINT_URL": "http://fakes3:4569",
                 "CRASHSTORAGE_REGION": "us-west-1",
                 "CRASHSTORAGE_ACCESS_KEY": "fakekey",
                 "CRASHSTORAGE_SECRET_ACCESS_KEY": "fakesecretkey",
@@ -182,13 +187,11 @@ class TestS3CrashStorageIntegration:
         assert s3mock.remaining_conversation() == []
 
     def test_retrying(self, client, s3mock, loggingmock, mock_generate_test_filepath):
-        ROOT = "http://fakes3:4569/"
-
         # .verify_write_to_bucket() writes to the bucket to verify Antenna can
         # write to it and the configuration is correct
         s3mock.add_step(
             method="PUT",
-            url=ROOT + "fakebucket/test/testwrite.txt",
+            url="http://fakes3:4569/fakebucket/test/testwrite.txt",
             body=b"test",
             resp=s3mock.fake_response(status_code=200),
         )
@@ -196,7 +199,10 @@ class TestS3CrashStorageIntegration:
         # Fail once with a 403, retry and then proceed.
         s3mock.add_step(
             method="PUT",
-            url=ROOT + "fakebucket/v1/dump_names/de1bb258-cbbf-4589-a673-34f800160918",
+            url=(
+                "http://fakes3:4569/fakebucket/v1/dump_names/"
+                "de1bb258-cbbf-4589-a673-34f800160918"
+            ),
             body=b'["upload_file_minidump"]',
             resp=s3mock.fake_response(status_code=403),
         )
@@ -204,20 +210,28 @@ class TestS3CrashStorageIntegration:
         # Proceed with saving files.
         s3mock.add_step(
             method="PUT",
-            url=ROOT + "fakebucket/v1/dump_names/de1bb258-cbbf-4589-a673-34f800160918",
+            url=(
+                "http://fakes3:4569/fakebucket/v1/dump_names/"
+                "de1bb258-cbbf-4589-a673-34f800160918"
+            ),
             body=b'["upload_file_minidump"]',
             resp=s3mock.fake_response(status_code=200),
         )
         s3mock.add_step(
             method="PUT",
-            url=ROOT + "fakebucket/v1/dump/de1bb258-cbbf-4589-a673-34f800160918",
+            url=(
+                "http://fakes3:4569/fakebucket/v1/dump/"
+                "de1bb258-cbbf-4589-a673-34f800160918"
+            ),
             body=b"abcd1234",
             resp=s3mock.fake_response(status_code=200),
         )
         s3mock.add_step(
             method="PUT",
-            url=ROOT
-            + "fakebucket/v2/raw_crash/de1/20160918/de1bb258-cbbf-4589-a673-34f800160918",
+            url=(
+                "http://fakes3:4569/fakebucket/v2/raw_crash/de1/"
+                "20160918/de1bb258-cbbf-4589-a673-34f800160918"
+            ),
             # Not going to compare the body here because it's just the raw crash
             resp=s3mock.fake_response(status_code=200),
         )

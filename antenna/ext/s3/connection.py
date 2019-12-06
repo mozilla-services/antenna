@@ -93,7 +93,7 @@ class S3Connection(RequiredConfigMixin):
         default="",
         alternate_keys=["root:aws_access_key_id"],
         doc=(
-            "AWS S3 access key. You can also specify AWS_ACCESS_KEY_ID which is "
+            "AWS access key. You can also specify AWS_ACCESS_KEY_ID which is "
             "the env var used by boto3."
         ),
     )
@@ -102,7 +102,7 @@ class S3Connection(RequiredConfigMixin):
         default="",
         alternate_keys=["root:aws_secret_access_key"],
         doc=(
-            "AWS S3 secret access key. You can also specify AWS_SECRET_ACCESS_KEY "
+            "AWS secret access key. You can also specify AWS_SECRET_ACCESS_KEY "
             "which is the env var used by boto3."
         ),
     )
@@ -110,7 +110,7 @@ class S3Connection(RequiredConfigMixin):
         "region",
         default="us-west-2",
         alternate_keys=["root:s3_region"],
-        doc="AWS S3 region to connect to. For example, ``us-west-2``",
+        doc="AWS region to connect to. For example, ``us-west-2``",
     )
     required_config.add_option(
         "endpoint_url",

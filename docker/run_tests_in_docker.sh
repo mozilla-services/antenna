@@ -44,6 +44,7 @@ if [ "$1" == "--shell" ]; then
            --link antenna_localstack-sqs_1 \
            --link antenna_statsd_1 \
            --env-file ./docker/config/local_dev.env \
+           --env-file ./docker/config/test.env \
            --tty \
            --interactive \
            --entrypoint="" \
@@ -94,6 +95,7 @@ docker run \
        --link antenna_localstack-s3_1 \
        --link antenna_statsd_1 \
        --env-file ./docker/config/local_dev.env \
+       --env-file ./docker/config/test.env \
        --tty \
        --interactive \
        --entrypoint= \
