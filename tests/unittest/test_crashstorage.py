@@ -40,13 +40,11 @@ class TestCrashStorage:
         # contents of the crash.
 
         # Verify things got saved
-        crashstorage = bsr.crashstorage
-        assert crashstorage.saved_things == [
+        assert bsr.crashstorage.saved_things == [
             {"crash_id": "de1bb258-cbbf-4589-a673-34f800160918"}
         ]
 
         # Verify things got published
-        crashpublish = bsr.crashpublish
-        assert crashpublish.published_things == [
+        assert bsr.crashpublish.published_things == [
             {"crash_id": "de1bb258-cbbf-4589-a673-34f800160918"}
         ]

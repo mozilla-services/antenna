@@ -8,7 +8,7 @@ import logging
 import sys
 from unittest import mock
 
-from everett.manager import ConfigManager
+from everett.manager import ConfigManager, ConfigDictEnv, ConfigOSEnv
 from falcon.request import Request
 from falcon.testing.helpers import create_environ
 from falcon.testing.client import TestClient
@@ -31,7 +31,7 @@ def pytest_runtest_setup():
     # Make sure we set up logging and metrics to sane default values.
     setup_logging(
         ConfigManager.from_dict(
-            {"HOST_ID": "", "LOGGING_LEVEL": "DEBUG", "LOCAL_DEV_ENV": "False"}
+            {"HOST_ID": "", "LOGGING_LEVEL": "DEBUG", "LOCAL_DEV_ENV": "True"}
         )
     )
     markus.configure([{"class": "markus.backends.logging.LoggingMetrics"}])
@@ -60,6 +60,15 @@ def request_generator():
 class AntennaTestClient(TestClient):
     """Test client to ease testing with Antenna API"""
 
+    @classmethod
+    def build_config(cls, new_config=None):
+        """Build ConfigManager using environment and overrides."""
+        new_config = new_config or {}
+        config_manager = ConfigManager(
+            environments=[ConfigDictEnv(new_config), ConfigOSEnv(),]
+        )
+        return config_manager
+
     def rebuild_app(self, new_config):
         """Rebuilds the app
 
@@ -69,7 +78,7 @@ class AntennaTestClient(TestClient):
         :arg new_config: dict of configuration to build the new app with
 
         """
-        self.app = get_app(ConfigManager.from_dict(new_config))
+        self.app = get_app(self.build_config(new_config))
 
     def join_app(self):
         """This goes through and calls join on all gevent pools in the app
@@ -114,7 +123,7 @@ def client():
             })
 
     """
-    return AntennaTestClient(get_app(ConfigManager.from_dict({})))
+    return AntennaTestClient(get_app(AntennaTestClient.build_config()))
 
 
 @pytest.yield_fixture
