@@ -22,7 +22,7 @@ ANTENNA_GID=${ANTENNA_GID:-"10001"}
 
 # Use the same image we use for building docker images because it's cached.
 # Otherwise this doesn't make any difference.
-BASEIMAGENAME="python:3.7.5-slim"
+BASEIMAGENAME="python:3.7.6-slim"
 TESTIMAGE="local/antenna_deploy_base"
 
 # Start services in background (this is idempotent)
