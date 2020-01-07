@@ -12,7 +12,7 @@ everett==1.0.2 \
 # rewrite work to upgrade to Falcon 2+.
 falcon==1.4.1 \
     --hash=sha256:0a66b33458fab9c1e400a9be1a68056abda178eb02a8cb4b8f795e9df20b053b \
-    --hash=sha256:3981f609c0358a9fcdb25b0e7fab3d9e23019356fb429c635ce4133135ae1bc4 # pyup: <2.0.0
+    --hash=sha256:3981f609c0358a9fcdb25b0e7fab3d9e23019356fb429c635ce4133135ae1bc4
 gevent==1.4.0 \
     --hash=sha256:0774babec518a24d9a7231d4e689931f31b332c4517a771e532002614e270a64 \
     --hash=sha256:0e1e5b73a445fe82d40907322e1e0eec6a6745ca3cea19291c6f9f50117bb7ea \
