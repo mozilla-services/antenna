@@ -190,9 +190,9 @@ decorator==4.4.1 \
 entrypoints==0.3 \
     --hash=sha256:589f874b313739ad35be6e0cd7efde2a4e9b6fea91edcc34e58ecbb8dbe56d19 \
     --hash=sha256:c70dd71abe5a8c85e55e12c19bd91ccfeec11a6e99044204511f9ed547d48451
-google-api-core==1.14.3 \
-    --hash=sha256:b95895a9398026bc0500cf9b4a3f82c3f72c3f9150b26ff53af40c74e91c264a \
-    --hash=sha256:df8adc4b97f5ab4328a0e745bee77877cf4a7d4601cb1cd5959d2bbf8fba57aa
+google-api-core==1.15.0 \
+    --hash=sha256:9006e1641599345056cc690a934e1262107c78d969d72cf96412f6db5d32147f \
+    --hash=sha256:2d661c8d650a1df5805d0e360121cb55c55d8bd29f858fa62cbe943e59ce89f7
 grpc-google-iam-v1==0.12.3 \
     --hash=sha256:0bfb5b56f648f457021a91c0df0db4934b6e0c300bd0f2de2333383fe958aa72
 grpcio==1.26.0 \
