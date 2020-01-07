@@ -12,6 +12,14 @@
 
 set -e
 
+# Wait for services to be ready
+echo "Waiting for ${CRASHSTORAGE_ENDPOINT_URL} ..."
+urlwait "${CRASHSTORAGE_ENDPOINT_URL}" 10
+echo "Waiting for ${PUBSUB_EMULATOR_HOST} ..."
+urlwait "http://${PUBSUB_EMULATOR_HOST}" 10
+echo "Waiting for ${CRASHPUBLISH_ENDPOINT_URL} ..."
+urlwait "${CRASHPUBLISH_ENDPOINT_URL}" 10
+
 echo "Delete and create S3 bucket..."
 python ./bin/s3_cli.py delete "${CRASHSTORAGE_BUCKET_NAME}"
 python ./bin/s3_cli.py create "${CRASHSTORAGE_BUCKET_NAME}"
