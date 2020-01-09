@@ -59,7 +59,11 @@ class TestBreakpadSubmitterResource:
         )
 
         bsp = BreakpadSubmitterResource(self.empty_config)
-        expected_raw_crash = {"ProductName": "Firefox", "Version": "1.0"}
+        expected_raw_crash = {
+            "ProductName": "Firefox",
+            "Version": "1.0",
+            "payload": "multipart",
+        }
         expected_dumps = {"upload_file_minidump": b"abcd1234"}
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
 
@@ -81,7 +85,11 @@ class TestBreakpadSubmitterResource:
         )
 
         bsp = BreakpadSubmitterResource(self.empty_config)
-        expected_raw_crash = {"ProductName": "Firefox", "Version": "1"}
+        expected_raw_crash = {
+            "ProductName": "Firefox",
+            "Version": "1",
+            "payload": "multipart",
+        }
         expected_dumps = {
             "upload_file_minidump": b"deadbeef",
             "upload_file_minidump_flash1": b"abcd1234",
@@ -115,7 +123,11 @@ class TestBreakpadSubmitterResource:
         )
 
         bsp = BreakpadSubmitterResource(self.empty_config)
-        expected_raw_crash = {"ProductName": "Firefox", "Version": "1.0"}
+        expected_raw_crash = {
+            "ProductName": "Firefox",
+            "Version": "1.0",
+            "payload": "multipart",
+        }
         expected_dumps = {"upload_file_minidump": b"abcd1234"}
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
 
@@ -131,7 +143,11 @@ class TestBreakpadSubmitterResource:
         )
 
         bsp = BreakpadSubmitterResource(self.empty_config)
-        expected_raw_crash = {"ProductName": "Firefox", "Version": "1.0"}
+        expected_raw_crash = {
+            "ProductName": "Firefox",
+            "Version": "1.0",
+            "payload": "json",
+        }
         expected_dumps = {"upload_file_minidump": b"abcd1234"}
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
 
