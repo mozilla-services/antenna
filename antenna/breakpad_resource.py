@@ -333,6 +333,13 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             # malformed and we should dump it.
             raise MalformedCrashReport("has_json_and_kv")
 
+        # Add a note about how the annotations were encoded in the crash report.
+        # For now, there are two options: json and multipart.
+        if has_json:
+            raw_crash["payload"] = "json"
+        else:
+            raw_crash["payload"] = "multipart"
+
         return raw_crash, dumps
 
     def get_throttle_result(self, raw_crash):
