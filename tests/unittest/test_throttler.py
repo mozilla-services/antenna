@@ -188,8 +188,17 @@ class Test_thunderbird_gt_68:
             {"ProductName": "Thunderbird"},
             {"ProductName": "Thunderbird", "Version": ""},
             {"ProductName": "Thunderbird", "Version": "a"},
-            {"ProductName": "Thunderbird", "Version": "66"},
-            {"ProductName": "Thunderbird", "Version": "67.10"},
+            {
+                "ProductName": "Thunderbird",
+                "Version": "66",
+                "ReleaseChannel": "release",
+            },
+            {
+                "ProductName": "Thunderbird",
+                "Version": "67.10",
+                "ReleaseChannel": "release",
+            },
+            {"ProductName": "Thunderbird", "Version": "69.0", "ReleaseChannel": "beta"},
         ],
     )
     def test_false(self, throttler, raw_crash):
@@ -203,7 +212,11 @@ class Test_thunderbird_gt_68:
         # Need a throttler with the default configuration which includes supported
         # products
         throttler = Throttler(ConfigManager.from_dict({}))
-        raw_crash = {"ProductName": "Thunderbird", "Version": version}
+        raw_crash = {
+            "ProductName": "Thunderbird",
+            "Version": version,
+            "ReleaseChannel": "release",
+        }
         assert match_thunderbird_gt_68(throttler, raw_crash) is True
 
 
@@ -216,11 +229,32 @@ class Test_seamonkey_gt_2_49_5:
             {"ProductName": "SeaMonkey"},
             {"ProductName": "SeaMonkey", "Version": ""},
             {"ProductName": "SeaMonkey", "Version": "a"},
-            {"ProductName": "SeaMonkey", "Version": "2"},
-            {"ProductName": "SeaMonkey", "Version": "2.48"},
-            {"ProductName": "SeaMonkey", "Version": "2.49"},
-            {"ProductName": "SeaMonkey", "Version": "2.49.4"},
-            {"ProductName": "SeaMonkey", "Version": "2.49.5"},
+            {"ProductName": "SeaMonkey", "Version": "2", "ReleaseChannel": "release"},
+            {
+                "ProductName": "SeaMonkey",
+                "Version": "2.48",
+                "ReleaseChannel": "release",
+            },
+            {
+                "ProductName": "SeaMonkey",
+                "Version": "2.49",
+                "ReleaseChannel": "release",
+            },
+            {
+                "ProductName": "SeaMonkey",
+                "Version": "2.49.4",
+                "ReleaseChannel": "release",
+            },
+            {
+                "ProductName": "SeaMonkey",
+                "Version": "2.49.5",
+                "ReleaseChannel": "release",
+            },
+            {
+                "ProductName": "SeaMonkey",
+                "Version": "2.51",
+                "ReleaseChannel": "nightly",
+            },
         ],
     )
     def test_false(self, throttler, raw_crash):
@@ -234,7 +268,11 @@ class Test_seamonkey_gt_2_49_5:
         # Need a throttler with the default configuration which includes supported
         # products
         throttler = Throttler(ConfigManager.from_dict({}))
-        raw_crash = {"ProductName": "SeaMonkey", "Version": version}
+        raw_crash = {
+            "ProductName": "SeaMonkey",
+            "Version": version,
+            "ReleaseChannel": "release",
+        }
         assert match_seamonkey_gt_2_49_5(throttler, raw_crash) is True
 
 

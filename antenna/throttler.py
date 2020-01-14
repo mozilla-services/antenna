@@ -238,8 +238,9 @@ def match_seamonkey_gt_2_49_5(throttler, data):
     """
     product = data.get("ProductName", "").lower().strip()
     version = data.get("Version", "")
+    channel = data.get("ReleaseChannel", "")
 
-    if product != "seamonkey" or not version:
+    if product != "seamonkey" or not version or channel != "release":
         return False
 
     try:
@@ -254,15 +255,16 @@ def match_seamonkey_gt_2_49_5(throttler, data):
 
 
 def match_thunderbird_gt_68(throttler, data):
-    """Reject Thunderbird major version > 68 (bug #1604848).
+    """Reject Thunderbird release major version > 68 (bug #1604848).
 
     NOTE(willkg): Remove this January 2021.
 
     """
     product = data.get("ProductName", "").lower().strip()
     version = data.get("Version", "")
+    channel = data.get("ReleaseChannel", "")
 
-    if product != "thunderbird" or not version:
+    if product != "thunderbird" or not version or channel != "release":
         return False
 
     version = version.split(".")[0]
