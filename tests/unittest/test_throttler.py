@@ -14,6 +14,8 @@ from antenna.throttler import (
     Rule,
     Throttler,
     match_infobar_true,
+    match_thunderbird_gt_68,
+    match_seamonkey_gt_2_49_5,
 )
 
 
@@ -175,6 +177,108 @@ class Testmatch_infobar_true:
             "Version": "57.0",
         }
         assert match_infobar_true(throttler, raw_crash) is False
+
+
+class Test_thunderbird_gt_68:
+    @pytest.mark.parametrize(
+        "raw_crash",
+        [
+            {},
+            {"ProductName": "Phil"},
+            {"ProductName": "Thunderbird"},
+            {"ProductName": "Thunderbird", "Version": ""},
+            {"ProductName": "Thunderbird", "Version": "a", "ReleaseChannel": "release"},
+            {
+                "ProductName": "Thunderbird",
+                "Version": "66",
+                "ReleaseChannel": "release",
+            },
+            {
+                "ProductName": "Thunderbird",
+                "Version": "67.10",
+                "ReleaseChannel": "release",
+            },
+            {"ProductName": "Thunderbird", "Version": "69.0", "ReleaseChannel": "beta"},
+        ],
+    )
+    def test_false(self, throttler, raw_crash):
+        # Need a throttler with the default configuration which includes supported
+        # products
+        throttler = Throttler(ConfigManager.from_dict({}))
+        assert match_thunderbird_gt_68(throttler, raw_crash) is False
+
+    @pytest.mark.parametrize("version", ["69", "69.0", "70"])
+    def test_true(self, throttler, version):
+        # Need a throttler with the default configuration which includes supported
+        # products
+        throttler = Throttler(ConfigManager.from_dict({}))
+        raw_crash = {
+            "ProductName": "Thunderbird",
+            "Version": version,
+            "ReleaseChannel": "release",
+        }
+        assert match_thunderbird_gt_68(throttler, raw_crash) is True
+
+
+class Test_seamonkey_gt_2_49_5:
+    @pytest.mark.parametrize(
+        "raw_crash",
+        [
+            {},
+            {"ProductName": "Phil"},
+            {"ProductName": "SeaMonkey"},
+            {"ProductName": "SeaMonkey", "Version": ""},
+            {"ProductName": "SeaMonkey", "Version": "a"},
+            {"ProductName": "SeaMonkey", "Version": "2", "ReleaseChannel": "release"},
+            {
+                "ProductName": "SeaMonkey",
+                "Version": "2.48",
+                "ReleaseChannel": "release",
+            },
+            {
+                "ProductName": "SeaMonkey",
+                "Version": "2.49",
+                "ReleaseChannel": "release",
+            },
+            {
+                "ProductName": "SeaMonkey",
+                "Version": "2.49.4",
+                "ReleaseChannel": "release",
+            },
+            {
+                "ProductName": "SeaMonkey",
+                "Version": "2.49.5",
+                "ReleaseChannel": "release",
+            },
+            {
+                "ProductName": "SeaMonkey",
+                "Version": "2.51.0a1",
+                "ReleaseChannel": "release",
+            },
+            {
+                "ProductName": "SeaMonkey",
+                "Version": "2.51",
+                "ReleaseChannel": "nightly",
+            },
+        ],
+    )
+    def test_false(self, throttler, raw_crash):
+        # Need a throttler with the default configuration which includes supported
+        # products
+        throttler = Throttler(ConfigManager.from_dict({}))
+        assert match_seamonkey_gt_2_49_5(throttler, raw_crash) is False
+
+    @pytest.mark.parametrize("version", ["2.49.6", "2.50", "3"])
+    def test_true(self, throttler, version):
+        # Need a throttler with the default configuration which includes supported
+        # products
+        throttler = Throttler(ConfigManager.from_dict({}))
+        raw_crash = {
+            "ProductName": "SeaMonkey",
+            "Version": version,
+            "ReleaseChannel": "release",
+        }
+        assert match_seamonkey_gt_2_49_5(throttler, raw_crash) is True
 
 
 class Testmozilla_rules:
