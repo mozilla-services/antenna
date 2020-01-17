@@ -187,7 +187,7 @@ class Test_thunderbird_gt_68:
             {"ProductName": "Phil"},
             {"ProductName": "Thunderbird"},
             {"ProductName": "Thunderbird", "Version": ""},
-            {"ProductName": "Thunderbird", "Version": "a"},
+            {"ProductName": "Thunderbird", "Version": "a", "ReleaseChannel": "release"},
             {
                 "ProductName": "Thunderbird",
                 "Version": "66",
@@ -248,6 +248,11 @@ class Test_seamonkey_gt_2_49_5:
             {
                 "ProductName": "SeaMonkey",
                 "Version": "2.49.5",
+                "ReleaseChannel": "release",
+            },
+            {
+                "ProductName": "SeaMonkey",
+                "Version": "2.51.0a1",
                 "ReleaseChannel": "release",
             },
             {
