@@ -190,6 +190,25 @@ class TestBreakpadSubmitterResource:
         # crash id we sent
         assert result.content.decode("utf-8") == "CrashID=bp-%s\n" % crash_id
 
+    @pytest.mark.parametrize(
+        "raw_crash, expected",
+        [
+            ({}, {"collector_notes": []}),
+            (
+                {"TelemetryClientId": "ou812"},
+                {"collector_notes": ["Removed TelemetryClientId from raw crash."]},
+            ),
+            (
+                {"TelemetryServerURL": "ou812"},
+                {"collector_notes": ["Removed TelemetryServerURL from raw crash."]},
+            ),
+        ],
+    )
+    def test_cleanup_crash_report(self, client, raw_crash, expected):
+        bsp = BreakpadSubmitterResource(self.empty_config)
+        bsp.cleanup_crash_report(raw_crash)
+        assert raw_crash == expected
+
     def test_get_throttle_result(self):
         raw_crash = {"ProductName": "Firefox", "ReleaseChannel": "nightly"}
 
