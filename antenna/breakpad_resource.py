@@ -34,6 +34,12 @@ MAX_ATTEMPTS = 20
 STATE_SAVE = "save"
 STATE_PUBLISH = "publish"
 
+#: Bad fields we should never save
+BAD_FIELDS = [
+    "TelemetryClientId",
+    "TelemetryServerURL",
+]
+
 
 class MalformedCrashReport(Exception):
     """Exception raised when the crash report payload is malformed.
@@ -360,6 +366,22 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         return result, rule_name, throttle_rate
 
+    def cleanup_crash_report(self, raw_crash):
+        """Remove anything from the crash report that shouldn't be there.
+
+        This operates on the raw_crash in-place. This adds notes to ``collector_notes``.
+
+        """
+        collector_notes = []
+
+        # Remove bad fields
+        for bad_field in BAD_FIELDS:
+            if bad_field in raw_crash:
+                del raw_crash[bad_field]
+                collector_notes.append("Removed %s from raw crash." % bad_field)
+
+        raw_crash["collector_notes"] = collector_notes
+
     @mymetrics.timer_decorator("on_post.time")
     def on_post(self, req, resp):
         """Handle incoming HTTP POSTs.
@@ -432,23 +454,25 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             "throttle", tags=["result:%s" % RESULT_TO_TEXT[throttle_result].lower()]
         )
 
+        # If the result is REJECT, then discard it
         if throttle_result is REJECT:
-            # If the result is REJECT, then discard it
             resp.body = "Discarded=rule_%s" % rule_name
+            return
 
-        elif throttle_result is FAKEACCEPT:
-            # If the result is a FAKEACCEPT, then we return a crash id, but throw
-            # the crash away
+        # If the result is a FAKEACCEPT, then we return a crash id, but throw the crash
+        # away
+        if throttle_result is FAKEACCEPT:
             resp.body = "CrashID=%s%s\n" % (self.config("dump_id_prefix"), crash_id)
+            return
 
-        else:
-            # If the result is not REJECT, then save it and return the CrashID to
-            # the client
-            crash_report = CrashReport(raw_crash, dumps, crash_id)
-            crash_report.set_state(STATE_SAVE)
-            self.crashmover_queue.append(crash_report)
-            self.hb_run_crashmover()
-            resp.body = "CrashID=%s%s\n" % (self.config("dump_id_prefix"), crash_id)
+        # If we're accepting the cash report, then clean it up, save it and return the
+        # CrashID to the client
+        self.cleanup_crash_report(raw_crash)
+        crash_report = CrashReport(raw_crash, dumps, crash_id)
+        crash_report.set_state(STATE_SAVE)
+        self.crashmover_queue.append(crash_report)
+        self.hb_run_crashmover()
+        resp.body = "CrashID=%s%s\n" % (self.config("dump_id_prefix"), crash_id)
 
     def hb_run_crashmover(self):
         """Spawn a crashmover if there's work to do."""

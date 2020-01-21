@@ -75,6 +75,7 @@ class TestFSCrashStorage:
             b'{"MinidumpSha256Hash": "e9cee71ab932fde863338d08be4de9dfe39ea049bdafb342ce659ec5450b69ae", '
             + b'"ProductName": "Test", '
             + b'"Version": "1.0", '
+            + b'"collector_notes": [], '
             + b'"dump_checksums": '
             + b'{"upload_file_minidump": "e9cee71ab932fde863338d08be4de9dfe39ea049bdafb342ce659ec5450b69ae"}, '
             + b'"legacy_processing": 0, '
