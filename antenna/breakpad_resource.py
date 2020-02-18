@@ -315,7 +315,10 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
                 # This is a JSON blob, so load it and override raw_crash with
                 # it.
                 has_json = True
-                raw_crash = json.loads(fs_item.value)
+                try:
+                    raw_crash = json.loads(fs_item.value)
+                except json.decoder.JSONDecodeError:
+                    raise MalformedCrashReport("bad_json")
 
             elif fs_item.type and (
                 fs_item.type.startswith("application/octet-stream")

@@ -103,7 +103,7 @@ class TestBreakpadSubmitterResource:
         )
 
         bsp = BreakpadSubmitterResource(self.empty_config)
-        with pytest.raises(MalformedCrashReport):
+        with pytest.raises(MalformedCrashReport, match="wrong_content_type"):
             bsp.extract_payload(req)
 
     def test_extract_payload_compressed(self, request_generator):
@@ -150,6 +150,18 @@ class TestBreakpadSubmitterResource:
         }
         expected_dumps = {"upload_file_minidump": b"abcd1234"}
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
+
+    def test_extract_payload_bad_json(self, request_generator):
+        # If the JSON doesn't parse (invalid control character), it raises
+        # a MalformedCrashReport
+        data, headers = multipart_encode({"extra": '{"ProductName":"Firefox\n"}'})
+        req = request_generator(
+            method="POST", path="/submit", headers=headers, body=data
+        )
+
+        bsp = BreakpadSubmitterResource(self.empty_config)
+        with pytest.raises(MalformedCrashReport, match="bad_json"):
+            bsp.extract_payload(req)
 
     def text_extract_payload_kvpairs_and_json(self, request_generator, metricsmock):
         # If there's a JSON blob and also kv pairs, then that's a malformed
