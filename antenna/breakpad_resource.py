@@ -38,6 +38,7 @@ STATE_PUBLISH = "publish"
 BAD_FIELDS = [
     "TelemetryClientId",
     "TelemetryServerURL",
+    "TelemetrySessionId",
 ]
 
 
