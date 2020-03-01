@@ -131,9 +131,9 @@ PyYAML==5.3 \
 s3transfer==0.3.2 \
     --hash=sha256:2525bae2a530195576da53671bae8ca8c55ee8e33bc2225a65e804476611ea5a \
     --hash=sha256:4924e10451cc37901945806423d16c2c2040a6530645a614ed87e995ccec764c
-smmap2==2.0.5 \
-    --hash=sha256:0555a7bf4df71d1ef4218e4807bbf9b201f910174e6e08af2e138d4e517b4dde \
-    --hash=sha256:29a9ffa0497e7f2be94ca0ed1ca1aa3cd4cf25a1f6b4f5f87f74b46ed91d609a
+smmap2==3.0.1 \
+    --hash=sha256:0cb6ea470b1ad9a65a02ca7f4c7ae601861f7dd24a43812ca51cfca2892bb524 \
+    --hash=sha256:44cc8bdaf96442dbb9a8e2e14377d074b3d0eea292eee3c95c8c449b6c92c557
 snowballstemmer==2.0.0 \
     --hash=sha256:209f257d7533fdb3cb73bdbd24f436239ca3b2fa67d56f6ff88e86be08cc5ef0 \
     --hash=sha256:df3bac3df4c2c01363f3dd2cfa78cce2840a79b9f1c2d2de9ce8d31683992f52
