@@ -15,7 +15,7 @@ from antenna.throttler import (
     Throttler,
     match_infobar_true,
     match_thunderbird_gt_68,
-    match_seamonkey_gt_2_49_5,
+    match_seamonkey_gt_2_53_1,
 )
 
 
@@ -220,7 +220,7 @@ class Test_thunderbird_gt_68:
         assert match_thunderbird_gt_68(throttler, raw_crash) is True
 
 
-class Test_seamonkey_gt_2_49_5:
+class Test_seamonkey_gt_2_53_1:
     @pytest.mark.parametrize(
         "raw_crash",
         [
@@ -232,32 +232,29 @@ class Test_seamonkey_gt_2_49_5:
             {"ProductName": "SeaMonkey", "Version": "2", "ReleaseChannel": "release"},
             {
                 "ProductName": "SeaMonkey",
-                "Version": "2.48",
+                "Version": "2.53",
                 "ReleaseChannel": "release",
             },
             {
                 "ProductName": "SeaMonkey",
-                "Version": "2.49",
+                "Version": "2.53.0",
                 "ReleaseChannel": "release",
             },
             {
                 "ProductName": "SeaMonkey",
-                "Version": "2.49.4",
+                "Version": "2.53.1",
                 "ReleaseChannel": "release",
             },
+            # False because the last part of the version isn't an int
             {
                 "ProductName": "SeaMonkey",
-                "Version": "2.49.5",
+                "Version": "2.54.0a1",
                 "ReleaseChannel": "release",
             },
+            # False because it's not in the release channel
             {
                 "ProductName": "SeaMonkey",
-                "Version": "2.51.0a1",
-                "ReleaseChannel": "release",
-            },
-            {
-                "ProductName": "SeaMonkey",
-                "Version": "2.51",
+                "Version": "2.54",
                 "ReleaseChannel": "nightly",
             },
         ],
@@ -266,9 +263,9 @@ class Test_seamonkey_gt_2_49_5:
         # Need a throttler with the default configuration which includes supported
         # products
         throttler = Throttler(ConfigManager.from_dict({}))
-        assert match_seamonkey_gt_2_49_5(throttler, raw_crash) is False
+        assert match_seamonkey_gt_2_53_1(throttler, raw_crash) is False
 
-    @pytest.mark.parametrize("version", ["2.49.6", "2.50", "3"])
+    @pytest.mark.parametrize("version", ["2.53.2", "2.54", "3"])
     def test_true(self, throttler, version):
         # Need a throttler with the default configuration which includes supported
         # products
@@ -278,7 +275,7 @@ class Test_seamonkey_gt_2_49_5:
             "Version": version,
             "ReleaseChannel": "release",
         }
-        assert match_seamonkey_gt_2_49_5(throttler, raw_crash) is True
+        assert match_seamonkey_gt_2_53_1(throttler, raw_crash) is True
 
 
 class Testmozilla_rules:

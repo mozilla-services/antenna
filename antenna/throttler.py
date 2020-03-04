@@ -230,8 +230,10 @@ def match_b2g(throttler, data):
     return False
 
 
-def match_seamonkey_gt_2_49_5(throttler, data):
+def match_seamonkey_gt_2_53_1(throttler, data):
     """Reject SeaMonkey > 2.49.5 (bug #1604848).
+
+    Updated to 2.53.1 (bug #1619101).
 
     NOTE(willkg): Remove this January 2021.
 
@@ -248,7 +250,7 @@ def match_seamonkey_gt_2_49_5(throttler, data):
     except ValueError:
         return False
 
-    if version > (2, 49, 5):
+    if version > (2, 53, 1):
         return True
 
     return False
@@ -342,11 +344,11 @@ MOZILLA_RULES = [
         condition=match_thunderbird_gt_68,
         result=REJECT,
     ),
-    # Reject SeaMonkey > 2.49.5 (bug #1604848)
+    # Reject SeaMonkey > 2.53.1 (bug #1604848, bug #1619101)
     Rule(
-        rule_name="seamonkey_gt_2_49_5",
+        rule_name="seamonkey_gt_2_53_1",
         key="*",
-        condition=match_seamonkey_gt_2_49_5,
+        condition=match_seamonkey_gt_2_53_1,
         result=REJECT,
     ),
     # Reject crash reports for unsupported products; this does nothing if the
