@@ -3,14 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import logging
-import os
 from pathlib import Path
 import sys
 
 import boto3
 from botocore.client import Config
-from everett.manager import ConfigManager, ConfigEnvFileEnv, ConfigOSEnv
-from google.cloud import pubsub_v1
+from everett.manager import ConfigManager, ConfigOSEnv
 import pytest
 
 
@@ -37,10 +35,10 @@ def posturl(config):
 
 
 class S3Connection:
-    def __init__(self, access_key, secret_access_key, endpointurl, region, bucket):
+    def __init__(self, access_key, secret_access_key, endpoint_url, region, bucket):
         self.access_key = access_key
         self.secret_access_key = secret_access_key
-        self.endpointurl = endpointurl
+        self.endpoint_url = endpoint_url
         self.region = region
         self.bucket = bucket
 
@@ -49,7 +47,7 @@ class S3Connection:
 
     def get_config(self):
         return {
-            "endpointurl": self.endpointurl,
+            "endpoint_url": self.endpoint_url,
             "region": self.region,
             "bucket": self.bucket,
         }
@@ -67,8 +65,8 @@ class S3Connection:
             "region_name": self.region,
             "config": Config(s3={"addression_style": "path"}),
         }
-        if self.endpointurl:
-            client_kwargs["endpoint_url"] = self.endpointurl
+        if self.endpoint_url:
+            client_kwargs["endpoint_url"] = self.endpoint_url
 
         client = session.client(**client_kwargs)
         return client
@@ -88,48 +86,72 @@ def s3conn(config):
     return S3Connection(
         access_key=config("crashstorage_access_key", default=""),
         secret_access_key=config("crashstorage_secret_access_key", default=""),
-        endpointurl=config("crashstorage_endpoint_url", default=""),
+        endpoint_url=config("crashstorage_endpoint_url", default=""),
         region=config("crashstorage_region", default="us-west-2"),
         bucket=config("crashstorage_bucket_name"),
     )
 
 
-class PubSubHelper:
-    def __init__(self, project_id, topic_name, subscription_name):
-        self.subscription = pubsub_v1.SubscriberClient()
-        self.topic_path = self.subscription.topic_path(project_id, topic_name)
-        self.subscription_path = self.subscription.subscription_path(
-            project_id, subscription_name
-        )
+class SQSHelper:
+    def __init__(self, access_key, secret_access_key, endpoint_url, region, queue_name):
+        self.access_key = access_key
+        self.secret_access_key = secret_access_key
+        self.endpoint_url = endpoint_url
+        self.region = region
+        self.queue_name = queue_name
+        self.client = self.connect()
+
+    def connect(self):
+        session_kwargs = {}
+        if self.access_key and self.secret_access_key:
+            session_kwargs["aws_access_key_id"] = self.access_key
+            session_kwargs["aws_secret_access_key"] = self.secret_access_key
+
+        session = boto3.session.Session(**session_kwargs)
+
+        client_kwargs = {
+            "service_name": "sqs",
+            "region_name": self.region,
+        }
+        if self.endpoint_url:
+            client_kwargs["endpoint_url"] = self.endpoint_url
+
+        client = session.client(**client_kwargs)
+        return client
 
     def list_crashids(self):
-        """Return crash ids in the Pub/Sub topic."""
+        """Return crash ids in the SQS queue."""
+        queue_url = self.client.get_queue_url(QueueName=self.queue_name)["QueueUrl"]
+
         crashids = []
         while True:
-            response = self.subscription.pull(
-                self.subscription_path, max_messages=1, return_immediately=True
+            resp = self.client.receive_message(
+                QueueUrl=queue_url, WaitTimeSeconds=0, VisibilityTimeout=2,
             )
-            if not response.received_messages:
+            msgs = resp.get("Messages", [])
+            if not msgs:
                 break
 
-            ack_ids = []
-            for msg in response.received_messages:
-                if msg.message.data != "test":
-                    crashids.append(msg.message.data)
-                ack_ids.append(msg.ack_id)
+            for msg in msgs:
+                data = msg["Body"]
+                handle = msg["ReceiptHandle"]
+                if data != "test":
+                    crashids.append(data)
 
-            # Acknowledges the received messages so they will not be sent again.
-            self.subscription.acknowledge(self.subscription_path, ack_ids)
+                self.client.delete_message(QueueUrl=queue_url, ReceiptHandle=handle)
+
         return crashids
 
 
 @pytest.fixture
-def pubsub(config):
+def sqshelper(config):
     """Generate and returns a PubSub helper using env config."""
-    return PubSubHelper(
-        project_id=config("crashpublish_project_id", default=""),
-        topic_name=config("crashpublish_topic_name", default=""),
-        subscription_name=config("crashpublish_subscription_name", default=""),
+    return SQSHelper(
+        access_key=config("crashpublish_access_key", default=""),
+        secret_access_key=config("crashpublish_secret_access_key", default=""),
+        endpoint_url=config("crashpublish_endpoint_url", default=""),
+        region=config("crashpublish_region", default=""),
+        queue_name=config("crashpublish_queue_name", default=""),
     )
 
 

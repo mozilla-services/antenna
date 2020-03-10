@@ -4,7 +4,6 @@
 
 import datetime
 import logging
-import os
 import time
 
 import isodate
@@ -48,16 +47,10 @@ class CrashVerifier:
             key = self.dump_key(crash_id, name)
             assert key in s3conn.list_objects(prefix=key)
 
-    def verify_published_data(self, crash_id, pubsub):
+    def verify_published_data(self, crash_id, sqshelper):
         # Verify crash id was published--this might pick up a bunch of stuff,
         # so we just verify it's one of the things we picked up
-        if "PUBSUB_EMULATOR_HOST" in os.environ:
-            crash_ids = [
-                crash_id.decode("utf-8") for crash_id in pubsub.list_crashids()
-            ]
-            assert crash_id in crash_ids
-        else:
-            print("SKIPPING PUBLISH CHECK--NOT USING EMULATOR")
+        assert crash_id in sqshelper.list_crashids()
 
 
 def content_to_crashid(content):
@@ -74,7 +67,7 @@ SLEEP_TIME = 5
 
 
 class TestPostCrash:
-    def test_regular(self, posturl, s3conn, pubsub, crash_generator):
+    def test_regular(self, posturl, s3conn, sqshelper, crash_generator):
         """Post a valid crash and verify the contents made it to S3."""
         raw_crash, dumps = crash_generator.generate()
         crash_payload = mini_poster.assemble_crash_payload_dict(raw_crash, dumps)
@@ -90,9 +83,9 @@ class TestPostCrash:
         # Verify stored and published crash data
         verifier = CrashVerifier()
         verifier.verify_stored_data(crash_id, raw_crash, dumps, s3conn)
-        verifier.verify_published_data(crash_id, pubsub)
+        verifier.verify_published_data(crash_id, sqshelper)
 
-    def test_compressed_crash(self, posturl, s3conn, pubsub, crash_generator):
+    def test_compressed_crash(self, posturl, s3conn, sqshelper, crash_generator):
         """Post a compressed crash and verify contents made it to S3."""
         raw_crash, dumps = crash_generator.generate()
         crash_payload = mini_poster.assemble_crash_payload_dict(raw_crash, dumps)
@@ -108,4 +101,4 @@ class TestPostCrash:
         # Verify stored and published crash data
         verifier = CrashVerifier()
         verifier.verify_stored_data(crash_id, raw_crash, dumps, s3conn)
-        verifier.verify_published_data(crash_id, pubsub)
+        verifier.verify_published_data(crash_id, sqshelper)
