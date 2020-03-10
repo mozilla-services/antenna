@@ -15,7 +15,7 @@ from antenna.throttler import (
     Throttler,
     match_infobar_true,
     match_thunderbird_gt_68,
-    match_seamonkey_gt_2_53_1,
+    match_seamonkey_gt_2_53_2,
 )
 
 
@@ -220,7 +220,7 @@ class Test_thunderbird_gt_68:
         assert match_thunderbird_gt_68(throttler, raw_crash) is True
 
 
-class Test_seamonkey_gt_2_53_1:
+class Test_seamonkey_gt_2_53_2:
     @pytest.mark.parametrize(
         "raw_crash",
         [
@@ -237,12 +237,12 @@ class Test_seamonkey_gt_2_53_1:
             },
             {
                 "ProductName": "SeaMonkey",
-                "Version": "2.53.0",
+                "Version": "2.53.1",
                 "ReleaseChannel": "release",
             },
             {
                 "ProductName": "SeaMonkey",
-                "Version": "2.53.1",
+                "Version": "2.53.2",
                 "ReleaseChannel": "release",
             },
             # False because the last part of the version isn't an int
@@ -263,9 +263,9 @@ class Test_seamonkey_gt_2_53_1:
         # Need a throttler with the default configuration which includes supported
         # products
         throttler = Throttler(ConfigManager.from_dict({}))
-        assert match_seamonkey_gt_2_53_1(throttler, raw_crash) is False
+        assert match_seamonkey_gt_2_53_2(throttler, raw_crash) is False
 
-    @pytest.mark.parametrize("version", ["2.53.2", "2.54", "3"])
+    @pytest.mark.parametrize("version", ["2.53.3", "2.54", "3"])
     def test_true(self, throttler, version):
         # Need a throttler with the default configuration which includes supported
         # products
@@ -275,7 +275,7 @@ class Test_seamonkey_gt_2_53_1:
             "Version": version,
             "ReleaseChannel": "release",
         }
-        assert match_seamonkey_gt_2_53_1(throttler, raw_crash) is True
+        assert match_seamonkey_gt_2_53_2(throttler, raw_crash) is True
 
 
 class Testmozilla_rules:
