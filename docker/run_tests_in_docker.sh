@@ -27,7 +27,7 @@ TESTIMAGE="local/antenna_deploy_base"
 
 # Start services in background (this is idempotent)
 echo "Starting services needed by tests in the background..."
-${DC} up -d localstack-s3 localstack-sqs statsd pubsub
+${DC} up -d localstack-s3 localstack-sqs statsd
 
 # If we're running a shell, then we start up a test container with . mounted
 # to /app.

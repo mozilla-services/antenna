@@ -15,8 +15,6 @@ set -e
 # Wait for services to be ready
 echo "Waiting for ${CRASHSTORAGE_ENDPOINT_URL} ..."
 urlwait "${CRASHSTORAGE_ENDPOINT_URL}" 10
-echo "Waiting for ${PUBSUB_EMULATOR_HOST} ..."
-urlwait "http://${PUBSUB_EMULATOR_HOST}" 10
 echo "Waiting for ${CRASHPUBLISH_ENDPOINT_URL} ..."
 urlwait "${CRASHPUBLISH_ENDPOINT_URL}" 10
 
@@ -24,12 +22,6 @@ echo "Delete and create S3 bucket..."
 python ./bin/s3_cli.py delete "${CRASHSTORAGE_BUCKET_NAME}"
 python ./bin/s3_cli.py create "${CRASHSTORAGE_BUCKET_NAME}"
 python ./bin/s3_cli.py list_buckets
-
-echo "Delete and create Pub/Sub topic..."
-python ./bin/pubsub_cli.py delete_topic "${CRASHPUBLISH_PROJECT_ID}" "${CRASHPUBLISH_TOPIC_NAME}"
-python ./bin/pubsub_cli.py create_topic "${CRASHPUBLISH_PROJECT_ID}" "${CRASHPUBLISH_TOPIC_NAME}"
-python ./bin/pubsub_cli.py create_subscription "${CRASHPUBLISH_PROJECT_ID}" "${CRASHPUBLISH_TOPIC_NAME}" "${CRASHPUBLISH_SUBSCRIPTION_NAME}"
-python ./bin/pubsub_cli.py list_topics "${CRASHPUBLISH_PROJECT_ID}"
 
 echo "Delete and create SQS queue..."
 python ./bin/sqs_cli.py delete "${CRASHPUBLISH_QUEUE_NAME}"

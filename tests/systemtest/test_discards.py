@@ -22,8 +22,10 @@ class TestDiscarded:
 
         resp = requests.post(posturl, headers=headers, data=payload)
 
-        assert resp.status_code == 200
-        assert str(resp.content, encoding="utf-8") == "Discarded=no_annotations"
+        assert resp.status_code == 400
+        assert (
+            str(resp.content, encoding="utf-8") == "Discarded=malformed_no_annotations"
+        )
 
     def test_missing_content_type(self, posturl, s3conn, crash_generator):
         """Test crash missing a content-type header is discarded"""
@@ -33,8 +35,10 @@ class TestDiscarded:
         # Send no Content-Type header
         resp = requests.post(posturl, headers={}, data=payload)
 
-        assert resp.status_code == 200
-        assert str(resp.content, encoding="utf-8") == "Discarded=no_content_type"
+        assert resp.status_code == 400
+        assert (
+            str(resp.content, encoding="utf-8") == "Discarded=malformed_no_content_type"
+        )
 
     def test_no_payload(self, posturl, s3conn, crash_generator):
         """Test crash with no payload is discarded"""
@@ -47,8 +51,11 @@ class TestDiscarded:
         # Send no payload
         resp = requests.post(posturl, headers=headers, data="")
 
-        assert resp.status_code == 200
-        assert str(resp.content, encoding="utf-8") == "Discarded=no_content_length"
+        assert resp.status_code == 400
+        assert (
+            str(resp.content, encoding="utf-8")
+            == "Discarded=malformed_no_content_length"
+        )
 
     def test_junk_payload(self, posturl, s3conn, crash_generator):
         """Test crash with a junk payload is discarded"""
@@ -62,8 +69,10 @@ class TestDiscarded:
 
         resp = requests.post(posturl, headers=headers, data=payload)
 
-        assert resp.status_code == 200
-        assert str(resp.content, encoding="utf-8") == "Discarded=no_annotations"
+        assert resp.status_code == 400
+        assert (
+            str(resp.content, encoding="utf-8") == "Discarded=malformed_no_annotations"
+        )
 
     def test_compressed_payload_bad_header(self, posturl, s3conn, crash_generator):
         """Test crash with a compressed payload, but missing header is discarded"""
@@ -77,8 +86,10 @@ class TestDiscarded:
 
         resp = requests.post(posturl, headers=headers, data=payload)
 
-        assert resp.status_code == 200
-        assert str(resp.content, encoding="utf-8") == "Discarded=no_annotations"
+        assert resp.status_code == 400
+        assert (
+            str(resp.content, encoding="utf-8") == "Discarded=malformed_no_annotations"
+        )
 
     def test_compressed_header_non_compressed_payload(
         self, posturl, s3conn, crash_generator
@@ -94,5 +105,5 @@ class TestDiscarded:
 
         resp = requests.post(posturl, headers=headers, data=payload)
 
-        assert resp.status_code == 200
-        assert str(resp.content, encoding="utf-8") == "Discarded=bad_gzip"
+        assert resp.status_code == 400
+        assert str(resp.content, encoding="utf-8") == "Discarded=malformed_bad_gzip"

@@ -11,7 +11,6 @@
 #
 # * elasticsearch
 # * postgresql
-# * pubsub
 
 # Failures should cause setup to fail
 set -v -e -x
@@ -25,7 +24,6 @@ PYTHON="$(which python)"
 
 # Wait for services to be ready
 urlwait "${CRASHSTORAGE_ENDPOINT_URL}" 10
-urlwait "http://${PUBSUB_EMULATOR_HOST}" 10
 urlwait "${CRASHPUBLISH_ENDPOINT_URL}" 10
 
 # Run tests

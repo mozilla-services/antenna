@@ -21,7 +21,7 @@ gunicorn \
     --bind=0.0.0.0:8000 \
     --workers=1 \
     --worker-connections=2 \
-    --worker-class=antenna.gunicornworker.GeventGrpcWorker \
+    --worker-class=gevent \
     --error-logfile=- \
     --access-logfile=- \
     --config=antenna/gunicornhooks.py \
