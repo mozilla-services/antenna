@@ -2,11 +2,11 @@
 Unittest README
 ===============
 
-These test the Antenna code. We use the py.test test runner.
+These test the Antenna code. We use the pytest test runner.
 
 Contents of this directory::
 
-    conftest.py -- holds py.test fixtures
+    conftest.py -- holds pytest fixtures
     test_*.py   -- a test file
 
 

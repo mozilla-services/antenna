@@ -78,27 +78,26 @@ def positive_int(val):
 
 
 class BreakpadSubmitterResource(RequiredConfigMixin):
-    """Handles incoming breakpad crash reports and saves to crashstorage.
+    """Handles incoming breakpad-style crash reports.
 
-    This handles incoming HTTP POST requests containing breakpad-style crash
-    reports in multipart/form-data format.
+    This handles incoming HTTP POST requests containing breakpad-style crash reports in
+    multipart/form-data format.
 
     It can handle compressed or uncompressed POST payloads.
 
-    It parses the payload from the HTTP POST request, runs it through the
-    throttler with the specified rules, generates a crash_id, returns the
-    crash_id to the HTTP client and then saves the crash using the configured
-    crashstorage class.
+    It parses the payload from the HTTP POST request, runs it through the throttler with
+    the specified rules, generates a crash_id, returns the crash_id to the HTTP client,
+    saves the crash using the configured crashstorage class, and publishes it using
+    the configured crashpublish class.
 
     .. Note::
 
-       From when a crash comes in to when it's saved by the crashstorage class,
-       the crash is entirely in memory. Keep that in mind when figuring out
-       how to scale your Antenna nodes.
+       From when a crash comes in to when it's saved by the crashstorage class, the
+       crash is entirely in memory. Keep that in mind when figuring out how to scale
+       your Antenna nodes.
 
 
-    The most important configuration bit here is choosing the crashstorage
-    class.
+    The most important configuration bit here is choosing the crashstorage class.
 
     For example::
 

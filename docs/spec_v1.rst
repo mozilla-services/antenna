@@ -51,7 +51,7 @@ Requirements for v1 of antenna:
 
 1. Handle incoming HTTP POST requests on ``/submit``
 
-   * Handle gzip compressed HTTP POST request bodies.
+   * Handle gzip compressed HTTP POST request bodies--helpful for mobile.
    * Parse ``multipart/form-data`` into a raw crash.
 
    Antenna should parse HTTP payloads the same way that Socorro collector
@@ -85,6 +85,14 @@ Requirements for v1 of antenna:
    * Generate a crash id using the same scheme we're currently using.
    * Return the crash id to the client so that it can generate urls
      in about:crashes.
+   * Content-type for response should be ``text/plain``.
+   * Example success response body::
+
+         CrashID=bp-28a40956-d19e-48ff-a2ee-19a932160525
+
+   * Example failure response body::
+
+         Discarded=1
 
 4. Add collector-generated bits to the crash report.
 
@@ -211,6 +219,32 @@ Which ends up in S3 like this::
     v1/dump/00007bd0-2d1c-4865-af09-80bc02160513
 
         Raw dump.
+
+
+HTTP POST request body has previously had problems with null bytes and
+non-utf-8 characters. They've taken great pains to make sure it contains
+correct utf-8 characters. We still need to do a pass on removing null bytes.
+
+HTTP POSTs for crash reports should always have a content length.
+
+Crash report can contain::
+
+    Throttleable=0
+
+If that's there and 0, then it should skip the throttler and be accepted,
+saved and processed.
+
+    https://dxr.mozilla.org/mozilla-central/source/toolkit/crashreporter/CrashSubmit.jsm#282
+
+
+Crash report can contain::
+
+    crash_id=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+We siphon crashes from our prod environment to our dev environment. We want
+these crash reports to end up with the same crash id. Thus it's possible for an
+incoming crash to have a crash id in the data. If it does have a crash id, we
+should use that.
 
 
 Crash ids

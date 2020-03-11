@@ -1,16 +1,17 @@
-========================================
-Antenna: Breakpad crash report collector
-========================================
+==========================================
+Antenna: Socorro crash ingestion collector
+==========================================
 
-`Breakpad crash <https://chromium.googlesource.com/breakpad/breakpad>`_
-collector web app that handles incoming crash reports and saves them
-to AWS S3.
+Collector for the `Socorro crash ingestion pipeline
+<https://socorro.readthedocs.io/>`_ that supports `breakpad-style crash reports
+<https://chromium.googlesource.com/breakpad/breakpad>`_.
 
 Uses Python 3, `Gunicorn <http://gunicorn.org/>`_, `gevent
 <http://www.gevent.org/>`_, `Falcon <https://falconframework.org/>`_ and some
 other things.
 
 * Free software: Mozilla Public License version 2.0
+* Code: https://github.com/mozilla-services/antenna/
 * Documentation: https://antenna.readthedocs.io/
 * Bugs: `Report a bug <https://bugzilla.mozilla.org/enter_bug.cgi?format=__standard__&product=Socorro&component=Antenna>`_
 * Community Participation Guidelines: `Guidelines <https://github.com/mozilla-services/antenna/blob/master/CODE_OF_CONDUCT.md>`_
@@ -169,23 +170,23 @@ production, see docs_.
 
 
    If you need to run specific tests or pass in different arguments, you can run
-   bash in the base container and then run ``py.test`` with whatever args you
+   bash in the base container and then run ``pytest`` with whatever args you
    want. For example:
 
    .. code-block:: shell
 
       $ make shell
-      app@...$ py.test
+      app@...$ pytest
 
       <pytest output>
 
-      app@...$ py.test tests/unittest/test_crashstorage.py
+      app@...$ pytest tests/unittest/test_crashstorage.py
 
 
-   We're using py.test_ for a test harness and test discovery.
+   We're using pytest_ for a test harness and test discovery.
 
 
 For more details on running Antenna or hacking on Antenna, see the docs_.
 
-.. _py.test: http://pytest.org/
+.. _pytest: http://pytest.org/
 .. _docs: https://antenna.readthedocs.io/

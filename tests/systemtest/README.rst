@@ -3,11 +3,11 @@ Systemtest README
 =================
 
 These test Antenna as a whole and are designed to be run against a running
-Antenna instance. We use the py.test test runner.
+Antenna instance. We use the pytest test runner.
 
 Contents of this directory::
 
-    conftest.py  -- holds py.test fixtures
+    conftest.py  -- holds pytest fixtures
     test_*.py    -- a test file
     run_tests.sh -- test runner shell script
 
@@ -28,7 +28,7 @@ Then in a separate terminal, run these tests from the repository root::
     make systemtest
 
 
-If you want to run individual tests, or use different py.test options, do::
+If you want to run individual tests, or use different pytest options, do::
 
     make systemtest-shell
 
