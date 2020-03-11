@@ -53,4 +53,4 @@ pip install --no-cache-dir -r requirements/default.txt -c requirements/constrain
 
 echo "Running tests."
 # Run tests using configuration in the environment and send everything to stdout
-py.test -vv tests/systemtest/ 2>&1
+pytest -vv tests/systemtest/ 2>&1

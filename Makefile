@@ -118,7 +118,7 @@ systemtest-shell: my.env .docker-build
 
 .PHONY: test-coverage
 test-coverage: my.env .docker-build
-	${DC} run base py.test --cov=antenna --cov-report term-missing
+	${DC} run base pytest --cov=antenna --cov-report term-missing
 
 .PHONY: docs
 docs: my.env .docker-build

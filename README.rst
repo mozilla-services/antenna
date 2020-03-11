@@ -170,23 +170,23 @@ production, see docs_.
 
 
    If you need to run specific tests or pass in different arguments, you can run
-   bash in the base container and then run ``py.test`` with whatever args you
+   bash in the base container and then run ``pytest`` with whatever args you
    want. For example:
 
    .. code-block:: shell
 
       $ make shell
-      app@...$ py.test
+      app@...$ pytest
 
       <pytest output>
 
-      app@...$ py.test tests/unittest/test_crashstorage.py
+      app@...$ pytest tests/unittest/test_crashstorage.py
 
 
-   We're using py.test_ for a test harness and test discovery.
+   We're using pytest_ for a test harness and test discovery.
 
 
 For more details on running Antenna or hacking on Antenna, see the docs_.
 
-.. _py.test: http://pytest.org/
+.. _pytest: http://pytest.org/
 .. _docs: https://antenna.readthedocs.io/

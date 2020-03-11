@@ -80,20 +80,20 @@ To run the tests, run this:
 Tests go in ``tests/``. Data required by tests goes in ``tests/data/``.
 
 If you need to run specific tests or pass in different arguments, you can run
-bash in the base container and then run ``py.test`` with whatever args you want.
+bash in the base container and then run ``pytest`` with whatever args you want.
 For example:
 
 .. code-block:: shell
 
    $ make shell
-   app@...$ py.test
+   app@...$ pytest
 
    <pytest output>
 
-   app@...$ py.test tests/unittest/test_crashstorage.py
+   app@...$ pytest tests/unittest/test_crashstorage.py
 
 
-We're using `py.test <https://pytest.org/>`_ for a test harness and test
+We're using `pytest <https://pytest.org/>`_ for a test harness and test
 discovery.
 
 
