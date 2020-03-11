@@ -8,8 +8,8 @@ Putting Antenna in production
 High-level things
 =================
 
-Antenna is a WSGI application that uses `Gunicorn <http://gunicorn.org/>`_ as
-the WSGI server.
+Antenna is a Python WSGI application that uses `Gunicorn
+<http://gunicorn.org/>`_ as the WSGI server.
 
 We use `nginx <http://nginx.org/>`_ in front of that, but you might be able to
 use other web servers.
@@ -107,6 +107,8 @@ somewhere else.
 EC2 instance size and scaling
 =============================
 
+*Circa 2017*
+
 We're setting up Antenna to run on Amazon EC2 x4.large nodes. Antenna isn't very
 CPU intensive, but it is very network intensive (it's essentially an upload
 server) and it queues things in memory.
@@ -128,9 +130,9 @@ What happens after Antenna collects a crash?
 Antenna saves the crash to the crash storage system you specify. We save our
 crashes to AWS S3.
 
-Then it publishes the crash to the designated crash queue. We queue crashes
-for processing with Pub/Sub. The processor subscribes to that topic and
-processes incoming crashes.
+Then it publishes the crash to the designated crash queue. We queue crashes for
+processing with AWS SQS. The processor pulls crash report ids to process from
+the AWS SQS queue.
 
 
 Troubleshooting

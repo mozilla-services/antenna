@@ -5,7 +5,9 @@ Architecture
 Purpose
 =======
 
-Antenna handles incoming breakpad crash reports and saves them to AWS S3.
+Antenna handles incoming breakpad crash reports, parses them, saves the raw
+crash data to AWS S3, and publishes the crash report id to AWS SQS for
+processing.
 
 
 Requirements
@@ -32,7 +34,7 @@ Antenna is built with the following requirements:
 4. **Make setting it up straight-forward**
 
    Antenna should be straight-forward to set up. Minimal configuration options.
-   Solid documentation.
+   Good defaults. Good documentation.
 
 5. **Easy to test**
 
@@ -66,6 +68,7 @@ High-level architecture
 
        client [shape=box3d, label="Breakpad\nclient"];
        awss3 [shape=tab, label="AWS S3"];
+       awssqs [shape=tab, label="AWS SQS"];
 
        client -> nginx [label="HTTP POST"];
 
@@ -74,13 +77,14 @@ High-level architecture
 
        nginx -> client [label="crashid"];
        antenna -> awss3 [label="save to S3"];
+       antenna -> awssqs [label="publish id to SQS"];
 
        { rank=min; client; }
        { rank=max; awss3; }
    }
 
 
-We run multiple Antenna nodes behind an ELB.
+We run multiple Antenna collector nodes behind an ELB.
 
 
 Data flow
@@ -88,7 +92,7 @@ Data flow
 
 This is the rough data flow:
 
-1. Breakpad client submits a crash report via HTTP POST with a
+1. Crash reporter client submits a crash report via HTTP POST with a
    multipart/form-data encoded payload.
 
 2. Antenna's ``BreakpadSubmitterResource`` handles the HTTP POST
@@ -102,26 +106,29 @@ This is the rough data flow:
 
    It generates a crash id.
 
-   It returns the crash id to the breakpad client.
+   It returns the crash id to the crash reporter client.
 
-3. The ``BreakpadSubmitterResource`` tosses the crash in the ``crashmover_save_queue``.
-   It tosses the crash in the ``crashmover_save_queue``.
+3. The ``BreakpadSubmitterResource`` tosses the crash in the ``crashmover_queue``.
+   It tosses the crash in the ``crashmover_queue``.
 
 4. At this point, the HTTP conversation is done and the connection ends.
 
 5. ... time passes depending on how many things are in the
-   ``crashmover_save_queue``.
+   ``crashmover_queue``.
 
 6. A crashmover coroutine frees up, pulls the crash out of the
-   ``crashmover_save_queue``, and then tries to save it to whatever crashstorage
+   ``crashmover_queue``, and then tries to save it to whatever crashstorage
    class is set up. If it's :everett:comp:`S3CrashStorage`, then it saves it to
    AWS S3.
 
-   If the save is successful, then the coroutine moves on to the next crash in
-   the queue.
+   If the save is successful, then the coroutine publishes the crash report
+   id to the AWS SQS standard queue for processing.
 
-   If the save is not successful, the coroutine puts the crash back in the queue
-   and moves on with the next crash.
+   If publishing is successful, the coroutine moves on to the next crash in the
+   queue.
+
+   If the save or publish is not successful, the coroutine puts the crash back
+   in the queue and moves on with the next crash.
 
 
 Diagnostics
@@ -212,7 +219,7 @@ And then one or more dumps in directories by dump name:
 Note that ``upload_file_minidump`` gets converted to ``dump``.
 
 For example, a crash with id ``00007bd0-2d1c-4865-af09-80bc00170413`` and
-two dumps "upload_file_minidump" and "upload_file_minidump_flash1" gets 
+two dumps "upload_file_minidump" and "upload_file_minidump_flash1" gets
 these files saved::
 
     v2/raw_crash/000/20170413/00007bd0-2d1c-4865-af09-80bc00170413
