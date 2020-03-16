@@ -55,9 +55,9 @@ six==1.14.0 \
 boto3==1.12.22 \
     --hash=sha256:e3cf4a0e1a6d79d2761b6ab050cb897a4e753f625524d15c01540f9522a11874 \
     --hash=sha256:172f07391ad6bd261336cddaf988944b2d8e528a7c036d82c7841676cbc935ec
-botocore==1.15.11 \
-    --hash=sha256:35d553b8975a3810010fabb885e42d1bbc97bdae52c873f7640a2dd87772c455 \
-    --hash=sha256:87a53301ee9e32e776d2d805c121753091fbddc3457dfdb8d6bdf7dbd945295a
+botocore==1.15.22 \
+    --hash=sha256:b8b399828d6dfe8ee879c22aa313591c183b78a8733df437ba84d9f39cd1b219 \
+    --hash=sha256:ac6b6ae659b797f7bb106a7bee5ff1c7de9ece85e542a334a1cd618f9f2782cc
 
 # Development things
 bandit==1.6.2 \
