@@ -230,53 +230,6 @@ def match_b2g(throttler, data):
     return False
 
 
-def match_seamonkey_gt_2_53_2(throttler, data):
-    """Reject SeaMonkey > 2.49.5 (bug #1604848).
-
-    Updated to 2.53.1 then to 2.53.2 (bug #1619101).
-
-    NOTE(willkg): Remove this January 2021.
-
-    """
-    product = data.get("ProductName", "").lower().strip()
-    version = data.get("Version", "")
-    channel = data.get("ReleaseChannel", "")
-
-    if product != "seamonkey" or not version or channel != "release":
-        return False
-
-    try:
-        version = tuple(int(n) for n in version.split("."))
-    except ValueError:
-        return False
-
-    if version > (2, 53, 2):
-        return True
-
-    return False
-
-
-def match_thunderbird_gt_68(throttler, data):
-    """Reject Thunderbird release major version > 68 (bug #1604848).
-
-    NOTE(willkg): Remove this January 2021.
-
-    """
-    product = data.get("ProductName", "").lower().strip()
-    version = data.get("Version", "")
-    channel = data.get("ReleaseChannel", "")
-
-    if product != "thunderbird" or not version or channel != "release":
-        return False
-
-    version = version.split(".")[0]
-
-    if version.isdigit() and int(version) > 68:
-        return True
-
-    return False
-
-
 def match_unsupported_product(throttler, data):
     """Match unsupported products."""
     products = throttler.config("products")
@@ -302,7 +255,6 @@ MOZILLA_PRODUCTS = [
     "Focus",
     "GeckoViewExample",
     "ReferenceBrowser",
-    # NOTE(willkg): Remove these January 2021.
     "Thunderbird",
     "SeaMonkey",
 ]
@@ -337,20 +289,6 @@ MOZILLA_RULES = [
     # "Fake accept" B2G crash reports because B2G doesn't handle rejection
     # well and will retry ad infinitum
     Rule(rule_name="b2g", key="*", condition=match_b2g, result=FAKEACCEPT),
-    # Reject Thunderbird major version > 68 (bug #1604848)
-    Rule(
-        rule_name="thunderbird_gt_68",
-        key="*",
-        condition=match_thunderbird_gt_68,
-        result=REJECT,
-    ),
-    # Reject SeaMonkey > 2.53.1 (bug #1604848, bug #1619101)
-    Rule(
-        rule_name="seamonkey_gt_2_53_2",
-        key="*",
-        condition=match_seamonkey_gt_2_53_2,
-        result=REJECT,
-    ),
     # Reject crash reports for unsupported products; this does nothing if the
     # list of supported products is empty
     Rule(
