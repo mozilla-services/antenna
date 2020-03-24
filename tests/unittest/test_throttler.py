@@ -43,12 +43,18 @@ class TestRule:
         rule = Rule("test", "ProductName", is_crash, ACCEPT)
         assert rule.match(throttler, {"ProductName": "Test"}) is False
 
-    def test_condition_function(self, throttler):
+    def test_condition_function_star(self, throttler):
         rule = Rule("test", "*", lambda throttler, x: True, ACCEPT)
         assert rule.match(throttler, {"ProductName": "test"}) is True
 
         rule = Rule("test", "*", lambda throttler, x: False, ACCEPT)
         assert rule.match(throttler, {"ProductName": "test"}) is False
+
+    def test_condition_function_value(self, throttler):
+        rule = Rule("test", "Foo", lambda throttler, x: x.startswith("bar"), ACCEPT)
+        assert rule.match(throttler, {"Foo": "bar"}) is True
+        assert rule.match(throttler, {"Foo": "piano"}) is False
+        assert rule.match(throttler, {"Foo": None}) is False
 
     def test_percentage(self, throttler, randommock):
         # Overrwrite the rule set for something we need
@@ -178,6 +184,17 @@ class Testmatch_infobar_true:
 
 
 class Testmozilla_rules:
+    def test_bad_data(self, throttler):
+        # NOTE(willkg): We use the test throttler which supports all products, so this
+        # gets through all the rules.
+        raw_crash = {
+            "ProductName": None,
+            "Version": None,
+            "BuildID": None,
+            "ReleaseChannel": None,
+        }
+        assert throttler.throttle(raw_crash) == (ACCEPT, "accept_everything", 100)
+
     def test_hangid(self, throttler):
         raw_crash = {
             "ProductName": "FireSquid",
@@ -185,7 +202,6 @@ class Testmozilla_rules:
             "ProcessType": "browser",
             "HangID": "xyz",
         }
-
         assert throttler.throttle(raw_crash) == (REJECT, "has_hangid_and_browser", 100)
 
     def test_infobar(self, throttler):
@@ -200,8 +216,6 @@ class Testmozilla_rules:
     @pytest.mark.parametrize(
         "productname, expected",
         [
-            # Test no ProductName
-            (None, (REJECT, "unsupported_product", 100)),
             # Test empty string
             ("", (REJECT, "unsupported_product", 100)),
             # Lowercase of existing product--product names are case-sensitive
@@ -226,6 +240,18 @@ class Testmozilla_rules:
                     logging.INFO,
                     "ProductName rejected: %r" % productname,
                 )
+            ]
+
+    def test_productname_none_reject(self, caplogpp):
+        """Verify productname rule blocks None value"""
+        with caplogpp.at_level(logging.INFO, logger="antenna"):
+            # Need a throttler with the default configuration which includes supported
+            # products
+            throttler = Throttler(ConfigManager.from_dict({}))
+            raw_crash = {"ProductName": None}
+            assert throttler.throttle(raw_crash) == (REJECT, "unsupported_product", 100)
+            assert caplogpp.record_tuples == [
+                ("antenna.throttler", logging.INFO, "ProductName rejected: 'None'")
             ]
 
     def test_productname_fakeaccept(self, caplogpp):
