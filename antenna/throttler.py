@@ -28,6 +28,20 @@ FAKEACCEPT = 3  # return crashid as if we accepted, but throw away--USE CAUTION!
 RESULT_TO_TEXT = {0: "ACCEPT", 1: "DEFER", 2: "REJECT", 3: "FAKEACCEPT"}
 
 
+def safe_get(data, key, default=""):
+    """Return a sanitized data[key].
+
+    Throttle rule conditions operate on strings since strings are the predominant value
+    type for crash report annotations.
+
+    This forces the value to be a string. For example, `None` will become `"None"`.
+
+    :return: string value
+
+    """
+    return str(data.get(key, default))
+
+
 def parse_attribute(val):
     """Everett parser for module attributes."""
     module, attribute_name = val.rsplit(".", 1)
@@ -186,7 +200,7 @@ class Rule:
             return self.condition(throttler, crash)
 
         if self.key in crash:
-            return self.condition(throttler, crash[self.key])
+            return self.condition(throttler, safe_get(crash, self.key))
 
         return False
 
@@ -202,10 +216,10 @@ def match_infobar_true(throttler, data):
     Bug #1425949.
 
     """
-    product = data.get("ProductName", "")
-    infobar = data.get("SubmittedFromInfobar", "")
-    version = data.get("Version", "")
-    buildid = data.get("BuildID", "")
+    product = safe_get(data, "ProductName")
+    infobar = safe_get(data, "SubmittedFromInfobar")
+    version = safe_get(data, "Version")
+    buildid = safe_get(data, "BuildID")
 
     if not (product and infobar and version and buildid):
         return False
@@ -222,7 +236,7 @@ def match_b2g(throttler, data):
     """Match crash reports for B2G."""
     is_b2g = (
         "B2G" not in throttler.config("products")
-        and data.get("ProductName", "").lower() == "b2g"
+        and safe_get(data, "ProductName").lower() == "b2g"
     )
     if is_b2g:
         logger.info("ProductName B2G: fake accept")
@@ -233,10 +247,11 @@ def match_b2g(throttler, data):
 def match_unsupported_product(throttler, data):
     """Match unsupported products."""
     products = throttler.config("products")
-    is_not_supported = data.get("ProductName") not in products
+    product_name = safe_get(data, "ProductName")
+    is_not_supported = product_name not in products
 
     if products and is_not_supported:
-        logger.info("ProductName rejected: %r" % data.get("ProductName"))
+        logger.info("ProductName rejected: %r" % product_name)
         return True
     return False
 
@@ -274,8 +289,10 @@ MOZILLA_RULES = [
         rule_name="has_hangid_and_browser",
         key="*",
         condition=(
-            lambda throttler, d: "HangID" in d
-            and d.get("ProcessType", "browser") == "browser"
+            lambda throttler, data: (
+                "HangID" in data
+                and safe_get(data, "ProcessType", default="browser") == "browser"
+            )
         ),
         result=REJECT,
     ),
@@ -342,8 +359,8 @@ MOZILLA_RULES = [
         rule_name="is_firefox_desktop",
         key="*",
         condition=lambda throttler, data: (
-            data.get("ProductName", "") == "Firefox"
-            and data.get("ReleaseChannel", "") == "release"
+            safe_get(data, "ProductName") == "Firefox"
+            and safe_get(data, "ReleaseChannel") == "release"
         ),
         result=(10, ACCEPT, REJECT),
     ),
