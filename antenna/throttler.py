@@ -24,8 +24,9 @@ ACCEPT = 0  # save and process
 DEFER = 1  # save but don't process
 REJECT = 2  # throw the crash away
 FAKEACCEPT = 3  # return crashid as if we accepted, but throw away--USE CAUTION!
+CONTINUE = 4  # continue through rules
 
-RESULT_TO_TEXT = {0: "ACCEPT", 1: "DEFER", 2: "REJECT", 3: "FAKEACCEPT"}
+RESULT_TO_TEXT = {0: "ACCEPT", 1: "DEFER", 2: "REJECT", 3: "FAKEACCEPT", 4: "CONTINUE"}
 
 
 def safe_get(data, key, default=""):
@@ -127,7 +128,9 @@ class Throttler(RequiredConfigMixin):
                     response = rule.result[1]
                 else:
                     response = rule.result[2]
-                return response, rule.rule_name, rule.result[0]
+
+                if response != CONTINUE:
+                    return response, rule.rule_name, rule.result[0]
 
         # None of the rules matched, so we defer
         return REJECT, "NO_MATCH", 0
@@ -339,6 +342,14 @@ MOZILLA_RULES = [
         key="ProcessType",
         condition=lambda throttler, x: x == "gpu",
         result=ACCEPT,
+    ),
+    # Throttle ipc_channel_error=ShutDownKill crash reports at 10%--they're
+    # not really *crashes* and we get an awful lot of them; bug #1624949
+    Rule(
+        rule_name="is_shutdownkill",
+        key="ipc_channel_error",
+        condition=lambda throttler, x: x == "ShutDownKill",
+        result=(10, CONTINUE, REJECT),
     ),
     # Accept crash reports in ReleaseChannel=aurora, beta, esr channels
     Rule(

@@ -322,6 +322,18 @@ class Testmozilla_rules:
             raw_crash["ProcessType"] = processtype
         assert throttler.throttle(raw_crash) == expected
 
+    def test_is_shutdownkill(self, throttler, randommock):
+        # Reject 90% of incoming ShutDownKill crash reports
+        with randommock(0.9):
+            raw_crash = {"ProductName": "Test", "ipc_channel_error": "ShutDownKill"}
+            assert throttler.throttle(raw_crash) == (REJECT, "is_shutdownkill", 10)
+
+        # Let the remaining 10% of ShutDownKill crash reports continue through the
+        # throttle rules
+        with randommock(0.09):
+            raw_crash = {"ProductName": "Test", "ipc_channel_error": "ShutDownKill"}
+            assert throttler.throttle(raw_crash) == (ACCEPT, "accept_everything", 100)
+
     @pytest.mark.parametrize("channel", ["aurora", "beta", "esr"])
     def test_is_alpha_beta_esr(self, throttler, channel):
         raw_crash = {"ProductName": "Test", "ReleaseChannel": channel}
