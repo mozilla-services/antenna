@@ -9,6 +9,7 @@ process), defer (save, but not process), and reject.
 
 """
 
+import datetime
 import importlib
 import logging
 import random
@@ -259,6 +260,19 @@ def match_unsupported_product(throttler, data):
     return False
 
 
+def match_old_buildid(throttler, data):
+    """Match build ids that are > 2 years old."""
+    buildid = safe_get(data, "BuildID")
+    now = datetime.datetime.now()
+    try:
+        buildid_date = datetime.datetime.strptime(buildid[:8], "%Y%m%d")
+    except ValueError:
+        # If this buildid doesn't have a YYYYMMDD at the beginning, it's not a valid
+        # buildid we want to look at
+        return False
+    return buildid_date < (now - datetime.timedelta(days=730))
+
+
 #: This accepts crash reports for all products
 ALL_PRODUCTS = []
 
@@ -287,6 +301,13 @@ ACCEPT_ALL = [
 
 #: Ruleset for Mozilla's crash collector throttler
 MOZILLA_RULES = [
+    # If it's got an old build id, reject it now
+    Rule(
+        rule_name="has_old_buildid",
+        key="*",
+        condition=match_old_buildid,
+        result=REJECT,
+    ),
     # Reject browser side of all multi-submission hang crashes
     Rule(
         rule_name="has_hangid_and_browser",

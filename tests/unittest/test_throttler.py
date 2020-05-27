@@ -5,6 +5,7 @@
 import logging
 
 from everett.manager import ConfigManager
+from freezegun import freeze_time
 import pytest
 
 from antenna.throttler import (
@@ -14,6 +15,7 @@ from antenna.throttler import (
     Rule,
     Throttler,
     match_infobar_true,
+    match_old_buildid,
 )
 
 
@@ -183,6 +185,38 @@ class Testmatch_infobar_true:
         assert match_infobar_true(throttler, raw_crash) is False
 
 
+class Testmatch_old_buildid:
+    def test_no_buildid(self, throttler):
+        assert match_old_buildid(throttler, {}) is False
+
+    @pytest.mark.parametrize(
+        "buildid, expected",
+        [("", False), ("None", False), (None, False), ("abc", False)],
+    )
+    def test_bad_data(self, throttler, buildid, expected):
+        raw_crash = {"BuildID": buildid}
+        assert match_old_buildid(throttler, raw_crash) == expected
+
+    @pytest.mark.parametrize(
+        "buildid, expected",
+        [
+            # These are too old
+            ("20170101000000", True),
+            ("20180101000000", True),
+            ("20180528000000", True),
+            # This is just under 730 days ago
+            ("20180529000000", False),
+            ("20180530000000", False),
+            # This is now
+            ("20200527000000", False),
+        ],
+    )
+    @freeze_time("2020-05-27 12:00:00", tz_offset=0)
+    def test_valid_buildis(self, throttler, buildid, expected):
+        raw_crash = {"BuildID": buildid}
+        assert match_old_buildid(throttler, raw_crash) == expected
+
+
 class Testmozilla_rules:
     def test_bad_data(self, throttler):
         # NOTE(willkg): We use the test throttler which supports all products, so this
@@ -195,6 +229,13 @@ class Testmozilla_rules:
         }
         assert throttler.throttle(raw_crash) == (ACCEPT, "accept_everything", 100)
 
+    def test_old_buildid(self, throttler):
+        raw_crash = {
+            "ProductName": "FireSquid",
+            "BuildID": "20170505000000",
+        }
+        assert throttler.throttle(raw_crash) == (REJECT, "has_old_buildid", 100)
+
     def test_hangid(self, throttler):
         raw_crash = {
             "ProductName": "FireSquid",
@@ -204,6 +245,7 @@ class Testmozilla_rules:
         }
         assert throttler.throttle(raw_crash) == (REJECT, "has_hangid_and_browser", 100)
 
+    @freeze_time("2019-05-27 12:00:00", tz_offset=0)
     def test_infobar(self, throttler):
         raw_crash = {
             "ProductName": "Firefox",
