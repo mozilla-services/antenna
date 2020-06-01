@@ -274,9 +274,9 @@ regex==2020.4.4 \
 pathspec==0.8.0 \
     --hash=sha256:7d91249d21749788d07a2d0f94147accd8f845507400749ea19c1ec9054a12b0 \
     --hash=sha256:da45173eb3a6f2a5a487efba21f050af2b41948be6ab52b6a1e3ff22bb8b7061
-gitdb==4.0.4 \
-    --hash=sha256:ba1132c0912e8c917aa8aa990bee26315064c7b7f171ceaaac0afeb1dc656c6a \
-    --hash=sha256:6f0ecd46f99bb4874e5678d628c3a198e2b4ef38daea2756a2bfd8df7dd5c1a5
+gitdb==4.0.5 \
+    --hash=sha256:91f36bfb1ab7949b3b40e23736db18231bf7593edada2ba5c3a174a7b23657ac \
+    --hash=sha256:c9e1f2d0db7ddb9a704c2a0217be31214e91a4fe1dea1efad19ae42ba0c285c9
 smmap==3.0.2 \
     --hash=sha256:52ea78b3e708d2c2b0cfe93b6fc3fbeec53db913345c26be6ed84c11ed8bebc1 \
     --hash=sha256:b46d3fc69ba5f367df96d91f8271e8ad667a198d5a28e215a6c3d9acd133a911
