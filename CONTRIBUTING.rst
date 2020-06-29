@@ -7,7 +7,7 @@ Code of Conduct
 
 This project and repository is governed by Mozilla's code of conduct and
 etiquette guidelines. For more details please see the `CODE_OF_CONDUCT.md file
-<https://github.com/mozilla-services/antenna/blob/master/CODE_OF_CONDUCT.md>`_.
+<https://github.com/mozilla-services/antenna/blob/main/CODE_OF_CONDUCT.md>`_.
 
 
 Issues

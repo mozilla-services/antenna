@@ -85,14 +85,14 @@ jobs:
                 export DOCKER_IMAGE="mozilla/${APP_NAME}:${CIRCLE_TAG}"
             fi
 
-            # push on master or git tag
-            if [ "${CIRCLE_BRANCH}" == "master" ] || [ -n "${CIRCLE_TAG}" ]; then
+            # push on main or git tag
+            if [ "${CIRCLE_BRANCH}" == "main" ] || [ -n "${CIRCLE_TAG}" ]; then
                 echo "${DOCKER_PASSWORD}" | docker login -u="${DOCKER_USERNAME}" --password-stdin
                 retry docker tag local/antenna_deploy_base "${DOCKER_IMAGE}"
                 retry docker push "${DOCKER_IMAGE}"
 
-                # push `latest` on master only
-                if [ "${CIRCLE_BRANCH}" == "master" ]; then
+                # push `latest` on main only
+                if [ "${CIRCLE_BRANCH}" == "main" ]; then
                     retry docker tag local/antenna_deploy_base "mozilla/${APP_NAME}:latest"
                     retry docker push "mozilla/${APP_NAME}:latest"
                 fi

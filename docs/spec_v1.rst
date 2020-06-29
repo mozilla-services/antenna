@@ -11,7 +11,7 @@ Antenna Project specification: v1
 History
 =======
 
-https://github.com/mozilla-services/antenna/commits/master/docs/spec_v1.rst
+https://github.com/mozilla-services/antenna/commits/main/docs/spec_v1.rst
 
 
 Background
@@ -326,7 +326,7 @@ flake8
 Antenna will have a linter set up to lint the code base.
 
 This will be run by developers and also run by CI for every pull request and
-merge to master.
+merge to main.
 
 This will help catch:
 
@@ -344,7 +344,7 @@ classes in the application.
 These will be written in pytest.
 
 These will be run by developers and also run by CI for every pull request and
-merge to master.
+merge to main.
 
 This will help catch:
 
