@@ -14,7 +14,7 @@ other things.
 * Code: https://github.com/mozilla-services/antenna/
 * Documentation: https://antenna.readthedocs.io/
 * Bugs: `Report a bug <https://bugzilla.mozilla.org/enter_bug.cgi?format=__standard__&product=Socorro&component=Antenna>`_
-* Community Participation Guidelines: `Guidelines <https://github.com/mozilla-services/antenna/blob/master/CODE_OF_CONDUCT.md>`_
+* Community Participation Guidelines: `Guidelines <https://github.com/mozilla-services/antenna/blob/main/CODE_OF_CONDUCT.md>`_
 
 
 Quickstart
