@@ -2,9 +2,9 @@
 datadog==0.36.0 \
     --hash=sha256:398c612f8fb8e1988be897fda920ffb3b8a1ec70d430730e3b71a269df31b486 \
     --hash=sha256:3fe197587db49d808ba88e40f431fb2d256be3c428419ac2984609d67fd66bce
-dockerflow==2019.10.0 \
-    --hash=sha256:44baf5c78dbf28855924c8c21c41f83147a3bd854cc0c9e1930b3b46174df6c9 \
-    --hash=sha256:6c5099cb4492c43b1daa5c1421b7b39d69836c3be8bdf6b5fb2fc95b1c60696b
+dockerflow==2020.6.0 \
+    --hash=sha256:0336428bc7baba97b96eefcb56edd6dc244aacabef0bd48e1d3121f79297ebe4 \
+    --hash=sha256:39af796e973858a8d37a0264fd6843f41b16851a5eab2ed4e1f5872954dcc4c4
 everett==1.0.2 \
     --hash=sha256:66c7991c056fd9b1de54c29e2b5004a30209530faef698d6ecfbf24bfbbdd1fb \
     --hash=sha256:8a5ee8cdde0ed6b3bbb63249e0e0703d4ad91921107ff198e0868ffce5f7b6bc
