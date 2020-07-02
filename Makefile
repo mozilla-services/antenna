@@ -21,27 +21,19 @@ endif
 
 DC := $(shell which docker-compose)
 
+.DEFAULT_GOAL := help
 .PHONY: help
-help: default
-
-.PHONY: default
-default:
-	@echo "build            - build docker containers for dev"
-	@echo "setup            - setup services"
-	@echo "run              - docker-compose up the entire system for dev"
+help:
+	@echo "Usage: make RULE"
 	@echo ""
-	@echo "shell            - open a shell in the base container"
-	@echo "clean            - remove all build, test, coverage and Python artifacts"
-	@echo "lint             - lint code"
-	@echo "lintfix          - reformat code"
-	@echo "test             - run unit tests"
-	@echo "testshell        - open a shell in the test container"
-	@echo "systemtest       - run system tests against a running Antenna instance"
-	@echo "systemtest-shell - open a shell in the systemtest container"
-	@echo "test-coverage    - run tests and generate coverage report in cover/"
-	@echo "docs             - generate Sphinx HTML documentation, including API docs"
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' Makefile \
+		| grep -v grep \
+	    | sed -n 's/^\(.*\): \(.*\)##\(.*\)/\1\3/p' \
+	    | column -t  -s '|'
 	@echo ""
 	@echo "Adjust your my.env file to set configuration."
+	@echo ""
+	@echo "See https://antenna.readthedocs.io/ for more documentation."
 
 # Dev configuration steps
 .docker-build:
@@ -55,24 +47,24 @@ my.env:
 	fi
 
 .PHONY: build
-build: my.env
+build: my.env  ## | Build docker images.
 	${DC} build ${DOCKER_BUILD_OPTS} --build-arg userid=${ANTENNA_UID} --build-arg groupid=${ANTENNA_GID} deploy-base
 	touch .docker-build
 
 .PHONY: setup
-setup: my.env .docker-build
+setup: my.env .docker-build  ## | Set up services.
 	${DC} run web bash ./docker/run_setup.sh
 
 .PHONY: run
-run: my.env .docker-build
+run: my.env .docker-build  ## | Run the webapp and services.
 	${DC} up web
 
 .PHONY: shell
-shell: my.env .docker-build
+shell: my.env .docker-build  ## | Open a shell in the base image.
 	${DC} run web bash
 
 .PHONY: my.env clean
-clean:
+clean:  ## | Remove build, test, coverage, and Python artifacts.
 	# python related things
 	-rm -rf build/
 	-rm -rf dist/
@@ -93,33 +85,33 @@ clean:
 	-rm .docker-build
 
 .PHONY: lint
-lint: my.env .docker-build
+lint: my.env .docker-build  ## | Lint code.
 	${DC} run --rm --no-deps base /bin/bash ./docker/run_lint.sh
 
 .PHONY: black
-lintfix: my.env .docker-build
+lintfix: my.env .docker-build  ## | Reformat code.
 	${DC} run --rm --no-deps base /bin/bash ./docker/run_lint.sh --fix
 
 .PHONY: test
-test: my.env .docker-build
+test: my.env .docker-build  ## | Run unit tests.
 	./docker/run_tests_in_docker.sh ${ARGS}
 
 .PHONY: testshell
-testshell: my.env .docker-build
+testshell: my.env .docker-build  ## | Open a shell in the test container.
 	./docker/run_tests_in_docker.sh --shell
 
 .PHONY: systemtest
-systemtest: my.env .docker-build
+systemtest: my.env .docker-build  ## | Run system tests against running Antenna instance.
 	${DC} run systemtest tests/systemtest/run_tests.sh
 
 .PHONY: systemtest-shell
-systemtest-shell: my.env .docker-build
+systemtest-shell: my.env .docker-build  ## | Open shell in systemtest container.
 	${DC} run systemtest bash
 
 .PHONY: test-coverage
-test-coverage: my.env .docker-build
+test-coverage: my.env .docker-build  ## | Run test coverage report.
 	${DC} run base pytest --cov=antenna --cov-report term-missing
 
 .PHONY: docs
-docs: my.env .docker-build
+docs: my.env .docker-build  ## | Generate Sphinx HTML documentation.
 	${DC} run -u ${ANTENNA_UID} base ./bin/build_docs.sh
