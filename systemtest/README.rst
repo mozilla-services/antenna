@@ -8,39 +8,22 @@ Antenna instance. We use the pytest test runner.
 Contents of this directory::
 
     conftest.py  -- holds pytest fixtures
-    test_*.py    -- a test file
-    run_tests.sh -- test runner shell script
+    test_*.py    -- test files
+    test_env.sh  -- test runner shell script to run against an environment
 
 
-
-Running tests against locally running Antenna
-=============================================
+Running tests
+=============
 
 In a terminal, run::
 
-    make run
+    $ make shell
+    app@xxx:/app$ cd systemtests
+    app@xxx:/app/systemtests$ ./test_env.sh ENV
 
 
-to run Antenna.
-
-Then in a separate terminal, run these tests from the repository root::
-
-    make systemtest
-
-
-If you want to run individual tests, or use different pytest options, do::
-
-    make systemtest-shell
-
-
-This gives you a bash shell in the docker container where you can more easily
-run system tests and debugging.
-
-Relevant configuration:
-
-``NONGINX``
-    Set ``NONGINX=1`` if you're running against a local dev environment
-    that isn't using Nginx. This will skip tests that require Nginx.
+If you're running against ``localdev``, you'll need to be running antenna
+in another terminal.
 
 
 Rules of systemtest

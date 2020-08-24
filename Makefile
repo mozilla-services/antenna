@@ -100,14 +100,6 @@ test: my.env .docker-build  ## | Run unit tests.
 testshell: my.env .docker-build  ## | Open a shell in the test container.
 	./docker/run_tests_in_docker.sh --shell
 
-.PHONY: systemtest
-systemtest: my.env .docker-build  ## | Run system tests against running Antenna instance.
-	${DC} run systemtest tests/systemtest/run_tests.sh
-
-.PHONY: systemtest-shell
-systemtest-shell: my.env .docker-build  ## | Open shell in systemtest container.
-	${DC} run systemtest bash
-
 .PHONY: test-coverage
 test-coverage: my.env .docker-build  ## | Run test coverage report.
 	${DC} run base pytest --cov=antenna --cov-report term-missing

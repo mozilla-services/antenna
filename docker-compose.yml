@@ -39,19 +39,6 @@ services:
       - localstack-sqs
       - statsd
 
-  # System test container
-  systemtest:
-    extends:
-      service: base
-    env_file:
-      - docker/config/local_dev.env
-      - my.env
-    environment:
-      - POSTURL=http://web:8000/submit
-      - NONGINX=1
-    links:
-      - web
-
   # https://hub.docker.com/r/localstack/localstack/
   # localstack running a fake S3
   localstack-s3:

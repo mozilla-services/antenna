@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import logging
-import os
 
 import pytest
 import requests
@@ -59,10 +58,6 @@ class Test20mbLimit:
 
         return 200
 
-    @pytest.mark.skipif(
-        bool(os.environ.get("NONGINX")),
-        reason="Requires nginx which you probably do not have running via localhost",
-    )
     @pytest.mark.parametrize(
         "size, status_code",
         [
@@ -73,16 +68,18 @@ class Test20mbLimit:
             ((20 * 1024 * 1024) + 1, 413),
         ],
     )
-    def test_crash_size(self, posturl, size, status_code, crash_generator):
+    def test_crash_size(self, posturl, size, status_code, crash_generator, nginx):
+        if not nginx:
+            pytest.skip("test requires nginx")
+
         # mini_poster._log_everything()
         result = self._test_crash_size(posturl, size, crash_generator)
         assert result == status_code
 
-    @pytest.mark.skipif(
-        bool(os.environ.get("NONGINX")),
-        reason="Requires nginx which you probably do not have running via localhost",
-    )
-    def test_21mb_and_low_content_length(self, posturl, crash_generator):
+    def test_21mb_and_low_content_length(self, posturl, crash_generator, nginx):
+        if not nginx:
+            pytest.skip("test requires nginx")
+
         # Generate a crash that exceeds nginx's max size
         crash_payload = self._generate_sized_crash(21 * 1024 * 1024, crash_generator)
         payload, headers = mini_poster.multipart_encode(crash_payload)

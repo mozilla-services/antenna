@@ -13,7 +13,7 @@ import pytest
 
 
 # Add repository root so we can import testlib
-REPO_ROOT = Path(__file__).parent.parent.parent
+REPO_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 # Set up logging to log at DEBUG level; this is quelled by pytest except when
@@ -28,10 +28,22 @@ def config():
 
 
 @pytest.fixture
+def nginx(config):
+    """Returns whether NGINX_TESTS=1"""
+    return config("nginx_tests", default="0") == "1"
+
+
+@pytest.fixture
+def postcheck(config):
+    """Return whether or not we can verify the file was saved (need access to S3)"""
+    return config("post_check", default="0") == "1"
+
+
+@pytest.fixture
 def posturl(config):
     """Generates configuration based on os.environ"""
     # Endpoint url to connect to
-    return config("posturl", default="http://localhost:8000/submit")
+    return config("host", default="http://web:8000/").rstrip("/") + "/submit"
 
 
 class S3Connection:

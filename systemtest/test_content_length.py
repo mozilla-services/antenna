@@ -4,7 +4,6 @@
 
 from http.client import HTTPConnection, HTTPSConnection, RemoteDisconnected
 import logging
-import os
 import urllib
 
 import pytest
@@ -82,12 +81,11 @@ class TestContentLength:
             str(resp.read(), encoding="utf-8") == "Discarded=malformed_no_annotations"
         )
 
-    @pytest.mark.skipif(
-        bool(os.environ.get("NONGINX")),
-        reason="Requires nginx which you probably do not have running via localhost",
-    )
-    def test_content_length_1000(self, posturl, crash_generator):
+    def test_content_length_1000(self, posturl, crash_generator, nginx):
         """Post a crash with a content-length greater than size of payload."""
+        if not nginx:
+            pytest.skip("test requires nginx")
+
         raw_crash, dumps = crash_generator.generate()
 
         # Generate the payload and headers for a crash with no dumps
