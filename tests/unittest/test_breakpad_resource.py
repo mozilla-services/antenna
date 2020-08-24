@@ -8,7 +8,7 @@ from everett.manager import ConfigManager
 import pytest
 
 from antenna.app import BreakpadSubmitterResource
-from antenna.breakpad_resource import MAX_ATTEMPTS, MalformedCrashReport
+from antenna.breakpad_resource import MalformedCrashReport
 from antenna.ext.crashpublish_base import CrashPublishBase
 from antenna.ext.crashstorage_base import CrashStorageBase
 from antenna.throttler import ACCEPT
@@ -286,7 +286,7 @@ class TestBreakpadSubmitterResource:
         # No more coroutines and no more queue
         check_health(crashmover_pool_size=0, crashmover_queue_size=0)
 
-    def test_retry_storage(self, client, loggingmock):
+    def test_retry_storage(self, client, caplogpp):
         crash_id = "de1bb258-cbbf-4589-a673-34f800160918"
         data, headers = multipart_encode(
             {
@@ -306,26 +306,46 @@ class TestBreakpadSubmitterResource:
             }
         )
 
-        with loggingmock(["antenna"]) as lm:
-            result = client.simulate_post("/submit", headers=headers, body=data)
-            assert result.status_code == 200
+        result = client.simulate_post("/submit", headers=headers, body=data)
+        assert result.status_code == 200
 
-            # The storage is bad, so this should raise errors and then log something
-            client.join_app()
+        # The storage is bad, so this should raise errors and then log something
+        client.join_app()
 
-            # We're using BadCrashStorage so the crashmover should retry 20
-            # times logging a message each time and then give up
-            for i in range(1, MAX_ATTEMPTS):
-                assert lm.has_record(
-                    name="antenna.breakpad_resource",
-                    levelname="ERROR",
-                    msg_contains=(
-                        "Exception when processing queue (%s), state: %s; error %d/%d"
-                        % (crash_id, "save", i, MAX_ATTEMPTS)
-                    ),
-                )
+        # We're using BadCrashStorage so the crashmover should retry 20
+        # times logging a message each time and then give up
+        records = [
+            rec[2]
+            for rec in caplogpp.record_tuples
+            if rec[0] == "antenna.breakpad_resource"
+        ]
+        assert records == [
+            f"{crash_id} has existing crash_id",
+            f"{crash_id}: matched by is_nightly; returned ACCEPT",
+            f"Exception when processing queue ({crash_id}), state: save; error 1/20",
+            f"Exception when processing queue ({crash_id}), state: save; error 2/20",
+            f"Exception when processing queue ({crash_id}), state: save; error 3/20",
+            f"Exception when processing queue ({crash_id}), state: save; error 4/20",
+            f"Exception when processing queue ({crash_id}), state: save; error 5/20",
+            f"Exception when processing queue ({crash_id}), state: save; error 6/20",
+            f"Exception when processing queue ({crash_id}), state: save; error 7/20",
+            f"Exception when processing queue ({crash_id}), state: save; error 8/20",
+            f"Exception when processing queue ({crash_id}), state: save; error 9/20",
+            f"Exception when processing queue ({crash_id}), state: save; error 10/20",
+            f"Exception when processing queue ({crash_id}), state: save; error 11/20",
+            f"Exception when processing queue ({crash_id}), state: save; error 12/20",
+            f"Exception when processing queue ({crash_id}), state: save; error 13/20",
+            f"Exception when processing queue ({crash_id}), state: save; error 14/20",
+            f"Exception when processing queue ({crash_id}), state: save; error 15/20",
+            f"Exception when processing queue ({crash_id}), state: save; error 16/20",
+            f"Exception when processing queue ({crash_id}), state: save; error 17/20",
+            f"Exception when processing queue ({crash_id}), state: save; error 18/20",
+            f"Exception when processing queue ({crash_id}), state: save; error 19/20",
+            f"Exception when processing queue ({crash_id}), state: save; error 20/20",
+            f"{crash_id}: too many errors trying to save; dropped",
+        ]
 
-    def test_retry_publish(self, client, loggingmock):
+    def test_retry_publish(self, client, caplogpp):
         crash_id = "de1bb258-cbbf-4589-a673-34f800160918"
         data, headers = multipart_encode(
             {
@@ -345,21 +365,43 @@ class TestBreakpadSubmitterResource:
             }
         )
 
-        with loggingmock(["antenna"]) as lm:
-            result = client.simulate_post("/submit", headers=headers, body=data)
-            assert result.status_code == 200
+        result = client.simulate_post("/submit", headers=headers, body=data)
+        assert result.status_code == 200
 
-            # The publish is bad, so this should raise errors and then log something
-            client.join_app()
+        # The publish is bad, so this should raise errors and then log something
+        client.join_app()
 
-            # We're using BadCrashPublish so the crashmover should retry 20
-            # times logging a message each time and then give up
-            for i in range(1, MAX_ATTEMPTS):
-                assert lm.has_record(
-                    name="antenna.breakpad_resource",
-                    levelname="ERROR",
-                    msg_contains=(
-                        "Exception when processing queue (%s), state: %s; error %d/%d"
-                        % (crash_id, "publish", i, MAX_ATTEMPTS)
-                    ),
-                )
+        # We're using BadCrashStorage so the crashmover should retry 20
+        # times logging a message each time and then give up
+        records = [
+            rec[2]
+            for rec in caplogpp.record_tuples
+            if rec[0] == "antenna.breakpad_resource"
+        ]
+
+        assert records == [
+            f"{crash_id} has existing crash_id",
+            f"{crash_id}: matched by is_nightly; returned ACCEPT",
+            f"{crash_id} saved",
+            f"Exception when processing queue ({crash_id}), state: publish; error 1/20",
+            f"Exception when processing queue ({crash_id}), state: publish; error 2/20",
+            f"Exception when processing queue ({crash_id}), state: publish; error 3/20",
+            f"Exception when processing queue ({crash_id}), state: publish; error 4/20",
+            f"Exception when processing queue ({crash_id}), state: publish; error 5/20",
+            f"Exception when processing queue ({crash_id}), state: publish; error 6/20",
+            f"Exception when processing queue ({crash_id}), state: publish; error 7/20",
+            f"Exception when processing queue ({crash_id}), state: publish; error 8/20",
+            f"Exception when processing queue ({crash_id}), state: publish; error 9/20",
+            f"Exception when processing queue ({crash_id}), state: publish; error 10/20",
+            f"Exception when processing queue ({crash_id}), state: publish; error 11/20",
+            f"Exception when processing queue ({crash_id}), state: publish; error 12/20",
+            f"Exception when processing queue ({crash_id}), state: publish; error 13/20",
+            f"Exception when processing queue ({crash_id}), state: publish; error 14/20",
+            f"Exception when processing queue ({crash_id}), state: publish; error 15/20",
+            f"Exception when processing queue ({crash_id}), state: publish; error 16/20",
+            f"Exception when processing queue ({crash_id}), state: publish; error 17/20",
+            f"Exception when processing queue ({crash_id}), state: publish; error 18/20",
+            f"Exception when processing queue ({crash_id}), state: publish; error 19/20",
+            f"Exception when processing queue ({crash_id}), state: publish; error 20/20",
+            f"{crash_id}: too many errors trying to publish; dropped",
+        ]

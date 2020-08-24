@@ -30,8 +30,16 @@ from antenna.sentry import (
 logger = logging.getLogger(__name__)
 
 
+_LOGGING_SETUP = False
+
+
 def setup_logging(app_config):
     """Initialize Python logging configuration."""
+    global _LOGGING_SETUP
+    if _LOGGING_SETUP:
+        # NOTE(willkg): This makes it so that logging is only set up once per process.
+        return
+
     host_id = app_config("host_id") or socket.gethostname()
 
     class AddHostID(logging.Filter):
@@ -91,6 +99,7 @@ def setup_logging(app_config):
         dc["root"] = {"handlers": ["mozlog"], "level": "WARNING"}
 
     logging.config.dictConfig(dc)
+    _LOGGING_SETUP = True
 
 
 def setup_metrics(metrics_classes, config, logger=None):
