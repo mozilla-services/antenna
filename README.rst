@@ -6,8 +6,8 @@ Collector for the `Socorro crash ingestion pipeline
 <https://socorro.readthedocs.io/>`_ that supports `breakpad-style crash reports
 <https://chromium.googlesource.com/breakpad/breakpad>`_.
 
-Uses Python 3, `Gunicorn <http://gunicorn.org/>`_, `gevent
-<http://www.gevent.org/>`_, `Falcon <https://falconframework.org/>`_ and some
+Uses Python 3, `Gunicorn <https://gunicorn.org/>`_, `gevent
+<https://www.gevent.org/>`_, `Falcon <https://falconframework.org/>`_ and some
 other things.
 
 * Free software: Mozilla Public License version 2.0
@@ -42,7 +42,6 @@ production, see docs_.
    .. code-block:: shell
 
       $ make build
-
 
    Anytime you want to update the containers, you can run ``make build``.
 
@@ -168,7 +167,6 @@ production, see docs_.
 
       $ make test
 
-
    If you need to run specific tests or pass in different arguments, you can run
    bash in the base container and then run ``pytest`` with whatever args you
    want. For example:
@@ -182,11 +180,10 @@ production, see docs_.
 
       app@...$ pytest tests/unittest/test_crashstorage.py
 
-
    We're using pytest_ for a test harness and test discovery.
 
 
 For more details on running Antenna or hacking on Antenna, see the docs_.
 
-.. _pytest: http://pytest.org/
+.. _pytest: https://docs.pytest.org/en/stable/
 .. _docs: https://antenna.readthedocs.io/

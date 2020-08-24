@@ -9,9 +9,9 @@ High-level things
 =================
 
 Antenna is a Python WSGI application that uses `Gunicorn
-<http://gunicorn.org/>`_ as the WSGI server.
+<https://gunicorn.org/>`_ as the WSGI server.
 
-We use `nginx <http://nginx.org/>`_ in front of that, but you might be able to
+We use `nginx <https://nginx.org/>`_ in front of that, but you might be able to
 use other web servers.
 
 .. Note::

@@ -29,13 +29,14 @@ All code files need to start with the MPLv2 header::
 
     # This Source Code Form is subject to the terms of the Mozilla Public
     # License, v. 2.0. If a copy of the MPL was not distributed with this
-    # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+    # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 
-PEP8 is nice. To lint your code, do:
+To lint your code, do:
 
 .. code-block:: shell
 
+    $ make lintfix
     $ make lint
 
 If you hit issues, use ``# noqa``.
@@ -57,7 +58,7 @@ Documentation
 =============
 
 Documentation for Antenna is build with `Sphinx
-<http://www.sphinx-doc.org/en/stable/>`_ and is available on ReadTheDocs. API is
+<https://www.sphinx-doc.org/en/stable/>`_ and is available on ReadTheDocs. API is
 automatically extracted from docstrings in the code.
 
 To build the docs, run this:
@@ -166,4 +167,3 @@ capture it this way:
 5. Wait 30 seconds, then close the crash dialog window.
 
    You should have a raw HTTP POST in ``http_post.raw``.
-
