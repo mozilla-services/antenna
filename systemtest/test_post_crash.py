@@ -7,6 +7,7 @@ import logging
 import time
 
 import isodate
+import pytest
 
 from testlib import mini_poster
 
@@ -67,8 +68,11 @@ SLEEP_TIME = 5
 
 
 class TestPostCrash:
-    def test_regular(self, posturl, s3conn, sqshelper, crash_generator):
+    def test_regular(self, posturl, s3conn, sqshelper, crash_generator, postcheck):
         """Post a valid crash and verify the contents made it to S3."""
+        if not postcheck:
+            pytest.skip("no access to S3")
+
         raw_crash, dumps = crash_generator.generate()
         crash_payload = mini_poster.assemble_crash_payload_dict(raw_crash, dumps)
         resp = mini_poster.post_crash(posturl, crash_payload, dumps)
@@ -85,8 +89,11 @@ class TestPostCrash:
         verifier.verify_stored_data(crash_id, raw_crash, dumps, s3conn)
         verifier.verify_published_data(crash_id, sqshelper)
 
-    def test_compressed_crash(self, posturl, s3conn, sqshelper, crash_generator):
+    def test_compressed_crash(self, posturl, s3conn, sqshelper, crash_generator, postcheck):
         """Post a compressed crash and verify contents made it to S3."""
+        if not postcheck:
+            pytest.skip("no access to S3")
+
         raw_crash, dumps = crash_generator.generate()
         crash_payload = mini_poster.assemble_crash_payload_dict(raw_crash, dumps)
         resp = mini_poster.post_crash(posturl, crash_payload, compressed=True)

@@ -19,13 +19,11 @@ Subdirectories
     These are written in Python, use pytest as the test runner and are run
     during normal development to unit test the code in Antenna.
 
-    These are run in a docker container using the ``make test`` rule.
+    Run these with::
 
+        $ make test
 
-**tests/systemtest/**
+    Run with more options with::
 
-    These are written in Python, use pytest as the test runner and are
-    designed to run against a running instance of Antenna.
-
-    These are run in a docker container using the ``make systemtest``
-    rule, but you could also run them from a Python virtual env.
+        $ make testshell
+        app@xxx:/app$ pytest
