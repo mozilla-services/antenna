@@ -1,6 +1,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import logging
 import random
@@ -34,7 +34,7 @@ class SQSCrashPublish(CrashPublishBase):
 
     1. provide ``ACCESS_KEY`` and ``SECRET_ACCESS_KEY`` in the configuration, OR
     2. use one of the other methods described in the boto3 docs
-       http://boto3.readthedocs.io/en/latest/guide/configuration.html#configuring-credentials
+       https://boto3.readthedocs.io/en/latest/guide/configuration.html#configuring-credentials
 
     You also need to create an AWS SQS standard queue with the following settings:
 
@@ -136,7 +136,7 @@ class SQSCrashPublish(CrashPublishBase):
         # Either they provided ACCESS_KEY and SECRET_ACCESS_KEY in which case
         # we use those, or they didn't in which case boto3 pulls credentials
         # from one of a myriad of other places.
-        # http://boto3.readthedocs.io/en/latest/guide/configuration.html#configuring-credentials
+        # https://boto3.readthedocs.io/en/latest/guide/configuration.html#configuring-credentials
         session_kwargs = {}
         if self.config("access_key") and self.config("secret_access_key"):
             session_kwargs["aws_access_key_id"] = self.config("access_key")

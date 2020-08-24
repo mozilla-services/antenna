@@ -6,8 +6,8 @@ Collector for the `Socorro crash ingestion pipeline
 <https://socorro.readthedocs.io/>`_ that supports `breakpad-style crash reports
 <https://chromium.googlesource.com/breakpad/breakpad>`_.
 
-Uses Python 3, `Gunicorn <http://gunicorn.org/>`_, `gevent
-<http://www.gevent.org/>`_, `Falcon <https://falconframework.org/>`_ and some
+Uses Python 3, `Gunicorn <https://gunicorn.org/>`_, `gevent
+<https://www.gevent.org/>`_, `Falcon <https://falconframework.org/>`_ and some
 other things.
 
 * Free software: Mozilla Public License version 2.0
@@ -20,9 +20,8 @@ other things.
 Contents
 ========
 
-User docs:
-
 .. toctree::
+   :caption: Dev/Ops documentation
    :maxdepth: 2
 
    quickstart
@@ -30,10 +29,8 @@ User docs:
    deploy
    architecture
 
-
-Project docs:
-
 .. toctree::
+   :caption: Project documentation
 
    dev
    spec_v1

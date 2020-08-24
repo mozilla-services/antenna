@@ -598,7 +598,7 @@ gevent thoughts
 `Falcon <https://falconframework.org/>`_ lists "works great with async libraries
 like gevent" as a feature, so it should be fine.
 
-* http://falcon.readthedocs.io/en/stable/index.html?highlight=gevent#features
+* https://falcon.readthedocs.io/en/stable/index.html?highlight=gevent#features
 
 While looking into whether boto supported Python 3's asyncio, I read several
 comments in their issue tracker from people who use boto with gevent without
@@ -623,7 +623,7 @@ load test might tell us more.
 Lonnen brought up this article from the Netflix blog where they had problems
 switching to async i/o with Zuul 2 which is Java-based:
 
-http://techblog.netflix.com/2016/09/zuul-2-netflix-journey-to-asynchronous.html
+https://netflixtechblog.com/zuul-2-the-netflix-journey-to-asynchronous-non-blocking-systems-45947377fb5c
 
 There's a lot of big differences between their project and ours. Still, we
 should give some thought to alleviating the complexities of debugging
@@ -636,7 +636,7 @@ boto2 vs. boto3
 According to the boto documentation, boto3 is stable and recommended for daily
 use.
 
-* boto2: http://boto.cloudhackers.com/en/latest/
+* boto2: https://boto.cloudhackers.com/en/latest/
 * boto3: https://github.com/boto/boto3
 
 Socorro uses boto2. I think we'll go with boto3 because it's the future.
@@ -647,13 +647,13 @@ S3 and bucket names
 
 AWS Rules for bucket names:
 
-http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html
+https://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html
 
 Note that they do suggest using periods in bucket names in the rules.
 
 S3 REST requests:
 
-http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAPI.html
+https://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAPI.html
 
 Note, they talk about two styles:
 
@@ -669,7 +669,7 @@ where the bucket resides.
 
 In the page on virtual hosted-style requests:
 
-http://docs.aws.amazon.com/AmazonS3/latest/dev/VirtualHosting.html
+https://docs.aws.amazon.com/AmazonS3/latest/dev/VirtualHosting.html
 
 they say:
 
