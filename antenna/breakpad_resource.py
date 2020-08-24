@@ -322,7 +322,10 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
                 has_json = True
                 try:
                     raw_crash = json.loads(fs_item.value)
-                except json.decoder.JSONDecodeError:
+                except (json.decoder.JSONDecodeError, UnicodeDecodeError):
+                    # The UnicodeDecodeError can happen if the utf-8 codec can't decode
+                    # one of the characters. The JSONDecodeError can happen in a variety
+                    # of "malformed JSON" situations.
                     raise MalformedCrashReport("bad_json")
 
             elif fs_item.type and (
