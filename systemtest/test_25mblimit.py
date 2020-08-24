@@ -13,7 +13,7 @@ from testlib import mini_poster
 logger = logging.getLogger(__name__)
 
 
-class Test20mbLimit:
+class Test25mbLimit:
     """Post a crash that's too big--it should be rejected"""
 
     def _generate_sized_crash(self, size, crash_generator):
@@ -61,11 +61,11 @@ class Test20mbLimit:
     @pytest.mark.parametrize(
         "size, status_code",
         [
-            # up to and including 20mb should get an HTTP 200
-            ((20 * 1024 * 1024) - 1, 200),
-            ((20 * 1024 * 1024), 200),
-            # past 20mb, so this should fail with an HTTP 413
-            ((20 * 1024 * 1024) + 1, 413),
+            # up to and including 25mb should get an HTTP 200
+            ((25 * 1024 * 1024) - 1, 200),
+            ((25 * 1024 * 1024), 200),
+            # past 25mb, so this should fail with an HTTP 413
+            ((25 * 1024 * 1024) + 1, 413),
         ],
     )
     def test_crash_size(self, posturl, size, status_code, crash_generator, nginx):
@@ -76,16 +76,16 @@ class Test20mbLimit:
         result = self._test_crash_size(posturl, size, crash_generator)
         assert result == status_code
 
-    def test_21mb_and_low_content_length(self, posturl, crash_generator, nginx):
+    def test_26mb_and_low_content_length(self, posturl, crash_generator, nginx):
         if not nginx:
             pytest.skip("test requires nginx")
 
         # Generate a crash that exceeds nginx's max size
-        crash_payload = self._generate_sized_crash(21 * 1024 * 1024, crash_generator)
+        crash_payload = self._generate_sized_crash(26 * 1024 * 1024, crash_generator)
         payload, headers = mini_poster.multipart_encode(crash_payload)
 
         # Reduce the size of the content length
-        headers["Content-Length"] = str(19 * 1024 * 1024)
+        headers["Content-Length"] = str(25 * 1024 * 1024)
         try:
             resp = requests.post(posturl, headers=headers, data=payload)
             status_code = resp.status_code
