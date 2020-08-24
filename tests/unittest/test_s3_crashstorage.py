@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import io
+import logging
 from unittest.mock import patch
 
 import botocore
@@ -186,7 +187,7 @@ class TestS3CrashStorageIntegration:
         # Assert we did the entire s3 conversation
         assert s3mock.remaining_conversation() == []
 
-    def test_retrying(self, client, s3mock, loggingmock, mock_generate_test_filepath):
+    def test_retrying(self, client, s3mock, caplogpp, mock_generate_test_filepath):
         # .verify_write_to_bucket() writes to the bucket to verify Antenna can
         # write to it and the configuration is correct
         s3mock.add_step(
@@ -255,23 +256,30 @@ class TestS3CrashStorageIntegration:
             }
         )
 
-        with loggingmock(["antenna"]) as lm:
-            result = client.simulate_post("/submit", headers=headers, body=data)
-            client.join_app()
+        result = client.simulate_post("/submit", headers=headers, body=data)
+        client.join_app()
 
-            # Verify the collector returns a 200 status code and the crash id
-            # we fed it.
-            assert result.status_code == 200
-            assert (
-                result.content == b"CrashID=bp-de1bb258-cbbf-4589-a673-34f800160918\n"
-            )
+        # Verify the collector returns a 200 status code and the crash id
+        # we fed it.
+        assert result.status_code == 200
+        assert result.content == b"CrashID=bp-de1bb258-cbbf-4589-a673-34f800160918\n"
 
-            # Verify the retry decorator logged something
-            assert lm.has_record(
-                name="antenna.ext.s3.connection",
-                levelname="WARNING",
-                msg_contains="retry attempt 0",
+        # Verify the retry decorator logged something
+        records = [
+            rec
+            for rec in caplogpp.record_tuples
+            if rec[0] == "antenna.ext.s3.connection"
+        ]
+        assert records == [
+            (
+                "antenna.ext.s3.connection",
+                logging.WARNING,
+                (
+                    "S3Connection.save_file: exception An error occurred (403) "
+                    "when calling the PutObject operation: Forbidden, retry attempt 0"
+                ),
             )
+        ]
 
         # Assert we did the entire s3 conversation
         assert s3mock.remaining_conversation() == []
