@@ -293,7 +293,12 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         request_env = dict(req.env)
         request_env["QUERY_STRING"] = ""
 
-        fs = cgi.FieldStorage(fp=data, environ=request_env, keep_blank_values=1)
+        try:
+            fs = cgi.FieldStorage(fp=data, environ=request_env, keep_blank_values=1)
+        except ValueError:
+            # cgi.FieldStorage throws a ValueError if the boundary is not a str;
+            # treat this as an invalid payload
+            raise MalformedCrashReport("malformed_boundary")
 
         raw_crash = {}
         dumps = {}
