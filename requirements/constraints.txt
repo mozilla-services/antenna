@@ -135,9 +135,9 @@ smmap2==3.0.1 \
 snowballstemmer==2.0.0 \
     --hash=sha256:209f257d7533fdb3cb73bdbd24f436239ca3b2fa67d56f6ff88e86be08cc5ef0 \
     --hash=sha256:df3bac3df4c2c01363f3dd2cfa78cce2840a79b9f1c2d2de9ce8d31683992f52
-sphinxcontrib-websupport==1.2.3 \
-    --hash=sha256:a2100b79096bbaea5a41e03261cee279d19c803218b9401a1d84ef6aeae17338 \
-    --hash=sha256:ee1d43e6e0332558a66fcb4005b9ba7313ad9764d0df0e6703ae869a028e451f
+sphinxcontrib-websupport==1.2.4 \
+    --hash=sha256:6fc9287dfc823fe9aa432463edd6cea47fa9ebbf488d7f289b322ffcfca075c7 \
+    --hash=sha256:4edf0223a0685a7c485ae5a156b6f529ba1ee481a1417817935b20bde1956232
 stevedore==3.2.0 \
     --hash=sha256:c8f4f0ebbc394e52ddf49de8bcc3cf8ad2b4425ebac494106bbc5e3661ac7633 \
     --hash=sha256:38791aa5bed922b0a844513c5f9ed37774b68edc609e5ab8ab8d8fe0ce4315e5
