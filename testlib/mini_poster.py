@@ -27,7 +27,6 @@ import sys
 import uuid
 
 import requests
-import six
 
 
 logger = logging.getLogger(__name__)
@@ -53,12 +52,10 @@ def assemble_crash_payload_dict(raw_crash, dumps, use_json=False):
 
     if dumps:
         for name, contents in dumps.items():
-            if isinstance(contents, six.text_type):
+            if isinstance(contents, str):
                 contents = contents.encode("utf-8")
-            elif isinstance(contents, six.binary_type):
-                contents = contents
-            else:
-                contents = six.text_type(contents).encode("utf-8")
+            elif not isinstance(contents, bytes):
+                contents = str(contents).encode("utf-8")
             crash_data[name] = ("fakecrash.dump", io.BytesIO(contents))
 
     return crash_data

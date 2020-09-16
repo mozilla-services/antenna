@@ -74,29 +74,26 @@ def setup_logging(app_config):
                 "filters": ["add_hostid"],
             },
         },
-    }
-    if app_config("local_dev_env"):
-        # In a local development environment, we log to the console in a
-        # human-readable fashion
-        dc["loggers"] = {
-            "antenna": {
-                "propagate": False,
-                "handlers": ["console"],
-                "level": app_config("logging_level"),
-            },
-            "markus": {"propagate": False, "handlers": ["console"], "level": "INFO"},
-        }
-        dc["root"] = {"handlers": ["console"], "level": "WARNING"}
-    else:
-        # In a server environment, we log everything in mozlog format
-        dc["loggers"] = {
+        "loggers": {
             "antenna": {
                 "propagate": False,
                 "handlers": ["mozlog"],
                 "level": app_config("logging_level"),
             }
+        },
+        "root": {"handlers": ["mozlog"], "level": "WARNING"},
+    }
+
+    if app_config("local_dev_env"):
+        # In a local development environment, we log to the console in a human-readable
+        # fashion and add a markus logger
+        dc["loggers"]["antenna"]["handlers"] = ["console"]
+        dc["loggers"]["markus"] = {
+            "propagate": False,
+            "handlers": ["console"],
+            "level": "INFO",
         }
-        dc["root"] = {"handlers": ["mozlog"], "level": "WARNING"}
+        dc["root"]["handlers"] = ["console"]
 
     logging.config.dictConfig(dc)
     _LOGGING_SETUP = True
@@ -322,7 +319,7 @@ def get_app(config=None):
     # Build the app and heartbeat manager
     app = AntennaAPI(config)
 
-    # Add restources
+    # Add resources
     app.add_route("breakpad", "/submit", BreakpadSubmitterResource(config))
     app.add_route(
         "version",
