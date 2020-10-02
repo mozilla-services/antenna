@@ -45,17 +45,20 @@ jobs:
       - run:
           name: Build Docker image
           working_directory: /antenna
-          command: make build
+          command: |
+            make build
 
       - run:
           name: Lint
           working_directory: /antenna
-          command: docker run local/antenna_deploy_base /bin/bash ./docker/run_lint.sh
+          command: |
+            docker run local/antenna_deploy_base shell ./docker/run_lint.sh
 
       - run:
           name: Run tests
           working_directory: /antenna
-          command: make test
+          command: |
+            make test-ci
 
       - run:
           name: Push to Dockerhub
