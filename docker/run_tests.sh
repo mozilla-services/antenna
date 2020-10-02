@@ -27,4 +27,4 @@ urlwait "${CRASHSTORAGE_ENDPOINT_URL}" 10
 urlwait "${CRASHPUBLISH_ENDPOINT_URL}" 10
 
 # Run tests
-"${PYTEST}"
+"${PYTEST}" $@

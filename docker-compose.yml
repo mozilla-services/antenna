@@ -24,6 +24,30 @@ services:
     volumes:
       - .:/app
 
+  # Test container
+  test:
+    image: local/antenna_deploy_base
+    env_file:
+      - docker/config/local_dev.env
+      - docker/config/test.env
+    links:
+      - localstack-sqs
+      - localstack-s3
+      - statsd
+    volumes:
+      - .:/app
+
+  # Same as test container, but doesn't volume mount .
+  test-ci:
+    image: local/antenna_deploy_base
+    env_file:
+      - docker/config/local_dev.env
+      - docker/config/test.env
+    links:
+      - localstack-sqs
+      - localstack-s3
+      - statsd
+
   # Web container is a prod-like fully-functioning Antenna container.
   web:
     extends:
@@ -33,7 +57,7 @@ services:
       - my.env
     ports:
       - "8000:8000"
-    command: ./bin/run_web.sh
+    command: web
     links:
       - localstack-s3
       - localstack-sqs
