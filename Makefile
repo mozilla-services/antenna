@@ -53,7 +53,7 @@ build: my.env  ## | Build docker images.
 
 .PHONY: setup
 setup: my.env .docker-build  ## | Set up services.
-	${DC} run web shell ./docker/run_setup.sh
+	${DC} run --rm web shell ./docker/run_setup.sh
 
 .PHONY: run
 run: my.env .docker-build  ## | Run the webapp and services.
@@ -61,7 +61,7 @@ run: my.env .docker-build  ## | Run the webapp and services.
 
 .PHONY: shell
 shell: my.env .docker-build  ## | Open a shell in the web image.
-	${DC} run web shell
+	${DC} run --rm web shell
 
 .PHONY: my.env clean
 clean:  ## | Remove build, test, coverage, and Python artifacts.
