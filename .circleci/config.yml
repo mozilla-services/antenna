@@ -49,6 +49,12 @@ jobs:
             make build
 
       - run:
+          name: Verify requirements.txt file
+          working_directory: /antenna
+          command: |
+            docker run local/antenna_deploy_base shell ./bin/run_verify_reqs.sh
+
+      - run:
           name: Lint
           working_directory: /antenna
           command: |
