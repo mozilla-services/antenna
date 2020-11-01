@@ -17,7 +17,7 @@ bandit==1.6.2
 black==20.8b1
 click==7.1.2
 coverage==5.3
-flake8==3.8.3
+flake8==3.8.4
 freezegun==1.0.0
 more-itertools==8.5.0
 pip-tools==5.3.1
