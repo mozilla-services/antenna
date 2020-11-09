@@ -1,8 +1,17 @@
+---
+# These environment variables must be set in CircleCI UI
+#
+# DOCKERHUB_REPO - docker hub repo, format: <username>/<repo>
+# DOCKER_USER    - login info for docker hub
+# DOCKER_PASS
 version: 2.1
 jobs:
   build_test_push:
     docker:
       - image: mozilla/cidockerbases:docker-latest
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
     working_directory: /
     environment:
       APP_NAME: "socorro_collector"
@@ -35,6 +44,15 @@ jobs:
 
       - setup_remote_docker:
           version: 19.03.13
+
+      - run:
+          name: Login to Dockerhub
+          command: |
+            if [ "${DOCKER_USER}" == "" ] || [ "${DOCKER_PASS}" == "" ]; then
+              echo "Skipping Login to Dockerhub, credentials not available."
+            else
+              echo "${DOCKER_PASS}" | docker login -u="${DOCKER_USER}" --password-stdin
+            fi
 
       - run:
           name: Get info
@@ -89,23 +107,24 @@ jobs:
                 set -e
             }
 
-            # tag images with SHA1 hash or git tag
-            export DOCKER_IMAGE="mozilla/${APP_NAME}:${CIRCLE_SHA1}"
-            if [ -n "${CIRCLE_TAG}" ]; then
-                export DOCKER_IMAGE="mozilla/${APP_NAME}:${CIRCLE_TAG}"
-            fi
+            export LOCAL_IMAGE="local/antenna_deploy_base:latest"
 
-            # push on main or git tag
-            if [ "${CIRCLE_BRANCH}" == "main" ] || [ -n "${CIRCLE_TAG}" ]; then
-                echo "${DOCKER_PASSWORD}" | docker login -u="${DOCKER_USERNAME}" --password-stdin
-                retry docker tag local/antenna_deploy_base "${DOCKER_IMAGE}"
-                retry docker push "${DOCKER_IMAGE}"
+            if [ "${DOCKER_USER}" == "" ] || [ "${DOCKER_PASS}" == "" ]; then
+              echo "Skipping Login to Dockerhub, credentials not available."
+            else
+              echo "${DOCKER_PASS}" | docker login -u="${DOCKER_USER}" --password-stdin
 
-                # push `latest` on main only
-                if [ "${CIRCLE_BRANCH}" == "main" ]; then
-                    retry docker tag local/antenna_deploy_base "mozilla/${APP_NAME}:latest"
-                    retry docker push "mozilla/${APP_NAME}:latest"
-                fi
+              if [ "${CIRCLE_BRANCH}" == "main" ]; then
+                # deploy latest on main branch updates
+                docker tag "${LOCAL_IMAGE}" "${DOCKERHUB_REPO}:latest"
+                retry docker push "${DOCKERHUB_REPO}:latest"
+              elif  [ ! -z "${CIRCLE_TAG}" ]; then
+                # deploy a release tag
+                echo "${DOCKERHUB_REPO}:${CIRCLE_TAG}"
+                docker tag "${LOCAL_IMAGE}" "${DOCKERHUB_REPO}:${CIRCLE_TAG}"
+                docker images
+                retry docker push "${DOCKERHUB_REPO}:${CIRCLE_TAG}"
+              fi
             fi
 
 workflows:
