@@ -243,9 +243,12 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         if content_length == 0:
             raise MalformedCrashReport("no_content_length")
 
+        is_compressed = False
+
         # Decompress payload if it's compressed
         if req.env.get("HTTP_CONTENT_ENCODING") == "gzip":
             mymetrics.incr("gzipped_crash")
+            is_compressed = True
 
             # If the content is gzipped, we pull it out and decompress it. We
             # have to do that here because nginx doesn't have a good way to do
@@ -355,6 +358,9 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             raw_crash["payload"] = "json"
         else:
             raw_crash["payload"] = "multipart"
+
+        # Capture whether the payload was compressed
+        raw_crash["payload_compressed"] = "1" if is_compressed else "0"
 
         return raw_crash, dumps
 
