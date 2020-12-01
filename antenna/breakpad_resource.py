@@ -251,9 +251,20 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             # have to do that here because nginx doesn't have a good way to do
             # that in nginx-land.
             gzip_header = 16 + zlib.MAX_WBITS
+            start_time = time.perf_counter()
             try:
                 data = zlib.decompress(req.stream.read(content_length), gzip_header)
+                mymetrics.histogram(
+                    "gzipped_crash_decompress",
+                    value=(time.perf_counter() - start_time) * 1000.0,
+                    tags=["result:success"],
+                )
             except zlib.error:
+                mymetrics.histogram(
+                    "gzipped_crash_decompress",
+                    value=(time.perf_counter() - start_time) * 1000.0,
+                    tags=["result:fail"],
+                )
                 # This indicates this isn't a valid compressed stream. Given
                 # that the HTTP request insists it is, we're just going to
                 # assume it's junk and not try to process any further.
