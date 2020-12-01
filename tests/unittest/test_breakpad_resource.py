@@ -63,6 +63,7 @@ class TestBreakpadSubmitterResource:
             "ProductName": "Firefox",
             "Version": "1.0",
             "payload": "multipart",
+            "payload_compressed": "0",
         }
         expected_dumps = {"upload_file_minidump": b"abcd1234"}
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
@@ -89,6 +90,7 @@ class TestBreakpadSubmitterResource:
             "ProductName": "Firefox",
             "Version": "1",
             "payload": "multipart",
+            "payload_compressed": "0",
         }
         expected_dumps = {
             "upload_file_minidump": b"deadbeef",
@@ -145,6 +147,7 @@ class TestBreakpadSubmitterResource:
             "ProductName": "Firefox",
             "Version": "1.0",
             "payload": "multipart",
+            "payload_compressed": "1",
         }
         expected_dumps = {"upload_file_minidump": b"abcd1234"}
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
@@ -165,6 +168,7 @@ class TestBreakpadSubmitterResource:
             "ProductName": "Firefox",
             "Version": "1.0",
             "payload": "json",
+            "payload_compressed": "0",
         }
         expected_dumps = {"upload_file_minidump": b"abcd1234"}
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
