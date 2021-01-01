@@ -20,9 +20,9 @@ babel==2.8.0 \
     --hash=sha256:1aac2ae2d0d8ea368fa90906567f5c08463d98ade155c0c4bfedd6a0f7160e38 \
     --hash=sha256:d670ea0b10f8b723672d3a6abeb87b565b244da220d76b4dba1b66269ec152d4 \
     # via sphinx
-bandit==1.6.2 \
-    --hash=sha256:336620e220cf2d3115877685e264477ff9d9abaeb0afe3dc7264f55fa17a3952 \
-    --hash=sha256:41e75315853507aa145d62a78a2a6c5e3240fe14ee7c601459d0df9418196065 \
+bandit==1.7.0 \
+    --hash=sha256:216be4d044209fa06cf2a3e51b319769a51be8318140659719aa7a115c35ed07 \
+    --hash=sha256:8a4c7415254d75df8ff3c3b15cfe9042ecee628a1e40b44c15a98890fbfc2608 \
     # via -r requirements.in
 black==20.8b1 \
     --hash=sha256:1c02557aa099101b9d21496f8a914e9ed2222ef70336404eeeac8edba836fbea \
