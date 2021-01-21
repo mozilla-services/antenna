@@ -81,7 +81,6 @@ class TestFSCrashStorage:
             + b'"payload": "multipart", '
             + b'"payload_compressed": "0", '
             + b'"submitted_timestamp": "2011-09-06T00:00:00+00:00", '
-            + b'"throttle_rate": 100, '
             + b'"uuid": "de1bb258-cbbf-4589-a673-34f800160918"}'
         )
 
