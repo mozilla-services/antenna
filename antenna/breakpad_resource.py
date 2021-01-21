@@ -19,7 +19,13 @@ import markus
 
 from antenna.heartbeat import register_for_life, register_for_heartbeat
 from antenna.throttler import REJECT, FAKEACCEPT, RESULT_TO_TEXT, Throttler
-from antenna.util import create_crash_id, sanitize_dump_name, utc_now, validate_crash_id
+from antenna.util import (
+    create_crash_id,
+    isoformat_to_time,
+    sanitize_dump_name,
+    utc_now,
+    validate_crash_id,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -404,7 +410,8 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         """
         resp.status = falcon.HTTP_200
 
-        start_time = time.time()
+        current_timestamp = utc_now()
+
         # NOTE(willkg): This has to return text/plain since that's what the
         # breakpad clients expect.
         resp.content_type = "text/plain"
@@ -422,10 +429,8 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
         mymetrics.incr("incoming_crash")
 
-        # Add timestamps
-        current_timestamp = utc_now()
+        # Add timestamp to crash report
         raw_crash["submitted_timestamp"] = current_timestamp.isoformat()
-        raw_crash["timestamp"] = start_time
 
         # Add checksums and MinidumpSha256Hash
         raw_crash["dump_checksums"] = {
@@ -541,9 +546,14 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         # Capture the total time it took for this crash to be handled from
         # being received from breakpad client to saving to s3.
         #
-        # NOTE(willkg): time.time returns seconds, but .timing() wants
-        # milliseconds, so we multiply!
-        delta = (time.time() - crash_report.raw_crash["timestamp"]) * 1000
+        # NOTE(willkg): We use submitted_timestamp which is formatted with isoformat().
+        # time.time() returns seconds as a float, but .timing() wants milliseconds, so
+        # we multiply by 1000.
+
+        delta = time.time() - isoformat_to_time(
+            crash_report.raw_crash["submitted_timestamp"]
+        )
+        delta = delta * 1000
 
         mymetrics.timing("crash_handling.time", value=delta)
         mymetrics.incr("save_crash.count")

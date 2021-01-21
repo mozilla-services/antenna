@@ -44,6 +44,22 @@ def utc_now():
     return datetime.datetime.now(UTC)
 
 
+def isoformat_to_time(data):
+    """Convert an isoformat string to seconds since epoch
+
+    :arg str data: datetime in isoformat
+
+    :returns: time in seconds as a float (equivalent to time.time() return); or 0.0
+        if it's a bad datetime
+
+    """
+    try:
+        dt = datetime.datetime.fromisoformat(data)
+        return dt.timestamp()
+    except ValueError:
+        return 0.0
+
+
 def get_version_info(basedir):
     """Given a basedir, retrieves version information for this deploy.
 

@@ -13,6 +13,7 @@ from antenna.util import (
     get_date_from_crash_id,
     get_throttle_from_crash_id,
     get_version_info,
+    isoformat_to_time,
     retry,
     sanitize_dump_name,
     utc_now,
@@ -25,6 +26,19 @@ def test_utc_now():
     assert res.strftime("%Z") == "UTC"
     assert res.strftime("%z") == "+0000"
     assert res.tzinfo
+
+
+@pytest.mark.parametrize(
+    "data, expected",
+    [
+        # Good dates return good times
+        ("2011-09-06T00:00:00+00:00", 1315267200.0),
+        # Bad data returns 0.0
+        ("foo", 0.0),
+    ],
+)
+def test_isoformat_to_time(data, expected):
+    assert isoformat_to_time(data) == expected
 
 
 def test_get_version_info(tmpdir):
