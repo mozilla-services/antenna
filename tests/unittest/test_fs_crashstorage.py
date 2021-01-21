@@ -84,7 +84,6 @@ class TestFSCrashStorage:
             + b'"submitted_timestamp": "2011-09-06T00:00:00+00:00", '
             + b'"throttle_rate": 100, '
             + b'"timestamp": 1315267200.0, '
-            + b'"type_tag": "bp", '
             + b'"uuid": "de1bb258-cbbf-4589-a673-34f800160918"}'
         )
 

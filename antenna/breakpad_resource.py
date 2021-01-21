@@ -111,9 +111,6 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         doc="The name of the field in the POST data for dumps.",
     )
     required_config.add_option(
-        "dump_id_prefix", default="bp-", doc="The crash type prefix."
-    )
-    required_config.add_option(
         "concurrent_crashmovers",
         default="2",
         parser=positive_int,
@@ -456,8 +453,6 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
             )
             raw_crash["uuid"] = crash_id
 
-        raw_crash["type_tag"] = self.config("dump_id_prefix").strip("-")
-
         # Log the throttle result
         logger.info(
             "%s: matched by %s; returned %s",
@@ -478,7 +473,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         # If the result is a FAKEACCEPT, then we return a crash id, but throw the crash
         # away
         if throttle_result is FAKEACCEPT:
-            resp.body = "CrashID=%s%s\n" % (self.config("dump_id_prefix"), crash_id)
+            resp.body = "CrashID=bp-%s\n" % crash_id
             return
 
         # If we're accepting the cash report, then clean it up, save it and return the
@@ -488,7 +483,7 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         crash_report.set_state(STATE_SAVE)
         self.crashmover_queue.append(crash_report)
         self.hb_run_crashmover()
-        resp.body = "CrashID=%s%s\n" % (self.config("dump_id_prefix"), crash_id)
+        resp.body = "CrashID=bp-%s\n" % crash_id
 
     def hb_run_crashmover(self):
         """Spawn a crashmover if there's work to do."""
