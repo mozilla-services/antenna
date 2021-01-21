@@ -379,9 +379,6 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
         # throttle the crash.
         result, rule_name, throttle_rate = self.throttler.throttle(raw_crash)
 
-        # Save the results in the raw_crash itself
-        raw_crash["throttle_rate"] = throttle_rate
-
         return result, rule_name, throttle_rate
 
     def cleanup_crash_report(self, raw_crash):
