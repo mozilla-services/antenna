@@ -248,7 +248,6 @@ class TestBreakpadSubmitterResource:
 
         bsp = BreakpadSubmitterResource(self.empty_config)
         assert bsp.get_throttle_result(raw_crash) == (ACCEPT, "is_nightly", 100)
-        assert raw_crash["legacy_processing"] == ACCEPT
         assert raw_crash["throttle_rate"] == 100
 
     def test_queuing(self, client):
