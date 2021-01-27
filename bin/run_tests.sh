@@ -4,6 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+# Usage: bin/run_tests.sh
+#
 # Runs tests.
 #
 # This should be called from inside a container and after the dependent
@@ -12,13 +14,12 @@
 # * elasticsearch
 # * postgresql
 
-# Failures should cause setup to fail
-set -v -e -x
+set -euo pipefail
 
 echo ">>> pytest"
 # Set up environment variables
 
-export PYTHONPATH=/app/:$PYTHONPATH
+export PYTHONPATH=/app/:${PYTHONPATH:-}
 PYTEST="$(which pytest)"
 PYTHON="$(which python)"
 

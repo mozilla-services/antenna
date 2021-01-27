@@ -77,7 +77,7 @@ jobs:
           name: Lint
           working_directory: /antenna
           command: |
-            docker run local/antenna_deploy_base shell ./docker/run_lint.sh
+            docker run local/antenna_deploy_base shell ./bin/run_lint.sh
 
       - run:
           name: Run tests

@@ -53,7 +53,7 @@ build: my.env  ## | Build docker images.
 
 .PHONY: setup
 setup: my.env .docker-build  ## | Set up services.
-	${DC} run --rm web shell ./docker/run_setup.sh
+	${DC} run --rm web shell ./bin/run_setup.sh
 
 .PHONY: run
 run: my.env .docker-build  ## | Run the webapp and services.
@@ -86,11 +86,11 @@ clean:  ## | Remove build, test, coverage, and Python artifacts.
 
 .PHONY: lint
 lint: my.env .docker-build  ## | Lint code.
-	${DC} run --rm --no-deps base shell ./docker/run_lint.sh
+	${DC} run --rm --no-deps base shell ./bin/run_lint.sh
 
-.PHONY: black
+.PHONY: lintfix
 lintfix: my.env .docker-build  ## | Reformat code.
-	${DC} run --rm --no-deps base shell ./docker/run_lint.sh --fix
+	${DC} run --rm --no-deps base shell ./bin/run_lint.sh --fix
 
 .PHONY: test
 test: my.env .docker-build  ## | Run unit tests.
@@ -99,7 +99,7 @@ test: my.env .docker-build  ## | Run unit tests.
 	${DC} up -d localstack-sqs
 	${DC} up -d statsd
 	# Run tests
-	${DC} run --rm test shell ./docker/run_tests.sh
+	${DC} run --rm test shell ./bin/run_tests.sh
 
 .PHONY: test-ci
 test-ci: my.env .docker-build  ## | Run unit tests in CI.
@@ -108,7 +108,7 @@ test-ci: my.env .docker-build  ## | Run unit tests in CI.
 	${DC} up -d localstack-sqs
 	${DC} up -d statsd
 	# Run tests in test-ci container
-	${DC} run --rm test-ci shell ./docker/run_tests.sh
+	${DC} run --rm test-ci shell ./bin/run_tests.sh
 
 .PHONY: testshell
 testshell: my.env .docker-build  ## | Open a shell in the test container.
@@ -116,7 +116,7 @@ testshell: my.env .docker-build  ## | Open a shell in the test container.
 
 .PHONY: test-coverage
 test-coverage: my.env .docker-build  ## | Run test coverage report.
-	${DC} run --rm test shell ./docker/run_tests.sh --cov=antenna --cov-report term-missing
+	${DC} run --rm test shell ./bin/run_tests.sh --cov=antenna --cov-report term-missing
 
 .PHONY: docs
 docs: my.env .docker-build  ## | Generate Sphinx HTML documentation.
