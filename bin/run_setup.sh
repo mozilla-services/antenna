@@ -4,13 +4,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-# Usage: docker/run_setup.sh
+# Usage: bin/run_setup.sh
 #
 # Wipes and then sets up Pub/Sub and S3 services.
 #
 # This should be called from inside a container.
 
-set -e
+set -euo pipefail
 
 # Wait for services to be ready
 echo "Waiting for ${CRASHSTORAGE_ENDPOINT_URL} ..."

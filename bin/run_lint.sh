@@ -4,17 +4,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-# Usage: docker/run_lint.sh [--fix]
+# Usage: bin/run_lint.sh [--fix]
 #
 # Runs linting and code fixing.
 #
 # This should be called from inside a container.
 
-set -e
+set -euo pipefail
 
 BLACKARGS=("--line-length=88" "--target-version=py37" antenna bin testlib tests)
 
-if [[ $1 == "--fix" ]]; then
+if [[ "${1:-}" == "--fix" ]]; then
     echo ">>> black fix"
     black "${BLACKARGS[@]}"
 

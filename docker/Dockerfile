@@ -30,4 +30,4 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PORT 8000
 EXPOSE $PORT
 
-ENTRYPOINT ["/app/docker/entrypoint.sh"]
+ENTRYPOINT ["/app/bin/entrypoint.sh"]

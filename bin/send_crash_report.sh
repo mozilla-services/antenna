@@ -1,7 +1,10 @@
 #!/bin/bash
 
-# Sends a fake crash report to the host specified in $HOST 
+# Sends a fake crash report to the host specified in $HOST
 # defaulting to http://localhost:8000 .
+
+set -euo pipefail
+
 HOST=$1
 if [ -z "${HOST}" ]; then
     HOST="http://localhost:8000"

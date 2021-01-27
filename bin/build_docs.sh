@@ -6,6 +6,8 @@
 
 # Builds docs in the docs/ directory.
 
+set -euo pipefail
+
 # Clean the docs first
 make -C docs/ clean
 
