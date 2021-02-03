@@ -51,7 +51,7 @@ def set_sentry_client(sentry_dsn, basedir):
         logger.info("Removed sentry client")
 
 
-class WSGILoggingMiddleware(object):
+class WSGILoggingMiddleware:
     """WSGI middleware that logs unhandled exceptions."""
 
     def __init__(self, application):

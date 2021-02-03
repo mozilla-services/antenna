@@ -46,8 +46,7 @@ def wait_times_save():
     gives up.
 
     """
-    for i in [2, 2, 2, 2, 2]:
-        yield i
+    yield from [2, 2, 2, 2, 2]
 
 
 class S3Connection(RequiredConfigMixin):

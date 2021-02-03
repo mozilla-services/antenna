@@ -26,13 +26,13 @@ class CrashVerifier:
         )
 
     def dump_names_key(self, crash_id):
-        return "v1/dump_names/{crashid}".format(crashid=crash_id)
+        return f"v1/dump_names/{crash_id}"
 
     def dump_key(self, crash_id, name):
         if name in (None, "", "upload_file_minidump"):
             name = "dump"
 
-        return "v1/{name}/{crashid}".format(name=name, crashid=crash_id)
+        return f"v1/{name}/{crash_id}"
 
     def verify_stored_data(self, crash_id, raw_crash, dumps, s3conn):
         # Verify the raw crash file made it

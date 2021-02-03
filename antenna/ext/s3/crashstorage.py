@@ -55,11 +55,9 @@ class S3CrashStorage(CrashStorageBase):
 
     def get_runtime_config(self, namespace=None):
         """Return generator for items in runtime configuration."""
-        for item in super().get_runtime_config(namespace):
-            yield item
+        yield from super().get_runtime_config(namespace)
 
-        for item in self.conn.get_runtime_config(namespace):
-            yield item
+        yield from self.conn.get_runtime_config(namespace)
 
     def check_health(self, state):
         """Check connection health."""
@@ -73,7 +71,7 @@ class S3CrashStorage(CrashStorageBase):
         )
 
     def _get_dump_names_path(self, crash_id):
-        return "v1/dump_names/{crash_id}".format(crash_id=crash_id)
+        return f"v1/dump_names/{crash_id}"
 
     def _get_dump_name_path(self, crash_id, dump_name):
         # NOTE(willkg): This is something that Socorro collector did. I'm not

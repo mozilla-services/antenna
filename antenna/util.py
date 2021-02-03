@@ -71,9 +71,9 @@ def get_version_info(basedir):
     """
     try:
         path = Path(basedir) / "version.json"
-        with open(str(path), "r") as fp:
+        with open(str(path)) as fp:
             commit_info = json.loads(fp.read().strip())
-    except (IOError, OSError):
+    except OSError:
         logger.error("Exception thrown when retrieving version.json", exc_info=True)
         commit_info = {}
     return commit_info
@@ -216,8 +216,7 @@ class MaxAttemptsError(Exception):
 
 def wait_time_generator():
     """Return generator for wait times."""
-    for amt in [2, 2, 2, 2, 2]:
-        yield amt
+    yield from [2, 2, 2, 2, 2]
 
 
 def retry(
