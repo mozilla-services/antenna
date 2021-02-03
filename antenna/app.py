@@ -277,8 +277,7 @@ class AntennaAPI(falcon.API):
         """Return generator of runtime configuration for all resources."""
         for res in self.get_resources():
             if hasattr(res, "get_runtime_config"):
-                for item in res.get_runtime_config(namespace):
-                    yield item
+                yield from res.get_runtime_config(namespace)
 
     def verify(self):
         """Verify that Antenna is ready to start."""

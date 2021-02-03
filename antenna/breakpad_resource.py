@@ -169,17 +169,13 @@ class BreakpadSubmitterResource(RequiredConfigMixin):
 
     def get_runtime_config(self, namespace=None):
         """Return generator of runtime configuration."""
-        for item in super().get_runtime_config():
-            yield item
+        yield from super().get_runtime_config()
 
-        for item in self.throttler.get_runtime_config():
-            yield item
+        yield from self.throttler.get_runtime_config()
 
-        for item in self.crashstorage.get_runtime_config(["crashstorage"]):
-            yield item
+        yield from self.crashstorage.get_runtime_config(["crashstorage"])
 
-        for item in self.crashpublish.get_runtime_config(["crashpublish"]):
-            yield item
+        yield from self.crashpublish.get_runtime_config(["crashpublish"])
 
     def check_health(self, state):
         """Return health state."""
