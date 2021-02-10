@@ -335,21 +335,6 @@ class Testmozilla_rules:
         assert throttler.throttle(raw_crash) == (ACCEPT, "has_comments", 100)
 
     @pytest.mark.parametrize(
-        "email, expected",
-        [
-            (None, (ACCEPT, "accept_everything", 100)),
-            ("", (ACCEPT, "accept_everything", 100)),
-            ("foo", (ACCEPT, "accept_everything", 100)),
-            ("foo@example.com", (ACCEPT, "has_email", 100)),
-        ],
-    )
-    def test_email(self, throttler, email, expected):
-        raw_crash = {"ProductName": "BarTest"}
-        if email is not None:
-            raw_crash["Email"] = email
-        assert throttler.throttle(raw_crash) == expected
-
-    @pytest.mark.parametrize(
         "processtype, expected",
         [
             (None, (ACCEPT, "accept_everything", 100)),
