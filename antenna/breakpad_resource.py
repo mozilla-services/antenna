@@ -39,8 +39,10 @@ MAX_ATTEMPTS = 20
 STATE_SAVE = "save"
 STATE_PUBLISH = "publish"
 
-#: Bad fields we should never save
+#: Bad fields we should never save, so remove them from the payload before
+#: they get any further
 BAD_FIELDS = [
+    "Email",
     "TelemetryClientId",
     "TelemetryServerURL",
     "TelemetrySessionId",
