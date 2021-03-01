@@ -1,7 +1,7 @@
 # Production requirements
 boto3==1.15.10
 botocore==1.18.18
-datadog==0.39.0
+datadog==0.40.0
 dockerflow==2020.10.0
 everett==1.0.3
 falcon==2.0.0
