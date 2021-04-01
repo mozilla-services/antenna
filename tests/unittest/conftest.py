@@ -126,7 +126,7 @@ def client():
     return AntennaTestClient(get_app(AntennaTestClient.build_config()))
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def s3mock():
     """Returns an s3mock context that lets you do S3-related tests
 
@@ -185,7 +185,7 @@ def randommock():
     return _randommock
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def caplogpp(caplog):
     """caplogpp fixes propagation logger values and returns caplog fixture"""
     changed_loggers = []
