@@ -6,7 +6,7 @@ ARG userid=10001
 
 WORKDIR /app/
 RUN groupadd --gid $groupid app && \
-    useradd -g app --uid $userid --shell /usr/sbin/nologin app && \
+    useradd -g app --uid $userid --shell /usr/sbin/nologin --create-home app && \
     chown app:app /app/
 
 RUN apt-get update && \
