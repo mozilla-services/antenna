@@ -23,7 +23,7 @@ more-itertools==8.7.0
 pip-tools==6.0.1
 pytest-cov==2.11.1
 pytest-wholenodeid==0.2
-pytest==6.2.2
+pytest==6.2.3
 requests==2.25.1
 sphinx-rtd-theme==0.5.2
 urlwait==1.0
