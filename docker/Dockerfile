@@ -1,4 +1,4 @@
-FROM python:3.9.4-slim@sha256:bca2bcc8afda3abca3f73ff3d9ac146076aa47d09a226290eb3c99f175b1371a
+FROM python:3.9.5-slim@sha256:9dc8667397f2d26bf648967d155bff875a523e79a964cc36d8c48576ad0df6db
 
 # Set up user and group
 ARG groupid=10001
