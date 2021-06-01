@@ -17,7 +17,7 @@ https://github.com/mozilla-services/antenna/commits/main/docs/spec_v1.rst
 Background
 ==========
 
-`Socorro <https://github.com/mozilla/socorro>`_ is the crash ingestion pipeline
+`Socorro <https://github.com/mozilla-services/socorro>`_ is the crash ingestion pipeline
 for Mozilla's products including Firefox, Firefox for Android, and others.
 
 When Firefox crashes, the Breakpad crash reporter collects data, generates the
@@ -57,7 +57,7 @@ Requirements for v1 of antenna:
    Antenna should parse HTTP payloads the same way that Socorro collector
    currently does.
 
-   HTTP payloads are large:
+   HTTP payloads are large. As of April 29th, 2017:
 
    * average: 500kb
    * 95%: 1.5mb
