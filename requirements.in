@@ -15,7 +15,7 @@ raven==6.10.0
 Sphinx==3.5.4
 bandit==1.7.0
 black==21.5b2
-click==7.1.2
+click==8.0.1
 coverage==5.5
 flake8==3.9.2
 freezegun==1.1.0
