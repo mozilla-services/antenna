@@ -24,9 +24,9 @@ bandit==1.7.0 \
     --hash=sha256:216be4d044209fa06cf2a3e51b319769a51be8318140659719aa7a115c35ed07 \
     --hash=sha256:8a4c7415254d75df8ff3c3b15cfe9042ecee628a1e40b44c15a98890fbfc2608
     # via -r requirements.in
-black==21.5b2 \
-    --hash=sha256:1fc0e0a2c8ae7d269dfcf0c60a89afa299664f3e811395d40b1922dff8f854b5 \
-    --hash=sha256:e5cf21ebdffc7a9b29d73912b6a6a9a4df4ce70220d523c21647da2eae0751ef
+black==21.6b0 \
+    --hash=sha256:dc132348a88d103016726fe360cb9ede02cecf99b76e3660ce6c596be132ce04 \
+    --hash=sha256:dfb8c5a069012b2ab1e972e7b908f5fb42b6bbabcba0a788b86dc05067c7d9c7
     # via -r requirements.in
 boto3==1.15.10 \
     --hash=sha256:04ce4665dee58c89b0eee784bbb480fb4346a7baeb1d5611f676ae21fd3f553a \
@@ -384,6 +384,13 @@ pyparsing==2.4.7 \
     --hash=sha256:c203ec8783bf771a155b207279b9bccb8dea02d8f0c9e5f8ead507bc3246ecc1 \
     --hash=sha256:ef9d7589ef3c200abe66653d3f1ab1033c3c419ae9b9bdb1240a85b024efc88b
     # via packaging
+pytest==6.2.4 \
+    --hash=sha256:50bcad0a0b9c5a72c8e4e7c9855a3ad496ca6a881a3641b4260605450772c54b \
+    --hash=sha256:91ef2131a9bd6be8f76f1f08eac5c5317221d6ad1e143ae03894b862e8976890
+    # via
+    #   -r requirements.in
+    #   pytest-cov
+    #   pytest-wholenodeid
 pytest-cov==2.12.0 \
     --hash=sha256:8535764137fecce504a49c2b742288e3d34bc09eed298ad65963616cc98fd45e \
     --hash=sha256:95d4933dcbbacfa377bb60b29801daa30d90c33981ab2a79e9ab4452c165066e
@@ -392,13 +399,6 @@ pytest-wholenodeid==0.2 \
     --hash=sha256:6bc4edaf560c8b45ac4669bb8b99d8fbbb7f6e5af8dc7727200cd4d3ef4668c2 \
     --hash=sha256:bdcb4df88ca182a19752ef95150c0881deaafc2c593ef67c61515894e5309206
     # via -r requirements.in
-pytest==6.2.4 \
-    --hash=sha256:50bcad0a0b9c5a72c8e4e7c9855a3ad496ca6a881a3641b4260605450772c54b \
-    --hash=sha256:91ef2131a9bd6be8f76f1f08eac5c5317221d6ad1e143ae03894b862e8976890
-    # via
-    #   -r requirements.in
-    #   pytest-cov
-    #   pytest-wholenodeid
 python-dateutil==2.8.1 \
     --hash=sha256:73ebfe9dbf22e832286dafa60473e4cd239f8592f699aa5adaf10050e6e1823c \
     --hash=sha256:75bb3f31ea686f1197762692a9ee6a7550b59fc6ca3a1f4b5d7e32fb98e2da2a
@@ -513,16 +513,16 @@ snowballstemmer==2.1.0 \
     --hash=sha256:b51b447bea85f9968c13b650126a888aabd4cb4463fca868ec596826325dedc2 \
     --hash=sha256:e997baa4f2e9139951b6f4c631bad912dfd3c792467e2f03d7239464af90e914
     # via sphinx
-sphinx-rtd-theme==0.5.2 \
-    --hash=sha256:32bd3b5d13dc8186d7a42fc816a23d32e83a4827d7d9882948e7b837c232da5a \
-    --hash=sha256:4a05bdbe8b1446d77a01e20a23ebc6777c74f43237035e76be89699308987d6f
-    # via -r requirements.in
 sphinx==4.0.2 \
     --hash=sha256:b5c2ae4120bf00c799ba9b3699bc895816d272d120080fbc967292f29b52b48c \
     --hash=sha256:d1cb10bee9c4231f1700ec2e24a91be3f3a3aba066ea4ca9f3bbe47e59d5a1d4
     # via
     #   -r requirements.in
     #   sphinx-rtd-theme
+sphinx-rtd-theme==0.5.2 \
+    --hash=sha256:32bd3b5d13dc8186d7a42fc816a23d32e83a4827d7d9882948e7b837c232da5a \
+    --hash=sha256:4a05bdbe8b1446d77a01e20a23ebc6777c74f43237035e76be89699308987d6f
+    # via -r requirements.in
 sphinxcontrib-applehelp==1.0.2 \
     --hash=sha256:806111e5e962be97c29ec4c1e7fe277bfd19e9652fb1a4392105b43e01af885a \
     --hash=sha256:a072735ec80e7675e3f432fcae8610ecf509c5f1869d17e2eecff44389cdbc58
