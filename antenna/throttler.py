@@ -284,7 +284,6 @@ MOZILLA_PRODUCTS = [
     "Fenix",
     "FirefoxReality",
     "Focus",
-    "GeckoViewExample",
     "ReferenceBrowser",
     "Thunderbird",
     "SeaMonkey",
