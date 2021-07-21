@@ -17,13 +17,15 @@ import click
 
 def get_client():
     session = boto3.session.Session(
-        aws_access_key_id=os.environ.get("CRASHSTORAGE_ACCESS_KEY"),
-        aws_secret_access_key=os.environ.get("CRASHSTORAGE_SECRET_ACCESS_KEY"),
+        aws_access_key_id=os.environ.get("CRASHMOVER_CRASHSTORAGE_ACCESS_KEY"),
+        aws_secret_access_key=os.environ.get(
+            "CRASHMOVER_CRASHSTORAGE_SECRET_ACCESS_KEY"
+        ),
     )
     client = session.client(
         service_name="s3",
         config=Config(s3={"addressing_style": "path"}),
-        endpoint_url=os.environ.get("CRASHSTORAGE_ENDPOINT_URL"),
+        endpoint_url=os.environ.get("CRASHMOVER_CRASHSTORAGE_ENDPOINT_URL"),
     )
     return client
 

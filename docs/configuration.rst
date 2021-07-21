@@ -23,14 +23,13 @@ credentials for crashstorage.
 ::
 
     # Metrics things
-    METRICS_CLASS=antenna.metrics.DogStatsdMetrics
     STATSD_NAMESPACE=mcboatface
 
     # BreakdpadSubmitterResource settings
-    CRASHSTORAGE_CLASS=antenna.ext.s3.crashstorage.S3CrashStorage
+    CRASHMOVER_CRASHSTORAGE_CLASS=antenna.ext.s3.crashstorage.S3CrashStorage
 
     # S3CrashStorage and S3Connection settings
-    CRASHSTORAGE_BUCKET_NAME=org-myorg-mybucket
+    CRASHMOVER_CRASHSTORAGE_BUCKET_NAME=org-myorg-mybucket
 
 
 
@@ -39,30 +38,11 @@ Application
 
 First, you need to configure the application-scoped variables.
 
-.. autocomponent:: antenna.app.AppConfig
+.. autocomponent:: antenna.app.AntennaAPI
    :hide-classname:
    :case: upper
 
    These all have sane defaults, so you don't have to configure any of this.
-
-
-Metrics
-=======
-
-LoggingMetrics
---------------
-
-.. autocomponent:: antenna.metrics.LoggingMetrics
-   :show-docstring:
-   :case: upper
-
-
-DogStatsd metrics
------------------
-
-.. autocomponent:: antenna.metrics.DogStatsdMetrics
-   :show-docstring:
-   :case: upper
 
 
 Breakpad crash resource
@@ -71,6 +51,7 @@ Breakpad crash resource
 .. autocomponent:: antenna.breakpad_resource.BreakpadSubmitterResource
    :show-docstring:
    :case: upper
+   :namespace: breakpad
 
 
 Throttler
@@ -79,6 +60,16 @@ Throttler
 .. autocomponent:: antenna.throttler.Throttler
    :show-docstring:
    :case: upper
+   :namespace: breakpad_throttler
+
+
+Crash mover
+===========
+
+.. autocomponent:: antenna.crashmover.CrashMover
+   :show-docstring:
+   :case: upper
+   :namespace: crashmover
 
 
 Crash storage
@@ -108,14 +99,14 @@ and implement that.
 .. autocomponent:: antenna.ext.fs.crashstorage.FSCrashStorage
    :show-docstring:
    :case: upper
-   :namespace: crashstorage
+   :namespace: crashmover_crashstorage
 
-   When set as the BreakpadSubmitterResource crashstorage class, configuration
-   for this class is in the ``CRASHSTORAGE`` namespace.
+   When set as the CrashMover crashstorage class, configuration
+   for this class is in the ``CRASHMOVER_CRASHSTORAGE`` namespace.
 
    Example::
 
-       CRASHSTORAGE_FS_ROOT=/tmp/whatever
+       CRASHMOVER_CRASHSTORAGE_FS_ROOT=/tmp/whatever
 
 
 AWS S3
@@ -128,26 +119,26 @@ supported.
 .. autocomponent:: antenna.ext.s3.connection.S3Connection
    :show-docstring:
    :case: upper
-   :namespace: crashstorage
+   :namespace: crashmover_crashstorage
 
-   When set as the BreakpadSubmitterResource crashstorage class, configuration
-   for this class is in the ``CRASHSTORAGE`` namespace.
+   When set as the CrashMover crashstorage class, configuration
+   for this class is in the ``CRASHMOVER_CRASHSTORAGE`` namespace.
 
    Example::
 
-       CRASHSTORAGE_BUCKET_NAME=mybucket
-       CRASHSTORAGE_REGION=us-west-2
-       CRASHSTORAGE_ACCESS_KEY=somethingsomething
-       CRASHSTORAGE_SECRET_ACCESS_KEY=somethingsomething
+       CRASHMOVER_CRASHSTORAGE_BUCKET_NAME=mybucket
+       CRASHMOVER_CRASHSTORAGE_REGION=us-west-2
+       CRASHMOVER_CRASHSTORAGE_ACCESS_KEY=somethingsomething
+       CRASHMOVER_CRASHSTORAGE_SECRET_ACCESS_KEY=somethingsomething
 
 
 .. autocomponent:: antenna.ext.s3.crashstorage.S3CrashStorage
    :show-docstring:
    :case: upper
-   :namespace: crashstorage
+   :namespace: crashmover_crashstorage
 
-   When set as the BreakpadSubmitterResource crashstorage class, configuration
-   for this class is in the ``CRASHSTORAGE`` namespace.
+   When set as the CrashMover crashstorage class, configuration
+   for this class is in the ``CRASHMOVER_CRASHSTORAGE`` namespace.
 
    Generally, if the default connection class is fine, you don't need to do any
    configuration here.
@@ -177,7 +168,7 @@ The ``SQSCrashPublish`` class will publish crash ids to an AWS SQS queue.
 .. autocomponent:: antenna.ext.sqs.crashpublish.SQSCrashPublish
    :show-docstring:
    :case: upper
-   :namespace: crashpublish
+   :namespace: crashmover_crashpublish
 
-   When set as the BreakpadSubmitterResource crashpublish class, configuration
-   for this class is in the ``CRASHPUBLISH`` namespace.
+   When set as the CrashMover crashpublish class, configuration
+   for this class is in the ``CRASHMOVER_CRASHPUBLISH`` namespace.

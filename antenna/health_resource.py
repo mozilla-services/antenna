@@ -6,7 +6,6 @@ from collections import OrderedDict
 import json
 import logging
 
-from everett.component import RequiredConfigMixin
 import falcon
 import markus
 
@@ -17,11 +16,8 @@ logger = logging.getLogger(__name__)
 mymetrics = markus.get_metrics("health")
 
 
-class BrokenResource(RequiredConfigMixin):
+class BrokenResource:
     """Handle ``/__broken__`` endpoint."""
-
-    def __init__(self, config):
-        self.config = config
 
     def on_get(self, req, resp):
         """Implement GET HTTP request."""
@@ -33,8 +29,7 @@ class BrokenResource(RequiredConfigMixin):
 class VersionResource:
     """Handle ``/__version__`` endpoint."""
 
-    def __init__(self, config, basedir):
-        self.config = config
+    def __init__(self, basedir):
         self.basedir = basedir
 
     def on_get(self, req, resp):
@@ -49,9 +44,6 @@ class VersionResource:
 
 class LBHeartbeatResource:
     """Handle ``/__lbheartbeat__`` to let the load balancing know application health."""
-
-    def __init__(self, config):
-        self.config = config
 
     def on_get(self, req, resp):
         """Implement GET HTTP request."""
@@ -92,8 +84,7 @@ class HealthState:
 class HeartbeatResource:
     """Handle ``/__heartbeat__`` for app health."""
 
-    def __init__(self, config, app):
-        self.config = config
+    def __init__(self, app):
         self.antenna_app = app
 
     def on_get(self, req, resp):

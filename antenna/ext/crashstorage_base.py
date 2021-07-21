@@ -4,16 +4,15 @@
 
 import logging
 
-from everett.component import ConfigOptions, RequiredConfigMixin
-
 
 logger = logging.getLogger(__name__)
 
 
-class CrashStorageBase(RequiredConfigMixin):
+class CrashStorageBase:
     """Crash storage base class."""
 
-    required_config = ConfigOptions()
+    class Config:
+        pass
 
     def __init__(self, config):
         self.config = config.with_options(self)

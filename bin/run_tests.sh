@@ -24,8 +24,8 @@ PYTEST="$(which pytest)"
 PYTHON="$(which python)"
 
 # Wait for services to be ready
-urlwait "${CRASHSTORAGE_ENDPOINT_URL}" 10
-urlwait "${CRASHPUBLISH_ENDPOINT_URL}" 10
+urlwait "${CRASHMOVER_CRASHSTORAGE_ENDPOINT_URL}" 10
+urlwait "${CRASHMOVER_CRASHPUBLISH_ENDPOINT_URL}" 10
 
 # Run tests
 "${PYTEST}" $@

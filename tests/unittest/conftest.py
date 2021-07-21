@@ -28,11 +28,7 @@ from testlib.s3mock import S3Mock  # noqa
 
 def pytest_runtest_setup():
     # Make sure we set up logging and metrics to sane default values.
-    setup_logging(
-        ConfigManager.from_dict(
-            {"HOST_ID": "", "LOGGING_LEVEL": "DEBUG", "LOCAL_DEV_ENV": "True"}
-        )
-    )
+    setup_logging(logging_level="DEBUG", debug=True, host_id="", processname="antenna")
     markus.configure([{"class": "markus.backends.logging.LoggingMetrics"}])
 
     # Wipe any registered heartbeat functions
@@ -80,6 +76,18 @@ class AntennaTestClient(TestClient):
         """
         self.app = get_app(self.build_config(new_config))
 
+    def get_crashmover(self):
+        """Retrieves the crashmover from the AntennaAPI."""
+        # NOTE(willkg): The "app" here is a middleware which should have an
+        # .application attribute which is the actual AntennaAPI that we want.
+        return self.app.application.crashmover
+
+    def get_resource_by_name(self, name):
+        """Retrieves the Falcon API resource by name"""
+        # NOTE(willkg): The "app" here is a middleware which should have an
+        # .application attribute which is the actual AntennaAPI that we want.
+        return self.app.application.get_resource_by_name(name)
+
     def join_app(self):
         """This goes through and calls join on all gevent pools in the app
 
@@ -91,19 +99,8 @@ class AntennaTestClient(TestClient):
             resp = client.get(...)
             client.join_app()
 
-            assert resp.status_code == 200
-
         """
-        # FIXME(willkg): This is hard-coded for now. We can fix that later if
-        # we add other pools to the system.
-        bsr = self.get_resource_by_name("breakpad")
-        bsr.join_pool()
-
-    def get_resource_by_name(self, name):
-        """Retrieves the Falcon API resource by name"""
-        # NOTE(willkg): The "app" here is a middleware which should have an
-        # .application attribute which is the actual AntennaAPI that we want.
-        return self.app.application.get_resource_by_name(name)
+        self.get_crashmover().join_pool()
 
 
 @pytest.fixture

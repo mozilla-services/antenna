@@ -66,29 +66,57 @@ production, see docs_.
       You should see a lot of output. It'll start out with something like this::
 
          /usr/bin/docker-compose up web
+         antenna_localstack-sqs_1 is up-to-date
          antenna_statsd_1 is up-to-date
          antenna_localstack-s3_1 is up-to-date
-         Recreating antenna_web_1
+         Starting antenna_web_1 ... done
          Attaching to antenna_web_1
-         web_1      | [2016-11-07 15:39:21 +0000] [7] [INFO] Starting gunicorn 19.6.0
-         web_1      | [2016-11-07 15:39:21 +0000] [7] [INFO] Listening at: http://0.0.0.0:8000 (7)
-         web_1      | [2016-11-07 15:39:21 +0000] [7] [INFO] Using worker: gevent
-         web_1      | [2016-11-07 15:39:21 +0000] [10] [INFO] Booting worker with pid: 10
-         web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: Setting up metrics: <class 'antenna.metrics.DogStatsdMetrics'>
-         web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.metrics: DogStatsdMetrics configured: statsd:8125 mcboatface
-         web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: BASEDIR=/app
-         web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: LOGGING_LEVEL=DEBUG
-         web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: METRICS_CLASS=antenna.metrics.DogStatsdMetrics
-         web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: DUMP_FIELD=upload_file_minidump
-         web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: DUMP_ID_PREFIX=bp-
-         web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: CRASHSTORAGE_CLASS=antenna.ext.s3.crashstorage.S3CrashStorage
-         web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: THROTTLE_RULES=antenna.throttler.mozilla_rules
-         web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: CRASHSTORAGE_ACCESS_KEY=foo
-         web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: CRASHSTORAGE_SECRET_ACCESS_KEY=*****
-         web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: CRASHSTORAGE_REGION=us-east-1
-         web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: CRASHSTORAGE_ENDPOINT_URL=http://localstack-s3:4572
-         web_1      | [2016-11-07 15:39:21 +0000] [INFO] antenna.app: CRASHSTORAGE_BUCKET_NAME=antennabucket
-
+         web_1    | + PORT=8000
+         web_1    | + GUNICORN_WORKERS=1
+         web_1    | + GUNICORN_WORKER_CONNECTIONS=4
+         web_1    | + GUNICORN_WORKER_CLASS=gevent
+         web_1    | + GUNICORN_MAX_REQUESTS=0
+         web_1    | + GUNICORN_MAX_REQUESTS_JITTER=0
+         web_1    | + CMD_PREFIX=
+         web_1    | + gunicorn --workers=1 --worker-connections=4 --worker-class=gevent --max-requests=0 --max-requests-jitter=0 --config=antenna/gunicornhooks.py --log-file - --error-logfile=- --access-logfile=- --bind 0.0.0.0:8000 antenna.wsgi:application
+         web_1    | [2021-08-04 19:25:30 +0000] [8] [INFO] Starting gunicorn 20.1.0
+         web_1    | [2021-08-04 19:25:30 +0000] [8] [INFO] Listening at: http://0.0.0.0:8000 (8)
+         web_1    | [2021-08-04 19:25:30 +0000] [8] [INFO] Using worker: gevent
+         web_1    | [2021-08-04 19:25:30 +0000] [9] [INFO] Booting worker with pid: 9
+         web_1    | 2021-08-04 19:25:30,645 INFO - antenna - antenna.sentry - Removed sentry client
+         web_1    | 2021-08-04 19:25:30,663 INFO - antenna - markus.backends.datadog - DatadogMetrics configured: statsd:8125 mcboatface
+         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - BASEDIR=/app
+         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - LOGGING_LEVEL=DEBUG
+         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - LOCAL_DEV_ENV=True
+         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - STATSD_HOST=statsd
+         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - STATSD_PORT=8125
+         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - STATSD_NAMESPACE=mcboatface
+         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - SECRET_SENTRY_DSN=
+         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - HOST_ID=
+         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - CRASHMOVER_CONCURRENT_CRASHMOVERS=2
+         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_CLASS=antenna.ext.s3.crashstorage.S3CrashStorage
+         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_CLASS=antenna.ext.sqs.crashpublish.SQSCrashPublish
+         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_CONNECTION_CLASS=antenna.ext.s3.connection.S3Connection
+         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_ACCESS_KEY=foo
+         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_SECRET_ACCESS_KEY=*****
+         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_REGION=us-east-1
+         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_ENDPOINT_URL=http://localstack-s3:4572
+         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_BUCKET_NAME=antennabucket
+         web_1    | 2021-08-04 19:25:30,673 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_ACCESS_KEY=foo
+         web_1    | 2021-08-04 19:25:30,673 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_SECRET_ACCESS_KEY=*****
+         web_1    | 2021-08-04 19:25:30,673 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_REGION=us-east-1
+         web_1    | 2021-08-04 19:25:30,673 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_ENDPOINT_URL=http://localstack-sqs:4576
+         web_1    | 2021-08-04 19:25:30,673 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_QUEUE_NAME=local_dev_socorro_standard
+         web_1    | 2021-08-04 19:25:30,673 INFO - antenna - antenna.app - BREAKPAD_DUMP_FIELD=upload_file_minidump
+         web_1    | 2021-08-04 19:25:30,673 INFO - antenna - antenna.app - BREAKPAD_THROTTLER_RULES=antenna.throttler.MOZILLA_RULES
+         web_1    | 2021-08-04 19:25:30,673 INFO - antenna - antenna.app - BREAKPAD_THROTTLER_PRODUCTS=antenna.throttler.MOZILLA_PRODUCTS
+         web_1    | 2021-08-04 19:25:30,673 DEBUG - antenna - antenna.heartbeat - Verification starting.
+         web_1    | 2021-08-04 19:25:30,673 DEBUG - antenna - antenna.heartbeat - Verifying S3CrashStorage.verify_write_to_bucket
+         web_1    | 2021-08-04 19:25:30,682 DEBUG - antenna - antenna.heartbeat - Verifying SQSCrashPublish.verify_queue
+         web_1    | 2021-08-04 19:25:30,692 DEBUG - antenna - antenna.heartbeat - Verification complete: everything is good!
+         web_1    | 2021-08-04 19:25:30,692 INFO - antenna - antenna.app - Antenna is running! http://localhost:8000
+         web_1    | 2021-08-04 19:25:30,692 INFO - antenna - antenna.heartbeat - Starting heartbeat
+         web_1    | 2021-08-04 19:25:30,692 DEBUG - antenna - antenna.heartbeat - thump
 
    2. Verify things are running:
 

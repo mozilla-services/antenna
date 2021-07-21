@@ -35,13 +35,15 @@ def validate_queue_name(queue_name):
 
 def get_client():
     session = boto3.session.Session(
-        aws_access_key_id=os.environ.get("CRASHPUBLISH_ACCESS_KEY"),
-        aws_secret_access_key=os.environ.get("CRASHPUBLISH_SECRET_ACCESS_KEY"),
+        aws_access_key_id=os.environ.get("CRASHMOVER_CRASHPUBLISH_ACCESS_KEY"),
+        aws_secret_access_key=os.environ.get(
+            "CRASHMOVER_CRASHPUBLISH_SECRET_ACCESS_KEY"
+        ),
     )
     client = session.client(
         service_name="sqs",
-        region_name=os.environ.get("CRASHPUBLISH_REGION"),
-        endpoint_url=os.environ.get("CRASHPUBLISH_ENDPOINT_URL"),
+        region_name=os.environ.get("CRASHMOVER_CRASHPUBLISH_REGION"),
+        endpoint_url=os.environ.get("CRASHMOVER_CRASHPUBLISH_ENDPOINT_URL"),
     )
     return client
 

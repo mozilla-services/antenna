@@ -15,8 +15,8 @@ class TestCrashStorage:
         """Verify posting a crash gets to crash storage in the right shape"""
         client.rebuild_app(
             {
-                "THROTTLE_RULES": "antenna.throttler.ACCEPT_ALL",
-                "PRODUCTS": "antenna.throttler.ALL_PRODUCTS",
+                "BREAKPAD_THROTTLER_THROTTLE_RULES": "antenna.throttler.ACCEPT_ALL",
+                "BREAKPAD_THROTTLER_PRODUCTS": "antenna.throttler.ALL_PRODUCTS",
             }
         )
 
@@ -33,18 +33,17 @@ class TestCrashStorage:
         client.join_app()
         assert result.status_code == 200
 
-        bsr = client.get_resource_by_name("breakpad")
+        crashmover = client.get_crashmover()
 
-        # Now we've got the BreakpadSubmitterResource, so we can pull out the
-        # crashstorage, verify there's only one crash in it and then verify the
-        # contents of the crash.
+        # Now we've got the CrashMover, so we can pull out the crashstorage, verify
+        # there's only one crash in it and then verify the contents of the crash.
 
         # Verify things got saved
-        assert bsr.crashstorage.saved_things == [
+        assert crashmover.crashstorage.saved_things == [
             {"crash_id": "de1bb258-cbbf-4589-a673-34f800160918"}
         ]
 
         # Verify things got published
-        assert bsr.crashpublish.published_things == [
+        assert crashmover.crashpublish.published_things == [
             {"crash_id": "de1bb258-cbbf-4589-a673-34f800160918"}
         ]
