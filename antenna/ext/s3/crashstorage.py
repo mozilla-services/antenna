@@ -4,8 +4,7 @@
 
 import logging
 
-from everett.component import ConfigOptions
-from everett.manager import parse_class
+from everett.manager import Option, parse_class
 
 from antenna.heartbeat import register_for_verification
 from antenna.ext.crashstorage_base import CrashStorageBase
@@ -36,32 +35,35 @@ class S3CrashStorage(CrashStorageBase):
 
     """
 
-    required_config = ConfigOptions()
-    required_config.add_option(
-        "connection_class",
-        default="antenna.ext.s3.connection.S3Connection",
-        parser=parse_class,
-        doc="S3 connection class to use",
-    )
+    class Config:
+        connection_class = Option(
+            default="antenna.ext.s3.connection.S3Connection",
+            parser=parse_class,
+            doc="S3 connection class to use",
+        )
 
     def __init__(self, config):
         self.config = config.with_options(self)
-        self.conn = self.config("connection_class")(config)
+        self.connection = self.config("connection_class")(config)
         register_for_verification(self.verify_write_to_bucket)
+
+    def get_components(self):
+        """Return map of namespace -> component for traversing component tree."""
+        return {"": self.connection}
 
     def verify_write_to_bucket(self):
         """Verify S3 bucket exists and can be written to."""
-        self.conn.verify_write_to_bucket()
+        self.connection.verify_write_to_bucket()
 
     def get_runtime_config(self, namespace=None):
         """Return generator for items in runtime configuration."""
         yield from super().get_runtime_config(namespace)
 
-        yield from self.conn.get_runtime_config(namespace)
+        yield from self.connection.get_runtime_config(namespace)
 
     def check_health(self, state):
         """Check connection health."""
-        self.conn.check_health(state)
+        self.connection.check_health(state)
 
     def _get_raw_crash_path(self, crash_id):
         return "v2/raw_crash/{entropy}/{date}/{crash_id}".format(
@@ -99,12 +101,12 @@ class S3CrashStorage(CrashStorageBase):
             issues, bucket is missing, etc.
 
         """
-        # FIXME(willkg): self.conn.save_file raises a
+        # FIXME(willkg): self.connection.save_file raises a
         # botocore.exceptions.ClientError if the perms aren't right. That needs
         # to surface to "this node is not healthy".
 
         # Save raw_crash
-        self.conn.save_file(
+        self.connection.save_file(
             self._get_raw_crash_path(crash_id),
             json_ordered_dumps(raw_crash).encode("utf-8"),
         )
@@ -120,14 +122,16 @@ class S3CrashStorage(CrashStorageBase):
 
         """
         # Save dump_names even if there are no dumps
-        self.conn.save_file(
+        self.connection.save_file(
             self._get_dump_names_path(crash_id),
             json_ordered_dumps(list(sorted(dumps.keys()))).encode("utf-8"),
         )
 
         # Save dumps
         for dump_name, dump in dumps.items():
-            self.conn.save_file(self._get_dump_name_path(crash_id, dump_name), dump)
+            self.connection.save_file(
+                self._get_dump_name_path(crash_id, dump_name), dump
+            )
 
     def save_crash(self, crash_report):
         """Save crash data."""

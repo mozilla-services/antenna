@@ -96,11 +96,11 @@ class S3Connection:
 def s3conn(config):
     """Generate and returns an S3 connection using env config."""
     return S3Connection(
-        access_key=config("crashstorage_access_key", default=""),
-        secret_access_key=config("crashstorage_secret_access_key", default=""),
-        endpoint_url=config("crashstorage_endpoint_url", default=""),
-        region=config("crashstorage_region", default="us-west-2"),
-        bucket=config("crashstorage_bucket_name"),
+        access_key=config("crashmover_crashstorage_access_key", default=""),
+        secret_access_key=config("crashmover_crashstorage_secret_access_key", default=""),
+        endpoint_url=config("crashmover_crashstorage_endpoint_url", default=""),
+        region=config("crashmover_crashstorage_region", default="us-west-2"),
+        bucket=config("crashmover_crashstorage_bucket_name"),
     )
 
 
@@ -159,11 +159,11 @@ class SQSHelper:
 def sqshelper(config):
     """Generate and returns a PubSub helper using env config."""
     return SQSHelper(
-        access_key=config("crashpublish_access_key", default=""),
-        secret_access_key=config("crashpublish_secret_access_key", default=""),
-        endpoint_url=config("crashpublish_endpoint_url", default=""),
-        region=config("crashpublish_region", default=""),
-        queue_name=config("crashpublish_queue_name", default=""),
+        access_key=config("crashmover_crashpublish_access_key", default=""),
+        secret_access_key=config("crashmover_crashpublish_secret_access_key", default=""),
+        endpoint_url=config("crashmover_crashpublish_endpoint_url", default=""),
+        region=config("crashmover_crashpublish_region", default=""),
+        queue_name=config("crashmover_crashpublish_queue_name", default=""),
     )
 
 

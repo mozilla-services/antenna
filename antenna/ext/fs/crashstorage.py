@@ -6,7 +6,7 @@ import logging
 import os
 import os.path
 
-from everett.component import ConfigOptions
+from everett.manager import Option
 
 from antenna.ext.crashstorage_base import CrashStorageBase
 from antenna.util import get_date_from_crash_id, json_ordered_dumps
@@ -45,12 +45,11 @@ class FSCrashStorage(CrashStorageBase):
 
     """
 
-    required_config = ConfigOptions()
-    required_config.add_option(
-        "fs_root",
-        default="/tmp/antenna_crashes",  # nosec
-        doc="path to where files should be stored",
-    )
+    class Config:
+        fs_root = Option(
+            default="/tmp/antenna_crashes",  # nosec
+            doc="path to where files should be stored",
+        )
 
     # FIXME(willkg): umask
 

@@ -26,13 +26,15 @@ class SQSHelper:
     def _build_client(self):
         """Build a client."""
         session = boto3.session.Session(
-            aws_access_key_id=os.environ.get("CRASHPUBLISH_ACCESS_KEY"),
-            aws_secret_access_key=os.environ.get("CRASHPUBLISH_SECRET_ACCESS_KEY"),
+            aws_access_key_id=os.environ.get("CRASHMOVER_CRASHPUBLISH_ACCESS_KEY"),
+            aws_secret_access_key=os.environ.get(
+                "CRASHMOVER_CRASHPUBLISH_SECRET_ACCESS_KEY"
+            ),
         )
         client = session.client(
             service_name="sqs",
-            region_name=os.environ.get("CRASHPUBLISH_REGION"),
-            endpoint_url=os.environ.get("CRASHPUBLISH_ENDPOINT_URL"),
+            region_name=os.environ.get("CRASHMOVER_CRASHPUBLISH_REGION"),
+            endpoint_url=os.environ.get("CRASHMOVER_CRASHPUBLISH_ENDPOINT_URL"),
         )
         return client
 
@@ -74,8 +76,8 @@ class TestSQSCrashPublishIntegration:
         with pytest.raises(ClientError):
             client.rebuild_app(
                 {
-                    "CRASHPUBLISH_CLASS": "antenna.ext.sqs.crashpublish.SQSCrashPublish",
-                    "CRASHPUBLISH_QUEUE_NAME": "test_socorro",
+                    "CRASHMOVER_CRASHPUBLISH_CLASS": "antenna.ext.sqs.crashpublish.SQSCrashPublish",
+                    "CRASHMOVER_CRASHPUBLISH_QUEUE_NAME": "test_socorro",
                 }
             )
 
@@ -87,8 +89,8 @@ class TestSQSCrashPublishIntegration:
         # will call verify_topic() which will work fine.
         client.rebuild_app(
             {
-                "CRASHPUBLISH_CLASS": "antenna.ext.sqs.crashpublish.SQSCrashPublish",
-                "CRASHPUBLISH_QUEUE_NAME": "test_socorro",
+                "CRASHMOVER_CRASHPUBLISH_CLASS": "antenna.ext.sqs.crashpublish.SQSCrashPublish",
+                "CRASHMOVER_CRASHPUBLISH_QUEUE_NAME": "test_socorro",
             }
         )
 
@@ -112,8 +114,8 @@ class TestSQSCrashPublishIntegration:
         # Rebuild the app the test client is using with relevant configuration
         client.rebuild_app(
             {
-                "CRASHPUBLISH_CLASS": "antenna.ext.sqs.crashpublish.SQSCrashPublish",
-                "CRASHPUBLISH_QUEUE_NAME": "test_socorro",
+                "CRASHMOVER_CRASHPUBLISH_CLASS": "antenna.ext.sqs.crashpublish.SQSCrashPublish",
+                "CRASHMOVER_CRASHPUBLISH_QUEUE_NAME": "test_socorro",
             }
         )
 

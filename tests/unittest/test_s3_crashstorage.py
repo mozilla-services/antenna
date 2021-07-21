@@ -63,11 +63,11 @@ class TestS3CrashStorageIntegration:
         # Rebuild the app the test client is using with relevant configuration.
         client.rebuild_app(
             {
-                "CRASHSTORAGE_CLASS": "antenna.ext.s3.crashstorage.S3CrashStorage",
-                "CRASHSTORAGE_ENDPOINT_URL": "http://fakes3:4569",
-                "CRASHSTORAGE_ACCESS_KEY": "fakekey",
-                "CRASHSTORAGE_SECRET_ACCESS_KEY": "fakesecretkey",
-                "CRASHSTORAGE_BUCKET_NAME": "fakebucket",
+                "CRASHMOVER_CRASHSTORAGE_CLASS": "antenna.ext.s3.crashstorage.S3CrashStorage",
+                "CRASHMOVER_CRASHSTORAGE_ENDPOINT_URL": "http://fakes3:4569",
+                "CRASHMOVER_CRASHSTORAGE_ACCESS_KEY": "fakekey",
+                "CRASHMOVER_CRASHSTORAGE_SECRET_ACCESS_KEY": "fakesecretkey",
+                "CRASHMOVER_CRASHSTORAGE_BUCKET_NAME": "fakebucket",
             }
         )
 
@@ -134,12 +134,12 @@ class TestS3CrashStorageIntegration:
         # Rebuild the app the test client is using with relevant configuration.
         client.rebuild_app(
             {
-                "CRASHSTORAGE_CLASS": "antenna.ext.s3.crashstorage.S3CrashStorage",
-                "CRASHSTORAGE_ENDPOINT_URL": "http://fakes3:4569",
-                "CRASHSTORAGE_REGION": "us-west-1",
-                "CRASHSTORAGE_ACCESS_KEY": "fakekey",
-                "CRASHSTORAGE_SECRET_ACCESS_KEY": "fakesecretkey",
-                "CRASHSTORAGE_BUCKET_NAME": "fakebucket.with.periods",
+                "CRASHMOVER_CRASHSTORAGE_CLASS": "antenna.ext.s3.crashstorage.S3CrashStorage",
+                "CRASHMOVER_CRASHSTORAGE_ENDPOINT_URL": "http://fakes3:4569",
+                "CRASHMOVER_CRASHSTORAGE_REGION": "us-west-1",
+                "CRASHMOVER_CRASHSTORAGE_ACCESS_KEY": "fakekey",
+                "CRASHMOVER_CRASHSTORAGE_SECRET_ACCESS_KEY": "fakesecretkey",
+                "CRASHMOVER_CRASHSTORAGE_BUCKET_NAME": "fakebucket.with.periods",
             }
         )
 
@@ -171,11 +171,11 @@ class TestS3CrashStorageIntegration:
             # configuration. This calls .verify_write_to_bucket() which fails.
             client.rebuild_app(
                 {
-                    "CRASHSTORAGE_CLASS": "antenna.ext.s3.crashstorage.S3CrashStorage",
-                    "CRASHSTORAGE_ENDPOINT_URL": "http://fakes3:4569",
-                    "CRASHSTORAGE_ACCESS_KEY": "fakekey",
-                    "CRASHSTORAGE_SECRET_ACCESS_KEY": "fakesecretkey",
-                    "CRASHSTORAGE_BUCKET_NAME": "fakebucket",
+                    "CRASHMOVER_CRASHSTORAGE_CLASS": "antenna.ext.s3.crashstorage.S3CrashStorage",
+                    "CRASHMOVER_CRASHSTORAGE_ENDPOINT_URL": "http://fakes3:4569",
+                    "CRASHMOVER_CRASHSTORAGE_ACCESS_KEY": "fakekey",
+                    "CRASHMOVER_CRASHSTORAGE_SECRET_ACCESS_KEY": "fakesecretkey",
+                    "CRASHMOVER_CRASHSTORAGE_BUCKET_NAME": "fakebucket",
                 }
             )
 
@@ -248,11 +248,11 @@ class TestS3CrashStorageIntegration:
         # Rebuild the app the test client is using with relevant configuration.
         client.rebuild_app(
             {
-                "CRASHSTORAGE_CLASS": "antenna.ext.s3.crashstorage.S3CrashStorage",
-                "CRASHSTORAGE_ENDPOINT_URL": "http://fakes3:4569",
-                "CRASHSTORAGE_ACCESS_KEY": "fakekey",
-                "CRASHSTORAGE_SECRET_ACCESS_KEY": "fakesecretkey",
-                "CRASHSTORAGE_BUCKET_NAME": "fakebucket",
+                "CRASHMOVER_CRASHSTORAGE_CLASS": "antenna.ext.s3.crashstorage.S3CrashStorage",
+                "CRASHMOVER_CRASHSTORAGE_ENDPOINT_URL": "http://fakes3:4569",
+                "CRASHMOVER_CRASHSTORAGE_ACCESS_KEY": "fakekey",
+                "CRASHMOVER_CRASHSTORAGE_SECRET_ACCESS_KEY": "fakesecretkey",
+                "CRASHMOVER_CRASHSTORAGE_BUCKET_NAME": "fakebucket",
             }
         )
 

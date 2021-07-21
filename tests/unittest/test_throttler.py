@@ -81,7 +81,7 @@ class TestRule:
 class TestACCEPT_ALL:
     def test_ruleset(self):
         throttler = Throttler(
-            ConfigManager.from_dict({"THROTTLE_RULES": "antenna.throttler.ACCEPT_ALL"})
+            ConfigManager.from_dict({"RULES": "antenna.throttler.ACCEPT_ALL"})
         )
 
         assert throttler.throttle({"ProductName": "Test"}) == (

@@ -16,14 +16,13 @@ captures unhandled exceptions but doesn't otherwise disturb the heartbeat.
 
 import logging
 
-from everett.component import ConfigOptions, RequiredConfigMixin
 import gevent
 
 
 logger = logging.getLogger(__name__)
 
 
-class HeartbeatManager(RequiredConfigMixin):
+class HeartbeatManager:
     """Heartbeat manager.
 
     This holds heartbeat state and the methods used to start, stop and run the
@@ -31,13 +30,10 @@ class HeartbeatManager(RequiredConfigMixin):
 
     """
 
-    required_config = ConfigOptions()
-
     # Interval between heartbeats
     heartbeat_interval = 10
 
-    def __init__(self, config):
-        self.config = config.with_options(self)
+    def __init__(self):
         self.hb_started = False
         self.is_alive = None
         self.hb_greenlet = None

@@ -7,7 +7,7 @@ import random
 
 import boto3
 from botocore.client import ClientError
-from everett.component import ConfigOptions
+from everett.manager import Option
 import gevent
 
 from antenna.ext.crashpublish_base import CrashPublishBase
@@ -71,41 +71,37 @@ class SQSCrashPublish(CrashPublishBase):
 
     """
 
-    required_config = ConfigOptions()
-    required_config.add_option(
-        "access_key",
-        default="",
-        alternate_keys=["root:aws_access_key_id"],
-        doc=(
-            "AWS SQS access key. You can also specify AWS_ACCESS_KEY_ID which is "
-            "the env var used by boto3."
-        ),
-    )
-    required_config.add_option(
-        "secret_access_key",
-        default="",
-        alternate_keys=["root:aws_secret_access_key"],
-        doc=(
-            "AWS SQS secret access key. You can also specify AWS_SECRET_ACCESS_KEY "
-            "which is the env var used by boto3."
-        ),
-    )
-    required_config.add_option(
-        "region",
-        default="us-west-2",
-        alternate_keys=["root:s3_region"],
-        doc="AWS region to connect to. For example, ``us-west-2``",
-    )
-    required_config.add_option(
-        "endpoint_url",
-        default="",
-        alternate_keys=["root:s3_endpoint_url"],
-        doc=(
-            "endpoint_url to connect to; None if you are connecting to AWS. For "
-            "example, ``http://localhost:4569/``."
-        ),
-    )
-    required_config.add_option("queue_name", doc="The AWS SQS queue name.")
+    class Config:
+        access_key = Option(
+            default="",
+            alternate_keys=["root:aws_access_key_id"],
+            doc=(
+                "AWS SQS access key. You can also specify AWS_ACCESS_KEY_ID which is "
+                "the env var used by boto3."
+            ),
+        )
+        secret_access_key = Option(
+            default="",
+            alternate_keys=["root:aws_secret_access_key"],
+            doc=(
+                "AWS SQS secret access key. You can also specify AWS_SECRET_ACCESS_KEY "
+                "which is the env var used by boto3."
+            ),
+        )
+        region = Option(
+            default="us-west-2",
+            alternate_keys=["root:s3_region"],
+            doc="AWS region to connect to. For example, ``us-west-2``",
+        )
+        endpoint_url = Option(
+            default="",
+            alternate_keys=["root:s3_endpoint_url"],
+            doc=(
+                "endpoint_url to connect to; None if you are connecting to AWS. For "
+                "example, ``http://localhost:4569/``."
+            ),
+        )
+        queue_name = Option(doc="The AWS SQS queue name.")
 
     def __init__(self, config):
         super().__init__(config)

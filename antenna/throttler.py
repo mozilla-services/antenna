@@ -15,7 +15,7 @@ import logging
 import random
 import re
 
-from everett.component import ConfigOptions, RequiredConfigMixin
+from everett.manager import Option
 
 
 logger = logging.getLogger(__name__)
@@ -54,7 +54,7 @@ def parse_attribute(val):
         raise ValueError("%s is not a valid attribute of %s" % (attribute_name, module))
 
 
-class Throttler(RequiredConfigMixin):
+class Throttler:
     """Accept or reject incoming crashes based on specified rule set.
 
     The throttler can throttle incoming crashes using the content of the crash.
@@ -63,11 +63,11 @@ class Throttler(RequiredConfigMixin):
 
     If you don't want to throttle anything, use this::
 
-        THROTTLE_RULES=antenna.throttler.ACCEPT_ALL
+        BREAKPAD_THROTTLER_RULES=antenna.throttler.ACCEPT_ALL
 
     If you want to support all products, use this::
 
-        PRODUCTS=antenna.throttler.ALL_PRODUCTS
+        BREAKPAD_THROTTLER_PRODUCTS=antenna.throttler.ALL_PRODUCTS
 
     To set up a rule set, put it in a Python file and define the rule set
     there. For example, you could have file ``myruleset.py`` with this in it::
@@ -79,33 +79,28 @@ class Throttler(RequiredConfigMixin):
             # ...
         ]
 
-    then set ``THROTTLE_RULES`` to the path for that. For example, depending
-    on the current working directory and ``PYTHONPATH``, the above could be::
+    then set ``BREAKPAD_THROTTLER_RULES`` to the path for that. For example,
+    depending on the current working directory and ``PYTHONPATH``, the above could be::
 
-        THROTTLE_RULES=myruleset.rules
-
-
-    FIXME(willkg): Flesh this out.
+        BREAKPAD_THROTTLER_RULES=myruleset.rules
 
     """
 
-    required_config = ConfigOptions()
-    required_config.add_option(
-        "throttle_rules",
-        default="antenna.throttler.MOZILLA_RULES",
-        doc="Python dotted path to ruleset",
-        parser=parse_attribute,
-    )
-    required_config.add_option(
-        "products",
-        default="antenna.throttler.MOZILLA_PRODUCTS",
-        doc="Python dotted path to list of supported products",
-        parser=parse_attribute,
-    )
+    class Config:
+        rules = Option(
+            default="antenna.throttler.MOZILLA_RULES",
+            doc="Python dotted path to ruleset",
+            parser=parse_attribute,
+        )
+        products = Option(
+            default="antenna.throttler.MOZILLA_PRODUCTS",
+            doc="Python dotted path to list of supported products",
+            parser=parse_attribute,
+        )
 
     def __init__(self, config):
         self.config = config.with_options(self)
-        self.rule_set = self.config("throttle_rules")
+        self.rule_set = self.config("rules")
 
     def throttle(self, raw_crash):
         """Throttle an incoming crash report.

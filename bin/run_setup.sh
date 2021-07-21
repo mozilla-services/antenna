@@ -13,16 +13,16 @@
 set -euo pipefail
 
 # Wait for services to be ready
-echo "Waiting for ${CRASHSTORAGE_ENDPOINT_URL} ..."
-urlwait "${CRASHSTORAGE_ENDPOINT_URL}" 10
-echo "Waiting for ${CRASHPUBLISH_ENDPOINT_URL} ..."
-urlwait "${CRASHPUBLISH_ENDPOINT_URL}" 10
+echo "Waiting for ${CRASHMOVER_CRASHSTORAGE_ENDPOINT_URL} ..."
+urlwait "${CRASHMOVER_CRASHSTORAGE_ENDPOINT_URL}" 10
+echo "Waiting for ${CRASHMOVER_CRASHPUBLISH_ENDPOINT_URL} ..."
+urlwait "${CRASHMOVER_CRASHPUBLISH_ENDPOINT_URL}" 10
 
 echo "Delete and create S3 bucket..."
-python ./bin/s3_cli.py delete "${CRASHSTORAGE_BUCKET_NAME}"
-python ./bin/s3_cli.py create "${CRASHSTORAGE_BUCKET_NAME}"
+python ./bin/s3_cli.py delete "${CRASHMOVER_CRASHSTORAGE_BUCKET_NAME}"
+python ./bin/s3_cli.py create "${CRASHMOVER_CRASHSTORAGE_BUCKET_NAME}"
 python ./bin/s3_cli.py list_buckets
 
 echo "Delete and create SQS queue..."
-python ./bin/sqs_cli.py delete "${CRASHPUBLISH_QUEUE_NAME}"
-python ./bin/sqs_cli.py create "${CRASHPUBLISH_QUEUE_NAME}"
+python ./bin/sqs_cli.py delete "${CRASHMOVER_CRASHPUBLISH_QUEUE_NAME}"
+python ./bin/sqs_cli.py create "${CRASHMOVER_CRASHPUBLISH_QUEUE_NAME}"

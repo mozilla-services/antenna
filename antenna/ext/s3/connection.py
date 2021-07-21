@@ -10,7 +10,7 @@ import uuid
 
 import boto3
 from botocore.client import ClientError, Config
-from everett.component import ConfigOptions, RequiredConfigMixin
+from everett.manager import Option
 import gevent
 
 from antenna.util import retry
@@ -49,7 +49,7 @@ def wait_times_save():
     yield from [2, 2, 2, 2, 2]
 
 
-class S3Connection(RequiredConfigMixin):
+class S3Connection:
     """Connection object for S3.
 
     **Credentials and permissions**
@@ -87,47 +87,42 @@ class S3Connection(RequiredConfigMixin):
 
     """
 
-    required_config = ConfigOptions()
-    required_config.add_option(
-        "access_key",
-        default="",
-        alternate_keys=["root:aws_access_key_id"],
-        doc=(
-            "AWS access key. You can also specify AWS_ACCESS_KEY_ID which is "
-            "the env var used by boto3."
-        ),
-    )
-    required_config.add_option(
-        "secret_access_key",
-        default="",
-        alternate_keys=["root:aws_secret_access_key"],
-        doc=(
-            "AWS secret access key. You can also specify AWS_SECRET_ACCESS_KEY "
-            "which is the env var used by boto3."
-        ),
-    )
-    required_config.add_option(
-        "region",
-        default="us-west-2",
-        alternate_keys=["root:s3_region"],
-        doc="AWS region to connect to. For example, ``us-west-2``",
-    )
-    required_config.add_option(
-        "endpoint_url",
-        default="",
-        alternate_keys=["root:s3_endpoint_url"],
-        doc=(
-            "endpoint_url to connect to; None if you are connecting to AWS. For "
-            "example, ``http://localhost:4569/``."
-        ),
-    )
-    required_config.add_option(
-        "bucket_name",
-        doc=(
-            "AWS S3 bucket to save to. Note that the bucket must already have been "
-            "created and must be in the region specified by ``region``."
-        ),
-    )
+    class Config:
+        access_key = Option(
+            default="",
+            alternate_keys=["root:aws_access_key_id"],
+            doc=(
+                "AWS access key. You can also specify AWS_ACCESS_KEY_ID which is "
+                "the env var used by boto3."
+            ),
+        )
+        secret_access_key = Option(
+            default="",
+            alternate_keys=["root:aws_secret_access_key"],
+            doc=(
+                "AWS secret access key. You can also specify AWS_SECRET_ACCESS_KEY "
+                "which is the env var used by boto3."
+            ),
+        )
+        region = Option(
+            default="us-west-2",
+            alternate_keys=["root:s3_region"],
+            doc="AWS region to connect to. For example, ``us-west-2``",
+        )
+        endpoint_url = Option(
+            default="",
+            alternate_keys=["root:s3_endpoint_url"],
+            doc=(
+                "endpoint_url to connect to; None if you are connecting to AWS. For "
+                "example, ``http://localhost:4569/``."
+            ),
+        )
+        bucket_name = Option(
+            doc=(
+                "AWS S3 bucket to save to. Note that the bucket must already have been "
+                "created and must be in the region specified by ``region``."
+            ),
+        )
 
     def __init__(self, config):
         self.config = config.with_options(self)
