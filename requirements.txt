@@ -114,9 +114,9 @@ datadog==0.42.0 \
     --hash=sha256:140b51f5db3f46d6f3ec022c05830c6b3e13e4f62c19c823e1227ac322b26667 \
     --hash=sha256:7a6fac17a7d09f1883ab9a45ce4ff7a16aa1a5eb3cc4c6cddac7f8c53e7d1e9b
     # via -r requirements.in
-dockerflow==2020.10.0 \
-    --hash=sha256:226086becc436b5a1995348e26c4fb2ad1d4e5dbc10dffec0c675c9a43306c8b \
-    --hash=sha256:36787fa016e5505d71d60c36cd4e0de7b2d1e50059160bd4e93ceb62bb40d3f8
+dockerflow==2021.7.0 \
+    --hash=sha256:9f309fdf72a897290878f97cc30fd4bb3609b13cf74bfce4268f5e368e466070 \
+    --hash=sha256:e47bbca06c261a5c3d97e5e0990aa71dafed41b723d0e0009c32e1d2f9b92db4
     # via -r requirements.in
 docutils==0.16 \
     --hash=sha256:0c5b78adfbf7762415433f5515cd5c9e762339e23369dbe8000d84a4bf4ab3af \
