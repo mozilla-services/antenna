@@ -36,7 +36,7 @@ class TestFSCrashStorage:
         client.rebuild_app(
             {
                 "BASEDIR": str(tmpdir),
-                "BREAKPAD_THROTTLER_THROTTLE_RULES": "antenna.throttler.ACCEPT_ALL",
+                "BREAKPAD_THROTTLER_RULES": "antenna.throttler.ACCEPT_ALL",
                 "BREAKPAD_THROTTLER_PRODUCTS": "antenna.throttler.ALL_PRODUCTS",
                 "CRASHMOVER_CRASHSTORAGE_CLASS": "antenna.ext.fs.crashstorage.FSCrashStorage",
                 "CRASHMOVER_CRASHSTORAGE_FS_ROOT": str(tmpdir.join("antenna_crashes")),

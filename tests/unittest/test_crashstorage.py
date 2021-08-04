@@ -15,7 +15,7 @@ class TestCrashStorage:
         """Verify posting a crash gets to crash storage in the right shape"""
         client.rebuild_app(
             {
-                "BREAKPAD_THROTTLER_THROTTLE_RULES": "antenna.throttler.ACCEPT_ALL",
+                "BREAKPAD_THROTTLER_RULES": "antenna.throttler.ACCEPT_ALL",
                 "BREAKPAD_THROTTLER_PRODUCTS": "antenna.throttler.ALL_PRODUCTS",
             }
         )
