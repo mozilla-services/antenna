@@ -181,7 +181,6 @@ class CrashMover:
         the relevant queue.
 
         """
-        print(f"queue: {self.crashmover_queue}")
         while self.crashmover_queue:
             crash_report = self.crashmover_queue.popleft()
             try:
