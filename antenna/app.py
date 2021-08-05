@@ -59,7 +59,7 @@ class AntennaAPI(falcon.API):
             doc="The root directory for this application to find and store things.",
         )
         logging_level = Option(
-            default="DEBUG",
+            default="INFO",
             doc="The logging level to use. DEBUG, INFO, WARNING, ERROR or CRITICAL",
         )
         local_dev_env = Option(
