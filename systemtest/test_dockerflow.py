@@ -14,7 +14,12 @@ class TestDockerflow:
     def test_version(self, baseurl):
         resp = requests.get(baseurl + "__version__")
         assert resp.status_code == 200
-        assert resp.json() == {}
+        data = resp.json()
+        assert isinstance(data, dict)
+        data_keys = list(sorted(data.keys()))
+        # It's empty in the local dev environment, but has 4 keys in the server
+        # environment
+        assert data_keys == [] or data_keys == ["build", "commit", "source", "version"]
 
     def test_heartbeat(self, baseurl):
         resp = requests.get(baseurl + "__heartbeat__")
