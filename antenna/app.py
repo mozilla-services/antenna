@@ -25,7 +25,7 @@ from antenna.health_resource import (
 from antenna.heartbeat import HeartbeatManager
 from antenna.liblogging import setup_logging, log_config
 from antenna.libmarkus import setup_metrics
-from antenna.sentry import (
+from antenna.libsentry import (
     set_sentry_client,
     setup_sentry_logging,
     wsgi_capture_exceptions,

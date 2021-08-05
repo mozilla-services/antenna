@@ -19,16 +19,18 @@ from raven.middleware import Sentry
 from antenna.util import get_version_info
 
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 # Global Sentry client singleton
-_sentry_client = None
+_SENTRY_CLIENT = None
 
 
 def setup_sentry_logging():
     """Set up sentry logging of exceptions."""
-    if _sentry_client:
-        setup_logging(SentryHandler(_sentry_client))
+    if _SENTRY_CLIENT:
+        handler = SentryHandler(_SENTRY_CLIENT)
+        handler.setLevel(logging.ERROR)
+        setup_logging(handler)
 
 
 def set_sentry_client(sentry_dsn, basedir):
@@ -37,18 +39,18 @@ def set_sentry_client(sentry_dsn, basedir):
     To clear the client, pass in something falsey like ``''`` or ``None``.
 
     """
-    global _sentry_client
+    global _SENTRY_CLIENT
     if sentry_dsn:
         version_info = get_version_info(basedir)
         commit = version_info.get("commit")[:8]
 
-        _sentry_client = Client(
+        _SENTRY_CLIENT = Client(
             dsn=sentry_dsn, include_paths=["antenna"], tags={"commit": commit}
         )
-        logger.info("Set up sentry client")
+        LOGGER.info("Set up sentry client")
     else:
-        _sentry_client = None
-        logger.info("Removed sentry client")
+        _SENTRY_CLIENT = None
+        LOGGER.info("Removed sentry client")
 
 
 class WSGILoggingMiddleware:
@@ -65,7 +67,7 @@ class WSGILoggingMiddleware:
             return self.application(environ, start_response)
 
         except Exception:
-            logger.exception("Unhandled exception")
+            LOGGER.exception("Unhandled exception")
             exc_info = sys.exc_info()
             start_response(
                 "500 Internal Server Error",
@@ -82,7 +84,7 @@ def wsgi_capture_exceptions(app):
     to Sentry. Otherwise, it will send them as part of the middleware.
 
     """
-    if _sentry_client is None:
+    if _SENTRY_CLIENT is None:
         return WSGILoggingMiddleware(app)
     else:
-        return Sentry(app, _sentry_client)
+        return Sentry(app, _SENTRY_CLIENT)
