@@ -212,10 +212,10 @@ def get_app(config_manager=None):
     app.setup()
     app.verify()
 
+    if app.config("local_dev_env"):
+        LOGGER.info("Antenna is running! http://localhost:8000")
+
     # Wrap the app in some kind of unhandled exception notification mechanism
     app = wsgi_capture_exceptions(app)
-
-    if config_manager("local_dev_env"):
-        LOGGER.info("Antenna is running! http://localhost:8000")
 
     return app

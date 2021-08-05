@@ -40,6 +40,12 @@ def postcheck(config):
 
 
 @pytest.fixture
+def baseurl(config):
+    """Generates base url based on os.environ"""
+    return config("host", default="http://web:8000/").rstrip("/") + "/"
+
+
+@pytest.fixture
 def posturl(config):
     """Generates configuration based on os.environ"""
     # Endpoint url to connect to
