@@ -3,7 +3,7 @@ boto3==1.15.10
 botocore==1.18.18
 datadog==0.42.0
 dockerflow==2021.7.0
-everett==2.0.0
+everett==2.0.1
 falcon==2.0.0
 gevent==21.1.2
 gunicorn==20.1.0
