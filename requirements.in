@@ -1,6 +1,6 @@
 # Production requirements
-boto3==1.15.10
-botocore==1.18.18
+boto3==1.18.53
+botocore==1.21.53
 datadog==0.42.0
 dockerflow==2021.7.0
 everett==2.0.1
@@ -12,17 +12,17 @@ markus==3.0.0
 raven==6.10.0
 
 # Development requirements
-Sphinx==4.1.2
+Sphinx==4.2.0
 bandit==1.7.0
 black==21.9b0
 click==8.0.1
-coverage==5.5
+coverage==6.0
 flake8==3.9.2
 freezegun==1.1.0
-more-itertools==8.8.0
-pip-tools==6.2.0
-pytest-cov==2.12.1
+more-itertools==8.10.0
+pip-tools==6.3.0
+pytest-cov==3.0.0
 pytest==6.2.5
 requests==2.26.0
-sphinx-rtd-theme==0.5.2
+sphinx-rtd-theme==1.0.0
 urlwait==1.0

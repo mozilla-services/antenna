@@ -121,3 +121,8 @@ test-coverage: my.env .docker-build  ## | Run test coverage report.
 .PHONY: docs
 docs: my.env .docker-build  ## | Generate Sphinx HTML documentation.
 	${DC} run -u ${ANTENNA_UID} base shell ./bin/build_docs.sh
+
+.PHONY: rebuildreqs
+rebuildreqs: my.env .docker-build  ## | Rebuild requirements.txt file.
+	-rm requirements.txt
+	${DC} run --rm base shell pip-compile --generate-hashes
