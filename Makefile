@@ -124,5 +124,5 @@ docs: my.env .docker-build  ## | Generate Sphinx HTML documentation.
 
 .PHONY: rebuildreqs
 rebuildreqs: my.env .docker-build  ## | Rebuild requirements.txt file.
-	-rm requirements.txt
-	${DC} run --rm base shell pip-compile --generate-hashes
+	# -rm requirements.txt
+	${DC} run --rm base shell pip-compile --generate-hashes -U
