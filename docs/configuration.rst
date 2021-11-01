@@ -3,6 +3,7 @@ Antenna configuration
 =====================
 
 .. contents::
+   :local:
 
 
 Introduction
@@ -32,44 +33,143 @@ credentials for crashstorage.
     CRASHMOVER_CRASHSTORAGE_BUCKET_NAME=org-myorg-mybucket
 
 
+Gunicorn configuration
+======================
+
+For Gunicorn configuration, see ``Dockerfile``. You'll want to set the
+following:
+
+.. everett:option:: GUNICORN_WORKERS
+   :parser: str
+   :default: "1"
+
+   The number of Antenna processes to spin off. We use 2x+1 where x is the
+   number of processors on the machine we're using.
+
+   This is the ``workers`` Gunicorn configuration setting.
+
+   https://docs.gunicorn.org/en/stable/settings.html#workers
+
+   This is used in
+   `bin/run_web.sh <https://github.com/mozilla-services/antenna/blob/main/bin/run_web.sh>`_.
+
+
+.. everett:option:: GUNICORN_WORKER_CONNECTIONS
+   :parser: str
+   :default: "4"
+
+   This is the number of coroutines to spin off to handle incoming HTTP
+   connections (crash reports). Gunicorn's default is 1000. That's what we use
+   in production.
+
+   Note that the Antenna heartbeat insinuates itself into this coroutine pool,
+   so you need 2 at a bare minimum.
+
+   This is the ``worker-connections`` Gunicorn configuration setting.
+
+   https://docs.gunicorn.org/en/stable/settings.html#worker-connections
+
+   This is used in
+   `bin/run_web.sh <https://github.com/mozilla-services/antenna/blob/main/bin/run_web.sh>`_.
+
+
+.. everett:option:: GUNICORN_WORKER_CLASS
+   :parser: str
+   :default: "gevent"
+
+   This has to be set to ``gevent``. Antenna does some ``GeventWorker``
+   specific things and won't work with anything else.
+
+   This is the ``worker-class`` Gunicorn configuration setting.
+
+   https://docs.gunicorn.org/en/stable/settings.html#worker-class
+
+   This is used in
+   `bin/run_web.sh <https://github.com/mozilla-services/antenna/blob/main/bin/run_web.sh>`_.
+
+
+.. everett:option:: GUNICORN_MAX_REQUESTS
+   :parser: str
+   :default: "0"
+
+   If set to 0, this does nothing.
+
+   For a value greater than 0, the maximum number of requests for the worker to
+   serve before Gunicorn restarts the worker.
+
+   This is the ``ma-requests`` Gunicorn configuration setting.
+
+   https://docs.gunicorn.org/en/stable/settings.html#max-requests
+
+   This is used in
+   `bin/run_web.sh <https://github.com/mozilla-services/antenna/blob/main/bin/run_web.sh>`_.
+
+
+.. everett:option:: GUNICORN_MAX_REQUESTS_JITTER
+   :parser: str
+   :default: "0"
+
+   Maximum jitter to add to ``GUNICORN_MAX_REQUESTS`` setting.
+
+   This is the ``ma-requests-jitter`` Gunicorn configuration setting.
+
+   https://docs.gunicorn.org/en/stable/settings.html#max-requests-jitter
+
+   This is used in
+   `bin/run_web.sh <https://github.com/mozilla-services/antenna/blob/main/bin/run_web.sh>`_.
+
+
+.. everett:option:: CMD_PREFIX
+   :default: ""
+
+   Specifies a command prefix to run the Gunicorn process in.
+
+   This is used in
+   `bin/run_web.sh <https://github.com/mozilla-services/antenna/blob/main/bin/run_web.sh>`_.
+
 
 Application
 ===========
 
 First, you need to configure the application-scoped variables.
 
-.. autocomponent:: antenna.app.AntennaAPI
-   :hide-classname:
+.. autocomponentconfig:: antenna.app.AntennaAPI
+   :hide-name:
    :case: upper
+   :show-table:
 
-   These all have sane defaults, so you don't have to configure any of this.
+   These are defaults appropriate for a server environment, so you may not have
+   to configure any of this.
 
 
 Breakpad crash resource
 =======================
 
-.. autocomponent:: antenna.breakpad_resource.BreakpadSubmitterResource
+.. autocomponentconfig:: antenna.breakpad_resource.BreakpadSubmitterResource
    :show-docstring:
    :case: upper
    :namespace: breakpad
+   :show-table:
 
 
 Throttler
 =========
 
-.. autocomponent:: antenna.throttler.Throttler
+.. autocomponentconfig:: antenna.throttler.Throttler
    :show-docstring:
    :case: upper
    :namespace: breakpad_throttler
+   :show-table:
 
 
 Crash mover
 ===========
 
-.. autocomponent:: antenna.crashmover.CrashMover
+.. autocomponentconfig:: antenna.crashmover.CrashMover
    :show-docstring:
    :case: upper
    :namespace: crashmover
+   :show-table:
 
 
 Crash storage
@@ -84,9 +184,10 @@ NoOpCrashStorage
 The ``NoOpCrashStorage`` class is helpful for debugging, but otherwise shouldn't
 be used.
 
-.. autocomponent:: antenna.ext.crashstorage_base.NoOpCrashStorage
+.. autocomponentconfig:: antenna.ext.crashstorage_base.NoOpCrashStorage
    :show-docstring:
    :case: upper
+   :show-table:
 
 
 Filesystem
@@ -96,10 +197,11 @@ The ``FSCrashStorage`` class will save crash data to disk. If you choose this,
 you'll want to think about what happens to the crash after Antenna has saved it
 and implement that.
 
-.. autocomponent:: antenna.ext.fs.crashstorage.FSCrashStorage
+.. autocomponentconfig:: antenna.ext.fs.crashstorage.FSCrashStorage
    :show-docstring:
    :case: upper
    :namespace: crashmover_crashstorage
+   :show-table:
 
    When set as the CrashMover crashstorage class, configuration
    for this class is in the ``CRASHMOVER_CRASHSTORAGE`` namespace.
@@ -116,10 +218,11 @@ The ``S3CrashStorage`` class will save crash data to AWS S3. You might be able
 to use this to save to other S3-like systems, but that's not tested or
 supported.
 
-.. autocomponent:: antenna.ext.s3.connection.S3Connection
+.. autocomponentconfig:: antenna.ext.s3.connection.S3Connection
    :show-docstring:
    :case: upper
    :namespace: crashmover_crashstorage
+   :show-table:
 
    When set as the CrashMover crashstorage class, configuration
    for this class is in the ``CRASHMOVER_CRASHSTORAGE`` namespace.
@@ -132,7 +235,7 @@ supported.
        CRASHMOVER_CRASHSTORAGE_SECRET_ACCESS_KEY=somethingsomething
 
 
-.. autocomponent:: antenna.ext.s3.crashstorage.S3CrashStorage
+.. autocomponentconfig:: antenna.ext.s3.crashstorage.S3CrashStorage
    :show-docstring:
    :case: upper
    :namespace: crashmover_crashstorage
@@ -155,7 +258,7 @@ NoOpCrashPublish
 The ``NoOpCrashPublish`` class is helpful for debugging and also if you don't
 want Antenna to be publishing crash ids somewhere.
 
-.. autocomponent:: antenna.ext.crashpublish_base.NoOpCrashPublish
+.. autocomponentconfig:: antenna.ext.crashpublish_base.NoOpCrashPublish
    :show-docstring:
    :case: upper
 
@@ -165,10 +268,11 @@ AWS SQS
 
 The ``SQSCrashPublish`` class will publish crash ids to an AWS SQS queue.
 
-.. autocomponent:: antenna.ext.sqs.crashpublish.SQSCrashPublish
+.. autocomponentconfig:: antenna.ext.sqs.crashpublish.SQSCrashPublish
    :show-docstring:
    :case: upper
    :namespace: crashmover_crashpublish
+   :show-table:
 
    When set as the CrashMover crashpublish class, configuration
    for this class is in the ``CRASHMOVER_CRASHPUBLISH`` namespace.

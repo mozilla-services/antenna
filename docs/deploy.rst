@@ -19,38 +19,6 @@ use other web servers.
    Make sure to use HTTPS--don't send your users' crash reports over HTTP.
 
 
-Gunicorn configuration
-======================
-
-For Gunicorn configuration, see ``Dockerfile``. You'll want to set the
-following:
-
-``GUNICORN_WORKERS``
-
-    The number of Antenna processes to spin off. We use 2x+1 where x is the
-    number of processors on the machine we're using.
-
-    This is the ``workers`` Gunicorn configuration setting.
-
-``GUNICORN_WORKER_CONNECTIONS``
-
-    This is the number of coroutines to spin off to handle incoming HTTP
-    connections (crash reports). Gunicorn's default is 1000. That's what
-    we use in production.
-
-    Note that the Antenna heartbeat insinuates itself into this coroutine pool,
-    so you need 2 at a bare minimum.
-
-    This is the ``worker-connections`` Gunicorn configuration setting.
-
-``GUNICORN_WORKER_CLASS``
-
-    This has to be set to ``gevent``. Antenna does some ``GeventWorker``
-    specific things and won't work with anything else.
-
-    This is the ``worker-class`` Gunicorn configuration setting.
-
-
 Health endpoints
 ================
 
