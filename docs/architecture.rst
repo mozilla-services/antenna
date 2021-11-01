@@ -118,8 +118,7 @@ This is the rough data flow:
 
 6. A crashmover coroutine frees up, pulls the crash out of the
    ``crashmover_queue``, and then tries to save it to whatever crashstorage
-   class is set up. If it's :everett:comp:`S3CrashStorage`, then it saves it to
-   AWS S3.
+   class is set up. If it's ``S3CrashStorage``, then it saves it to AWS S3.
 
    If the save is successful, then the coroutine publishes the crash report
    id to the AWS SQS standard queue for processing.
