@@ -281,7 +281,6 @@ MOZILLA_PRODUCTS = [
     "Focus",
     "ReferenceBrowser",
     "Thunderbird",
-    "SeaMonkey",
 ]
 
 
