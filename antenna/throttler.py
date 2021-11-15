@@ -280,7 +280,6 @@ MOZILLA_PRODUCTS = [
     "FirefoxReality",
     "Focus",
     "ReferenceBrowser",
-    "Thunderbird",
 ]
 
 
