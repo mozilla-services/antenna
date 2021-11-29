@@ -280,6 +280,7 @@ MOZILLA_PRODUCTS = [
     "FirefoxReality",
     "Focus",
     "ReferenceBrowser",
+    "MozillaVPN",
 ]
 
 
