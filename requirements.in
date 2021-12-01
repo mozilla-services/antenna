@@ -12,7 +12,7 @@ markus==4.0.0
 raven==6.10.0
 
 # Development requirements
-Sphinx==4.2.0
+Sphinx==4.3.1
 bandit==1.7.0
 black==21.10b0
 click==8.0.3
