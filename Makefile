@@ -123,6 +123,9 @@ docs: my.env .docker-build  ## | Generate Sphinx HTML documentation.
 	${DC} run -u ${ANTENNA_UID} base shell ./bin/build_docs.sh
 
 .PHONY: rebuildreqs
-rebuildreqs: my.env .docker-build  ## | Rebuild requirements.txt file.
-	# -rm requirements.txt
+rebuildreqs: my.env .docker-build  ## | Rebuild requirements.txt file after requirements.in changes.
+	${DC} run --rm base shell pip-compile --generate-hashes
+
+.PHONY: updatereqs
+updatereqs: my.env .docker-build  ## | Update deps in requirements.txt file.
 	${DC} run --rm base shell pip-compile --generate-hashes -U
