@@ -7,7 +7,7 @@ everett==2.0.1
 falcon==2.0.0
 gevent==21.8.0
 gunicorn==20.1.0
-isodate==0.6.0
+isodate==0.6.1
 markus==4.0.0
 raven==6.10.0
 
