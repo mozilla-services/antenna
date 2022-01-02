@@ -1,11 +1,11 @@
 # Production requirements
-boto3==1.19.7
-botocore==1.22.7
+boto3==1.20.26
+botocore==1.23.26
 datadog==0.43.0
 dockerflow==2021.7.0
 everett==2.0.1
 falcon==3.0.1
-gevent==21.8.0
+gevent==21.12.0
 gunicorn==20.1.0
 isodate==0.6.1
 markus==4.0.0
@@ -16,7 +16,7 @@ Sphinx==4.3.2
 bandit==1.7.1
 black==21.12b0
 click==8.0.3
-coverage==6.1.1
+coverage==6.2
 flake8==4.0.1
 freezegun==1.1.0
 more-itertools==8.12.0
