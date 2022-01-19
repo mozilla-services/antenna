@@ -23,7 +23,7 @@ ${CMD_PREFIX} gunicorn \
     --max-requests="${GUNICORN_MAX_REQUESTS}" \
     --max-requests-jitter="${GUNICORN_MAX_REQUESTS_JITTER}" \
     --config=antenna/gunicornhooks.py \
-    --log-file - \
+    --log-file=- \
     --error-logfile=- \
     --access-logfile=- \
     --bind 0.0.0.0:"${PORT}" \

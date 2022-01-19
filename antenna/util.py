@@ -73,8 +73,8 @@ def get_version_info(basedir):
         path = Path(basedir) / "version.json"
         with open(str(path)) as fp:
             commit_info = json.loads(fp.read().strip())
-    except OSError:
-        logger.error("Exception thrown when retrieving version.json", exc_info=True)
+    except OSError as exc:
+        logger.info(f"Exception thrown when retrieving version.json: {exc}")
         commit_info = {}
     return commit_info
 
