@@ -49,6 +49,7 @@ my.env:
 .PHONY: build
 build: my.env  ## | Build docker images.
 	${DC} build ${DOCKER_BUILD_OPTS} --build-arg userid=${ANTENNA_UID} --build-arg groupid=${ANTENNA_GID} deploy-base
+	${DC} build fakesentry
 	touch .docker-build
 
 .PHONY: setup
@@ -57,7 +58,7 @@ setup: my.env .docker-build  ## | Set up services.
 
 .PHONY: run
 run: my.env .docker-build  ## | Run the webapp and services.
-	${DC} up web
+	${DC} up web fakesentry
 
 .PHONY: shell
 shell: my.env .docker-build  ## | Open a shell in the web image.
@@ -98,6 +99,7 @@ test: my.env .docker-build  ## | Run unit tests.
 	${DC} up -d localstack-s3
 	${DC} up -d localstack-sqs
 	${DC} up -d statsd
+	${DC} up -d fakesentry
 	# Run tests
 	${DC} run --rm test shell ./bin/run_tests.sh
 
@@ -107,6 +109,7 @@ test-ci: my.env .docker-build  ## | Run unit tests in CI.
 	${DC} up -d localstack-s3
 	${DC} up -d localstack-sqs
 	${DC} up -d statsd
+	${DC} up -d fakesentry
 	# Run tests in test-ci container
 	${DC} run --rm test-ci shell ./bin/run_tests.sh
 

@@ -25,11 +25,7 @@ from antenna.health_resource import (
 from antenna.heartbeat import HeartbeatManager
 from antenna.liblogging import setup_logging, log_config
 from antenna.libmarkus import setup_metrics
-from antenna.libsentry import (
-    set_sentry_client,
-    setup_sentry_logging,
-    wsgi_capture_exceptions,
-)
+from antenna.libsentry import setup_sentry
 
 
 LOGGER = logging.getLogger(__name__)
@@ -129,12 +125,6 @@ class AntennaAPI(falcon.API):
             processname="antenna",
         )
 
-        # Set a Sentry client if we're so configured
-        set_sentry_client(self.config("secret_sentry_dsn"), self.config("basedir"))
-
-        # Set up Sentry exception logger if we're so configured
-        setup_sentry_logging()
-
         # Set up metrics
         setup_metrics(
             statsd_host=self.config("statsd_host"),
@@ -207,15 +197,20 @@ def get_app(config_manager=None):
     if config_manager is None:
         config_manager = build_config_manager()
 
+    # Set up Sentry
+    app_config = config_manager.with_options(AntennaAPI)
+    setup_sentry(
+        basedir=app_config("basedir"),
+        host_id=app_config("host_id"),
+        sentry_dsn=app_config("secret_sentry_dsn"),
+    )
+
     # Build the app and heartbeat manager
     app = AntennaAPI(config_manager)
     app.setup()
     app.verify()
 
-    if app.config("local_dev_env"):
-        LOGGER.info("Antenna is running! http://localhost:8000")
-
-    # Wrap the app in some kind of unhandled exception notification mechanism
-    app = wsgi_capture_exceptions(app)
+    if app_config("local_dev_env"):
+        LOGGER.info("Antenna is running! http://localhost:8000/")
 
     return app

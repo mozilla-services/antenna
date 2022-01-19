@@ -78,15 +78,11 @@ class AntennaTestClient(TestClient):
 
     def get_crashmover(self):
         """Retrieves the crashmover from the AntennaAPI."""
-        # NOTE(willkg): The "app" here is a middleware which should have an
-        # .application attribute which is the actual AntennaAPI that we want.
-        return self.app.application.crashmover
+        return self.app.crashmover
 
     def get_resource_by_name(self, name):
         """Retrieves the Falcon API resource by name"""
-        # NOTE(willkg): The "app" here is a middleware which should have an
-        # .application attribute which is the actual AntennaAPI that we want.
-        return self.app.application.get_resource_by_name(name)
+        return self.app.get_resource_by_name(name)
 
     def join_app(self):
         """This goes through and calls join on all gevent pools in the app

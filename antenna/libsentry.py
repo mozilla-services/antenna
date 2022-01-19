@@ -9,82 +9,43 @@ unhandled exceptions.
 """
 
 import logging
-import sys
 
-from raven import Client
-from raven.conf import setup_logging
-from raven.handlers.logging import SentryHandler
-from raven.middleware import Sentry
+import sentry_sdk
+from sentry_sdk.integrations.falcon import FalconIntegration
 
 from antenna.util import get_version_info
 
 
 LOGGER = logging.getLogger(__name__)
 
-# Global Sentry client singleton
-_SENTRY_CLIENT = None
+
+def get_release(basedir):
+    version_info = get_version_info(basedir)
+
+    tag = version_info.get("tag", "none")
+
+    commit = version_info.get("commit")
+    commit = commit[:8] if commit else "unknown"
+
+    return f"{tag}:{commit}"
 
 
-def setup_sentry_logging():
-    """Set up sentry logging of exceptions."""
-    if _SENTRY_CLIENT:
-        handler = SentryHandler(_SENTRY_CLIENT)
-        handler.setLevel(logging.ERROR)
-        setup_logging(handler)
+def setup_sentry(basedir, host_id, sentry_dsn):
+    """Setup Sentry with Falcon
 
-
-def set_sentry_client(sentry_dsn, basedir):
-    """Set a Sentry client using a given sentry_dsn.
-
-    To clear the client, pass in something falsey like ``''`` or ``None``.
-
-    """
-    global _SENTRY_CLIENT
-    if sentry_dsn:
-        version_info = get_version_info(basedir)
-        commit = version_info.get("commit")[:8]
-
-        _SENTRY_CLIENT = Client(
-            dsn=sentry_dsn, include_paths=["antenna"], tags={"commit": commit}
-        )
-        LOGGER.info("Set up sentry client")
-    else:
-        _SENTRY_CLIENT = None
-        LOGGER.info("Removed sentry client")
-
-
-class WSGILoggingMiddleware:
-    """WSGI middleware that logs unhandled exceptions."""
-
-    def __init__(self, application):
-        # NOTE(willkg): This has to match how the Sentry middleware works so
-        # that we can (ab)use that fact and access the underlying application.
-        self.application = application
-
-    def __call__(self, environ, start_response):
-        """Wrap application in exception capture code."""
-        try:
-            return self.application(environ, start_response)
-
-        except Exception:
-            LOGGER.exception("Unhandled exception")
-            exc_info = sys.exc_info()
-            start_response(
-                "500 Internal Server Error",
-                [("content-type", "application/json; charset=utf-8")],
-                exc_info,
-            )
-            return [b'{"msg": "COUGH! Internal Server Error"}']
-
-
-def wsgi_capture_exceptions(app):
-    """Wrap a WSGI app with some kind of unhandled exception capture.
-
-    If a Sentry client is configured, then this will send unhandled exceptions
-    to Sentry. Otherwise, it will send them as part of the middleware.
+    https://docs.sentry.io/platforms/python/guides/falcon/
 
     """
-    if _SENTRY_CLIENT is None:
-        return WSGILoggingMiddleware(app)
-    else:
-        return Sentry(app, _SENTRY_CLIENT)
+    if not sentry_dsn:
+        return
+
+    release = get_release(basedir)
+
+    sentry_sdk.init(
+        dsn=sentry_dsn,
+        integrations=[FalconIntegration()],
+        send_default_pii=False,
+        release=release,
+        server_name=host_id,
+    )
+    LOGGER.info("set up sentry")

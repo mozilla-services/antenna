@@ -19,6 +19,8 @@ from everett.manager import (
 
 _IS_LOGGING_SETUP = False
 
+LOGGER = logging.getLogger(__name__)
+
 
 def setup_logging(logging_level, debug=False, host_id=None, processname=None):
     """Initialize Python logging configuration.
@@ -79,9 +81,8 @@ def setup_logging(logging_level, debug=False, host_id=None, processname=None):
             },
         },
         "loggers": {
-            "antenna": {
-                "level": logging_level,
-            }
+            "falcon": {"level": logging_level},
+            "antenna": {"level": logging_level},
         },
         "root": {"handlers": ["mozlog"], "level": "WARNING"},
     }
@@ -93,6 +94,10 @@ def setup_logging(logging_level, debug=False, host_id=None, processname=None):
         dc["root"]["handlers"] = ["console"]
 
     logging.config.dictConfig(dc)
+    LOGGER.info(
+        f"set up logging logging_level={logging_level} debug={debug} "
+        + f"host_id={host_id} processname={processname}"
+    )
     _IS_LOGGING_SETUP = True
 
 

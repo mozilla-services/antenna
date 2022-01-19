@@ -38,3 +38,9 @@ class TestHealthChecks:
     def test_broken(self, client):
         resp = client.simulate_get("/__broken__")
         assert resp.status_code == 500
+
+        # FIXME(willkg): It would be great to verify that an error got to fakesentry,
+        # but simulate_get() is faking the middleware so sentry-sdk never sends an
+        # error. Falcon doesn't have a LiveServerTestCase (Django) equivalent. I'm not
+        # sure how else we can effectively test integration with sentry-sdk without
+        # mocking a bunch of stuff.
