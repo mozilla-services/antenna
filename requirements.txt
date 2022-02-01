@@ -16,9 +16,9 @@ babel==2.9.1 \
     --hash=sha256:ab49e12b91d937cd11f0b67cb259a57ab4ad2b59ac7a3b41d6c06c0ac5b0def9 \
     --hash=sha256:bc0c176f9f6a994582230df350aa6e05ba2ebe4b3ac317eab29d9be5d2768da0
     # via sphinx
-bandit==1.7.1 \
-    --hash=sha256:a81b00b5436e6880fa8ad6799bc830e02032047713cbb143a12939ac67eb756c \
-    --hash=sha256:f5acd838e59c038a159b5c621cf0f8270b279e884eadd7b782d7491c02add0d4
+bandit==1.7.2 \
+    --hash=sha256:6d11adea0214a43813887bfe71a377b5a9955e4c826c8ffd341b494e3ab25260 \
+    --hash=sha256:e20402cadfd126d85b68ed4c8862959663c8c372dbbb1fca8f8e2c9f55a067ec
     # via -r requirements.in
 black==21.12b0 \
     --hash=sha256:77b80f693a569e2e527958459634f18df9b0ba2625ba4e0c2d5da5be42e6f2b3 \
