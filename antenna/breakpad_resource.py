@@ -294,7 +294,7 @@ class BreakpadSubmitterResource:
             msg = str(exc)
             mymetrics.incr("malformed", tags=["reason:%s" % msg])
             resp.status = falcon.HTTP_400
-            resp.body = "Discarded=malformed_%s" % msg
+            resp.text = "Discarded=malformed_%s" % msg
             return
 
         mymetrics.incr("incoming_crash")
@@ -341,13 +341,13 @@ class BreakpadSubmitterResource:
 
         # If the result is REJECT, then discard it
         if throttle_result is REJECT:
-            resp.body = "Discarded=rule_%s" % rule_name
+            resp.text = "Discarded=rule_%s" % rule_name
             return
 
         # If the result is a FAKEACCEPT, then we return a crash id, but throw the crash
         # away
         if throttle_result is FAKEACCEPT:
-            resp.body = "CrashID=bp-%s\n" % crash_id
+            resp.text = "CrashID=bp-%s\n" % crash_id
             return
 
         # If we're accepting the cash report, then clean it up, save it and return the
@@ -359,4 +359,4 @@ class BreakpadSubmitterResource:
             raw_crash=raw_crash, dumps=dumps, crash_id=crash_id
         )
 
-        resp.body = "CrashID=bp-%s\n" % crash_id
+        resp.text = "CrashID=bp-%s\n" % crash_id

@@ -13,6 +13,7 @@ from everett.manager import (
     Option,
 )
 import falcon
+from falcon.errors import HTTPInternalServerError
 
 from antenna.breakpad_resource import BreakpadSubmitterResource
 from antenna.crashmover import CrashMover
@@ -46,7 +47,7 @@ def build_config_manager():
     return config
 
 
-class AntennaAPI(falcon.API):
+class AntennaAPI(falcon.App):
     """Falcon API for Antenna."""
 
     class Config:
@@ -85,23 +86,35 @@ class AntennaAPI(falcon.API):
             ),
         )
 
-    def __init__(self, config):
+    def __init__(self, config_manager):
         super().__init__()
-        self.config_manager = config
-        self.config = config.with_options(self)
+        self.config_manager = config_manager
+        self.config = config_manager.with_options(self)
         self._all_resources = {}
 
         # This is the crashmover which takes a crash report, saves it, and publishes
         # it
-        self.crashmover = CrashMover(config.with_namespace("crashmover"))
+        self.crashmover = CrashMover(config_manager.with_namespace("crashmover"))
 
         # This is the breakpad resource that handles incoming crash reports POSTed to
         # /submit
         self.breakpad = BreakpadSubmitterResource(
-            config=config.with_namespace("breakpad"), crashmover=self.crashmover
+            config=config_manager.with_namespace("breakpad"), crashmover=self.crashmover
         )
 
         self.hb = HeartbeatManager()
+
+    def uncaught_error_handler(self, req, resp, ex, params):
+        """Handle uncaught exceptions
+
+        Falcon calls this for exceptions that don't subclass HTTPError. We want
+        to log an exception, then kick off Falcon's internal error handling
+        code for the HTTP response.
+
+        """
+        # We're still in an exception context, so sys.exc_info() still has the details.
+        LOGGER.exception("Unhandled exception")
+        self._compose_error_response(req, resp, HTTPInternalServerError())
 
     def get_components(self):
         """Return map of namespace -> component for traversing component tree
@@ -116,14 +129,11 @@ class AntennaAPI(falcon.API):
         }
 
     def setup(self):
-        # Set up logging and sentry first, so we have something to log to. Then
-        # build and log everything else.
-        setup_logging(
-            logging_level=self.config("logging_level"),
-            debug=self.config("local_dev_env"),
-            host_id=self.config("host_id"),
-            processname="antenna",
-        )
+        # Set up uncaught error handler
+        self.add_error_handler(Exception, self.uncaught_error_handler)
+
+        # Log runtime configuration
+        log_config(LOGGER, self.config_manager, self)
 
         # Set up metrics
         setup_metrics(
@@ -145,9 +155,6 @@ class AntennaAPI(falcon.API):
 
         # Set up breakpad submission route
         self.add_route("breakpad", "/submit", self.breakpad)
-
-        # Log runtime configuration
-        log_config(LOGGER, self.config_manager, self)
 
     def add_route(self, name, uri_template, resource, *args, **kwargs):
         """Add specified Falcon route.
@@ -199,6 +206,15 @@ def get_app(config_manager=None):
 
     # Set up Sentry
     app_config = config_manager.with_options(AntennaAPI)
+
+    # Set up logging and sentry first, so we have something to log to. Then
+    # build and log everything else.
+    setup_logging(
+        logging_level=app_config("logging_level"),
+        debug=app_config("local_dev_env"),
+        host_id=app_config("host_id"),
+        processname="antenna",
+    )
     setup_sentry(
         basedir=app_config("basedir"),
         host_id=app_config("host_id"),

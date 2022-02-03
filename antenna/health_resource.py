@@ -39,7 +39,7 @@ class VersionResource:
 
         resp.content_type = "application/json; charset=utf-8"
         resp.status = falcon.HTTP_200
-        resp.body = version_info
+        resp.text = version_info
 
 
 class LBHeartbeatResource:
@@ -108,4 +108,4 @@ class HeartbeatResource:
             resp.status = falcon.HTTP_200
         else:
             resp.status = falcon.HTTP_503
-        resp.body = json.dumps(state.to_dict())
+        resp.text = json.dumps(state.to_dict())
