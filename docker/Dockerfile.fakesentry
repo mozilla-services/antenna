@@ -5,15 +5,15 @@ ARG userid=5000
 
 WORKDIR /app/
 
-RUN addgroup -g $groupid app && \
+RUN addgroup --gid $groupid app && \
     adduser --disabled-password --gecos "" --home /home/app --ingroup app --uid $userid app && \
     chown app:app /app/
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
-RUN pip install -U 'pip>=8' && \
-    pip install --no-cache-dir 'kent==0.3.0'
+RUN pip install -U 'pip>=20' && \
+    pip install --no-cache-dir 'kent==0.4.0'
 
 USER app
 
