@@ -76,7 +76,6 @@ class HeartbeatManager:
         """
         # Keep beating unless the WSGI worker is shutting down
         while self.is_alive():
-            logger.debug("thump")
             self._heartbeat_beat_once()
             gevent.sleep(self.heartbeat_interval)
 
