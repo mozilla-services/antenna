@@ -14,10 +14,7 @@ RUN apt-get update && \
 
 COPY --chown=app:app requirements.txt /app/
 
-# Install Socorro Python requirements using pip < 22 because pip 22
-# doesn't work with pip-tools. (2022-02-01)
-# https://github.com/jazzband/pip-tools/issues/1558
-RUN pip install -U 'pip<22' && \
+RUN pip install -U 'pip>=20' && \
     pip install --no-cache-dir -r requirements.txt && \
     pip check --disable-pip-version-check
 
