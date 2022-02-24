@@ -103,16 +103,6 @@ test: my.env .docker-build  ## | Run unit tests.
 	# Run tests
 	${DC} run --rm test shell ./bin/run_tests.sh
 
-.PHONY: test-ci
-test-ci: my.env .docker-build  ## | Run unit tests in CI environment.
-	# Make sure services are started up
-	${DC} up --detach --no-color localstack-s3
-	${DC} up --detach --no-color localstack-sqs
-	${DC} up --detach --no-color statsd
-	${DC} up --detach --no-color fakesentry
-	# Run tests in test-ci container
-	${DC} run --rm test-ci shell ./bin/run_tests.sh
-
 .PHONY: testshell
 testshell: my.env .docker-build  ## | Open a shell in the test container.
 	${DC} run --rm test shell

@@ -61,10 +61,8 @@ jobs:
 
       - run:
           name: Verify requirements.txt file
-          # yamllint disable rule:line-length
           command: |
-            docker-compose run --no-deps deploy-base shell ./bin/run_verify_reqs.sh
-          # yamllint enable rule:line-length
+            docker-compose run --rm --no-deps ci shell ./bin/run_verify_reqs.sh
 
       - run:
           name: Save image
@@ -79,7 +77,6 @@ jobs:
           root: workspace
           paths:
             - antenna-deploy-base.tar.gz
-
 
   lint:
     docker: *docker
@@ -102,7 +99,7 @@ jobs:
           name: Lint
           command: |
             make my.env
-            docker-compose run --no-deps deploy-base shell ./bin/run_lint.sh
+            docker-compose run --rm --no-deps ci shell ./bin/run_lint.sh
 
   test:
     docker: *docker
@@ -124,7 +121,13 @@ jobs:
       - run:
           name: Run tests
           command: |
-            make test-ci
+            make my.env
+            docker-compose up --detach --no-color \
+                localstack-s3 \
+                localstack-sqs \
+                statsd \
+                fakesentry
+            docker-compose run --rm ci shell ./bin/run_tests.sh
 
   push:
     docker: *docker
