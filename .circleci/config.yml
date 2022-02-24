@@ -6,7 +6,7 @@
 # DOCKER_PASS
 version: 2.1
 jobs:
-  build_test_push:
+  build:
     docker:
       - image: cimg/base:2022.02
         auth:
@@ -17,7 +17,8 @@ jobs:
     steps:
       - checkout
 
-      - setup_remote_docker:
+      - &setup_remote_docker
+        setup_remote_docker:
           version: 20.10.11
           docker_layer_caching: true
 
@@ -66,15 +67,54 @@ jobs:
           command: |
             docker run local/antenna_deploy_base shell ./bin/run_verify_reqs.sh
 
+  lint:
+    docker:
+      - image: cimg/base:2022.02
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
+    environment:
+      APP_NAME: "socorro_collector"
+    steps:
+      - checkout
+
+      - *setup_remote_docker
+
       - run:
           name: Lint
           command: |
             docker run local/antenna_deploy_base shell ./bin/run_lint.sh
 
+  test:
+    docker:
+      - image: cimg/base:2022.02
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
+    environment:
+      APP_NAME: "socorro_collector"
+    steps:
+      - checkout
+
+      - *setup_remote_docker
+
       - run:
           name: Run tests
           command: |
             make test-ci
+
+  push:
+    docker:
+      - image: cimg/base:2022.02
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
+    environment:
+      APP_NAME: "socorro_collector"
+    steps:
+      - checkout
+
+      - *setup_remote_docker
 
       - run:
           name: Push to Dockerhub
@@ -122,17 +162,20 @@ jobs:
 workflows:
   version: 2
 
-  # workflow jobs are _not_ run in tag builds by default
-  # we use filters to whitelist jobs that should be run for tags
-
-  # workflow jobs are run in _all_ branch builds by default
-  # we use filters to blacklist jobs that shouldn't be run for a branch
-
-  # see: https://circleci.com/docs/2.0/workflows/#git-tag-job-execution
-
   build_test_push:
     jobs:
-      - build_test_push:
+      - build
+      - lint:
+          requires:
+            - build
+      - test:
+          requires:
+            - build
+      - push:
+          requires:
+            - build
+            - lint
+            - test
           filters:
             tags:
               only: /.*/
