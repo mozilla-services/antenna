@@ -95,20 +95,20 @@ lintfix: my.env .docker-build  ## | Reformat code.
 .PHONY: test
 test: my.env .docker-build  ## | Run unit tests.
 	# Make sure services are started up
-	${DC} up -d localstack-s3
-	${DC} up -d localstack-sqs
-	${DC} up -d statsd
-	${DC} up -d fakesentry
+	${DC} up --detach localstack-s3
+	${DC} up --detach localstack-sqs
+	${DC} up --detach statsd
+	${DC} up --detach fakesentry
 	# Run tests
 	${DC} run --rm test shell ./bin/run_tests.sh
 
 .PHONY: test-ci
-test-ci: my.env .docker-build  ## | Run unit tests in CI.
+test-ci: my.env .docker-build  ## | Run unit tests in CI environment.
 	# Make sure services are started up
-	${DC} up -d localstack-s3
-	${DC} up -d localstack-sqs
-	${DC} up -d statsd
-	${DC} up -d fakesentry
+	${DC} up --detach --no-color localstack-s3
+	${DC} up --detach --no-color localstack-sqs
+	${DC} up --detach --no-color statsd
+	${DC} up --detach --no-color fakesentry
 	# Run tests in test-ci container
 	${DC} run --rm test-ci shell ./bin/run_tests.sh
 
