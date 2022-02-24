@@ -43,9 +43,6 @@ jobs:
             "$CIRCLE_BUILD_URL" > version.json
           # yamllint enable rule:line-length
 
-      - store_artifacts:
-          path: version.json
-
       - run:
           name: Login to Dockerhub
           # yamllint disable rule:line-length
@@ -69,6 +66,21 @@ jobs:
             docker-compose run --no-deps deploy-base shell ./bin/run_verify_reqs.sh
           # yamllint enable rule:line-length
 
+      - run:
+          name: Save image
+          # yamllint disable rule:line-length
+          command: |
+            mkdir -p workspace
+            docker save -o workspace/antenna-deploy-base.tar local/antenna_deploy_base:latest
+            gzip workspace/antenna-deploy-base.tar
+          # yamllint enable rule:line-length
+
+      - persist_to_workspace:
+          root: workspace
+          paths:
+            - antenna-deploy-base.tar.gz
+
+
   lint:
     docker: *docker
     environment:
@@ -77,6 +89,14 @@ jobs:
       - checkout
 
       - *setup_remote_docker
+
+      - attach_workspace:
+          at: workspace
+
+      - run:
+          name: Load from workspace
+          command: |
+            docker load -i workspace/antenna-deploy-base.tar.gz
 
       - run:
           name: Lint
@@ -93,6 +113,14 @@ jobs:
 
       - *setup_remote_docker
 
+      - attach_workspace:
+          at: workspace
+
+      - run:
+          name: Load from workspace
+          command: |
+            docker load -i workspace/antenna-deploy-base.tar.gz
+
       - run:
           name: Run tests
           command: |
@@ -106,6 +134,14 @@ jobs:
       - checkout
 
       - *setup_remote_docker
+
+      - attach_workspace:
+          at: workspace
+
+      - run:
+          name: Load from workspace
+          command: |
+            docker load -i workspace/antenna-deploy-base.tar.gz
 
       - run:
           name: Push to Dockerhub

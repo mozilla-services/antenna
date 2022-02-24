@@ -48,7 +48,8 @@ my.env:
 
 .PHONY: build
 build: my.env  ## | Build docker images.
-	${DC} build ${DOCKER_BUILD_OPTS} --build-arg userid=${ANTENNA_UID} --build-arg groupid=${ANTENNA_GID}
+	${DC} build ${DOCKER_BUILD_OPTS} --build-arg userid=${ANTENNA_UID} --build-arg groupid=${ANTENNA_GID} deploy-base
+	${DC} build fakesentry
 	touch .docker-build
 
 .PHONY: setup
