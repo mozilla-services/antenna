@@ -21,6 +21,19 @@ jobs:
             sudo apt-get install make
 
       - checkout
+
+      - setup_remote_docker:
+          version: 20.10.11
+          docker_layer_caching: true
+
+      - run:
+          name: Get info
+          command: |
+            uname -v
+            docker info
+            which docker-compose
+            docker-compose --version
+
       - run:
           name: Create version.json
           # yamllint disable rule:line-length
@@ -37,10 +50,6 @@ jobs:
       - store_artifacts:
           path: version.json
 
-      - setup_remote_docker:
-          version: 19.03.13
-          docker_layer_caching: true
-
       - run:
           name: Login to Dockerhub
           # yamllint disable rule:line-length
@@ -51,14 +60,6 @@ jobs:
               echo "${DOCKER_PASS}" | docker login -u="${DOCKER_USER}" --password-stdin
             fi
           # yamllint enable rule:line-length
-
-      - run:
-          name: Get info
-          command: |
-            uname -v
-            docker info
-            which docker-compose
-            docker-compose --version
 
       - run:
           name: Build Docker image
