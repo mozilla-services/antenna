@@ -39,8 +39,8 @@ services:
     volumes:
       - .:/app
 
-  # Same as test container, but doesn't volume mount .
-  test-ci:
+  # Container that we use in CI--it can't volume mount things
+  ci:
     image: local/antenna_deploy_base
     env_file:
       - docker/config/local_dev.env
@@ -51,7 +51,7 @@ services:
       - localstack-s3
       - statsd
 
-  # Web container is a prod-like fully-functioning Antenna container.
+  # Web container is a prod-like fully-functioning Antenna container
   web:
     extends:
       service: base
