@@ -23,6 +23,7 @@ jobs:
       - checkout
       - run:
           name: Create version.json
+          # yamllint disable rule:line-length
           command: |
             # create a version.json per https://github.com/mozilla-services/Dockerflow/blob/master/docs/version_object.md
             printf '{"commit":"%s","version":"%s","source":"https://github.com/%s/%s","build":"%s"}\n' \
@@ -31,6 +32,7 @@ jobs:
             "$CIRCLE_PROJECT_USERNAME" \
             "$CIRCLE_PROJECT_REPONAME" \
             "$CIRCLE_BUILD_URL" > version.json
+          # yamllint enable rule:line-length
 
       - store_artifacts:
           path: version.json
@@ -41,12 +43,14 @@ jobs:
 
       - run:
           name: Login to Dockerhub
+          # yamllint disable rule:line-length
           command: |
             if [ "${DOCKER_USER}" == "" ] || [ "${DOCKER_PASS}" == "" ]; then
               echo "Skipping Login to Dockerhub, credentials not available."
             else
               echo "${DOCKER_PASS}" | docker login -u="${DOCKER_USER}" --password-stdin
             fi
+          # yamllint enable rule:line-length
 
       - run:
           name: Get info
@@ -78,6 +82,7 @@ jobs:
 
       - run:
           name: Push to Dockerhub
+          # yamllint disable rule:line-length
           command: |
             function retry {
                 set +e
@@ -116,6 +121,7 @@ jobs:
                 retry docker push "${DOCKERHUB_REPO}:${CIRCLE_TAG}"
               fi
             fi
+          # yamllint disable rule:line-length
 
 workflows:
   version: 2
