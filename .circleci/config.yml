@@ -12,7 +12,6 @@ jobs:
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
-    working_directory: /
     environment:
       APP_NAME: "socorro_collector"
     steps:
@@ -21,12 +20,9 @@ jobs:
           command: |
             sudo apt-get install make
 
-      - checkout:
-          path: /antenna
-
+      - checkout
       - run:
           name: Create version.json
-          working_directory: /antenna
           command: |
             # create a version.json per https://github.com/mozilla-services/Dockerflow/blob/master/docs/version_object.md
             printf '{"commit":"%s","version":"%s","source":"https://github.com/%s/%s","build":"%s"}\n' \
@@ -34,10 +30,10 @@ jobs:
             "$CIRCLE_TAG" \
             "$CIRCLE_PROJECT_USERNAME" \
             "$CIRCLE_PROJECT_REPONAME" \
-            "$CIRCLE_BUILD_URL" > /antenna/version.json
+            "$CIRCLE_BUILD_URL" > version.json
 
       - store_artifacts:
-          path: /antenna/version.json
+          path: version.json
 
       - setup_remote_docker:
           version: 19.03.13
@@ -61,31 +57,26 @@ jobs:
 
       - run:
           name: Build Docker image
-          working_directory: /antenna
           command: |
             make build
 
       - run:
           name: Verify requirements.txt file
-          working_directory: /antenna
           command: |
             docker run local/antenna_deploy_base shell ./bin/run_verify_reqs.sh
 
       - run:
           name: Lint
-          working_directory: /antenna
           command: |
             docker run local/antenna_deploy_base shell ./bin/run_lint.sh
 
       - run:
           name: Run tests
-          working_directory: /antenna
           command: |
             make test-ci
 
       - run:
           name: Push to Dockerhub
-          working_directory: /antenna
           command: |
             function retry {
                 set +e
