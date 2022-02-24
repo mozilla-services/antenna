@@ -15,11 +15,6 @@ jobs:
     environment:
       APP_NAME: "socorro_collector"
     steps:
-      - run:
-          name: Install essential packages
-          command: |
-            sudo apt-get install make
-
       - checkout
 
       - setup_remote_docker:
