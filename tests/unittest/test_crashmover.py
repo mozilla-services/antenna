@@ -79,7 +79,7 @@ class TestCrashMover:
         # No more coroutines and no more queue
         check_health(crashmover_pool_size=0, crashmover_queue_size=0)
 
-    def test_retry_storage(self, client, caplogpp):
+    def test_retry_storage(self, client, caplog):
         crash_id = "de1bb258-cbbf-4589-a673-34f800160918"
         raw_crash = {
             "uuid": crash_id,
@@ -112,7 +112,7 @@ class TestCrashMover:
         # We're using BadCrashStorage so the crashmover should retry 20
         # times logging a message each time and then give up
         records = [
-            rec[2] for rec in caplogpp.record_tuples if rec[0] == "antenna.crashmover"
+            rec[2] for rec in caplog.record_tuples if rec[0] == "antenna.crashmover"
         ]
         assert records == [
             f"Exception when processing queue ({crash_id}), state: save; error 1/20",
@@ -138,7 +138,7 @@ class TestCrashMover:
             f"{crash_id}: too many errors trying to save; dropped",
         ]
 
-    def test_retry_publish(self, client, caplogpp):
+    def test_retry_publish(self, client, caplog):
         crash_id = "de1bb258-cbbf-4589-a673-34f800160918"
         raw_crash = {
             "uuid": crash_id,
@@ -171,7 +171,7 @@ class TestCrashMover:
         # We're using BadCrashStorage so the crashmover should retry 20
         # times logging a message each time and then give up
         records = [
-            rec[2] for rec in caplogpp.record_tuples if rec[0] == "antenna.crashmover"
+            rec[2] for rec in caplog.record_tuples if rec[0] == "antenna.crashmover"
         ]
 
         assert records == [

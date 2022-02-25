@@ -187,7 +187,7 @@ class TestS3CrashStorageIntegration:
         # Assert we did the entire s3 conversation
         assert s3mock.remaining_conversation() == []
 
-    def test_retrying(self, client, s3mock, caplogpp, mock_generate_test_filepath):
+    def test_retrying(self, client, s3mock, caplog, mock_generate_test_filepath):
         # .verify_write_to_bucket() writes to the bucket to verify Antenna can
         # write to it and the configuration is correct
         s3mock.add_step(
@@ -266,9 +266,7 @@ class TestS3CrashStorageIntegration:
 
         # Verify the retry decorator logged something
         records = [
-            rec
-            for rec in caplogpp.record_tuples
-            if rec[0] == "antenna.ext.s3.connection"
+            rec for rec in caplog.record_tuples if rec[0] == "antenna.ext.s3.connection"
         ]
         assert records == [
             (
