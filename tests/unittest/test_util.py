@@ -15,7 +15,7 @@ from antenna.util import (
     get_version_info,
     isoformat_to_time,
     retry,
-    sanitize_dump_name,
+    sanitize_key_name,
     utc_now,
     validate_crash_id,
 )
@@ -117,8 +117,8 @@ def test_validate_crash_id(data, strict, expected):
         ("upload_file_m\xef\xbf\xbdnidump", "upload_file_mnidump"),
     ],
 )
-def test_sanitize_dump_name(data, expected):
-    assert sanitize_dump_name(data) == expected
+def test_sanitize_key_name(data, expected):
+    assert sanitize_key_name(data) == expected
 
 
 def make_fake_sleep():

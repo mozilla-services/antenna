@@ -2,22 +2,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-import cgi
 import hashlib
 import io
-import logging
 import json
+import logging
 import time
 import zlib
 
 from everett.manager import Option
 import falcon
+from falcon.media.multipart import MultipartFormHandler, MultipartParseError
 import markus
 
 from antenna.throttler import REJECT, FAKEACCEPT, RESULT_TO_TEXT, Throttler
 from antenna.util import (
     create_crash_id,
-    sanitize_dump_name,
+    sanitize_key_name,
     utc_now,
     validate_crash_id,
 )
@@ -79,15 +79,15 @@ class BreakpadSubmitterResource:
     def extract_payload(self, req):
         """Parse HTTP POST payload.
 
-        Decompresses the payload if necessary and then walks through the
-        FieldStorage converting from multipart/form-data to Python datatypes.
+        Decompresses the payload if necessary and then walks through the payload
+        converting from ``multipart`` to Python datatypes.
 
         NOTE(willkg): The FieldStorage is poorly documented (in my opinion). It
         has a list attribute that is a list of FieldStorage items--one for each
         key/val in the form. For attached files, the FieldStorage will have a
         name, value and filename and the type should be
         ``application/octet-stream``. Thus we parse it looking for things of type
-        ``text/plain``, ``application/json``, and application/octet-stream.
+        ``text/plain``, ``application/json``, and ``application/octet-stream``.
 
         :arg falcon.request.Request req: a Falcon Request instance
 
@@ -102,13 +102,13 @@ class BreakpadSubmitterResource:
 
         # If it's the wrong content type or there's no boundary section, raise
         # MalformedCrashReport
-        content_type = [part.strip() for part in req.content_type.split(";", 1)]
+        content_type_parts = [part.strip() for part in req.content_type.split(";", 1)]
         if (
-            len(content_type) != 2
-            or content_type[0] not in ("multipart/form-data", "multipart/mixed")
-            or not content_type[1].startswith("boundary=")
+            len(content_type_parts) != 2
+            or content_type_parts[0] not in ("multipart/form-data", "multipart/mixed")
+            or not content_type_parts[1].startswith("boundary=")
         ):
-            if content_type[0] not in ("multipart/form-data", "multipart/mixed"):
+            if content_type_parts[0] not in ("multipart/form-data", "multipart/mixed"):
                 raise MalformedCrashReport("wrong_content_type")
             else:
                 raise MalformedCrashReport("no_boundary")
@@ -120,7 +120,6 @@ class BreakpadSubmitterResource:
             raise MalformedCrashReport("no_content_length")
 
         is_compressed = False
-
         # Decompress payload if it's compressed
         if req.env.get("HTTP_CONTENT_ENCODING") == "gzip":
             mymetrics.incr("gzipped_crash")
@@ -160,23 +159,12 @@ class BreakpadSubmitterResource:
             mymetrics.histogram(
                 "crash_size", value=content_length, tags=["payload:compressed"]
             )
-        else:
-            data = req.stream
 
+        else:
+            data = req.bounded_stream
             mymetrics.histogram(
                 "crash_size", value=content_length, tags=["payload:uncompressed"]
             )
-
-        # Stomp on querystring so we don't pull it in
-        request_env = dict(req.env)
-        request_env["QUERY_STRING"] = ""
-
-        try:
-            fs = cgi.FieldStorage(fp=data, environ=request_env, keep_blank_values=1)
-        except ValueError:
-            # cgi.FieldStorage throws a ValueError if the boundary is not a str;
-            # treat this as an invalid payload
-            raise MalformedCrashReport("malformed_boundary")
 
         raw_crash = {}
         dumps = {}
@@ -184,55 +172,63 @@ class BreakpadSubmitterResource:
         has_json = False
         has_kvpairs = False
 
-        for fs_item in fs.list:
-            # If the field has no name, then it's probably junk, so let's drop it.
-            if not fs_item.name:
-                continue
+        handler = MultipartFormHandler()
+        try:
+            form = handler.deserialize(
+                stream=data,
+                content_type=req.content_type,
+                content_length=content_length,
+            )
 
-            if fs_item.name == "dump_checksums":
-                # We don't want to pick up the dump_checksums from a raw
-                # crash that was re-submitted.
-                continue
+            for part in form:
+                if not part.name:
+                    # If the field has no name, then it's probably junk, so let's drop it.
+                    continue
 
-            elif fs_item.type and fs_item.type.startswith("application/json"):
-                # This is a JSON blob, so load it and override raw_crash with
-                # it.
-                has_json = True
-                try:
-                    raw_crash = json.loads(fs_item.value)
-                except (json.decoder.JSONDecodeError, UnicodeDecodeError):
-                    # The UnicodeDecodeError can happen if the utf-8 codec can't decode
-                    # one of the characters. The JSONDecodeError can happen in a variety
-                    # of "malformed JSON" situations.
-                    raise MalformedCrashReport("bad_json")
+                if part.name == "dump_checksums":
+                    # Ignore dump_checksums from a raw crash that was re-submitted.
+                    continue
 
-                if not isinstance(raw_crash, dict):
-                    raise MalformedCrashReport("bad_json")
+                elif part.content_type.startswith("application/json"):
+                    # This is a JSON blob, so load it and override raw_crash with
+                    # it.
+                    has_json = True
+                    try:
+                        raw_crash = json.loads(part.stream.read())
+                    except (json.decoder.JSONDecodeError, UnicodeDecodeError):
+                        # The UnicodeDecodeError can happen if the utf-8 codec can't decode
+                        # one of the characters. The JSONDecodeError can happen in a variety
+                        # of "malformed JSON" situations.
+                        raise MalformedCrashReport("bad_json")
 
-            elif fs_item.type and (
-                fs_item.type.startswith("application/octet-stream")
-                or isinstance(fs_item.value, bytes)
-            ):
-                # This is a dump, so add it to dumps using a sanitized dump
-                # name.
-                dump_name = sanitize_dump_name(fs_item.name)
-                dumps[dump_name] = fs_item.value
+                    if not isinstance(raw_crash, dict):
+                        raise MalformedCrashReport("bad_json")
 
-            else:
-                # This isn't a dump, so it's a key/val pair, so we add that.
-                has_kvpairs = True
-                raw_crash[fs_item.name] = fs_item.value
+                elif part.content_type.startswith("application/octet-stream"):
+                    # This is a dump, so add it to dumps using a sanitized dump name.
+                    dump_name = sanitize_key_name(part.name)
+                    dumps[dump_name] = part.stream.read()
+
+                else:
+                    # This isn't a dump, so it's a key/val pair, so we add that as a string.
+                    has_kvpairs = True
+                    name = sanitize_key_name(part.name)
+                    raw_crash[name] = part.get_text()
+
+        except MultipartParseError as mpe:
+            logger.error(f"extract payload exception: {mpe.description}")
+            raise MalformedCrashReport("no_annotations")
 
         if not raw_crash:
             raise MalformedCrashReport("no_annotations")
 
         if has_json and has_kvpairs:
-            # If the crash payload has both kvpairs and a JSON blob, then it's
-            # malformed and we should dump it.
+            # If the crash payload has both kvpairs and a JSON blob, then it's malformed
+            # and we should dump it.
             raise MalformedCrashReport("has_json_and_kv")
 
-        # Add a note about how the annotations were encoded in the crash report.
-        # For now, there are two options: json and multipart.
+        # Add a note about how the annotations were encoded in the crash report. For
+        # now, there are two options: json and multipart.
         if has_json:
             raw_crash["payload"] = "json"
         else:
@@ -251,10 +247,9 @@ class BreakpadSubmitterResource:
         :returns tuple: ``(result, rule_name, percentage)``
 
         """
-        # At this stage, nothing has given us a throttle answer, so we
-        # throttle the crash.
+        # At this stage, nothing has given us a throttle answer, so we throttle the
+        # crash.
         result, rule_name, throttle_rate = self.throttler.throttle(raw_crash)
-
         return result, rule_name, throttle_rate
 
     def cleanup_crash_report(self, raw_crash):
@@ -263,7 +258,7 @@ class BreakpadSubmitterResource:
         This operates on the raw_crash in-place. This adds notes to ``collector_notes``.
 
         """
-        collector_notes = []
+        collector_notes = raw_crash.get("collector_notes", [])
 
         # Remove bad fields
         for bad_field in BAD_FIELDS:

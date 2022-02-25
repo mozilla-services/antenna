@@ -117,25 +117,6 @@ class TestBreakpadSubmitterResource:
         }
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
 
-    def test_extract_payload_bad_boundary(self, request_generator):
-        crashmover = FakeCrashMover()
-        data, headers = multipart_encode(
-            {
-                "ProductName": "Firefox",
-                "Version": "1.0",
-                "upload_file_minidump": ("fakecrash.dump", io.BytesIO(b"abcd1234")),
-            },
-            # This is a junk non-ascii boundary that causes FieldStorage to raise a
-            # ValueError
-            boundary="\xc3\xbf.",
-        )
-        req = request_generator(
-            method="POST", path="/submit", headers=headers, body=data
-        )
-        bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
-        with pytest.raises(MalformedCrashReport, match="malformed_boundary"):
-            bsp.extract_payload(req)
-
     def test_extract_payload_bad_content_type(self, request_generator):
         crashmover = FakeCrashMover()
         headers = {"Content-Type": "application/json"}

@@ -198,8 +198,17 @@ def get_date_from_crash_id(crash_id, as_datetime=False):
 ALPHA_NUMERIC_UNDERSCORE = string.ascii_letters + string.digits + "_"
 
 
-def sanitize_dump_name(val):
-    """Sanitize a dump name."""
+def sanitize_key_name(val):
+    """Sanitize a key name.
+
+    :param val: the value to sanitize
+
+    :returns: the value as a sanitized str
+
+    """
+    if isinstance(val, bytes):
+        val = val.decode("utf-8")
+
     # Dump names can only contain ASCII alpha-numeric characters and
     # underscores
     val = "".join(v for v in val if v in ALPHA_NUMERIC_UNDERSCORE)
