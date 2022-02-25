@@ -22,12 +22,12 @@ LOGGER = logging.getLogger(__name__)
 def get_release(basedir):
     version_info = get_version_info(basedir)
 
-    tag = version_info.get("tag", "none")
+    version = version_info.get("version", "none")
 
     commit = version_info.get("commit")
     commit = commit[:8] if commit else "unknown"
 
-    return f"{tag}:{commit}"
+    return f"{version}:{commit}"
 
 
 def setup_sentry(basedir, host_id, sentry_dsn):
