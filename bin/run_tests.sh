@@ -23,8 +23,7 @@ export PYTHONPATH=/app/:${PYTHONPATH:-}
 PYTEST="$(which pytest)"
 PYTHON="$(which python)"
 
-# Wait for services to be ready
-urlwait "${CRASHMOVER_CRASHSTORAGE_ENDPOINT_URL}" 15
+# Wait for services to be ready (both have the same endpoint url)
 urlwait "${CRASHMOVER_CRASHPUBLISH_ENDPOINT_URL}" 15
 
 # Run tests

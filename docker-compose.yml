@@ -33,8 +33,7 @@ services:
       - docker/config/test.env
     links:
       - fakesentry
-      - localstack-sqs
-      - localstack-s3
+      - localstack
       - statsd
     volumes:
       - .:/app
@@ -47,8 +46,7 @@ services:
       - docker/config/test.env
     links:
       - fakesentry
-      - localstack-sqs
-      - localstack-s3
+      - localstack
       - statsd
 
   # Web container is a prod-like fully-functioning Antenna container
@@ -63,33 +61,20 @@ services:
     command: web
     links:
       - fakesentry
-      - localstack-s3
-      - localstack-sqs
+      - localstack
       - statsd
 
   # https://hub.docker.com/r/localstack/localstack/
-  # localstack running a fake S3
-  localstack-s3:
-    image: localstack/localstack:0.10.5
+  # localstack running a fake S3 and SQS
+  localstack:
+    image: localstack/localstack:0.14.0
     environment:
-      - SERVICES=s3:4572
+      - SERVICES=s3,sqs
       - DEFAULT_REGION=us-east-1
-      - HOSTNAME=localstack-s3
-      - HOSTNAME_EXTERNAL=localstack-s3
+      - HOSTNAME=localstack
+      - HOSTNAME_EXTERNAL=localstack
     ports:
-      - "4572:4572"
-
-  # https://hub.docker.com/r/localstack/localstack/
-  # localstack running a fake sqs
-  localstack-sqs:
-    image: localstack/localstack:0.10.5
-    environment:
-      - SERVICES=sqs:4576
-      - DEFAULT_REGION=us-east-1
-      - HOSTNAME=localstack-sqs
-      - HOSTNAME_EXTERNAL=localstack-sqs
-    ports:
-      - "4576:4576"
+      - "4566:4566"
 
   # https://hub.docker.com/r/kamon/grafana_graphite/
   # username: admin, password: admin

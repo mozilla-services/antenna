@@ -45,7 +45,7 @@ production, see docs_.
 
    Anytime you want to update the containers, you can run ``make build``.
 
-4. Set up local Pub/Sub and S3 services:
+4. Set up local SQS and S3 services:
 
    .. code-block:: shell
 
@@ -66,9 +66,8 @@ production, see docs_.
       You should see a lot of output. It'll start out with something like this::
 
          /usr/bin/docker-compose up web
-         antenna_localstack-sqs_1 is up-to-date
          antenna_statsd_1 is up-to-date
-         antenna_localstack-s3_1 is up-to-date
+         antenna_localstack_1 is up-to-date
          Starting antenna_web_1 ... done
          Attaching to antenna_web_1
          web_1    | + PORT=8000
@@ -100,12 +99,12 @@ production, see docs_.
          web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_ACCESS_KEY=foo
          web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_SECRET_ACCESS_KEY=*****
          web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_REGION=us-east-1
-         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_ENDPOINT_URL=http://localstack-s3:4572
+         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_ENDPOINT_URL=http://localstack:4566
          web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_BUCKET_NAME=antennabucket
          web_1    | 2021-08-04 19:25:30,673 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_ACCESS_KEY=foo
          web_1    | 2021-08-04 19:25:30,673 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_SECRET_ACCESS_KEY=*****
          web_1    | 2021-08-04 19:25:30,673 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_REGION=us-east-1
-         web_1    | 2021-08-04 19:25:30,673 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_ENDPOINT_URL=http://localstack-sqs:4576
+         web_1    | 2021-08-04 19:25:30,673 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_ENDPOINT_URL=http://localstack:4566
          web_1    | 2021-08-04 19:25:30,673 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_QUEUE_NAME=local_dev_socorro_standard
          web_1    | 2021-08-04 19:25:30,673 INFO - antenna - antenna.app - BREAKPAD_DUMP_FIELD=upload_file_minidump
          web_1    | 2021-08-04 19:25:30,673 INFO - antenna - antenna.app - BREAKPAD_THROTTLER_RULES=antenna.throttler.MOZILLA_RULES
@@ -126,7 +125,7 @@ production, see docs_.
 
          $ docker-compose ps
 
-      You should see containers with names ``web``, ``statsd`` and ``localstack-s3``.
+      You should see containers with names ``web``, ``statsd`` and ``localstack``.
 
    3. Send in a crash report:
 
@@ -152,17 +151,14 @@ production, see docs_.
          web_1      | [2016-11-07 15:48:45 +0000] [INFO] antenna.breakpad_resource: a448814e-16dd-45fb-b7dd-b0b522161010 saved
 
 
-   4. See the data in localstack-s3:
+   4. See the data in localstack:
 
-      The ``localstack-s3`` container stores data in memory and the data
-      doesn't persist between container restarts.
+      The ``localstack`` container stores data in memory and the data doesn't
+      persist between container restarts.
 
-      You can use the aws-cli to access it. For example::
+      You can use the ``bin/s3_cli.py`` to access it::
 
-        AWS_ACCESS_KEY_ID=foo AWS_SECRET_ACCESS_KEY=foo \
-            aws --endpoint-url=http://localhost:5000 \
-                --region=us-east-1 \
-                s3 ls s3://antennabucket/
+        docker-compose run --rm web shell python bin/s3_cli.py list_buckets
 
       If you do this a lot, turn it into a shell script.
 
