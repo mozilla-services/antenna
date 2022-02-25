@@ -76,7 +76,7 @@ def compress(multipart):
     return bio.getbuffer()
 
 
-def multipart_encode(raw_crash, boundary=None):
+def multipart_encode(raw_crash, boundary=None, mimetype="multipart/form-data"):
     """Takes a raw_crash as a Python dict and converts to a multipart/form-data
 
     Here's an example ``raw_crash``::
@@ -124,7 +124,7 @@ def multipart_encode(raw_crash, boundary=None):
         boundary = uuid.uuid4().hex
 
     output = io.BytesIO()
-    headers = {"Content-Type": "multipart/form-data; boundary=%s" % boundary}
+    headers = {"Content-Type": f"{mimetype}; boundary={boundary}"}
 
     for key, val in sorted(raw_crash.items()):
         block = ["--%s" % boundary]
