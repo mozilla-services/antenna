@@ -172,12 +172,26 @@ class TestBreakpadSubmitterResource:
         expected_dumps = {"upload_file_minidump": b"abcd1234"}
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
 
-    def test_extract_payload_bad_json(self, request_generator):
+    def test_extract_payload_bad_json_malformed(self, request_generator):
         crashmover = FakeCrashMover()
 
         # If the JSON doesn't parse (invalid control character), it raises
         # a MalformedCrashReport
         data, headers = multipart_encode({"extra": '{"ProductName":"Firefox\n"}'})
+        req = request_generator(
+            method="POST", path="/submit", headers=headers, body=data
+        )
+
+        bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
+        with pytest.raises(MalformedCrashReport, match="bad_json"):
+            bsp.extract_payload(req)
+
+    def test_extract_payload_bad_json_not_dict(self, request_generator):
+        crashmover = FakeCrashMover()
+
+        # If the JSON doesn't parse (invalid control character), it raises
+        # a MalformedCrashReport
+        data, headers = multipart_encode({"extra": '"badvalue"'})
         req = request_generator(
             method="POST", path="/submit", headers=headers, body=data
         )
