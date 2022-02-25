@@ -266,9 +266,9 @@ class Testmozilla_rules:
             ("testproduct", (REJECT, "unsupported_product", 100)),
         ],
     )
-    def test_productname_reject(self, caplogpp, productname, expected):
+    def test_productname_reject(self, caplog, productname, expected):
         """Verify productname rule blocks unsupported products"""
-        with caplogpp.at_level(logging.INFO, logger="antenna"):
+        with caplog.at_level(logging.INFO, logger="antenna"):
             # Need a throttler with the default configuration which includes supported
             # products
             throttler = Throttler(ConfigManager.from_dict({}))
@@ -276,7 +276,7 @@ class Testmozilla_rules:
             if productname is not None:
                 raw_crash["ProductName"] = productname
             assert throttler.throttle(raw_crash) == expected
-            assert caplogpp.record_tuples == [
+            assert caplog.record_tuples == [
                 (
                     "antenna.throttler",
                     logging.INFO,
@@ -284,27 +284,27 @@ class Testmozilla_rules:
                 )
             ]
 
-    def test_productname_none_reject(self, caplogpp):
+    def test_productname_none_reject(self, caplog):
         """Verify productname rule blocks None value"""
-        with caplogpp.at_level(logging.INFO, logger="antenna"):
+        with caplog.at_level(logging.INFO, logger="antenna"):
             # Need a throttler with the default configuration which includes supported
             # products
             throttler = Throttler(ConfigManager.from_dict({}))
             raw_crash = {"ProductName": None}
             assert throttler.throttle(raw_crash) == (REJECT, "unsupported_product", 100)
-            assert caplogpp.record_tuples == [
+            assert caplog.record_tuples == [
                 ("antenna.throttler", logging.INFO, "ProductName rejected: 'None'")
             ]
 
-    def test_productname_fakeaccept(self, caplogpp):
+    def test_productname_fakeaccept(self, caplog):
         # This product isn't in the list and it's B2G which is the special case
-        with caplogpp.at_level(logging.INFO, logger="antenna"):
+        with caplog.at_level(logging.INFO, logger="antenna"):
             # Need a throttler with the default configuration which includes supported
             # products
             throttler = Throttler(ConfigManager.from_dict({}))
             raw_crash = {"ProductName": "b2g"}
             assert throttler.throttle(raw_crash) == (FAKEACCEPT, "b2g", 100)
-            assert caplogpp.record_tuples == [
+            assert caplog.record_tuples == [
                 ("antenna.throttler", logging.INFO, "ProductName B2G: fake accept")
             ]
 
