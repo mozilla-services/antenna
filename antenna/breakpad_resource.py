@@ -206,6 +206,9 @@ class BreakpadSubmitterResource:
                     # of "malformed JSON" situations.
                     raise MalformedCrashReport("bad_json")
 
+                if not isinstance(raw_crash, dict):
+                    raise MalformedCrashReport("bad_json")
+
             elif fs_item.type and (
                 fs_item.type.startswith("application/octet-stream")
                 or isinstance(fs_item.value, bytes)
