@@ -12,11 +12,9 @@
 
 set -euo pipefail
 
-# Wait for services to be ready
+# Wait for services to be ready (both have the same endpoint url)
 echo "Waiting for ${CRASHMOVER_CRASHSTORAGE_ENDPOINT_URL} ..."
-urlwait "${CRASHMOVER_CRASHSTORAGE_ENDPOINT_URL}" 10
-echo "Waiting for ${CRASHMOVER_CRASHPUBLISH_ENDPOINT_URL} ..."
-urlwait "${CRASHMOVER_CRASHPUBLISH_ENDPOINT_URL}" 10
+urlwait "${CRASHMOVER_CRASHSTORAGE_ENDPOINT_URL}" 15
 
 echo "Delete and create S3 bucket..."
 python ./bin/s3_cli.py delete "${CRASHMOVER_CRASHSTORAGE_BUCKET_NAME}"

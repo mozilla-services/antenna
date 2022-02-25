@@ -123,8 +123,7 @@ jobs:
           command: |
             make my.env
             docker-compose up --detach --no-color \
-                localstack-s3 \
-                localstack-sqs \
+                localstack \
                 statsd \
                 fakesentry
             docker-compose run --rm ci shell ./bin/run_tests.sh
