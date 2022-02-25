@@ -105,10 +105,10 @@ class BreakpadSubmitterResource:
         content_type = [part.strip() for part in req.content_type.split(";", 1)]
         if (
             len(content_type) != 2
-            or content_type[0] != "multipart/form-data"
+            or content_type[0] not in ("multipart/form-data", "multipart/mixed")
             or not content_type[1].startswith("boundary=")
         ):
-            if content_type[0] != "multipart/form-data":
+            if content_type[0] not in ("multipart/form-data", "multipart/mixed"):
                 raise MalformedCrashReport("wrong_content_type")
             else:
                 raise MalformedCrashReport("no_boundary")

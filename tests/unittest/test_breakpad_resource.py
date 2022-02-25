@@ -62,6 +62,30 @@ class TestBreakpadSubmitterResource:
         expected_dumps = {"upload_file_minidump": b"abcd1234"}
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
 
+    def test_extract_payload_multipart_mixed(self, request_generator):
+        crashmover = FakeCrashMover()
+        data, headers = multipart_encode(
+            {
+                "ProductName": "Firefox",
+                "Version": "1.0",
+                "upload_file_minidump": ("fakecrash.dump", io.BytesIO(b"abcd1234")),
+            },
+            mimetype="multipart/mixed",
+        )
+        req = request_generator(
+            method="POST", path="/submit", headers=headers, body=data
+        )
+
+        bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
+        expected_raw_crash = {
+            "ProductName": "Firefox",
+            "Version": "1.0",
+            "payload": "multipart",
+            "payload_compressed": "0",
+        }
+        expected_dumps = {"upload_file_minidump": b"abcd1234"}
+        assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
+
     def test_extract_payload_2_dumps(self, request_generator):
         crashmover = FakeCrashMover()
         data, headers = multipart_encode(
