@@ -11,7 +11,11 @@ import zlib
 
 from everett.manager import Option
 import falcon
-from falcon.media.multipart import MultipartFormHandler, MultipartParseError
+from falcon.media.multipart import (
+    MultipartFormHandler,
+    MultipartParseError,
+    MultipartParseOptions,
+)
 import markus
 
 from antenna.throttler import REJECT, FAKEACCEPT, RESULT_TO_TEXT, Throttler
@@ -71,6 +75,9 @@ class BreakpadSubmitterResource:
         self.config = config.with_options(self)
         self.crashmover = crashmover
         self.throttler = Throttler(config.with_namespace("throttler"))
+
+        self._multipart_parse_options = MultipartParseOptions()
+        self._multipart_parse_options.max_body_part_count = 0
 
     def get_components(self):
         """Return map of namespace -> component for traversing component tree."""
@@ -172,7 +179,8 @@ class BreakpadSubmitterResource:
         has_json = False
         has_kvpairs = False
 
-        handler = MultipartFormHandler()
+        # Create a form handler that has no max_body_part_count
+        handler = MultipartFormHandler(parse_options=self._multipart_parse_options)
         try:
             form = handler.deserialize(
                 stream=data,
