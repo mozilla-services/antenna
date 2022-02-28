@@ -4,6 +4,8 @@
 
 from collections import deque
 import io
+import itertools
+import string
 
 from everett.manager import ConfigManager
 import pytest
@@ -61,6 +63,46 @@ class TestBreakpadSubmitterResource:
         }
         expected_dumps = {"upload_file_minidump": b"abcd1234"}
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
+
+    def test_extract_payload_many_annotations(self, request_generator):
+        # Test extracting with 200-ish annotations. At the time of this writing, there
+        # are 165 annotations specified in CrashAnnotations.yaml. It's likely crash
+        # reports send annotations not specified in that file, but 200 is probably a
+        # good enough number to test with.
+        crashmover = FakeCrashMover()
+        data = {
+            "ProductName": "Firefox",
+            "Version": "1.0",
+        }
+
+        # Add another 200-ish annotations
+        keys = [
+            f"Annotation{char1}{char2}"
+            for (char1, char2) in itertools.product(string.ascii_uppercase, "12345678")
+        ]
+        data.update({key: "1" for key in keys})
+
+        assert len(data.keys()) == 210
+
+        # Add a file
+        data["upload_file_minidump"] = ("fakecrash.dump", io.BytesIO(b"abcd1234"))
+
+        body, headers = multipart_encode(data)
+        req = request_generator(
+            method="POST", path="/submit", headers=headers, body=body
+        )
+
+        bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
+        raw_crash, dumps = bsp.extract_payload(req)
+
+        # Start with the keys that we encoded in the request body
+        expected_keys = set(data.keys())
+        # Remove upload_file_minidump because that's a file and not an annotation
+        expected_keys -= {"upload_file_minidump"}
+        # Add keys added by BreakpadSubmitterResource
+        expected_keys |= {"payload", "payload_compressed"}
+        assert set(raw_crash.keys()) == expected_keys
+        assert dumps == {"upload_file_minidump": b"abcd1234"}
 
     def test_extract_payload_multipart_mixed(self, request_generator):
         crashmover = FakeCrashMover()
