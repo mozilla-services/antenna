@@ -20,7 +20,7 @@ coverage==6.2
 flake8==4.0.1
 freezegun==1.1.0
 more-itertools==8.12.0
-pip-tools==6.5.0
+pip-tools==6.5.1
 pytest-cov==3.0.0
 pytest==6.2.5
 requests==2.27.1
