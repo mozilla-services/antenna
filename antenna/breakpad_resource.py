@@ -193,11 +193,7 @@ class BreakpadSubmitterResource:
                     # If the field has no name, then it's probably junk, so let's drop it.
                     continue
 
-                if part.name == "dump_checksums":
-                    # Ignore dump_checksums from a raw crash that was re-submitted.
-                    continue
-
-                elif part.content_type.startswith("application/json"):
+                if part.content_type.startswith("application/json"):
                     # This is a JSON blob, so load it and override raw_crash with
                     # it.
                     has_json = True
@@ -220,8 +216,7 @@ class BreakpadSubmitterResource:
                 else:
                     # This isn't a dump, so it's a key/val pair, so we add that as a string.
                     has_kvpairs = True
-                    name = sanitize_key_name(part.name)
-                    raw_crash[name] = part.get_text()
+                    raw_crash[part.name] = part.get_text()
 
         except MultipartParseError as mpe:
             logger.error(f"extract payload exception: {mpe.description}")
