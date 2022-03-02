@@ -211,20 +211,22 @@ class BreakpadSubmitterResource:
                     if not isinstance(raw_crash, dict):
                         raise MalformedCrashReport("bad_json")
 
-                elif part.content_type.startswith("application/octet-stream"):
-                    # This is a dump, so add it to dumps using a sanitized dump name.
-                    dump_name = sanitize_key_name(part.name)
-                    dumps[dump_name] = part.stream.read()
-
                 elif part.content_type.startswith("text/plain"):
                     # This isn't a dump, so it's a key/val pair, so we add that as a string.
                     has_kvpairs = True
                     raw_crash[part.name] = part.get_text()
+
                 else:
-                    # bug 1757786: debugging code
-                    logging.error(
-                        f"unknown content type: {part.name} {part.content_type}"
-                    )
+                    if part.content_type != "application/octet-stream":
+                        # FIXME(willkg): we should accumulate these issues and then toss
+                        # them in the raw crash where we can see them better
+                        logging.info(
+                            f"unknown content type: {part.name} {part.content_type}"
+                        )
+
+                    # This is a dump, so add it to dumps using a sanitized dump name.
+                    dump_name = sanitize_key_name(part.name)
+                    dumps[dump_name] = part.stream.read()
 
         except MultipartParseError as mpe:
             logger.error(f"extract payload exception: {mpe.description}")
