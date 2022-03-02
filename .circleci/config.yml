@@ -193,13 +193,22 @@ workflows:
 
   build_test_push:
     jobs:
-      - build
+      - build:
+          filters:
+            tags:
+              only: /.*/
       - lint:
           requires:
             - build
+          filters:
+            tags:
+              only: /.*/
       - test:
           requires:
             - build
+          filters:
+            tags:
+              only: /.*/
       - push:
           requires:
             - build
