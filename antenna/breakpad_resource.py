@@ -213,10 +213,15 @@ class BreakpadSubmitterResource:
                     dump_name = sanitize_key_name(part.name)
                     dumps[dump_name] = part.stream.read()
 
-                else:
+                elif part.content_type.startswith("text/plain"):
                     # This isn't a dump, so it's a key/val pair, so we add that as a string.
                     has_kvpairs = True
                     raw_crash[part.name] = part.get_text()
+                else:
+                    # bug 1757786: debugging code
+                    logging.error(
+                        f"unknown content type: {part.name} {part.content_type}"
+                    )
 
         except MultipartParseError as mpe:
             logger.error(f"extract payload exception: {mpe.description}")
