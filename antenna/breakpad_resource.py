@@ -77,7 +77,10 @@ class BreakpadSubmitterResource:
         self.throttler = Throttler(config.with_namespace("throttler"))
 
         self._multipart_parse_options = MultipartParseOptions()
+        # Setting this to 0 means "infinity"
         self._multipart_parse_options.max_body_part_count = 0
+        # We set this to 20mb semi-arbitrarily; we can increase it as we need to
+        self._multipart_parse_options.max_body_part_buffer_size = 20 * 1024 * 1024
 
     def get_components(self):
         """Return map of namespace -> component for traversing component tree."""
