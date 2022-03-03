@@ -19,41 +19,6 @@ def utc_now():
     return datetime.datetime.now(isodate.UTC)
 
 
-class CrashVerifier:
-    def raw_crash_key(self, crash_id):
-        return "v2/raw_crash/{entropy}/{date}/{crashid}".format(
-            entropy=crash_id[0:3], date="20" + crash_id[-6:], crashid=crash_id
-        )
-
-    def dump_names_key(self, crash_id):
-        return f"v1/dump_names/{crash_id}"
-
-    def dump_key(self, crash_id, name):
-        if name in (None, "", "upload_file_minidump"):
-            name = "dump"
-
-        return f"v1/{name}/{crash_id}"
-
-    def verify_stored_data(self, crash_id, raw_crash, dumps, s3conn):
-        # Verify the raw crash file made it
-        key = self.raw_crash_key(crash_id)
-        assert key in s3conn.list_objects(prefix=key)
-
-        # Verify the dump_names file made it
-        key = self.dump_names_key(crash_id)
-        assert key in s3conn.list_objects(prefix=key)
-
-        # Verify the dumps made it
-        for name, dump in dumps.items():
-            key = self.dump_key(crash_id, name)
-            assert key in s3conn.list_objects(prefix=key)
-
-    def verify_published_data(self, crash_id, sqshelper):
-        # Verify crash id was published--this might pick up a bunch of stuff,
-        # so we just verify it's one of the things we picked up
-        assert crash_id in sqshelper.list_crashids()
-
-
 def content_to_crashid(content):
     if not isinstance(content, str):
         content = str(content, encoding="utf-8")
@@ -68,7 +33,7 @@ SLEEP_TIME = 5
 
 
 class TestPostCrash:
-    def test_regular(self, posturl, s3conn, sqshelper, crash_generator, postcheck):
+    def test_regular(self, posturl, s3conn, sqshelper, crash_generator, crash_verifier, postcheck):
         """Post a valid crash and verify the contents made it to S3."""
         if not postcheck:
             pytest.skip("no access to S3")
@@ -85,11 +50,10 @@ class TestPostCrash:
         logger.debug("S3conn: %s", s3conn.get_config())
 
         # Verify stored and published crash data
-        verifier = CrashVerifier()
-        verifier.verify_stored_data(crash_id, raw_crash, dumps, s3conn)
-        verifier.verify_published_data(crash_id, sqshelper)
+        crash_verifier.verify_stored_data(crash_id, raw_crash, dumps, s3conn)
+        crash_verifier.verify_published_data(crash_id, sqshelper)
 
-    def test_compressed_crash(self, posturl, s3conn, sqshelper, crash_generator, postcheck):
+    def test_compressed_crash(self, posturl, s3conn, sqshelper, crash_generator, crash_verifier, postcheck):
         """Post a compressed crash and verify contents made it to S3."""
         if not postcheck:
             pytest.skip("no access to S3")
@@ -106,6 +70,5 @@ class TestPostCrash:
         logger.debug("S3conn: %s", s3conn.get_config())
 
         # Verify stored and published crash data
-        verifier = CrashVerifier()
-        verifier.verify_stored_data(crash_id, raw_crash, dumps, s3conn)
-        verifier.verify_published_data(crash_id, sqshelper)
+        crash_verifier.verify_stored_data(crash_id, raw_crash, dumps, s3conn)
+        crash_verifier.verify_published_data(crash_id, sqshelper)
