@@ -12,7 +12,7 @@
 
 set -euo pipefail
 
-BLACKARGS=("--line-length=88" "--target-version=py37" antenna bin testlib tests)
+BLACKARGS=("--line-length=88" "--target-version=py37" antenna bin testlib tests systemtest)
 
 if [[ "${1:-}" == "--fix" ]]; then
     echo ">>> black fix"
@@ -20,7 +20,7 @@ if [[ "${1:-}" == "--fix" ]]; then
 
 else
     echo ">>> flake8"
-    flake8 --statistics antenna tests/unittest/
+    flake8 --statistics antenna tests/unittest/ systemtest/
 
     echo ">>> black"
     black --check "${BLACKARGS[@]}"

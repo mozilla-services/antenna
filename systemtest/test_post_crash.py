@@ -33,7 +33,9 @@ SLEEP_TIME = 5
 
 
 class TestPostCrash:
-    def test_regular(self, posturl, s3conn, sqshelper, crash_generator, crash_verifier, postcheck):
+    def test_regular(
+        self, posturl, s3conn, sqshelper, crash_generator, crash_verifier, postcheck
+    ):
         """Post a valid crash and verify the contents made it to S3."""
         if not postcheck:
             pytest.skip("no access to S3")
@@ -53,7 +55,9 @@ class TestPostCrash:
         crash_verifier.verify_stored_data(crash_id, raw_crash, dumps, s3conn)
         crash_verifier.verify_published_data(crash_id, sqshelper)
 
-    def test_compressed_crash(self, posturl, s3conn, sqshelper, crash_generator, crash_verifier, postcheck):
+    def test_compressed_crash(
+        self, posturl, s3conn, sqshelper, crash_generator, crash_verifier, postcheck
+    ):
         """Post a compressed crash and verify contents made it to S3."""
         if not postcheck:
             pytest.skip("no access to S3")
