@@ -42,21 +42,21 @@ class Test25mbLimit:
             resp = requests.post(posturl, headers=headers, data=payload)
             return resp.status_code
 
-        except requests.exceptions.ConnectionError as exc:
-            # NOTE(willkg): requests uses httplib which raises an exception if
-            # the connection is closed, but doesn't read the HTTP response that
+        except requests.exceptions.SSLError as exc:
+            # NOTE(willkg): requests uses httplib and raises an exception when the
+            # server closes the connection instead of reading the HTTP response that
             # might be there. Thus requests never gets the HTTP response.
             #
-            # So the best we can test for at this time without a ton of work is
-            # to make sure we get a ConnectionError with a broken pipe.
+            # So the best we can test for at this time without a ton of work is to make
+            # sure we get an SSLEOFError.
+            #
+            # Sort of related to this, but this was with Python < 3.10:
             #
             # https://github.com/kennethreitz/requests/issues/2422
-            if "Broken pipe" in str(exc):
+            if "EOF occurred in violation of protocol" in str(exc):
                 # Treating this as a 413
                 return 413
             raise
-
-        return 200
 
     @pytest.mark.parametrize(
         "size, status_code",
@@ -89,10 +89,11 @@ class Test25mbLimit:
         try:
             resp = requests.post(posturl, headers=headers, data=payload)
             status_code = resp.status_code
-        except requests.exceptions.ConnectionError as exc:
-            if "Broken pipe" not in str(exc):
+        except requests.exceptions.SSLError as exc:
+            if "EOF occurred in violation of protocol" in str(exc):
+                status_code = 413
+            else:
                 raise
-            status_code = 413
 
         # Assert this fails with a 413 because the payload is too big. This
         # tells us if nginx is applying its max payload check to the
