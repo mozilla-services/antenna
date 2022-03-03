@@ -107,7 +107,9 @@ def s3conn(config):
     """Generate and returns an S3 connection using env config."""
     return S3Connection(
         access_key=config("crashmover_crashstorage_access_key", default=""),
-        secret_access_key=config("crashmover_crashstorage_secret_access_key", default=""),
+        secret_access_key=config(
+            "crashmover_crashstorage_secret_access_key", default=""
+        ),
         endpoint_url=config("crashmover_crashstorage_endpoint_url", default=""),
         region=config("crashmover_crashstorage_region", default="us-west-2"),
         bucket=config("crashmover_crashstorage_bucket_name"),
@@ -148,7 +150,9 @@ class SQSHelper:
         crashids = []
         while True:
             resp = self.client.receive_message(
-                QueueUrl=queue_url, WaitTimeSeconds=0, VisibilityTimeout=2,
+                QueueUrl=queue_url,
+                WaitTimeSeconds=0,
+                VisibilityTimeout=2,
             )
             msgs = resp.get("Messages", [])
             if not msgs:
@@ -170,7 +174,9 @@ def sqshelper(config):
     """Generate and returns a PubSub helper using env config."""
     return SQSHelper(
         access_key=config("crashmover_crashpublish_access_key", default=""),
-        secret_access_key=config("crashmover_crashpublish_secret_access_key", default=""),
+        secret_access_key=config(
+            "crashmover_crashpublish_secret_access_key", default=""
+        ),
         endpoint_url=config("crashmover_crashpublish_endpoint_url", default=""),
         region=config("crashmover_crashpublish_region", default=""),
         queue_name=config("crashmover_crashpublish_queue_name", default=""),
