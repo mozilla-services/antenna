@@ -70,7 +70,7 @@ jobs:
           command: |
             mkdir -p workspace
             docker save -o workspace/antenna-deploy-base.tar local/antenna_deploy_base:latest
-            gzip workspace/antenna-deploy-base.tar
+            gzip --fast workspace/antenna-deploy-base.tar
           # yamllint enable rule:line-length
 
       - persist_to_workspace:
