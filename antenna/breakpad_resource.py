@@ -48,8 +48,6 @@ class MalformedCrashReport(Exception):
 
     """
 
-    pass
-
 
 class BreakpadSubmitterResource:
     """Handles incoming breakpad-style crash reports.
@@ -206,15 +204,22 @@ class BreakpadSubmitterResource:
                         # The UnicodeDecodeError can happen if the utf-8 codec can't decode
                         # one of the characters. The JSONDecodeError can happen in a variety
                         # of "malformed JSON" situations.
-                        raise MalformedCrashReport("bad_json")
+                        raise MalformedCrashReport("invalid_json")
 
                     if not isinstance(raw_crash, dict):
-                        raise MalformedCrashReport("bad_json")
+                        raise MalformedCrashReport("invalid_json_value")
 
                 elif part.content_type.startswith("text/plain"):
                     # This isn't a dump, so it's a key/val pair, so we add that as a string.
                     has_kvpairs = True
-                    raw_crash[part.name] = part.get_text()
+                    try:
+                        raw_crash[part.name] = part.get_text()
+                    except MultipartParseError as mpe:
+                        logger.error(
+                            f"extract payload text part exception: {mpe.description}"
+                        )
+                        msg = "invalid_annotation_value"
+                        raise MalformedCrashReport(msg) from mpe
 
                 else:
                     if part.content_type != "application/octet-stream":
@@ -229,8 +234,13 @@ class BreakpadSubmitterResource:
                     dumps[dump_name] = part.stream.read()
 
         except MultipartParseError as mpe:
+            # If we hit this, then there are a few things that are likely wrong:
+            #
+            # 1. boundaries are missing or malformed
+            # 2. missing EOL sequences
+            # 3. file parts are missing Content-Type declaration
             logger.error(f"extract payload exception: {mpe.description}")
-            raise MalformedCrashReport("no_annotations")
+            raise MalformedCrashReport("invalid_payload_structure") from mpe
 
         if not raw_crash:
             raise MalformedCrashReport("no_annotations")
