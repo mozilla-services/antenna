@@ -9,6 +9,7 @@
 # Run this in the Docker container.
 
 import os
+import pathlib
 
 import boto3
 from botocore.client import ClientError, Config
@@ -82,9 +83,10 @@ def list_buckets(ctx):
 
 
 @s3_group.command("list_objects")
+@click.option("-d", "--details", default=False, type=bool, help="With details")
 @click.argument("bucket")
 @click.pass_context
-def list_objects(ctx, bucket):
+def list_objects(ctx, bucket, details):
     """List the contents of a bucket."""
     conn = get_client()
     try:
@@ -95,7 +97,34 @@ def list_objects(ctx, bucket):
 
     resp = conn.list_objects_v2(Bucket=bucket)
     for item in resp.get("Contents", []):
-        click.echo("%s\t%s\t%s" % (item["Key"], item["Size"], item["LastModified"]))
+        if details:
+            click.echo(f"{item['Key']}\t{item['Size']}\t{item['LastModified']}")
+        else:
+            click.echo(f"{item['Key']}")
+
+
+@s3_group.command("download")
+@click.argument("bucket")
+@click.argument("key")
+@click.argument("outputdir")
+@click.pass_context
+def download_file(ctx, bucket, key, outputdir):
+    conn = get_client()
+    try:
+        conn.head_bucket(Bucket=bucket)
+    except ClientError:
+        click.echo(f"Bucket {bucket} does not exist.")
+        return
+
+    keypath = pathlib.Path(outputdir) / pathlib.Path(key)
+    if not keypath.parent.exists():
+        keypath.parent.mkdir(parents=True)
+
+    if not keypath.parent.is_dir():
+        click.echo(f"{keypath.parent} exists but is not a directory")
+
+    with keypath.open("wb") as fp:
+        conn.download_fileobj(bucket, key, fp)
 
 
 if __name__ == "__main__":
