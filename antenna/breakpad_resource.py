@@ -209,7 +209,7 @@ class BreakpadSubmitterResource:
                     if not isinstance(raw_crash, dict):
                         raise MalformedCrashReport("invalid_json_value")
 
-                elif part.content_type.startswith("text/plain"):
+                elif part.content_type.startswith("text/plain") and not part.filename:
                     # This isn't a dump, so it's a key/val pair, so we add that as a string.
                     has_kvpairs = True
                     try:
@@ -218,8 +218,7 @@ class BreakpadSubmitterResource:
                         logger.error(
                             f"extract payload text part exception: {mpe.description}"
                         )
-                        msg = "invalid_annotation_value"
-                        raise MalformedCrashReport(msg) from mpe
+                        raise MalformedCrashReport("invalid_annotation_value") from mpe
 
                 else:
                     if part.content_type != "application/octet-stream":

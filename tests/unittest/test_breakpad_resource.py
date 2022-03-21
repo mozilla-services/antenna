@@ -182,6 +182,41 @@ class TestBreakpadSubmitterResource:
         with pytest.raises(MalformedCrashReport, match="no_annotations"):
             bsp.extract_payload(req)
 
+    def test_extract_payload_filename_not_text(self, request_generator):
+        """Verify part that has a filename is not treated as text"""
+        crashmover = FakeCrashMover()
+        data = (
+            b"--442e931e47c9474f9bcd9b73e47aa38d\r\n"
+            b'Content-Disposition: form-data; name="ProductName"\r\n'
+            b"Content-Type: text/plain; charset=utf-8\r\n"
+            b"\r\n"
+            b"Firefox\r\n"
+            b"--442e931e47c9474f9bcd9b73e47aa38d\r\n"
+            b'Content-Disposition: form-data; name="upload_file_minidump"; filename="dump"\r\n'
+            b"\r\n"
+            b"ou812\r\n"
+            b"--442e931e47c9474f9bcd9b73e47aa38d--\r\n"
+        )
+        headers = {
+            "Content-Type": "multipart/form-data; boundary=442e931e47c9474f9bcd9b73e47aa38d",
+            "Content-Length": str(len(data)),
+        }
+
+        req = request_generator(
+            method="POST", path="/submit", headers=headers, body=data
+        )
+
+        bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
+        expected_raw_crash = {
+            "ProductName": "Firefox",
+            "payload": "multipart",
+            "payload_compressed": "0",
+        }
+        expected_dumps = {
+            "upload_file_minidump": b"ou812",
+        }
+        assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
+
     def test_extract_payload_invalid_annotation_value(self, request_generator):
         """Verify annotation that's not utf-8 raises error"""
         crashmover = FakeCrashMover()
