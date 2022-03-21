@@ -170,6 +170,43 @@ class TestBreakpadSubmitterResource:
         with pytest.raises(MalformedCrashReport, match="wrong_content_type"):
             bsp.extract_payload(req)
 
+    def test_extract_payload_no_annotations(self, request_generator):
+        """Verify no annotations raises error"""
+        crashmover = FakeCrashMover()
+        data, headers = multipart_encode({})
+        req = request_generator(
+            method="POST", path="/submit", headers=headers, body=data
+        )
+
+        bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
+        with pytest.raises(MalformedCrashReport, match="no_annotations"):
+            bsp.extract_payload(req)
+
+    def test_extract_payload_invalid_annotation_value(self, request_generator):
+        """Verify annotation that's not utf-8 raises error"""
+        crashmover = FakeCrashMover()
+        data = (
+            b"--442e931e47c9474f9bcd9b73e47aa38d\r\n"
+            b'Content-Disposition: form-data; name="ProductName"\r\n'
+            b"Content-Type: text/plain; charset=utf-8\r\n"
+            b"\r\n"
+            b"\xde\xde\xde"
+            b"\r\n"
+            b"--442e931e47c9474f9bcd9b73e47aa38d--\r\n"
+        )
+        headers = {
+            "Content-Type": "multipart/form-data; boundary=442e931e47c9474f9bcd9b73e47aa38d",
+            "Content-Length": str(len(data)),
+        }
+
+        req = request_generator(
+            method="POST", path="/submit", headers=headers, body=data
+        )
+
+        bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
+        with pytest.raises(MalformedCrashReport, match="invalid_annotation_value"):
+            bsp.extract_payload(req)
+
     def test_extract_payload_compressed(self, request_generator):
         crashmover = FakeCrashMover()
         data, headers = multipart_encode(
@@ -219,7 +256,7 @@ class TestBreakpadSubmitterResource:
         expected_dumps = {"upload_file_minidump": b"abcd1234"}
         assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
 
-    def test_extract_payload_bad_json_malformed(self, request_generator):
+    def test_extract_payload_invalid_json_malformed(self, request_generator):
         crashmover = FakeCrashMover()
 
         # If the JSON doesn't parse (invalid control character), it raises
@@ -230,10 +267,10 @@ class TestBreakpadSubmitterResource:
         )
 
         bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
-        with pytest.raises(MalformedCrashReport, match="bad_json"):
+        with pytest.raises(MalformedCrashReport, match="invalid_json"):
             bsp.extract_payload(req)
 
-    def test_extract_payload_bad_json_not_dict(self, request_generator):
+    def test_extract_payload_invalid_json_not_dict(self, request_generator):
         crashmover = FakeCrashMover()
 
         # If the JSON doesn't parse (invalid control character), it raises
@@ -244,7 +281,7 @@ class TestBreakpadSubmitterResource:
         )
 
         bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
-        with pytest.raises(MalformedCrashReport, match="bad_json"):
+        with pytest.raises(MalformedCrashReport, match="invalid_json_value"):
             bsp.extract_payload(req)
 
     def text_extract_payload_kvpairs_and_json(self, request_generator, metricsmock):
