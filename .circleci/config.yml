@@ -119,6 +119,12 @@ jobs:
             docker load -i workspace/antenna-deploy-base.tar.gz
 
       - run:
+          name: Build Docker image
+          command: |
+            make build
+            docker-compose images
+
+      - run:
           name: Run tests
           command: |
             make my.env
