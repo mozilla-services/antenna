@@ -275,12 +275,13 @@ ALL_PRODUCTS = []
 #: List of supported products; these have to match the ProductName of the
 #: incoming crash report
 MOZILLA_PRODUCTS = [
-    "Firefox",
     "Fenix",
+    "Firefox",
     "FirefoxReality",
     "Focus",
-    "ReferenceBrowser",
     "MozillaVPN",
+    "ReferenceBrowser",
+    "Thunderbird",
 ]
 
 
