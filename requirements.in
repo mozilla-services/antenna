@@ -14,7 +14,7 @@ sentry-sdk==1.5.6
 # Development requirements
 Sphinx==4.4.0
 bandit==1.7.3
-black==22.1.0
+black==22.3.0
 click==8.0.3
 coverage==6.2
 flake8==4.0.1
