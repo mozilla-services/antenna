@@ -12,7 +12,7 @@ markus==4.0.0
 sentry-sdk==1.5.8
 
 # Development requirements
-Sphinx==4.4.0
+Sphinx==4.5.0
 bandit==1.7.4
 black==22.3.0
 click==8.1.2
