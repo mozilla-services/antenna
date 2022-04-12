@@ -52,13 +52,14 @@ production, see documentation_.
 3. (*Optional for Linux users*) Set UID and GID for Docker container user.
 
    If you're on Linux or you want to set the UID/GID of the app user that
-   runs in the Docker containers, run::
+   runs in the Docker containers, run:
 
-     $ make my.env
+   .. code-block:: shell
 
-   Then edit the file and set the ``SOCORRO_UID`` and ``SOCORRO_GID``
-   variables. These will get used when creating the app user in the base
-   image.
+      $ make my.env
+
+   Then edit the file and set the ``ANTENNA_UID`` and ``ANTENNA_GID``
+   variables. These will get used when creating the app user in the base image.
 
    If you ever want different values, change them in ``my.env`` and re-run
    ``make build``.
@@ -87,7 +88,6 @@ production, see documentation_.
       .. code-block:: shell
 
          $ make run
-
 
       You should see a lot of output. It'll start out with something like this::
 
@@ -167,7 +167,6 @@ production, see documentation_.
          CrashID=bp-6c43aa7c-7d34-41cf-85aa-55b0d2160622
          *  Closing connection 0
 
-
       You should get a CrashID back from the HTTP POST. You'll also see docker
       logging output something like this::
 
@@ -182,9 +181,11 @@ production, see documentation_.
       The ``localstack`` container stores data in memory and the data doesn't
       persist between container restarts.
 
-      You can use the ``bin/s3_cli.py`` to access it::
+      You can use the ``bin/s3_cli.py`` to access it:
 
-        docker-compose run --rm web shell python bin/s3_cli.py list_buckets
+      .. code-block:: shell
+
+         $ docker-compose run --rm web shell python bin/s3_cli.py list_buckets
 
       If you do this a lot, turn it into a shell script.
 
@@ -405,7 +406,7 @@ To build the docs, run this:
 
 .. code-block:: shell
 
-    $ make docs
+   $ make docs
 
 
 Testing
@@ -433,9 +434,9 @@ For example:
 
    app@...$ pytest tests/unittest/test_crashstorage.py
 
+We're using pytest_ for a test harness and test discovery.
 
-We're using `pytest <https://pytest.org/>`_ for a test harness and test
-discovery.
+.. _pytest: https://pytest.org/
 
 
 .. _testing-breakpad-crash-reporting:
@@ -455,34 +456,44 @@ development instance. There are a few options:
 
 2. Use Firefox and set the ``MOZ_CRASHREPORTER_URL`` environment variable:
 
-   https://developer.mozilla.org/en-US/docs/Environment_variables_affecting_crash_reporting
+   https://firefox-source-docs.mozilla.org/toolkit/crashreporter/crashreporter/index.html#environment-variables-affecting-crash-reporting
 
+   When you type ``about:crashparent`` in the url bar, it'll immediately crash
+   the parent process.
 
-   * (Firefox >= 62) Use ``about:crashparent`` or ``about:crashcontent``.
+   When you type ``about:crashcontent`` in the url bar, it'll immediately crash
+   the content process that's running.
 
-   * (Firefox < 62) Then kill the Firefox process using the ``kill`` command.
+   Go to ``about:crashparent`` or ``about:crashcontent``.
 
-     1. Run ``ps -aef | grep firefox``. That will list all the
-        Firefox processes.
+   Alternatively, you can manipulate processes from the command line:
 
-        Find the process id of the Firefox process you want to kill.
+   1. Run:
 
-        * main process looks something like ``/usr/bin/firefox``
-        * content process looks something like
-          ``/usr/bin/firefox -contentproc -childID ...``
+      .. code-block:: shell
 
-     2. The ``kill`` command lets you pass a signal to the process. By default, it
-        passes ``SIGTERM`` which will kill the process in a way that doesn't
-        launch the crash reporter.
+        $ ps -aef | grep firefox
 
-        You want to kill the process in a way that *does* launch the crash
-        reporter. I've had success with ``SIGABRT`` and ``SIGFPE``. For example:
+      That will list all the Firefox processes that are running.
 
-        * ``kill -SIGABRT <PID>``
-        * ``kill -SIGFPE <PID>``
+   2. Find the process id of the Firefox process you want to kill.
 
-        What works for you will depend on the operating system and version of
-        Firefox you're using.
+      * main process looks something like ``/usr/bin/firefox``
+      * content process looks something like
+        ``/usr/bin/firefox -contentproc -childID ...``
+
+   3. The ``kill`` command lets you pass a signal to the process. By default,
+      it passes ``SIGTERM`` which will kill the process in a way that
+      doesn't launch the crash reporter.
+
+      You want to kill the process in a way that *does* launch the crash
+      reporter. I've had success with ``SIGABRT`` and ``SIGFPE``. For example::
+
+         kill -SIGABRT <PID>
+         kill -SIGFPE <PID>
+
+      What works for you will depend on the operating system and version of
+      Firefox you're using.
 
 
 Capturing an HTTP POST payload for a crash report
