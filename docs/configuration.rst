@@ -1,6 +1,6 @@
-=====================
-Antenna configuration
-=====================
+=============
+Configuration
+=============
 
 .. contents::
    :local:
