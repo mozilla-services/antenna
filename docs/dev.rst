@@ -360,6 +360,40 @@ After that, the commit should explain *why* the changes are being made and any
 notes that future readers should know for context.
 
 
+Dependencies
+============
+
+Python dependencies for all parts of Antenna are in ``requirements.in`` and
+compiled using ``pip-compile`` with hashes and dependencies of dependencies in
+the ``requirements.txt`` file.
+
+For example, to add ``foobar`` version 5:
+
+1. add ``foobar==5`` to ``requirements.in``
+2. run:
+
+   .. code-block:: shell
+
+      make rebuildreqs
+
+   to apply the updates to ``requirements.txt``
+
+3. rebuild your docker environment:
+
+   .. code-block:: shell
+
+      $ make build
+
+If there are problems, it'll tell you.
+
+In some cases, you might want to update the primary and all the secondary
+dependencies. To do this, run:
+
+.. code-block:: shell
+
+   $ make updatereqs
+
+
 Documentation
 =============
 
