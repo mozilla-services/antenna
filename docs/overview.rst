@@ -1,6 +1,22 @@
-============
-Architecture
-============
+========
+Overview
+========
+
+.. contents::
+   :local:
+
+
+What is Antenna?
+================
+
+Antenna is the name of the collector for the Mozilla crash ingestion pipeline.
+The processor, scheduled task runner, and webapp portions of the crash
+ingestion pipeline are in `Socorro <https://socorro.readthedocs.io/>`__.
+
+For more information about the crash ingestion pipeline and what the collector
+does, see the `Socorro Overview
+<https://socorro.readthedocs.io/en/latest/overview.html>`_.
+
 
 Purpose
 =======
