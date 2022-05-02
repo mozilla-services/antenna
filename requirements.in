@@ -1,18 +1,18 @@
 # Production requirements
 boto3==1.20.26
 botocore==1.23.54
-datadog==0.43.0
+datadog==0.44.0
 dockerflow==2022.1.0
 everett==3.0.0
-falcon==3.0.1
+falcon==3.1.0
 gevent==21.12.0
 gunicorn==20.1.0
 isodate==0.6.1
 markus==4.0.0
-sentry-sdk==1.5.8
+sentry-sdk==1.5.10
 
 # Development requirements
-Sphinx==4.4.0
+Sphinx==4.5.0
 bandit==1.7.4
 black==22.3.0
 click==8.1.2
@@ -20,9 +20,9 @@ coverage==6.2
 flake8==4.0.1
 freezegun==1.2.1
 more-itertools==8.12.0
-pip-tools==6.5.1
+pip-tools==6.6.0
 pytest-cov==3.0.0
-pytest==7.0.1
+pytest==7.1.2
 requests==2.27.1
 sphinx-rtd-theme==1.0.0
 urlwait==1.0
