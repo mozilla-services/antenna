@@ -6,7 +6,6 @@ import datetime
 from functools import wraps
 import json
 import logging
-from pathlib import Path
 import re
 import string
 import time
@@ -58,29 +57,6 @@ def isoformat_to_time(data):
         return dt.timestamp()
     except ValueError:
         return 0.0
-
-
-def get_version_info(basedir):
-    """Given a basedir, retrieves version information for this deploy.
-
-    :arg str basedir: the path of the base directory where ``version.json``
-        exists
-
-    :returns: version info as a dict or an empty dict
-
-    """
-    path = Path(basedir) / "version.json"
-    if not path.exists():
-        commit_info = {}
-
-    else:
-        try:
-            with open(str(path)) as fp:
-                commit_info = json.loads(fp.read().strip())
-        except OSError as exc:
-            logger.info(f"Exception thrown when retrieving version.json: {exc}")
-            commit_info = {}
-    return commit_info
 
 
 def json_ordered_dumps(data):

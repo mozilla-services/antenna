@@ -25,7 +25,7 @@ def post_worker_init(worker):
         # Returns the ``.alive`` property of the Gunicorn worker instance
         return worker.alive
 
-    worker.wsgi.start_heartbeat(is_alive=_is_alive)
+    worker.wsgi.app.start_heartbeat(is_alive=_is_alive)
 
 
 def worker_exit(server, worker):
@@ -38,4 +38,4 @@ def worker_exit(server, worker):
 
     """
     if hasattr(worker, "wsgi"):
-        worker.wsgi.join_heartbeat()
+        worker.wsgi.app.join_heartbeat()

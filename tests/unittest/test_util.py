@@ -12,7 +12,6 @@ from antenna.util import (
     create_crash_id,
     get_date_from_crash_id,
     get_throttle_from_crash_id,
-    get_version_info,
     isoformat_to_time,
     retry,
     sanitize_key_name,
@@ -39,17 +38,6 @@ def test_utc_now():
 )
 def test_isoformat_to_time(data, expected):
     assert isoformat_to_time(data) == expected
-
-
-def test_get_version_info(tmpdir):
-    fn = tmpdir.join("/version.json")
-    fn.write_text(
-        '{"commit": "d6ac5a5d2acf99751b91b2a3ca651d99af6b9db3"}', encoding="utf-8"
-    )
-
-    assert get_version_info(str(tmpdir)) == {
-        "commit": "d6ac5a5d2acf99751b91b2a3ca651d99af6b9db3"
-    }
 
 
 @freeze_time("2011-09-06 00:00:00", tz_offset=0)

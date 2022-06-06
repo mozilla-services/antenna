@@ -76,12 +76,12 @@ class AntennaTestClient(TestClient):
         self.app = get_app(self.build_config(new_config))
 
     def get_crashmover(self):
-        """Retrieves the crashmover from the AntennaAPI."""
-        return self.app.crashmover
+        """Retrieves the crashmover from the AntennaApp."""
+        return self.app.app.crashmover
 
     def get_resource_by_name(self, name):
         """Retrieves the Falcon API resource by name"""
-        return self.app.get_resource_by_name(name)
+        return self.app.app.get_resource_by_name(name)
 
     def join_app(self):
         """This goes through and calls join on all gevent pools in the app
