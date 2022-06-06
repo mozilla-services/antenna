@@ -133,7 +133,7 @@ Application
 
 First, you need to configure the application-scoped variables.
 
-.. autocomponentconfig:: antenna.app.AntennaAPI
+.. autocomponentconfig:: antenna.app.AntennaApp
    :hide-name:
    :case: upper
    :show-table:

@@ -9,7 +9,7 @@ import logging
 import falcon
 import markus
 
-from antenna.util import get_version_info
+from antenna.libdockerflow import get_version_info
 
 
 logger = logging.getLogger(__name__)

@@ -5,6 +5,7 @@
 import logging
 import logging.config
 from pathlib import Path
+import sys
 
 from everett.manager import (
     ConfigManager,
@@ -14,6 +15,18 @@ from everett.manager import (
 )
 import falcon
 from falcon.errors import HTTPInternalServerError
+from fillmore.libsentry import set_up_sentry
+from fillmore.scrubber import Scrubber, Rule, SCRUB_RULES_DEFAULT
+import markus
+import sentry_sdk
+from sentry_sdk.integrations.atexit import AtexitIntegration
+from sentry_sdk.integrations.boto3 import Boto3Integration
+from sentry_sdk.integrations.dedupe import DedupeIntegration
+from sentry_sdk.integrations.excepthook import ExcepthookIntegration
+from sentry_sdk.integrations.modules import ModulesIntegration
+from sentry_sdk.integrations.stdlib import StdlibIntegration
+from sentry_sdk.integrations.threading import ThreadingIntegration
+from sentry_sdk.integrations.wsgi import SentryWsgiMiddleware
 
 from antenna.breakpad_resource import BreakpadSubmitterResource
 from antenna.crashmover import CrashMover
@@ -24,12 +37,26 @@ from antenna.health_resource import (
     VersionResource,
 )
 from antenna.heartbeat import HeartbeatManager
+from antenna.libdockerflow import get_release_name
 from antenna.liblogging import setup_logging, log_config
 from antenna.libmarkus import setup_metrics
-from antenna.libsentry import setup_sentry
 
 
 LOGGER = logging.getLogger(__name__)
+METRICS = markus.get_metrics("app")
+
+
+SCRUB_RULES_ANTENNA = [
+    Rule(
+        path="request.headers",
+        keys=["X-Forwarded-For", "X-Real-Ip"],
+        scrub="scrub",
+    ),
+]
+
+
+def count_sentry_scrub_error(msg):
+    METRICS.incr("sentry_scrub_error", value=1)
 
 
 def build_config_manager():
@@ -47,8 +74,8 @@ def build_config_manager():
     return config
 
 
-class AntennaAPI(falcon.App):
-    """Falcon API for Antenna."""
+class AntennaApp(falcon.App):
+    """Falcon app for Antenna."""
 
     class Config:
         basedir = Option(
@@ -112,8 +139,8 @@ class AntennaAPI(falcon.App):
         code for the HTTP response.
 
         """
-        # We're still in an exception context, so sys.exc_info() still has the details.
-        LOGGER.exception("Unhandled exception")
+        sentry_sdk.capture_exception(ex)
+        LOGGER.error("Unhandled exception", exc_info=sys.exc_info())
         self._compose_error_response(req, resp, HTTPInternalServerError())
 
     def get_components(self):
@@ -200,12 +227,12 @@ class AntennaAPI(falcon.App):
 
 
 def get_app(config_manager=None):
-    """Return AntennaAPI instance."""
+    """Return AntennaApp instance."""
     if config_manager is None:
         config_manager = build_config_manager()
 
     # Set up Sentry
-    app_config = config_manager.with_options(AntennaAPI)
+    app_config = config_manager.with_options(AntennaApp)
 
     # Set up logging and sentry first, so we have something to log to. Then
     # build and log everything else.
@@ -215,18 +242,44 @@ def get_app(config_manager=None):
         host_id=app_config("host_id"),
         processname="antenna",
     )
-    setup_sentry(
-        basedir=app_config("basedir"),
-        host_id=app_config("host_id"),
+
+    scrubber = Scrubber(
+        rules=SCRUB_RULES_DEFAULT + SCRUB_RULES_ANTENNA,
+        error_handler=count_sentry_scrub_error,
+    )
+    set_up_sentry(
         sentry_dsn=app_config("secret_sentry_dsn"),
+        release=get_release_name(app_config("basedir")),
+        host_id=app_config("host_id"),
+        # Disable frame-local variables
+        with_locals=False,
+        # Disable request data from being added to Sentry events
+        request_bodies="never",
+        # All integrations should be intentionally enabled
+        default_integrations=False,
+        integrations=[
+            AtexitIntegration(),
+            Boto3Integration(),
+            ExcepthookIntegration(),
+            DedupeIntegration(),
+            StdlibIntegration(),
+            ModulesIntegration(),
+            ThreadingIntegration(),
+        ],
+        # Scrub sensitive data
+        before_send=scrubber,
     )
 
     # Build the app and heartbeat manager
-    app = AntennaAPI(config_manager)
+    app = AntennaApp(config_manager)
     app.setup()
     app.verify()
 
     if app_config("local_dev_env"):
         LOGGER.info("Antenna is running! http://localhost:8000/")
+
+    # Wrap app in Sentry WSGI middleware which builds the request section in the
+    # Sentry event
+    app = SentryWsgiMiddleware(app)
 
     return app

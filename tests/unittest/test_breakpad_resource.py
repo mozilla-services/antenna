@@ -394,7 +394,7 @@ class TestBreakpadSubmitterResource:
         client.rebuild_app({"CRASHMOVER_CONCURRENT_SAVES": "1"})
 
         def check_health(crashmover_pool_size, crashmover_queue_size):
-            crashmover = client.app.crashmover
+            crashmover = client.app.app.crashmover
             assert len(crashmover.crashmover_queue) == crashmover_queue_size
             assert len(crashmover.crashmover_pool) == crashmover_pool_size
 
