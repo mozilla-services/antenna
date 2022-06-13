@@ -27,4 +27,7 @@ else
 
     echo ">>> bandit"
     bandit -r antenna/
+
+    echo ">>> license check"
+    python bin/license_check.py .
 fi
