@@ -34,7 +34,7 @@ BROKEN_EVENT = {
     "exception": {
         "values": [
             {
-                "mechanism": None,
+                "mechanism": {"handled": False, "type": "antenna"},
                 "module": None,
                 "stacktrace": {
                     "frames": [
@@ -98,7 +98,7 @@ BROKEN_EVENT = {
     },
     "server_name": "",
     "timestamp": ANY,
-    "transaction": "generic WSGI request",
+    "transaction": "/__broken__",
     "transaction_info": {},
 }
 

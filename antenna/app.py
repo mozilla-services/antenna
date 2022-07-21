@@ -19,6 +19,7 @@ from fillmore.libsentry import set_up_sentry
 from fillmore.scrubber import Scrubber, Rule, SCRUB_RULES_DEFAULT
 import markus
 import sentry_sdk
+from sentry_sdk.hub import Hub
 from sentry_sdk.integrations.atexit import AtexitIntegration
 from sentry_sdk.integrations.boto3 import Boto3Integration
 from sentry_sdk.integrations.dedupe import DedupeIntegration
@@ -27,6 +28,7 @@ from sentry_sdk.integrations.modules import ModulesIntegration
 from sentry_sdk.integrations.stdlib import StdlibIntegration
 from sentry_sdk.integrations.threading import ThreadingIntegration
 from sentry_sdk.integrations.wsgi import SentryWsgiMiddleware
+from sentry_sdk.utils import event_from_exception
 
 from antenna.breakpad_resource import BreakpadSubmitterResource
 from antenna.crashmover import CrashMover
@@ -46,6 +48,9 @@ LOGGER = logging.getLogger(__name__)
 METRICS = markus.get_metrics("app")
 
 
+# Set up Sentry to scrub user ip addresses, exclude frame-local vars, exclude the
+# request body, explicitly include integrations, and not use the LoggingIntegration
+
 SCRUB_RULES_ANTENNA = [
     Rule(
         path="request.headers",
@@ -57,6 +62,35 @@ SCRUB_RULES_ANTENNA = [
 
 def count_sentry_scrub_error(msg):
     METRICS.incr("sentry_scrub_error", value=1)
+
+
+def configure_sentry(app_config):
+    scrubber = Scrubber(
+        rules=SCRUB_RULES_DEFAULT + SCRUB_RULES_ANTENNA,
+        error_handler=count_sentry_scrub_error,
+    )
+    set_up_sentry(
+        sentry_dsn=app_config("secret_sentry_dsn"),
+        release=get_release_name(app_config("basedir")),
+        host_id=app_config("host_id"),
+        # Disable frame-local variables
+        with_locals=False,
+        # Disable request data from being added to Sentry events
+        request_bodies="never",
+        # All integrations should be intentionally enabled
+        default_integrations=False,
+        integrations=[
+            AtexitIntegration(),
+            Boto3Integration(),
+            ExcepthookIntegration(),
+            DedupeIntegration(),
+            StdlibIntegration(),
+            ModulesIntegration(),
+            ThreadingIntegration(),
+        ],
+        # Scrub sensitive data
+        before_send=scrubber,
+    )
 
 
 def build_config_manager():
@@ -139,7 +173,24 @@ class AntennaApp(falcon.App):
         code for the HTTP response.
 
         """
-        sentry_sdk.capture_exception(ex)
+        # NOTE(willkg): we might be able to get rid of the sentry event capture if the
+        # FalconIntegration in sentry-sdk gets fixed
+        with sentry_sdk.configure_scope() as scope:
+            # The SentryWsgiMiddleware tacks on an unhelpful transaction value which
+            # makes things hard to find in the Sentry interface, so we stomp on that
+            # with the req.path
+            scope.transaction.name = req.path
+            hub = Hub.current
+
+            event, hint = event_from_exception(
+                ex,
+                client_options=hub.client.options,
+                mechanism={"type": "antenna", "handled": False},
+            )
+
+            event["transaction"] = req.path
+            hub.capture_event(event, hint=hint)
+
         LOGGER.error("Unhandled exception", exc_info=sys.exc_info())
         self._compose_error_response(req, resp, HTTPInternalServerError())
 
@@ -243,32 +294,7 @@ def get_app(config_manager=None):
         processname="antenna",
     )
 
-    scrubber = Scrubber(
-        rules=SCRUB_RULES_DEFAULT + SCRUB_RULES_ANTENNA,
-        error_handler=count_sentry_scrub_error,
-    )
-    set_up_sentry(
-        sentry_dsn=app_config("secret_sentry_dsn"),
-        release=get_release_name(app_config("basedir")),
-        host_id=app_config("host_id"),
-        # Disable frame-local variables
-        with_locals=False,
-        # Disable request data from being added to Sentry events
-        request_bodies="never",
-        # All integrations should be intentionally enabled
-        default_integrations=False,
-        integrations=[
-            AtexitIntegration(),
-            Boto3Integration(),
-            ExcepthookIntegration(),
-            DedupeIntegration(),
-            StdlibIntegration(),
-            ModulesIntegration(),
-            ThreadingIntegration(),
-        ],
-        # Scrub sensitive data
-        before_send=scrubber,
-    )
+    configure_sentry(app_config)
 
     # Build the app and heartbeat manager
     app = AntennaApp(config_manager)
