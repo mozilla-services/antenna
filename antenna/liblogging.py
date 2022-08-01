@@ -81,8 +81,10 @@ def setup_logging(logging_level, debug=False, host_id=None, processname=None):
             },
         },
         "loggers": {
-            "falcon": {"level": logging_level},
             "antenna": {"level": logging_level},
+            "falcon": {"level": logging_level},
+            "fillmore": {"level": logging.ERROR},
+            "markus": {"level": logging.ERROR},
         },
         "root": {"handlers": ["mozlog"], "level": "WARNING"},
     }
@@ -90,7 +92,7 @@ def setup_logging(logging_level, debug=False, host_id=None, processname=None):
     if debug:
         # In debug mode (only the local development environment), we log to the console
         # in a human-readable fashion and add a markus logger
-        dc["loggers"]["markus"] = {"level": "INFO"}
+        dc["loggers"]["markus"] = {"level": logging.INFO}
         dc["root"]["handlers"] = ["console"]
 
     logging.config.dictConfig(dc)
