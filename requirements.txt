@@ -183,9 +183,9 @@ flake8==5.0.3 \
     --hash=sha256:93aa565ae2f0316b95bb57a354f2b2d55ee8508e1fe1cb13b77b9c195b4a2537 \
     --hash=sha256:b27fd7faa8d90aaae763664a489012292990388e5d3604f383b290caefbbc922
     # via -r requirements.in
-freezegun==1.2.1 \
-    --hash=sha256:15103a67dfa868ad809a8f508146e396be2995172d25f927e48ce51c0bf5cb09 \
-    --hash=sha256:b4c64efb275e6bc68dc6e771b17ffe0ff0f90b81a2a5189043550b6519926ba4
+freezegun==1.2.2 \
+    --hash=sha256:cd22d1ba06941384410cd967d8a99d5ae2442f57dfafeff2fda5de8dc5c05446 \
+    --hash=sha256:ea1b963b993cb9ea195adbd893a48d573fda951b0da64f60883d7e988b606c9f
     # via -r requirements.in
 gevent==21.12.0 \
     --hash=sha256:0082d8a5d23c35812ce0e716a91ede597f6dd2c5ff508a02a998f73598c59397 \
