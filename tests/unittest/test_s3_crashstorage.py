@@ -35,7 +35,10 @@ class TestS3CrashStorageIntegration:
         # # We want to verify these files are saved in this specific order.
         s3mock.add_step(
             method="PUT",
-            url="http://fakes3:4569/fakebucket/v1/dump_names/de1bb258-cbbf-4589-a673-34f800160918",
+            url=(
+                "http://fakes3:4569/fakebucket/v1/dump_names/"
+                + "de1bb258-cbbf-4589-a673-34f800160918"
+            ),
             body=b'["upload_file_minidump"]',
             resp=s3mock.fake_response(status_code=200),
         )
@@ -47,7 +50,10 @@ class TestS3CrashStorageIntegration:
         )
         s3mock.add_step(
             method="PUT",
-            url="http://fakes3:4569/fakebucket/v2/raw_crash/de1/20160918/de1bb258-cbbf-4589-a673-34f800160918",
+            url=(
+                "http://fakes3:4569/fakebucket/v2/raw_crash/20160918/"
+                + "de1bb258-cbbf-4589-a673-34f800160918"
+            ),
             # Not going to compare the body here because it's just the raw crash
             resp=s3mock.fake_response(status_code=200),
         )
@@ -116,8 +122,8 @@ class TestS3CrashStorageIntegration:
         s3mock.add_step(
             method="PUT",
             url=(
-                "http://fakes3:4569/fakebucket.with.periods/v2/raw_crash/de1/20160918/"
-                "de1bb258-cbbf-4589-a673-34f800160918"
+                "http://fakes3:4569/fakebucket.with.periods/v2/raw_crash/20160918/"
+                + "de1bb258-cbbf-4589-a673-34f800160918"
             ),
             # Not going to compare the body here because it's just the raw crash
             resp=s3mock.fake_response(status_code=200),
@@ -230,8 +236,8 @@ class TestS3CrashStorageIntegration:
         s3mock.add_step(
             method="PUT",
             url=(
-                "http://fakes3:4569/fakebucket/v2/raw_crash/de1/"
-                "20160918/de1bb258-cbbf-4589-a673-34f800160918"
+                "http://fakes3:4569/fakebucket/v2/raw_crash/"
+                + "20160918/de1bb258-cbbf-4589-a673-34f800160918"
             ),
             # Not going to compare the body here because it's just the raw crash
             resp=s3mock.fake_response(status_code=200),
