@@ -24,7 +24,8 @@ class TestDiscarded:
 
         assert resp.status_code == 400
         assert (
-            str(resp.content, encoding="utf-8") == "Discarded=malformed_no_annotations"
+            str(resp.content, encoding="utf-8")
+            == "Discarded=malformed_invalid_payload_structure"
         )
 
     def test_missing_content_type(self, posturl, s3conn, crash_generator):
@@ -71,7 +72,8 @@ class TestDiscarded:
 
         assert resp.status_code == 400
         assert (
-            str(resp.content, encoding="utf-8") == "Discarded=malformed_no_annotations"
+            str(resp.content, encoding="utf-8")
+            == "Discarded=malformed_invalid_payload_structure"
         )
 
     def test_compressed_payload_bad_header(self, posturl, s3conn, crash_generator):
@@ -88,7 +90,8 @@ class TestDiscarded:
 
         assert resp.status_code == 400
         assert (
-            str(resp.content, encoding="utf-8") == "Discarded=malformed_no_annotations"
+            str(resp.content, encoding="utf-8")
+            == "Discarded=malformed_invalid_payload_structure"
         )
 
     def test_compressed_header_non_compressed_payload(
