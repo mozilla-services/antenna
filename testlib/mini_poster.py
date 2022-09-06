@@ -286,9 +286,8 @@ def cmdline(args):
             logger.info("Trying to find dump_names and dumps...")
             crashid = str(Path(parsed.raw_crash).name)
 
-            # First, raw_crash is ROOT/v2/raw_crash/ENTROPY/DATE/CRASHID, so
-            # find the root.
-            root_path = Path(parsed.raw_crash).parents[4]
+            # First, raw_crash is ROOT/v2/raw_crash/DATE/CRASHID, so find the root.
+            root_path = Path(parsed.raw_crash).parents[3]
 
             # First find dump_names which tells us about all the dumps.
             logger.info("Looking for dumps listed in dump_names...")

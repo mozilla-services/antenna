@@ -208,7 +208,7 @@ Which gets converted to a ``raw_crash`` like this::
 
 Which ends up in S3 like this::
 
-    v2/raw_crash/000/20160513/00007bd0-2d1c-4865-af09-80bc02160513
+    v2/raw_crash/20160513/00007bd0-2d1c-4865-af09-80bc02160513
 
         Raw crash in serialized in JSON.
 

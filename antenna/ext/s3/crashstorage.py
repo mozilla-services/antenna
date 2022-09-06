@@ -29,9 +29,8 @@ class S3CrashStorage(CrashStorageBase):
                    <CRASHID>
            v2/
                raw_crash/
-                   <ENTROPY>/
-                       <YYYYMMDD>/
-                           <CRASHID>
+                   <YYYYMMDD>/
+                       <CRASHID>
 
     """
 
@@ -66,8 +65,7 @@ class S3CrashStorage(CrashStorageBase):
         self.connection.check_health(state)
 
     def _get_raw_crash_path(self, crash_id):
-        return "v2/raw_crash/{entropy}/{date}/{crash_id}".format(
-            entropy=crash_id[:3],
+        return "v2/raw_crash/{date}/{crash_id}".format(
             date=get_date_from_crash_id(crash_id),
             crash_id=crash_id,
         )
