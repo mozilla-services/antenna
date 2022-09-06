@@ -65,11 +65,13 @@ class TestContentLength:
         )
 
     def test_content_length_20(self, posturl, crash_generator):
-        """Post a crash with a content-length 20"""
+        """Post a crash with a content-length 20 which is less than content"""
         raw_crash, dumps = crash_generator.generate()
 
         # Generate the payload and headers for a crash with no dumps
         payload, headers = mini_poster.multipart_encode(raw_crash)
+
+        assert int(headers["Content-Length"]) > 20
 
         # Add wrong content-length
         headers["Content-Length"] = "20"
@@ -78,7 +80,8 @@ class TestContentLength:
 
         assert resp.getcode() == 400
         assert (
-            str(resp.read(), encoding="utf-8") == "Discarded=malformed_no_annotations"
+            str(resp.read(), encoding="utf-8")
+            == "Discarded=malformed_invalid_payload_structure"
         )
 
     def test_content_length_1000(self, posturl, crash_generator, nginx):
