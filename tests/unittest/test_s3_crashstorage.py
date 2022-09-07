@@ -51,7 +51,7 @@ class TestS3CrashStorageIntegration:
         s3mock.add_step(
             method="PUT",
             url=(
-                "http://fakes3:4569/fakebucket/v2/raw_crash/20160918/"
+                "http://fakes3:4569/fakebucket/v1/raw_crash/20160918/"
                 + "de1bb258-cbbf-4589-a673-34f800160918"
             ),
             # Not going to compare the body here because it's just the raw crash
@@ -122,7 +122,7 @@ class TestS3CrashStorageIntegration:
         s3mock.add_step(
             method="PUT",
             url=(
-                "http://fakes3:4569/fakebucket.with.periods/v2/raw_crash/20160918/"
+                "http://fakes3:4569/fakebucket.with.periods/v1/raw_crash/20160918/"
                 + "de1bb258-cbbf-4589-a673-34f800160918"
             ),
             # Not going to compare the body here because it's just the raw crash
@@ -236,7 +236,7 @@ class TestS3CrashStorageIntegration:
         s3mock.add_step(
             method="PUT",
             url=(
-                "http://fakes3:4569/fakebucket/v2/raw_crash/"
+                "http://fakes3:4569/fakebucket/v1/raw_crash/"
                 + "20160918/de1bb258-cbbf-4589-a673-34f800160918"
             ),
             # Not going to compare the body here because it's just the raw crash

@@ -224,7 +224,7 @@ AWS S3 file hierarchy
 If you use the Amazon Web Services S3 crashstorage component, then crashes get
 saved in this hierarchy in the bucket:
 
-* ``/v2/raw_crash/<DATE>/<CRASHID>``
+* ``/v1/raw_crash/<DATE>/<CRASHID>``
 * ``/v1/dump_names/<CRASHID>``
 
 And then one or more dumps in directories by dump name:
@@ -237,7 +237,7 @@ For example, a crash with id ``00007bd0-2d1c-4865-af09-80bc00170413`` and
 two dumps "upload_file_minidump" and "upload_file_minidump_flash1" gets
 these files saved::
 
-    v2/raw_crash/20170413/00007bd0-2d1c-4865-af09-80bc00170413
+    v1/raw_crash/20170413/00007bd0-2d1c-4865-af09-80bc00170413
 
         Raw crash in serialized in JSON.
 

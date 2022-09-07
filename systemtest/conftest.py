@@ -204,7 +204,7 @@ def crash_generator():
 
 class CrashVerifier:
     def raw_crash_key(self, crash_id):
-        return "v2/raw_crash/{date}/{crashid}".format(
+        return "v1/raw_crash/{date}/{crashid}".format(
             date="20" + crash_id[-6:], crashid=crash_id
         )
 

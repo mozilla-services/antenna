@@ -27,7 +27,6 @@ class S3CrashStorage(CrashStorageBase):
                    <CRASHID>
                <DUMPNAME>/
                    <CRASHID>
-           v2/
                raw_crash/
                    <YYYYMMDD>/
                        <CRASHID>
@@ -65,7 +64,7 @@ class S3CrashStorage(CrashStorageBase):
         self.connection.check_health(state)
 
     def _get_raw_crash_path(self, crash_id):
-        return "v2/raw_crash/{date}/{crash_id}".format(
+        return "v1/raw_crash/{date}/{crash_id}".format(
             date=get_date_from_crash_id(crash_id),
             crash_id=crash_id,
         )
