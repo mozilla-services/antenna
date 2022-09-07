@@ -277,16 +277,16 @@ def cmdline(args):
             logger.info("Adding dump %s -> %s..." % (dump_name, dump_path))
             dumps[dump_name] = open(dump_path, "rb").read()
 
-    elif "v2" in parsed.raw_crash:
-        # If there's a 'v2' in the raw_crash filename, then it's probably the
-        # case that willkg wants all the pieces for a crash he pulled from S3.
-        # We like willkg, so we'll help him out by doing the legwork.
+    elif "v1" in parsed.raw_crash:
+        # If there's a 'v1' in the raw_crash filename, then it's probably the case that
+        # willkg wants all the pieces for a crash he pulled from S3. We like willkg, so
+        # we'll help him out by doing the legwork.
         raw_crash_path = Path(parsed.raw_crash)
-        if str(raw_crash_path.parents[3]).endswith("v2"):
+        if str(raw_crash_path.parents[3]).endswith("v1"):
             logger.info("Trying to find dump_names and dumps...")
             crashid = str(Path(parsed.raw_crash).name)
 
-            # First, raw_crash is ROOT/v2/raw_crash/DATE/CRASHID, so find the root.
+            # First, raw_crash is ROOT/v1/raw_crash/DATE/CRASHID, so find the root.
             root_path = Path(parsed.raw_crash).parents[3]
 
             # First find dump_names which tells us about all the dumps.
