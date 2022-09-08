@@ -277,7 +277,6 @@ ALL_PRODUCTS = []
 MOZILLA_PRODUCTS = [
     "Fenix",
     "Firefox",
-    "FirefoxReality",
     "Focus",
     "MozillaVPN",
     "ReferenceBrowser",
