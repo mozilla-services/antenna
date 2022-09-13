@@ -47,7 +47,7 @@ production, see documentation_.
 2. Clone the repository to your local machine.
 
    Instructions for cloning are `on the Socorro page in GitHub
-    <https://github.com/mozilla-services/socorro>`_.
+   <https://github.com/mozilla-services/socorro>`_.
 
 3. (*Optional for Linux users*) Set UID and GID for Docker container user.
 
@@ -91,57 +91,57 @@ production, see documentation_.
 
       You should see a lot of output. It'll start out with something like this::
 
-         /usr/bin/docker-compose up web
-         antenna_statsd_1 is up-to-date
-         antenna_localstack_1 is up-to-date
-         Starting antenna_web_1 ... done
-         Attaching to antenna_web_1
-         web_1    | + PORT=8000
-         web_1    | + GUNICORN_WORKERS=1
-         web_1    | + GUNICORN_WORKER_CONNECTIONS=4
-         web_1    | + GUNICORN_WORKER_CLASS=gevent
-         web_1    | + GUNICORN_MAX_REQUESTS=0
-         web_1    | + GUNICORN_MAX_REQUESTS_JITTER=0
-         web_1    | + CMD_PREFIX=
-         web_1    | + gunicorn --workers=1 --worker-connections=4 --worker-class=gevent --max-requests=0 --max-requests-jitter=0 --config=antenna/gunicornhooks.py --log-file - --error-logfile=- --access-logfile=- --bind 0.0.0.0:8000 antenna.wsgi:application
-         web_1    | [2021-08-04 19:25:30 +0000] [8] [INFO] Starting gunicorn 20.1.0
-         web_1    | [2021-08-04 19:25:30 +0000] [8] [INFO] Listening at: http://0.0.0.0:8000 (8)
-         web_1    | [2021-08-04 19:25:30 +0000] [8] [INFO] Using worker: gevent
-         web_1    | [2021-08-04 19:25:30 +0000] [9] [INFO] Booting worker with pid: 9
-         web_1    | 2021-08-04 19:25:30,645 INFO - antenna - antenna.sentry - Removed sentry client
-         web_1    | 2021-08-04 19:25:30,663 INFO - antenna - markus.backends.datadog - DatadogMetrics configured: statsd:8125 mcboatface
-         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - BASEDIR=/app
-         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - LOGGING_LEVEL=DEBUG
-         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - LOCAL_DEV_ENV=True
-         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - STATSD_HOST=statsd
-         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - STATSD_PORT=8125
-         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - STATSD_NAMESPACE=mcboatface
-         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - SECRET_SENTRY_DSN=
-         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - HOST_ID=
-         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - CRASHMOVER_CONCURRENT_CRASHMOVERS=2
-         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_CLASS=antenna.ext.s3.crashstorage.S3CrashStorage
-         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_CLASS=antenna.ext.sqs.crashpublish.SQSCrashPublish
-         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_CONNECTION_CLASS=antenna.ext.s3.connection.S3Connection
-         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_ACCESS_KEY=foo
-         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_SECRET_ACCESS_KEY=*****
-         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_REGION=us-east-1
-         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_ENDPOINT_URL=http://localstack:4566
-         web_1    | 2021-08-04 19:25:30,672 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_BUCKET_NAME=antennabucket
-         web_1    | 2021-08-04 19:25:30,673 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_ACCESS_KEY=foo
-         web_1    | 2021-08-04 19:25:30,673 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_SECRET_ACCESS_KEY=*****
-         web_1    | 2021-08-04 19:25:30,673 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_REGION=us-east-1
-         web_1    | 2021-08-04 19:25:30,673 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_ENDPOINT_URL=http://localstack:4566
-         web_1    | 2021-08-04 19:25:30,673 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_QUEUE_NAME=local_dev_socorro_standard
-         web_1    | 2021-08-04 19:25:30,673 INFO - antenna - antenna.app - BREAKPAD_DUMP_FIELD=upload_file_minidump
-         web_1    | 2021-08-04 19:25:30,673 INFO - antenna - antenna.app - BREAKPAD_THROTTLER_RULES=antenna.throttler.MOZILLA_RULES
-         web_1    | 2021-08-04 19:25:30,673 INFO - antenna - antenna.app - BREAKPAD_THROTTLER_PRODUCTS=antenna.throttler.MOZILLA_PRODUCTS
-         web_1    | 2021-08-04 19:25:30,673 DEBUG - antenna - antenna.heartbeat - Verification starting.
-         web_1    | 2021-08-04 19:25:30,673 DEBUG - antenna - antenna.heartbeat - Verifying S3CrashStorage.verify_write_to_bucket
-         web_1    | 2021-08-04 19:25:30,682 DEBUG - antenna - antenna.heartbeat - Verifying SQSCrashPublish.verify_queue
-         web_1    | 2021-08-04 19:25:30,692 DEBUG - antenna - antenna.heartbeat - Verification complete: everything is good!
-         web_1    | 2021-08-04 19:25:30,692 INFO - antenna - antenna.app - Antenna is running! http://localhost:8000
-         web_1    | 2021-08-04 19:25:30,692 INFO - antenna - antenna.heartbeat - Starting heartbeat
-         web_1    | 2021-08-04 19:25:30,692 DEBUG - antenna - antenna.heartbeat - thump
+         web_1 | + PORT=8000
+         web_1 | + GUNICORN_WORKERS=1
+         web_1 | + GUNICORN_WORKER_CONNECTIONS=4
+         web_1 | + GUNICORN_WORKER_CLASS=gevent
+         web_1 | + GUNICORN_MAX_REQUESTS=0
+         web_1 | + GUNICORN_MAX_REQUESTS_JITTER=0
+         web_1 | + CMD_PREFIX=
+         web_1 | + gunicorn --workers=1 --worker-connections=4 --worker-class=gevent --max-requests=0 --max-requests-jitter=0 --config=antenna/gunicornhooks.py --log-file=- --error-logfile=- --access-logfile=- --bind 0.0.0.0:8000 antenna.wsgi:application
+         web_1 | [2022-09-13 14:21:45 +0000] [8] [INFO] Starting gunicorn 20.1.0
+         web_1 | [2022-09-13 14:21:45 +0000] [8] [INFO] Listening at: http://0.0.0.0:8000 (8)
+         web_1 | [2022-09-13 14:21:45 +0000] [8] [INFO] Using worker: gevent
+         web_1 | [2022-09-13 14:21:45 +0000] [9] [INFO] Booting worker with pid: 9
+         web_1 | 2022-09-13 14:21:45,461 INFO - antenna - antenna.liblogging - set up logging logging_level=DEBUG debug=True host_id=097fa14aec1e processname=antenna
+         web_1 | 2022-09-13 14:21:45,573 DEBUG - antenna - antenna.heartbeat - registered S3CrashStorage.verify_write_to_bucket for verification
+         web_1 | 2022-09-13 14:21:45,612 DEBUG - antenna - antenna.heartbeat - registered SQSCrashPublish.verify_queue for verification
+         web_1 | 2022-09-13 14:21:45,612 DEBUG - antenna - antenna.heartbeat - registered CrashMover.hb_report_health_stats for heartbeats
+         web_1 | 2022-09-13 14:21:45,612 DEBUG - antenna - antenna.heartbeat - registered CrashMover.hb_run_crashmover for heartbeats
+         web_1 | 2022-09-13 14:21:45,612 DEBUG - antenna - antenna.heartbeat - registered CrashMover.has_work_to_do for life
+         web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - BASEDIR=/app
+         web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - LOGGING_LEVEL=DEBUG
+         web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - LOCAL_DEV_ENV=True
+         web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - STATSD_HOST=statsd
+         web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - STATSD_PORT=8125
+         web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - STATSD_NAMESPACE=mcboatface
+         web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - SECRET_SENTRY_DSN=*****
+         web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - HOST_ID=
+         web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - CRASHMOVER_CONCURRENT_CRASHMOVERS=8
+         web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_CLASS=antenna.ext.s3.crashstorage.S3CrashStorage
+         web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_CLASS=antenna.ext.sqs.crashpublish.SQSCrashPublish
+         web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_CONNECTION_CLASS=antenna.ext.s3.connection.S3Connection
+         web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_ACCESS_KEY=foo
+         web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_SECRET_ACCESS_KEY=*****
+         web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_REGION=us-east-1
+         web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_ENDPOINT_URL=http://localstack:4566
+         web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_BUCKET_NAME=antennabucket
+         web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_ACCESS_KEY=foo
+         web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_SECRET_ACCESS_KEY=*****
+         web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_REGION=us-east-1
+         web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_ENDPOINT_URL=http://localstack:4566
+         web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_QUEUE_NAME=local_dev_socorro_standard
+         web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - BREAKPAD_DUMP_FIELD=upload_file_minidump
+         web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - BREAKPAD_THROTTLER_RULES=antenna.throttler.MOZILLA_RULES
+         web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - BREAKPAD_THROTTLER_PRODUCTS=antenna.throttler.MOZILLA_PRODUCTS
+         web_1 | 2022-09-13 14:21:45,661 INFO - antenna - markus.backends.datadog - DatadogMetrics configured: statsd:8125 mcboatface
+         web_1 | 2022-09-13 14:21:45,668 DEBUG - antenna - antenna.heartbeat - Verification starting.
+         web_1 | 2022-09-13 14:21:45,669 DEBUG - antenna - antenna.heartbeat - Verifying SQSCrashPublish.verify_queue
+         web_1 | 2022-09-13 14:21:45,678 DEBUG - antenna - antenna.heartbeat - Verifying S3CrashStorage.verify_write_to_bucket
+         web_1 | 2022-09-13 14:21:45,699 DEBUG - antenna - antenna.heartbeat - Verification complete: everything is good!
+         web_1 | 2022-09-13 14:21:45,699 INFO - antenna - antenna.app - Antenna is running! http://localhost:8000/
+         web_1 | 2022-09-13 14:21:45,699 INFO - antenna - antenna.heartbeat - Starting heartbeat
+         web_1 | 2022-09-13 14:21:45,700 INFO - antenna - markus - METRICS|2022-09-13 14:21:45|gauge|crashmover.work_queue_size|0|
 
    2. Verify things are running:
 
@@ -170,11 +170,19 @@ production, see documentation_.
       You should get a CrashID back from the HTTP POST. You'll also see docker
       logging output something like this::
 
-         web_1      | [2016-11-07 15:48:45 +0000] [INFO] antenna.breakpad_resource: a448814e-16dd-45fb-b7dd-b0b522161010 received with existing crash_id
-         web_1      | [2016-11-07 15:48:45 +0000] [INFO] antenna.breakpad_resource: a448814e-16dd-45fb-b7dd-b0b522161010: matched by is_firefox_desktop; returned ACCEPT
-         web_1      | [2016-11-07 15:48:45 +0000] [INFO] antenna.breakpad_resource: a448814e-16dd-45fb-b7dd-b0b522161010 accepted
-         web_1      | [2016-11-07 15:48:45 +0000] [INFO] antenna.breakpad_resource: a448814e-16dd-45fb-b7dd-b0b522161010 saved
-
+         web_1 | 2022-09-13 14:23:19,307 INFO - antenna - markus - METRICS|2022-09-13 14:23:19|histogram|breakpad_resource.crash_size|367|#payload:uncompressed
+         web_1 | 2022-09-13 14:23:19,308 INFO - antenna - markus - METRICS|2022-09-13 14:23:19|incr|breakpad_resource.incoming_crash|1|
+         web_1 | 2022-09-13 14:23:19,327 INFO - antenna - antenna.breakpad_resource - 6214725e-707c-4819-b2b4-93dce0220913: matched by accept_everything; returned ACCEPT
+         web_1 | 2022-09-13 14:23:19,328 INFO - antenna - markus - METRICS|2022-09-13 14:23:19|incr|breakpad_resource.throttle_rule|1|#rule:accept_everything
+         web_1 | 2022-09-13 14:23:19,328 INFO - antenna - markus - METRICS|2022-09-13 14:23:19|incr|breakpad_resource.throttle|1|#result:accept
+         web_1 | 2022-09-13 14:23:19,329 INFO - antenna - markus - METRICS|2022-09-13 14:23:19|timing|breakpad_resource.on_post.time|21.956996999506373|
+         web_1 | 2022-09-13 14:23:19,366 INFO - antenna - antenna.crashmover - 6214725e-707c-4819-b2b4-93dce0220913 saved
+         web_1 | 2022-09-13 14:23:19,366 INFO - antenna - markus - METRICS|2022-09-13 14:23:19|timing|crashmover.crash_save.time|36.97146700142184|
+         web_1 | 2022-09-13 14:23:19,374 INFO - antenna - antenna.crashmover - 6214725e-707c-4819-b2b4-93dce0220913 published
+         web_1 | 2022-09-13 14:23:19,374 INFO - antenna - markus - METRICS|2022-09-13 14:23:19|timing|crashmover.crash_publish.time|7.21690399950603|
+         web_1 | 2022-09-13 14:23:19,374 INFO - antenna - markus - METRICS|2022-09-13 14:23:19|timing|crashmover.crash_handling.time|67.44074821472168|
+         web_1 | 2022-09-13 14:23:19,374 INFO - antenna - markus - METRICS|2022-09-13 14:23:19|incr|crashmover.save_crash.count|1|
+         web_1 | 2022-09-13 14:23:22,814 INFO - antenna - markus - METRICS|2022-09-13 14:23:22|gauge|crashmover.work_queue_size|0|
 
    4. See the data in localstack:
 

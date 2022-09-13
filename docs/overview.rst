@@ -21,13 +21,14 @@ does, see the `Socorro Overview
 Purpose
 =======
 
-Antenna handles incoming breakpad crash reports, parses them, saves the raw
-crash data to AWS S3, and publishes the crash report id to AWS SQS for
+Antenna is the collector of the crash ingestion pipeline. It handles incoming
+crash reports posted by crash reporter clients, generates a crash id which is
+returned to the client, saves the information, and publishes a crash ids for
 processing.
 
 
 Requirements
-============
+------------
 
 Antenna is built with the following requirements:
 
@@ -62,45 +63,9 @@ Antenna is built with the following requirements:
 High-level architecture
 =======================
 
-.. graphviz::
+Antenna is the collector of the crash ingestion pipeline.
 
-   digraph G {
-       edge [
-           fontsize=9
-       ];
-       node [
-           shape=box,
-           fontsize=9
-       ];
-
-       rankdir=LR;
-
-       subgraph clusternode {
-           rank=same;
-
-           nginx [shape=box, label="nginx", height=1];
-           antenna [shape=box, label="Gunicorn\nrunning\nAntenna", height=1];
-       }
-
-       client [shape=box3d, label="Breakpad\nclient"];
-       awss3 [shape=tab, label="AWS S3"];
-       awssqs [shape=tab, label="AWS SQS"];
-
-       client -> nginx [label="HTTP POST"];
-
-       nginx -> antenna;
-       antenna -> nginx;
-
-       nginx -> client [label="crashid"];
-       antenna -> awss3 [label="save to S3"];
-       antenna -> awssqs [label="publish id to SQS"];
-
-       { rank=min; client; }
-       { rank=max; awss3; }
-   }
-
-
-We run multiple Antenna collector nodes behind an ELB.
+.. image:: drawio/antenna_architecture.drawio.svg
 
 
 Data flow
@@ -109,55 +74,99 @@ Data flow
 This is the rough data flow:
 
 1. Crash reporter client submits a crash report via HTTP POST with a
-   multipart/form-data encoded payload.
+   ``multipart/form-data`` encoded payload.
+
+   See `Specification: Submitting Crash Reports
+   <https://socorro.readthedocs.io/en/latest/spec_crashreport.html>`__ for
+   details on format.
 
 2. Antenna's ``BreakpadSubmitterResource`` handles the HTTP POST
    request.
 
-   If the payload is compressed, it uncompresses it.
+   If the payload is compressed, Antenna uncompresses it.
 
-   It extracts the payload converting it into a dict.
+   Antenna extracts the payload.
 
-   It throttles the crash.
+   Antenna throttles the crash report using a ruleset defined in the throttler.
 
-   It generates a crash id.
+   If the throttler rejects the crash, collection ends here.
 
-   It returns the crash id to the crash reporter client.
+   If the throttler accepts the crash, Antenna generates a crash id.
 
-3. The ``BreakpadSubmitterResource`` tosses the crash in the ``crashmover_queue``.
-   It tosses the crash in the ``crashmover_queue``.
-
-4. At this point, the HTTP conversation is done and the connection ends.
-
-5. ... time passes depending on how many things are in the
+3. The ``BreakpadSubmitterResource`` adds the crash report data to the
    ``crashmover_queue``.
 
-6. A crashmover coroutine frees up, pulls the crash out of the
-   ``crashmover_queue``, and then tries to save it to whatever crashstorage
-   class is set up. If it's ``S3CrashStorage``, then it saves it to AWS S3.
+   At this point, the HTTP POST has been handled, the crash id is sent to the
+   crash reporter client and the HTTP connection ends.
 
-   If the save is successful, then the coroutine publishes the crash report
+   Time passes depending on how many things are in the
+   ``crashmover_queue``.
+
+4. A crashmover coroutine frees up, pulls the crash report data out of the
+   ``crashmover_queue``, and then tries to save it to crashstorage.
+
+   If crashstorage is ``S3CrashStorage``, then the crashmover saves the crash
+   report data to AWS S3.
+
+   If the save is successful, then the crashmover publishes the crash report
    id to the AWS SQS standard queue for processing.
 
-   If publishing is successful, the coroutine moves on to the next crash in the
-   queue.
+   If publishing is successful, the crashmover moves on to the next crash
+   report in the queue.
 
-   If the save or publish is not successful, the coroutine puts the crash back
-   in the queue and moves on with the next crash.
+   If the save or publish is not successful, the crashmover puts the crash
+   report data back in the queue and moves on with the next crash.
 
 
 Diagnostics
 ===========
 
+Collector-added fields
+----------------------
+
+Antenna adds several fields to the raw crash capturing information about
+collection:
+
+``collector_notes``
+    Notes covering what happened during collection. This includes which fields
+    were removed from the raw crash.
+
+``dump_checksums``
+    Map of dump name (e.g. ``upload_file_minidump``) to md5 checksum for that
+    dump.
+
+``MinidumpSha256Hash``
+    The md5 hash of the ``upload_file_minidump`` minidump if there was one.
+    Otherwise it's the empty string.
+
+    This is named like this to "match" the equivalent field in the crash ping.
+
+``payload``
+    Specifies how the crash annotations were in the crash report. ``multipart``
+    means the crash annotations were encoded in ``multipart/form-data`` fields
+    and ``json`` means the crash annotations were in a JSON-encoded value in a
+    field named ``extra``.
+
+``payload_compressed``
+    ``1`` if the payload was compressed and ``0`` if it wasn't.
+
+``submitted_timestamp``
+    The timestamp for when this crash report was collected in UTC in
+    ``YYYY-MM-DDTHH:MM:SS.SSSSSS`` format.
+
+``uuid``
+    The crash id generated for this crash report.
+
+
 Logs to stdout
 --------------
 
-Antenna logs its activity to stdout in `mozlog format
-<https://python-dockerflow.readthedocs.io/en/latest/logging.html>`_.
+In a production environment, Antenna logs to stdout in `mozlog format
+<https://python-dockerflow.readthedocs.io/en/main/logging.html>`_.
 
 You can see crashes being accepted and saved::
 
-    {"Timestamp": 1493998643710555648, "Type": "antenna.breakpad_resource","Logger": "antenna", "Hostname": "ebf44d051438", "EnvVersion": "2.0", "Severity": 6, "Pid": 15, "Fields": {"host_id": "ebf44d051438", "message": "8e01b4e0-f38f-4b16-bc5a-043971170505: matched by is_firefox_desktop; returned DEFER"}}
+    {"Timestamp": 1493998643710555648, "Type": "antenna.breakpad_resource", "Logger": "antenna", "Hostname": "ebf44d051438", "EnvVersion": "2.0", "Severity": 6, "Pid": 15, "Fields": {"host_id": "ebf44d051438", "message": "8e01b4e0-f38f-4b16-bc5a-043971170505: matched by is_firefox_desktop; returned DEFER"}}
     {"Timestamp": 1493998645733482752, "Type": "antenna.breakpad_resource", "Logger": "antenna", "Hostname": "ebf44d051438", "EnvVersion": "2.0", "Severity": 6, "Pid": 15, "Fields": {"host_id": "ebf44d051438", "message": "8e01b4e0-f38f-4b16-bc5a-043971170505 saved"}}
 
 
