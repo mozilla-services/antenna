@@ -10,7 +10,11 @@ import string
 from everett.manager import ConfigManager
 import pytest
 
-from antenna.breakpad_resource import BreakpadSubmitterResource, MalformedCrashReport
+from antenna.breakpad_resource import (
+    BreakpadSubmitterResource,
+    CrashReport,
+    MalformedCrashReport,
+)
 from antenna.throttler import ACCEPT
 from testlib.mini_poster import compress, multipart_encode
 
@@ -55,14 +59,16 @@ class TestBreakpadSubmitterResource:
         )
 
         bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
-        expected_raw_crash = {
-            "ProductName": "Firefox",
-            "Version": "1.0",
-            "payload": "multipart",
-            "payload_compressed": "0",
-        }
-        expected_dumps = {"upload_file_minidump": b"abcd1234"}
-        assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
+        crash_report = CrashReport(
+            annotations={
+                "ProductName": "Firefox",
+                "Version": "1.0",
+            },
+            dumps={"upload_file_minidump": b"abcd1234"},
+            payload="multipart",
+            payload_compressed="0",
+        )
+        assert bsp.extract_payload(req) == crash_report
 
     def test_extract_payload_many_annotations(self, request_generator):
         # Test extracting with 200-ish annotations. At the time of this writing, there
@@ -93,16 +99,14 @@ class TestBreakpadSubmitterResource:
         )
 
         bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
-        raw_crash, dumps = bsp.extract_payload(req)
+        crash_report = bsp.extract_payload(req)
 
-        # Start with the keys that we encoded in the request body
+        # Build set of expected keys--only the annotations
         expected_keys = set(data.keys())
-        # Remove upload_file_minidump because that's a file and not an annotation
         expected_keys -= {"upload_file_minidump"}
-        # Add keys added by BreakpadSubmitterResource
-        expected_keys |= {"payload", "payload_compressed"}
-        assert set(raw_crash.keys()) == expected_keys
-        assert dumps == {"upload_file_minidump": b"abcd1234"}
+
+        assert set(crash_report.annotations.keys()) == expected_keys
+        assert crash_report.dumps == {"upload_file_minidump": b"abcd1234"}
 
     def test_extract_payload_multipart_mixed(self, request_generator):
         crashmover = FakeCrashMover()
@@ -119,14 +123,16 @@ class TestBreakpadSubmitterResource:
         )
 
         bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
-        expected_raw_crash = {
-            "ProductName": "Firefox",
-            "Version": "1.0",
-            "payload": "multipart",
-            "payload_compressed": "0",
-        }
-        expected_dumps = {"upload_file_minidump": b"abcd1234"}
-        assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
+        crash_report = CrashReport(
+            annotations={
+                "ProductName": "Firefox",
+                "Version": "1.0",
+            },
+            dumps={"upload_file_minidump": b"abcd1234"},
+            payload="multipart",
+            payload_compressed="0",
+        )
+        assert bsp.extract_payload(req) == crash_report
 
     def test_extract_payload_2_dumps(self, request_generator):
         crashmover = FakeCrashMover()
@@ -147,17 +153,19 @@ class TestBreakpadSubmitterResource:
         )
 
         bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
-        expected_raw_crash = {
-            "ProductName": "Firefox",
-            "Version": "1",
-            "payload": "multipart",
-            "payload_compressed": "0",
-        }
-        expected_dumps = {
-            "upload_file_minidump": b"deadbeef",
-            "upload_file_minidump_flash1": b"abcd1234",
-        }
-        assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
+        crash_report = CrashReport(
+            annotations={
+                "ProductName": "Firefox",
+                "Version": "1",
+            },
+            dumps={
+                "upload_file_minidump": b"deadbeef",
+                "upload_file_minidump_flash1": b"abcd1234",
+            },
+            payload="multipart",
+            payload_compressed="0",
+        )
+        assert bsp.extract_payload(req) == crash_report
 
     def test_extract_payload_bad_content_type(self, request_generator):
         crashmover = FakeCrashMover()
@@ -207,15 +215,15 @@ class TestBreakpadSubmitterResource:
         )
 
         bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
-        expected_raw_crash = {
-            "ProductName": "Firefox",
-            "payload": "multipart",
-            "payload_compressed": "0",
-        }
-        expected_dumps = {
-            "upload_file_minidump": b"ou812",
-        }
-        assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
+        crash_report = CrashReport(
+            annotations={
+                "ProductName": "Firefox",
+            },
+            dumps={"upload_file_minidump": b"ou812"},
+            payload="multipart",
+            payload_compressed="0",
+        )
+        assert bsp.extract_payload(req) == crash_report
 
     def test_extract_payload_invalid_annotation_value(self, request_generator):
         """Verify annotation that's not utf-8 raises error"""
@@ -260,14 +268,16 @@ class TestBreakpadSubmitterResource:
         )
 
         bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
-        expected_raw_crash = {
-            "ProductName": "Firefox",
-            "Version": "1.0",
-            "payload": "multipart",
-            "payload_compressed": "1",
-        }
-        expected_dumps = {"upload_file_minidump": b"abcd1234"}
-        assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
+        crash_report = CrashReport(
+            annotations={
+                "ProductName": "Firefox",
+                "Version": "1.0",
+            },
+            dumps={"upload_file_minidump": b"abcd1234"},
+            payload="multipart",
+            payload_compressed="1",
+        )
+        assert bsp.extract_payload(req) == crash_report
 
     def test_extract_payload_json(self, request_generator):
         crashmover = FakeCrashMover()
@@ -282,14 +292,16 @@ class TestBreakpadSubmitterResource:
         )
 
         bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
-        expected_raw_crash = {
-            "ProductName": "Firefox",
-            "Version": "1.0",
-            "payload": "json",
-            "payload_compressed": "0",
-        }
-        expected_dumps = {"upload_file_minidump": b"abcd1234"}
-        assert bsp.extract_payload(req) == (expected_raw_crash, expected_dumps)
+        crash_report = CrashReport(
+            annotations={
+                "ProductName": "Firefox",
+                "Version": "1.0",
+            },
+            dumps={"upload_file_minidump": b"abcd1234"},
+            payload="json",
+            payload_compressed="0",
+        )
+        assert bsp.extract_payload(req) == crash_report
 
     def test_extract_payload_invalid_json_malformed(self, request_generator):
         crashmover = FakeCrashMover()
@@ -363,14 +375,24 @@ class TestBreakpadSubmitterResource:
     @pytest.mark.parametrize(
         "raw_crash, expected",
         [
-            ({}, {"collector_notes": []}),
+            ({}, {"metadata": {"collector_notes": []}}),
             (
                 {"TelemetryClientId": "ou812"},
-                {"collector_notes": ["Removed TelemetryClientId from raw crash."]},
+                {
+                    "metadata": {
+                        "collector_notes": ["Removed TelemetryClientId from raw crash."]
+                    }
+                },
             ),
             (
                 {"TelemetryServerURL": "ou812"},
-                {"collector_notes": ["Removed TelemetryServerURL from raw crash."]},
+                {
+                    "metadata": {
+                        "collector_notes": [
+                            "Removed TelemetryServerURL from raw crash."
+                        ]
+                    }
+                },
             ),
         ],
     )

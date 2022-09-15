@@ -7,8 +7,10 @@ import io
 import json
 import logging
 import time
+from typing import Dict, List
 import zlib
 
+from attrs import define, field
 from everett.manager import Option
 import falcon
 from falcon.media.multipart import (
@@ -47,6 +49,15 @@ class MalformedCrashReport(Exception):
     Message should be an alpha-numeric error code with no spaces.
 
     """
+
+
+@define
+class CrashReport:
+    annotations: Dict[str, str] = field(factory=dict)
+    dumps: Dict[str, bytes] = field(factory=dict)
+    notes: List[str] = field(factory=list)
+    payload: str = "unknown"
+    payload_compressed: str = "0"
 
 
 class BreakpadSubmitterResource:
@@ -99,7 +110,7 @@ class BreakpadSubmitterResource:
 
         :arg falcon.request.Request req: a Falcon Request instance
 
-        :returns: (raw_crash dict, dumps dict)
+        :returns: CrashReport
 
         :raises MalformedCrashReport:
 
@@ -127,11 +138,12 @@ class BreakpadSubmitterResource:
         if content_length == 0:
             raise MalformedCrashReport("no_content_length")
 
-        is_compressed = False
+        crash_report = CrashReport()
+
         # Decompress payload if it's compressed
         if req.env.get("HTTP_CONTENT_ENCODING") == "gzip":
             mymetrics.incr("gzipped_crash")
-            is_compressed = True
+            crash_report.payload_compressed = "1"
 
             # If the content is gzipped, we pull it out and decompress it. We
             # have to do that here because nginx doesn't have a good way to do
@@ -174,9 +186,6 @@ class BreakpadSubmitterResource:
                 "crash_size", value=content_length, tags=["payload:uncompressed"]
             )
 
-        raw_crash = {}
-        dumps = {}
-
         has_json = False
         has_kvpairs = False
 
@@ -199,21 +208,23 @@ class BreakpadSubmitterResource:
                     # it.
                     has_json = True
                     try:
-                        raw_crash = json.loads(part.stream.read())
+                        annotations = json.loads(part.stream.read())
                     except (json.decoder.JSONDecodeError, UnicodeDecodeError):
                         # The UnicodeDecodeError can happen if the utf-8 codec can't decode
                         # one of the characters. The JSONDecodeError can happen in a variety
                         # of "malformed JSON" situations.
                         raise MalformedCrashReport("invalid_json")
 
-                    if not isinstance(raw_crash, dict):
+                    if not isinstance(annotations, dict):
                         raise MalformedCrashReport("invalid_json_value")
+
+                    crash_report.annotations = annotations
 
                 elif part.content_type.startswith("text/plain") and not part.filename:
                     # This isn't a dump, so it's a key/val pair, so we add that as a string.
                     has_kvpairs = True
                     try:
-                        raw_crash[part.name] = part.get_text()
+                        crash_report.annotations[part.name] = part.get_text()
                     except MultipartParseError as mpe:
                         logger.error(
                             f"extract payload text part exception: {mpe.description}"
@@ -230,7 +241,7 @@ class BreakpadSubmitterResource:
 
                     # This is a dump, so add it to dumps using a sanitized dump name.
                     dump_name = sanitize_key_name(part.name)
-                    dumps[dump_name] = part.stream.read()
+                    crash_report.dumps[dump_name] = part.stream.read()
 
         except MultipartParseError as mpe:
             # If we hit this, then there are a few things that are likely wrong:
@@ -241,7 +252,7 @@ class BreakpadSubmitterResource:
             logger.error(f"extract payload exception: {mpe.description}")
             raise MalformedCrashReport("invalid_payload_structure") from mpe
 
-        if not raw_crash:
+        if not crash_report.annotations:
             raise MalformedCrashReport("no_annotations")
 
         if has_json and has_kvpairs:
@@ -251,15 +262,9 @@ class BreakpadSubmitterResource:
 
         # Add a note about how the annotations were encoded in the crash report. For
         # now, there are two options: json and multipart.
-        if has_json:
-            raw_crash["payload"] = "json"
-        else:
-            raw_crash["payload"] = "multipart"
+        crash_report.payload = "json" if has_json else "multipart"
 
-        # Capture whether the payload was compressed
-        raw_crash["payload_compressed"] = "1" if is_compressed else "0"
-
-        return raw_crash, dumps
+        return crash_report
 
     def get_throttle_result(self, raw_crash):
         """Run raw_crash through throttler for a throttling result.
@@ -280,15 +285,16 @@ class BreakpadSubmitterResource:
         This operates on the raw_crash in-place. This adds notes to ``collector_notes``.
 
         """
-        collector_notes = raw_crash.get("collector_notes", [])
+        if "metadata" not in raw_crash:
+            raw_crash["metadata"] = {}
+
+        notes = raw_crash["metadata"].setdefault("collector_notes", [])
 
         # Remove bad fields
         for bad_field in BAD_FIELDS:
             if bad_field in raw_crash:
                 del raw_crash[bad_field]
-                collector_notes.append("Removed %s from raw crash." % bad_field)
-
-        raw_crash["collector_notes"] = collector_notes
+                notes.append("Removed %s from raw crash." % bad_field)
 
     @mymetrics.timer_decorator("on_post.time")
     def on_post(self, req, resp):
@@ -307,7 +313,7 @@ class BreakpadSubmitterResource:
         resp.content_type = "text/plain"
 
         try:
-            raw_crash, dumps = self.extract_payload(req)
+            crash_report = self.extract_payload(req)
 
         except MalformedCrashReport as exc:
             # If this is malformed, then reject it with malformed error code.
@@ -319,14 +325,26 @@ class BreakpadSubmitterResource:
 
         mymetrics.incr("incoming_crash")
 
+        raw_crash = crash_report.annotations
+
         # Add timestamp to crash report
         raw_crash["submitted_timestamp"] = current_timestamp.isoformat()
 
-        # Add checksums
-        raw_crash["dump_checksums"] = {
-            dump_name: hashlib.sha256(dump).hexdigest()
-            for dump_name, dump in dumps.items()
+        # Add metadata
+        raw_crash["metadata"] = {
+            "payload": crash_report.payload,
+            "payload_compressed": crash_report.payload_compressed,
+            "collector_notes": [],
         }
+
+        # Add checksums to metadata
+        raw_crash["metadata"]["dump_checksums"] = {
+            dump_name: hashlib.sha256(dump).hexdigest()
+            for dump_name, dump in crash_report.dumps.items()
+        }
+
+        # Add version information
+        raw_crash["version"] = 2
 
         # First throttle the crash which gives us the information we need
         # to generate a crash id.
@@ -373,7 +391,7 @@ class BreakpadSubmitterResource:
 
         # Add crash report to crashmover queue
         self.crashmover.add_crashreport(
-            raw_crash=raw_crash, dumps=dumps, crash_id=crash_id
+            raw_crash=raw_crash, dumps=crash_report.dumps, crash_id=crash_id
         )
 
         resp.text = "CrashID=bp-%s\n" % crash_id
