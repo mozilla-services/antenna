@@ -72,8 +72,7 @@ class TestFSCrashStorage:
         assert contents[
             "/antenna_crashes/20160918/raw_crash/de1bb258-cbbf-4589-a673-34f800160918.json"
         ] == (
-            b'{"MinidumpSha256Hash": "e9cee71ab932fde863338d08be4de9dfe39ea049bdafb342ce659ec5450b69ae", '
-            + b'"ProductName": "Test", '
+            b'{"ProductName": "Test", '
             + b'"Version": "1.0", '
             + b'"collector_notes": [], '
             + b'"dump_checksums": '
