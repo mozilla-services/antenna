@@ -72,15 +72,20 @@ class TestFSCrashStorage:
         assert contents[
             "/antenna_crashes/20160918/raw_crash/de1bb258-cbbf-4589-a673-34f800160918.json"
         ] == (
-            b'{"ProductName": "Test", '
+            b"{"
+            + b'"ProductName": "Test", '
             + b'"Version": "1.0", '
+            + b'"metadata": {'
             + b'"collector_notes": [], '
             + b'"dump_checksums": '
             + b'{"upload_file_minidump": "e9cee71ab932fde863338d08be4de9dfe39ea049bdafb342ce659ec5450b69ae"}, '
             + b'"payload": "multipart", '
-            + b'"payload_compressed": "0", '
+            + b'"payload_compressed": "0"'
+            + b"}, "
             + b'"submitted_timestamp": "2011-09-06T00:00:00+00:00", '
-            + b'"uuid": "de1bb258-cbbf-4589-a673-34f800160918"}'
+            + b'"uuid": "de1bb258-cbbf-4589-a673-34f800160918", '
+            + b'"version": 2'
+            + b"}"
         )
 
         assert (
