@@ -322,14 +322,11 @@ class BreakpadSubmitterResource:
         # Add timestamp to crash report
         raw_crash["submitted_timestamp"] = current_timestamp.isoformat()
 
-        # Add checksums and MinidumpSha256Hash
+        # Add checksums
         raw_crash["dump_checksums"] = {
             dump_name: hashlib.sha256(dump).hexdigest()
             for dump_name, dump in dumps.items()
         }
-        raw_crash["MinidumpSha256Hash"] = raw_crash["dump_checksums"].get(
-            "upload_file_minidump", ""
-        )
 
         # First throttle the crash which gives us the information we need
         # to generate a crash id.
