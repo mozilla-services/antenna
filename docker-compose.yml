@@ -16,12 +16,10 @@ services:
   # After this point is dev-related services.
   # ------------------------------------------------------------------
 
-  # Base container is used for development tasks like tests, linting, coverage
-  # and building docs.
+  # Base container is used for development tasks like tests, linting, and
+  # building docs.
   base:
     image: local/antenna_deploy_base
-    environment:
-      - COVERAGE_FILE=/tmp/.coverage
     volumes:
       - .:/app
 

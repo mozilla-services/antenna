@@ -65,7 +65,7 @@ shell: my.env .docker-build  ## | Open a shell in the web image.
 	${DC} run --rm web shell
 
 .PHONY: my.env clean
-clean:  ## | Remove build, test, coverage, and Python artifacts.
+clean:  ## | Remove build, test, and Python artifacts.
 	# python related things
 	-rm -rf build/
 	-rm -rf dist/
@@ -75,9 +75,6 @@ clean:  ## | Remove build, test, coverage, and Python artifacts.
 	find . -name '*.pyc' -exec rm -f {} +
 	find . -name '*.pyo' -exec rm -f {} +
 	find . -name '__pycache__' -exec rm -rf {} +
-
-	# test related things
-	-rm -f .coverage
 
 	# docs files
 	-rm -rf docs/_build/
@@ -105,10 +102,6 @@ test: my.env .docker-build  ## | Run unit tests.
 .PHONY: testshell
 testshell: my.env .docker-build  ## | Open a shell in the test container.
 	${DC} run --rm test shell
-
-.PHONY: test-coverage
-test-coverage: my.env .docker-build  ## | Run test coverage report.
-	${DC} run --rm test shell ./bin/run_tests.sh --cov=antenna --cov-report term-missing
 
 .PHONY: docs
 docs: my.env .docker-build  ## | Generate Sphinx HTML documentation.
