@@ -20,34 +20,10 @@ production, see documentation_.
 
 1. Install required software: Docker, docker-compose (1.10+), make, and git.
 
-   **Linux**:
-
-       Use your package manager.
-
-   **OSX**:
-
-       Install `Docker for Mac <https://docs.docker.com/docker-for-mac/>`_ which
-       will install Docker and docker-compose.
-
-       Use `homebrew <https://brew.sh>`_ to install make and git::
-
-         $ brew install make git
-
-   **Other**:
-
-       Install `Docker <https://docs.docker.com/engine/installation/>`_.
-
-       Install `docker-compose <https://docs.docker.com/compose/install/>`_.
-       You need something higher than 1.10, but less than 2.0.0.
-
-       Install `make <https://www.gnu.org/software/make/>`_.
-
-       Install `git <https://git-scm.com/>`_.
-
 2. Clone the repository to your local machine.
 
-   Instructions for cloning are `on the Socorro page in GitHub
-   <https://github.com/mozilla-services/socorro>`_.
+   Instructions for cloning are `on the Antenna page in GitHub
+   <https://github.com/mozilla-services/antenna>`_.
 
 3. (*Optional for Linux users*) Set UID and GID for Docker container user.
 
@@ -78,8 +54,8 @@ production, see documentation_.
 
       $ make setup
 
-   Anytime you want to wipe service state and recreate them, you can run ``make
-   setup``.
+   Anytime you want to wipe service state and recreate them, you can re-run
+   this make rule.
 
 6. Run with a prod-like fully-functional configuration.
 
