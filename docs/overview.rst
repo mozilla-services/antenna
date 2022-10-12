@@ -127,28 +127,26 @@ Collector-added fields
 Antenna adds several fields to the raw crash capturing information about
 collection:
 
-``collector_notes``
-    Notes covering what happened during collection. This includes which fields
-    were removed from the raw crash.
+``metadata``
+    Holds additional properties of the crash report including how it was
+    structured and whether there were any problems with it.
 
-``dump_checksums``
-    Map of dump name (e.g. ``upload_file_minidump``) to md5 checksum for that
-    dump.
+    ``collector_notes``
+        Notes covering what happened during collection. This includes which fields
+        were removed from the raw crash.
 
-``MinidumpSha256Hash``
-    The md5 hash of the ``upload_file_minidump`` minidump if there was one.
-    Otherwise it's the empty string.
+    ``dump_checksums``
+        Map of dump name (e.g. ``upload_file_minidump``) to md5 checksum for that
+        dump.
 
-    This is named like this to "match" the equivalent field in the crash ping.
+    ``payload``
+        Specifies how the crash annotations were in the crash report. ``multipart``
+        means the crash annotations were encoded in ``multipart/form-data`` fields
+        and ``json`` means the crash annotations were in a JSON-encoded value in a
+        field named ``extra``.
 
-``payload``
-    Specifies how the crash annotations were in the crash report. ``multipart``
-    means the crash annotations were encoded in ``multipart/form-data`` fields
-    and ``json`` means the crash annotations were in a JSON-encoded value in a
-    field named ``extra``.
-
-``payload_compressed``
-    ``1`` if the payload was compressed and ``0`` if it wasn't.
+    ``payload_compressed``
+        ``1`` if the payload was compressed and ``0`` if it wasn't.
 
 ``submitted_timestamp``
     The timestamp for when this crash report was collected in UTC in
@@ -156,6 +154,9 @@ collection:
 
 ``uuid``
     The crash id generated for this crash report.
+
+``version``
+    The raw crash schema version. Currently, this is 2.
 
 
 Logs to stdout
