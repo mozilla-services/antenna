@@ -10,7 +10,7 @@ RUN groupadd --gid $groupid app && \
     chown app:app /app/
 
 RUN apt-get update && \
-    apt-get install -y gcc apt-transport-https build-essential graphviz
+    apt-get install -y gcc apt-transport-https build-essential
 
 COPY --chown=app:app requirements.txt /app/
 
