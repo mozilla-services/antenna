@@ -4,7 +4,7 @@ boto3==1.24.87
 botocore==1.27.87
 datadog==0.44.0
 dockerflow==2022.8.0
-everett==3.0.0
+everett==3.1.0
 falcon==3.1.0
 fillmore==0.1.2
 gevent==21.12.0
