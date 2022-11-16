@@ -259,16 +259,23 @@ def match_unsupported_product(throttler, data):
     return False
 
 
+BUILDID_RE = re.compile(r"^20\d{12}$")
+
+
 def match_old_buildid(throttler, data):
     """Match build ids that are > 2 years old."""
     buildid = safe_get(data, "BuildID")
-    now = datetime.datetime.now()
+    if BUILDID_RE.match(buildid) is None:
+        return False
+
     try:
         buildid_date = datetime.datetime.strptime(buildid[:8], "%Y%m%d")
     except ValueError:
         # If this buildid doesn't have a YYYYMMDD at the beginning, it's not a valid
         # buildid we want to look at
         return False
+
+    now = datetime.datetime.now()
     return buildid_date < (now - datetime.timedelta(days=730))
 
 

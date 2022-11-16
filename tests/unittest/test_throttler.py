@@ -157,7 +157,8 @@ class Testmatch_infobar_true:
         assert match_infobar_true(throttler, raw_crash) is False
 
     def test_buildid(self, throttler):
-        # FIXME(willkg): You might have to update this test when you update the buildid.
+        # NOTE(willkg): You might have to update this test when you update the buildid.
+
         # No BuildID
         raw_crash = {
             "ProductName": "Firefox",
@@ -191,7 +192,14 @@ class Testmatch_old_buildid:
 
     @pytest.mark.parametrize(
         "buildid, expected",
-        [("", False), ("None", False), (None, False), ("abc", False)],
+        [
+            ("", False),
+            ("None", False),
+            (None, False),
+            ("abc", False),
+            ("20220404", False),
+            ("11111111111111", False),
+        ],
     )
     def test_bad_data(self, throttler, buildid, expected):
         raw_crash = {"BuildID": buildid}
