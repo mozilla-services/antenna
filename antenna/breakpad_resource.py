@@ -58,6 +58,7 @@ class CrashReport:
     notes: List[str] = field(factory=list)
     payload: str = "unknown"
     payload_compressed: str = "0"
+    payload_size: int = 0
 
 
 class BreakpadSubmitterResource:
@@ -139,6 +140,7 @@ class BreakpadSubmitterResource:
             raise MalformedCrashReport("no_content_length")
 
         crash_report = CrashReport()
+        crash_report.payload_size = int(content_length)
 
         # Decompress payload if it's compressed
         if req.env.get("HTTP_CONTENT_ENCODING") == "gzip":
@@ -334,6 +336,7 @@ class BreakpadSubmitterResource:
         raw_crash["metadata"] = {
             "payload": crash_report.payload,
             "payload_compressed": crash_report.payload_compressed,
+            "payload_size": crash_report.payload_size,
             "collector_notes": [],
         }
 

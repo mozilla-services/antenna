@@ -81,6 +81,7 @@ class TestFSCrashStorage:
             + b'{"upload_file_minidump": "e9cee71ab932fde863338d08be4de9dfe39ea049bdafb342ce659ec5450b69ae"}, '
             + b'"payload": "multipart", '
             + b'"payload_compressed": "0", '
+            + b'"payload_size": 645, '
             + b'"throttle_rule": "accept_everything"'
             + b"}, "
             + b'"submitted_timestamp": "2011-09-06T00:00:00+00:00", '
