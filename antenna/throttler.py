@@ -212,7 +212,7 @@ def always_match(throttler, crash):
 def match_infobar_true(throttler, data):
     """Match crashes we need to filter out due to infobar bug.
 
-    Bug #1425949.
+    Bug #1426949.
 
     """
     product = safe_get(data, "ProductName")
@@ -232,7 +232,11 @@ def match_infobar_true(throttler, data):
 
 
 def match_b2g(throttler, data):
-    """Match crash reports for B2G."""
+    """Match crash reports for B2G.
+
+    Bug #1500243.
+
+    """
     is_b2g = (
         "B2G" not in throttler.config("products")
         and safe_get(data, "ProductName").lower() == "b2g"
@@ -312,14 +316,14 @@ MOZILLA_RULES = [
         ),
         result=REJECT,
     ),
-    # Reject infobar=true crashes for certain versions of Firefox desktop
+    # Bug #1426949: Reject infobar=true crashes for certain versions of Firefox desktop
     Rule(
         rule_name="infobar_is_true",
         key="*",
         condition=match_infobar_true,
         result=REJECT,
     ),
-    # "Fake accept" B2G crash reports because B2G doesn't handle rejection
+    # Bug #1500243: "Fake accept" B2G crash reports because B2G doesn't handle rejection
     # well and will retry ad infinitum
     Rule(rule_name="b2g", key="*", condition=match_b2g, result=FAKEACCEPT),
     # Reject crash reports for unsupported products; this does nothing if the
@@ -349,8 +353,8 @@ MOZILLA_RULES = [
         condition=lambda throttler, x: x == "gpu",
         result=ACCEPT,
     ),
-    # Throttle ipc_channel_error=ShutDownKill crash reports at 10%--they're
-    # not really *crashes* and we get an awful lot of them; bug #1624949
+    # Bug #1624949: Throttle ipc_channel_error=ShutDownKill crash reports at
+    # 10%--they're not really *crashes* and we get an awful lot of them
     Rule(
         rule_name="is_shutdownkill",
         key="ipc_channel_error",
