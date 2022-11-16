@@ -362,7 +362,7 @@ class BreakpadSubmitterResource:
             )
             raw_crash["uuid"] = crash_id
 
-        # Log the throttle result
+        # Log throttle result and add to raw crash
         logger.info(
             "%s: matched by %s; returned %s",
             crash_id,
@@ -373,6 +373,7 @@ class BreakpadSubmitterResource:
         mymetrics.incr(
             "throttle", tags=["result:%s" % RESULT_TO_TEXT[throttle_result].lower()]
         )
+        raw_crash["metadata"]["throttle_rule"] = rule_name
 
         # If the result is REJECT, then discard it
         if throttle_result is REJECT:
