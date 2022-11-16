@@ -345,6 +345,8 @@ MOZILLA_RULES = [
     Rule(
         rule_name="has_comments", key="Comments", condition=always_match, result=ACCEPT
     ),
+    # Bug #1800531: Accept crash reports that have PHC
+    Rule(rule_name="has_phc", key="PHCKind", condition=always_match, result=ACCEPT),
     # Bug #1547804: Accept crash reports from gpu crashes; we don't get many
     # and our sampling reduces that to a handful that's hard to do things with
     Rule(
