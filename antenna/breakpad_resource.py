@@ -206,15 +206,14 @@ class BreakpadSubmitterResource:
                     continue
 
                 if part.content_type.startswith("application/json"):
-                    # This is a JSON blob, so load it and override raw_crash with
-                    # it.
+                    # This is a JSON blob, so load it and override raw_crash with it.
                     has_json = True
                     try:
                         annotations = json.loads(part.stream.read())
                     except (json.decoder.JSONDecodeError, UnicodeDecodeError):
-                        # The UnicodeDecodeError can happen if the utf-8 codec can't decode
-                        # one of the characters. The JSONDecodeError can happen in a variety
-                        # of "malformed JSON" situations.
+                        # The UnicodeDecodeError can happen if the utf-8 codec can't
+                        # decode one of the characters. The JSONDecodeError can happen
+                        # in a variety of "malformed JSON" situations.
                         raise MalformedCrashReport("invalid_json")
 
                     if not isinstance(annotations, dict):
@@ -223,23 +222,23 @@ class BreakpadSubmitterResource:
                     crash_report.annotations = annotations
 
                 elif part.content_type.startswith("text/plain") and not part.filename:
-                    # This isn't a dump, so it's a key/val pair, so we add that as a string.
+                    # This isn't a dump, so it's a key/val pair, so we add that as a
+                    # string.
                     has_kvpairs = True
                     try:
                         crash_report.annotations[part.name] = part.get_text()
                     except MultipartParseError as mpe:
-                        logger.error(
-                            f"extract payload text part exception: {mpe.description}"
-                        )
-                        raise MalformedCrashReport("invalid_annotation_value") from mpe
+                        # If there was a problem extracting the value as text, then log
+                        # it and add a note
+                        msg = f"extract payload text part exception: {mpe.description}"
+                        logger.error(msg)
+                        crash_report.notes.append(msg)
 
                 else:
                     if part.content_type != "application/octet-stream":
-                        # FIXME(willkg): we should accumulate these issues and then toss
-                        # them in the raw crash where we can see them better
-                        logging.info(
-                            f"unknown content type: {part.name} {part.content_type}"
-                        )
+                        msg = f"unknown content type: {part.name} {part.content_type}"
+                        logging.info(msg)
+                        crash_report.notes.append(msg)
 
                     # This is a dump, so add it to dumps using a sanitized dump name.
                     dump_name = sanitize_key_name(part.name)
@@ -259,8 +258,10 @@ class BreakpadSubmitterResource:
 
         if has_json and has_kvpairs:
             # If the crash payload has both kvpairs and a JSON blob, then it's malformed
-            # and we should dump it.
-            raise MalformedCrashReport("has_json_and_kv")
+            # so we add a note and log it.
+            msg = "includes annotations in both json-encoded extra and formdata parts"
+            logger.info(msg)
+            crash_report.notes.append(msg)
 
         # Add a note about how the annotations were encoded in the crash report. For
         # now, there are two options: json and multipart.
@@ -337,7 +338,7 @@ class BreakpadSubmitterResource:
             "payload": crash_report.payload,
             "payload_compressed": crash_report.payload_compressed,
             "payload_size": crash_report.payload_size,
-            "collector_notes": [],
+            "collector_notes": crash_report.notes,
         }
 
         # Add checksums to metadata

@@ -223,6 +223,7 @@ class TestBreakpadSubmitterResource:
                 "ProductName": "Firefox",
             },
             dumps={"upload_file_minidump": b"ou812"},
+            notes=["unknown content type: upload_file_minidump text/plain"],
             payload="multipart",
             payload_compressed="0",
             payload_size=301,
@@ -230,9 +231,15 @@ class TestBreakpadSubmitterResource:
         assert bsp.extract_payload(req) == crash_report
 
     def test_extract_payload_invalid_annotation_value(self, request_generator):
-        """Verify annotation that's not utf-8 raises error"""
+        """Verify annotation that's not utf-8 is logged"""
         crashmover = FakeCrashMover()
         data = (
+            b"--442e931e47c9474f9bcd9b73e47aa38d\r\n"
+            b'Content-Disposition: form-data; name="Version"\r\n'
+            b"Content-Type: text/plain; charset=utf-8\r\n"
+            b"\r\n"
+            b"100"
+            b"\r\n"
             b"--442e931e47c9474f9bcd9b73e47aa38d\r\n"
             b'Content-Disposition: form-data; name="ProductName"\r\n'
             b"Content-Type: text/plain; charset=utf-8\r\n"
@@ -251,8 +258,15 @@ class TestBreakpadSubmitterResource:
         )
 
         bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
-        with pytest.raises(MalformedCrashReport, match="invalid_annotation_value"):
-            bsp.extract_payload(req)
+        crash_report = CrashReport(
+            annotations={"Version": "100"},
+            notes=[
+                "extract payload text part exception: invalid text or charset: utf-8"
+            ],
+            payload="multipart",
+            payload_size=306,
+        )
+        assert bsp.extract_payload(req) == crash_report
 
     def test_extract_payload_compressed(self, request_generator):
         crashmover = FakeCrashMover()
