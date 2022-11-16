@@ -80,7 +80,8 @@ class TestFSCrashStorage:
             + b'"dump_checksums": '
             + b'{"upload_file_minidump": "e9cee71ab932fde863338d08be4de9dfe39ea049bdafb342ce659ec5450b69ae"}, '
             + b'"payload": "multipart", '
-            + b'"payload_compressed": "0"'
+            + b'"payload_compressed": "0", '
+            + b'"throttle_rule": "accept_everything"'
             + b"}, "
             + b'"submitted_timestamp": "2011-09-06T00:00:00+00:00", '
             + b'"uuid": "de1bb258-cbbf-4589-a673-34f800160918", '
