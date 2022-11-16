@@ -67,6 +67,7 @@ class TestBreakpadSubmitterResource:
             dumps={"upload_file_minidump": b"abcd1234"},
             payload="multipart",
             payload_compressed="0",
+            payload_size=486,
         )
         assert bsp.extract_payload(req) == crash_report
 
@@ -131,6 +132,7 @@ class TestBreakpadSubmitterResource:
             dumps={"upload_file_minidump": b"abcd1234"},
             payload="multipart",
             payload_compressed="0",
+            payload_size=486,
         )
         assert bsp.extract_payload(req) == crash_report
 
@@ -164,6 +166,7 @@ class TestBreakpadSubmitterResource:
             },
             payload="multipart",
             payload_compressed="0",
+            payload_size=668,
         )
         assert bsp.extract_payload(req) == crash_report
 
@@ -222,6 +225,7 @@ class TestBreakpadSubmitterResource:
             dumps={"upload_file_minidump": b"ou812"},
             payload="multipart",
             payload_compressed="0",
+            payload_size=301,
         )
         assert bsp.extract_payload(req) == crash_report
 
@@ -276,6 +280,7 @@ class TestBreakpadSubmitterResource:
             dumps={"upload_file_minidump": b"abcd1234"},
             payload="multipart",
             payload_compressed="1",
+            payload_size=486,
         )
         assert bsp.extract_payload(req) == crash_report
 
@@ -300,6 +305,7 @@ class TestBreakpadSubmitterResource:
             dumps={"upload_file_minidump": b"abcd1234"},
             payload="json",
             payload_compressed="0",
+            payload_size=396,
         )
         assert bsp.extract_payload(req) == crash_report
 
