@@ -334,6 +334,10 @@ class Testmozilla_rules:
         raw_crash = {"ProductName": "Test", "Comments": "foo bar baz"}
         assert throttler.throttle(raw_crash) == (ACCEPT, "has_comments", 100)
 
+    def test_phc(self, throttler):
+        raw_crash = {"ProductName": "Test", "PHCKind": "some value"}
+        assert throttler.throttle(raw_crash) == (ACCEPT, "has_phc", 100)
+
     @pytest.mark.parametrize(
         "processtype, expected",
         [
