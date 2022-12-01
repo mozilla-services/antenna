@@ -95,10 +95,6 @@ everett==3.1.0 \
     --hash=sha256:46175da5bcb06c193aa129e59714bca981344ff067c3a8bc2e625bc0b3dc01f6 \
     --hash=sha256:db13891b849e45e54faea93ee79881d12458c5378f5b9b7f806eeff03ce1de3c
     # via -r requirements.in
-exceptiongroup==1.0.0 \
-    --hash=sha256:2ac84b496be68464a2da60da518af3785fff8b7ec0d090a581604bc870bdee41 \
-    --hash=sha256:affbabf13fb6e98988c38d9c5650e701569fe3c1de3233cfb61c5f33774690ad
-    # via pytest
 falcon==3.1.0 \
     --hash=sha256:0044bd2c161f2b5c27ca5a0068e40bbeee560eb957a6ba01f9c1bb7439f6ab19 \
     --hash=sha256:09dc5f10878565708dc9e58e62e9f2dfee5162a1ea992cb62582ffdacf543ec2 \
@@ -132,9 +128,9 @@ falcon==3.1.0 \
     --hash=sha256:f2760bd18c16393a6fb5e55f371f67921edb72febe693a82b3c5e82195d087b7 \
     --hash=sha256:ff65ffefa629bc72dc868cdca9dfa3ca5d1e5f01b02560b7094df2a0c5b890d1
     # via -r requirements.in
-fillmore==0.1.2 \
-    --hash=sha256:5b81f1defb5db2af703ca0a1759d228232511742232de4bbfb8173ce580719ab \
-    --hash=sha256:8f6b79dc97b391c1e0526e7b2b46a22215542e58f46fabef0b71da10e9bfd54d
+fillmore==1.0.0 \
+    --hash=sha256:6829367ad75f10711a9b97144cb3f9a925d0c06af9c460ea28ab51f8a6d5cd80 \
+    --hash=sha256:9a7f5e3f559ee19307110e8ef094e3063cae666e698a7fe679b959e3c5eaebd4
     # via -r requirements.in
 flake8==5.0.4 \
     --hash=sha256:6fbe320aad8d6b95cec8b8e47bc933004678dc63095be98528b7bdd2a9f510db \
@@ -502,11 +498,7 @@ stevedore==3.5.0 \
 tomli==2.0.1 \
     --hash=sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc \
     --hash=sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f
-    # via
-    #   black
-    #   build
-    #   pep517
-    #   pytest
+    # via pep517
 urllib3==1.26.12 \
     --hash=sha256:3fa96cf423e6987997fc326ae8df396db2a8b7c667747d47ddd8ecba91f4a74e \
     --hash=sha256:b930dd878d5a8afb066a637fbb35144fe7901e3b209d1cd4f524bd0e9deee997
