@@ -95,10 +95,6 @@ everett==3.1.0 \
     --hash=sha256:46175da5bcb06c193aa129e59714bca981344ff067c3a8bc2e625bc0b3dc01f6 \
     --hash=sha256:db13891b849e45e54faea93ee79881d12458c5378f5b9b7f806eeff03ce1de3c
     # via -r requirements.in
-exceptiongroup==1.0.0 \
-    --hash=sha256:2ac84b496be68464a2da60da518af3785fff8b7ec0d090a581604bc870bdee41 \
-    --hash=sha256:affbabf13fb6e98988c38d9c5650e701569fe3c1de3233cfb61c5f33774690ad
-    # via pytest
 falcon==3.1.0 \
     --hash=sha256:0044bd2c161f2b5c27ca5a0068e40bbeee560eb957a6ba01f9c1bb7439f6ab19 \
     --hash=sha256:09dc5f10878565708dc9e58e62e9f2dfee5162a1ea992cb62582ffdacf543ec2 \
@@ -318,9 +314,9 @@ markupsafe==2.1.1 \
     # via
     #   jinja2
     #   werkzeug
-markus==4.0.1 \
-    --hash=sha256:0b1492d896defe2ebaaa3fbe384b0b14c9d2d7ed28d579b655b9146d7451f069 \
-    --hash=sha256:89d27d8948b771bfd475a0324c29b907f10551050b0673ca9b3439c3af943d57
+markus==4.1.0 \
+    --hash=sha256:47d61c0208579a4ade63fdde5ed4e2245728f359f3f9873506c41d7d2590474e \
+    --hash=sha256:9913541cbea8fd311ce1feee406763a1bef91c611d41c57db8139d1198948b84
     # via -r requirements.in
 mccabe==0.7.0 \
     --hash=sha256:348e0240c33b60bbdf4e523192ef919f28cb2c3d7d5c7794f74009290f236325 \
@@ -502,11 +498,7 @@ stevedore==3.5.0 \
 tomli==2.0.1 \
     --hash=sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc \
     --hash=sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f
-    # via
-    #   black
-    #   build
-    #   pep517
-    #   pytest
+    # via pep517
 urllib3==1.26.12 \
     --hash=sha256:3fa96cf423e6987997fc326ae8df396db2a8b7c667747d47ddd8ecba91f4a74e \
     --hash=sha256:b930dd878d5a8afb066a637fbb35144fe7901e3b209d1cd4f524bd0e9deee997
