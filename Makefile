@@ -19,7 +19,8 @@ ifeq (1, ${NOCACHE})
 DOCKER_BUILD_OPTS := --no-cache
 endif
 
-DC := $(shell which docker-compose)
+DOCKER := $(shell which docker)
+DC=${DOCKER} compose
 
 .DEFAULT_GOAL := help
 .PHONY: help
@@ -48,8 +49,8 @@ my.env:
 
 .PHONY: build
 build: my.env  ## | Build docker images.
-	${DC} build ${DOCKER_BUILD_OPTS} --build-arg userid=${ANTENNA_UID} --build-arg groupid=${ANTENNA_GID} deploy-base
-	${DC} build fakesentry
+	${DC} build ${DOCKER_BUILD_OPTS} --build-arg userid=${ANTENNA_UID} --build-arg groupid=${ANTENNA_GID} --progress plain deploy-base
+	${DC} build --progress plain fakesentry
 	touch .docker-build
 
 .PHONY: setup

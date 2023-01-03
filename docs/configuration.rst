@@ -13,7 +13,7 @@ Antenna uses environment configuration to define its behavior.
 
 The local development environment is configured in the ``my.env`` and
 ``docker/config/local_dev.env`` env files and that configuration is pulled in
-when you run Antenna using ``docker-compose``.
+when you run Antenna using ``docker compose``.
 
 In a server environment, configuration is pulled in from the process environment.
 
