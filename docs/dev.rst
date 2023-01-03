@@ -18,7 +18,7 @@ is also used for local development of Antenna.
 For more comprehensive documentation or instructions on how to set this up in
 production, see documentation_.
 
-1. Install required software: Docker, docker-compose (1.10+), make, and git.
+1. Install required software: Docker, make, and git.
 
 2. Clone the repository to your local machine.
 
@@ -125,7 +125,7 @@ production, see documentation_.
 
       .. code-block:: shell
 
-         $ docker-compose ps
+         $ docker compose ps
 
       You should see containers with names ``web``, ``statsd`` and ``localstack``.
 
@@ -169,7 +169,7 @@ production, see documentation_.
 
       .. code-block:: shell
 
-         $ docker-compose run --rm web shell python bin/s3_cli.py list_buckets
+         $ docker compose run --rm web shell python bin/s3_cli.py list_buckets
 
       If you do this a lot, turn it into a shell script.
 

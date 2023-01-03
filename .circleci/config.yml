@@ -8,7 +8,7 @@ version: 2.1
 jobs:
   main:
     docker:
-      - image: cimg/base:2022.02
+      - image: cimg/base:2023.01
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
@@ -18,7 +18,7 @@ jobs:
       - checkout
 
       - setup_remote_docker:
-          version: 20.10.11
+          version: 20.10.18
           docker_layer_caching: true
 
       - run:
@@ -26,8 +26,6 @@ jobs:
           command: |
             uname -v
             docker info
-            which docker-compose
-            docker-compose --version
 
       - run:
           name: Create version.json
@@ -61,21 +59,7 @@ jobs:
       - run:
           name: Verify requirements.txt file
           command: |
-            docker-compose run --rm --no-deps ci shell ./bin/run_verify_reqs.sh
-
-      - run:
-          name: Save image
-          # yamllint disable rule:line-length
-          command: |
-            mkdir -p workspace
-            docker save -o workspace/antenna-deploy-base.tar local/antenna_deploy_base:latest
-            gzip --fast workspace/antenna-deploy-base.tar
-          # yamllint enable rule:line-length
-
-      - persist_to_workspace:
-          root: workspace
-          paths:
-            - antenna-deploy-base.tar.gz
+            docker compose run --rm --no-deps ci shell ./bin/run_verify_reqs.sh
 
       - run:
           name: Lint
