@@ -10,7 +10,14 @@ RUN groupadd --gid $groupid app && \
     chown app:app /app/
 
 RUN apt-get update && \
-    apt-get install -y gcc apt-transport-https build-essential
+    apt-get install -y --no-install-recommends \
+        apt-transport-https \
+        build-essential \
+        gcc \
+        tini && \
+    apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY --chown=app:app requirements.txt /app/
 
@@ -30,4 +37,4 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PORT 8000
 EXPOSE $PORT
 
-ENTRYPOINT ["/app/bin/entrypoint.sh"]
+ENTRYPOINT ["tini", "--", "/app/bin/entrypoint.sh"]
