@@ -263,7 +263,7 @@ class AntennaApp(falcon.App):
 
     def verify(self):
         """Verify configuration and that Antenna is ready to start."""
-        for key, val in get_config_for_class(self.__class__).items():
+        for key in get_config_for_class(self.__class__).keys():
             self.config(key)
 
         self.hb.verify()

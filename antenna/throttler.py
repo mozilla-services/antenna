@@ -50,8 +50,10 @@ def parse_attribute(val):
     module = importlib.import_module(module)
     try:
         return getattr(module, attribute_name)
-    except AttributeError:
-        raise ValueError("%s is not a valid attribute of %s" % (attribute_name, module))
+    except AttributeError as exc:
+        raise ValueError(
+            f"{attribute_name} is not a valid attribute of {module}"
+        ) from exc
 
 
 class Throttler:

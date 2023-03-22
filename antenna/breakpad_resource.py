@@ -159,7 +159,7 @@ class BreakpadSubmitterResource:
                     value=(time.perf_counter() - start_time) * 1000.0,
                     tags=["result:success"],
                 )
-            except zlib.error:
+            except zlib.error as exc:
                 mymetrics.histogram(
                     "gzipped_crash_decompress",
                     value=(time.perf_counter() - start_time) * 1000.0,
@@ -168,7 +168,7 @@ class BreakpadSubmitterResource:
                 # This indicates this isn't a valid compressed stream. Given
                 # that the HTTP request insists it is, we're just going to
                 # assume it's junk and not try to process any further.
-                raise MalformedCrashReport("bad_gzip")
+                raise MalformedCrashReport("bad_gzip") from exc
 
             # Stomp on the content length to correct it because we've changed
             # the payload size by decompressing it. We save the original value
@@ -210,11 +210,11 @@ class BreakpadSubmitterResource:
                     has_json = True
                     try:
                         annotations = json.loads(part.stream.read())
-                    except (json.decoder.JSONDecodeError, UnicodeDecodeError):
+                    except (json.decoder.JSONDecodeError, UnicodeDecodeError) as exc:
                         # The UnicodeDecodeError can happen if the utf-8 codec can't
                         # decode one of the characters. The JSONDecodeError can happen
                         # in a variety of "malformed JSON" situations.
-                        raise MalformedCrashReport("invalid_json")
+                        raise MalformedCrashReport("invalid_json") from exc
 
                     if not isinstance(annotations, dict):
                         raise MalformedCrashReport("invalid_json_value")
