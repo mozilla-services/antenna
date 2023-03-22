@@ -12,22 +12,32 @@
 
 set -euo pipefail
 
-BLACKARGS=("--line-length=88" "--target-version=py37" antenna bin testlib tests systemtest)
+FILES="antenna bin testlib tests systemtest"
+PYTHON_VERSION=$(python --version)
+
 
 if [[ "${1:-}" == "--fix" ]]; then
-    echo ">>> black fix"
-    black "${BLACKARGS[@]}"
+    echo ">>> black fix (${PYTHON_VERSION})"
+    black $FILES
 
 else
-    echo ">>> flake8"
-    flake8 --statistics antenna tests/unittest/ systemtest/
+    echo ">>> ruff (${PYTHON_VERSION})"
+    ruff $FILES
 
-    echo ">>> black"
-    black --check "${BLACKARGS[@]}"
+    echo ">>> black (${PYTHON_VERSION})"
+    black --check $FILES
 
-    echo ">>> bandit"
+    echo ">>> bandit (${PYTHON_VERSION})"
     bandit -r antenna/
 
-    echo ">>> license check"
-    python bin/license_check.py .
+    echo ">>> license check (${PYTHON_VERSION})"
+    if [[ -d ".git" ]]; then
+        # If the .git directory exists, we can let license_check.py do
+        # git ls-files.
+        python bin/license_check.py
+    else
+        # The .git directory doesn't exist, so run it on all the Python
+        # files in the tree.
+        python bin/license_check.py .
+    fi
 fi
