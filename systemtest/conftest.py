@@ -227,7 +227,7 @@ class CrashVerifier:
         assert key in s3conn.list_objects(prefix=key)
 
         # Verify the dumps made it
-        for name, dump in dumps.items():
+        for name in dumps.keys():
             key = self.dump_key(crash_id, name)
             assert key in s3conn.list_objects(prefix=key)
 

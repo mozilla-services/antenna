@@ -13,7 +13,7 @@ from testlib.mini_poster import multipart_encode
 def get_tree(path):
     """Builds a list of files in a directory tree"""
     all_files = []
-    for root, dirs, files in os.walk(path):
+    for root, _, files in os.walk(path):
         all_files.extend([os.path.join(root, fn) for fn in files])
 
     return all_files

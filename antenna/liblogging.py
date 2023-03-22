@@ -141,7 +141,7 @@ def log_config(logger, config, component):
     runtime_config = get_runtime_config(
         config=config, component=component, traverse=traverse_tree
     )
-    for ns, key, value, option in runtime_config:
+    for ns, key, value, _ in runtime_config:
         # This gets rid of NO_VALUE
         value = value or ""
 
