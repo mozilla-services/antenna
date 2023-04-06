@@ -14,3 +14,12 @@ docstring-quotes = "double"
 [tool.black]
 line-length = 88
 target-version = ["py37"]
+
+
+[tool.release]
+github_user = "mozilla-services"
+github_project = "antenna"
+bugzilla_product = "Socorro"
+bugzilla_component = "Infra"
+main_branch = "main"
+tag_name_template = "%Y.%m.%d"
