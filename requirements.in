@@ -26,7 +26,7 @@ ruff==0.0.257
 Sphinx==4.5.0
 sphinx-rtd-theme==1.0.0
 urlwait==1.0
-werkzeug==2.2.2
+werkzeug==2.2.3
 
 # NOTE(willkg): required until we update to python 3.11
 exceptiongroup==1.1.0
