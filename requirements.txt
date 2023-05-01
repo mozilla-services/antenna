@@ -544,9 +544,9 @@ urlwait==1.0 \
     --hash=sha256:a9bf2da792fa6983fa93f6360108e16615066ab0f9cfb7f53e5faee5f5dffaac \
     --hash=sha256:eae2c20001efc915166cac79c04bac0088ad5787ec64b36f27afd2f359953b2b
     # via -r requirements.in
-werkzeug==2.2.2 \
-    --hash=sha256:7ea2d48322cc7c0f8b3a215ed73eabd7b5d75d0b50e31ab006286ccff9e00b8f \
-    --hash=sha256:f979ab81f58d7318e064e99c4506445d60135ac5cd2e177a2de0089bfd4c9bd5
+werkzeug==2.3.2 \
+    --hash=sha256:2f3278e9ef61511cdf82cc28fc5da0f5b501dd8f01ecf5ef6a5d810048f68702 \
+    --hash=sha256:b7b8bc1609f35ae8e45d48a9b58d7a4eb1e41eec148d37e977e5df6ebf3398b2
     # via -r requirements.in
 wheel==0.38.4 \
     --hash=sha256:965f5259b566725405b05e7cf774052044b1ed30119b5d586b2703aafe8719ac \
