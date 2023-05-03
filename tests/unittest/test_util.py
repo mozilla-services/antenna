@@ -27,6 +27,10 @@ def test_utc_now():
     assert res.tzinfo
 
 
+class FakeException(Exception):
+    pass
+
+
 @pytest.mark.parametrize(
     "data, expected",
     [
@@ -218,9 +222,9 @@ class Test_retry:
 
         @retry(sleep_function=fake_sleep)
         def some_thing():
-            raise Exception
+            raise FakeException()
 
-        with pytest.raises(Exception):
+        with pytest.raises(MaxAttemptsError):
             some_thing()
 
         assert fake_sleep.sleeps == [2, 2, 2, 2, 2]
@@ -233,8 +237,8 @@ class Test_retry:
 
         @retry(wait_time_generator=waits, sleep_function=fake_sleep)
         def some_thing():
-            raise Exception
+            raise FakeException()
 
-        with pytest.raises(Exception):
+        with pytest.raises(MaxAttemptsError):
             some_thing()
         assert fake_sleep.sleeps == [1, 1, 2, 2, 1, 1]
