@@ -1,7 +1,7 @@
 # Production requirements
 attrs==23.1.0
-boto3==1.28.16
-botocore==1.31.16
+boto3==1.26.138
+botocore==1.29.138
 datadog==0.46.0
 dockerflow==2022.8.0
 everett==3.2.0

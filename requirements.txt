@@ -49,13 +49,13 @@ black==23.3.0 \
     --hash=sha256:ec751418022185b0c1bb7d7736e6933d40bbb14c14a0abcf9123d1b159f98dd4 \
     --hash=sha256:f0bd2f4a58d6666500542b26354978218a9babcdc972722f4bf90779524515f3
     # via -r requirements.in
-boto3==1.28.16 \
-    --hash=sha256:aea48aedf3e8676e598e3202e732295064a4fcad5f2d2d2a699368b8c3ab492c \
-    --hash=sha256:d8e31f69fb919025a5961f8fbeb51fe92e2f753beb37fc1853138667a231cdaa
+boto3==1.26.138 \
+    --hash=sha256:d47a68a0ca6599e8711c7da670fbac24085d9d50cfb4f761204f154d2b6fae26 \
+    --hash=sha256:f0a78f94a7140b60960898fd86677e4e73cc96bd7f3e5c64fc5cc1818d04c7b8
     # via -r requirements.in
-botocore==1.31.16 \
-    --hash=sha256:563e15979e763b93d78de58d0fc065f8615be12f41bab42f5ad9f412b6a224b3 \
-    --hash=sha256:92b240e2cb7b3afae5361651d2f48ee582f45d2dab53aef76eef7eec1d3ce582
+botocore==1.29.138 \
+    --hash=sha256:31edc237088c104f7a05887646bbec31d7459dd2e108fd90cbffa315902817e2 \
+    --hash=sha256:3d145f30d10a9c712acee48e7ce906c9456bb25fe50d477c9312c702ccfa50d1
     # via
     #   -r requirements.in
     #   boto3
