@@ -22,8 +22,6 @@ BROKEN_EVENT = {
             "version": ANY,
         },
         "trace": {
-            "description": None,
-            "op": "http.server",
             "parent_span_id": None,
             "span_id": ANY,
             "trace_id": ANY,
