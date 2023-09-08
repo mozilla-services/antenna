@@ -277,12 +277,12 @@ def cmdline(args):
             logger.info("Adding dump %s -> %s..." % (dump_name, dump_path))
             dumps[dump_name] = open(dump_path, "rb").read()
 
-    elif "v1" in parsed.raw_crash:
+    elif "v1/" in parsed.raw_crash:
         # If there's a 'v1' in the raw_crash filename, then it's probably the case that
         # willkg wants all the pieces for a crash he pulled from S3. We like willkg, so
         # we'll help him out by doing the legwork.
         raw_crash_path = Path(parsed.raw_crash)
-        if str(raw_crash_path.parents[3]).endswith("v1"):
+        if str(raw_crash_path.parents[2]).endswith("v1"):
             logger.info("Trying to find dump_names and dumps...")
             crashid = str(Path(parsed.raw_crash).name)
 
@@ -296,10 +296,11 @@ def cmdline(args):
 
             for dump_name in dump_names:
                 logger.info("Adding dump %s..." % dump_name)
+                fn = root_path / "v1" / dump_name / crashid
                 if dump_name == "upload_file_minidump":
-                    fn = root_path / "v1" / "dump" / crashid
-                else:
-                    fn = root_path / "v1" / dump_name / crashid
+                    possible_fn = root_path / "v1" / "dump" / crashid
+                    if possible_fn.exists():
+                        fn = possible_fn
 
                 with open(str(fn), "rb") as fp:
                     data = fp.read()
