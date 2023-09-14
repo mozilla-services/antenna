@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+import json
 import logging
 
 from everett.manager import ConfigManager
@@ -16,6 +17,7 @@ from antenna.throttler import (
     Throttler,
     match_infobar_true,
     match_old_buildid,
+    match_unsupported_windows,
 )
 
 
@@ -91,7 +93,7 @@ class TestACCEPT_ALL:
         )
 
 
-class Testmatch_infobar_true:
+class Test_match_infobar_true:
     @pytest.mark.parametrize(
         "version, expected",
         [
@@ -186,7 +188,57 @@ class Testmatch_infobar_true:
         assert match_infobar_true(throttler, raw_crash) is False
 
 
-class Testmatch_old_buildid:
+class Test_match_unsupported_windows:
+    @pytest.mark.parametrize(
+        "data",
+        [
+            {},
+            {"TelemetryEnvironment": "{}"},
+            {"TelemetryEnvironment": '{"system":{}}'},
+            {"TelemetryEnvironment": '{"system":{"os":{}}}'},
+            {"TelemetryEnvironment": '{"system":{"os":{"name":""}}}'},
+            {"TelemetryEnvironment": '{"system":{"os":{"name":"Windows_NT"}}}'},
+            {
+                "TelemetryEnvironment": '{"system":{"os":{"name":"Windows_NT","windowsBuildNumber":""}}}'
+            },
+            {
+                "TelemetryEnvironment": '{"system":{"os":{"name":"Windows_NT","windowsBuildNumber":null}}}'
+            },
+        ],
+    )
+    def test_missing_data(self, throttler, data):
+        assert match_unsupported_windows(throttler, data) is False
+
+    @pytest.mark.parametrize(
+        "version, expected",
+        [
+            # Windows 7
+            (7601, True),
+            # Windows 8
+            (9200, True),
+            # Windows 8.1
+            (9600, True),
+            # Windows 10
+            (10240, False),
+        ],
+    )
+    def test_windows_versions(self, throttler, version, expected):
+        data = {
+            "TelemetryEnvironment": json.dumps(
+                {
+                    "system": {
+                        "os": {
+                            "name": "Windows_NT",
+                            "windowsBuildNumber": version,
+                        },
+                    },
+                }
+            )
+        }
+        assert match_unsupported_windows(throttler, data) is expected
+
+
+class Test_match_old_buildid:
     def test_no_buildid(self, throttler):
         assert match_old_buildid(throttler, {}) is False
 
@@ -372,6 +424,33 @@ class Testmozilla_rules:
         with randommock(0.09):
             raw_crash = {"ProductName": "Test", "ipc_channel_error": "ShutDownKill"}
             assert throttler.throttle(raw_crash) == (ACCEPT, "accept_everything", 100)
+
+    def test_is_firefox_esr_unsupported_windows(self, throttler, randommock):
+        tel_env = json.dumps(
+            {
+                "system": {
+                    "os": {
+                        "name": "Windows_NT",
+                        "windowsBuildNumber": 9600,
+                    },
+                },
+            }
+        )
+        raw_crash = {
+            "ProductName": "Firefox",
+            "ReleaseChannel": "esr",
+            "TelemetryEnvironment": tel_env,
+        }
+        with randommock(0.30):
+            assert throttler.throttle(raw_crash) == (
+                REJECT,
+                "is_firefox_esr_unsupported_windows",
+                25,
+            )
+
+        # If it returns CONTINUE, then it will trigger another rule
+        with randommock(0.20):
+            assert throttler.throttle(raw_crash) == (ACCEPT, "is_alpha_beta_esr", 100)
 
     @pytest.mark.parametrize("channel", ["aurora", "beta", "esr"])
     def test_is_alpha_beta_esr(self, throttler, channel):
