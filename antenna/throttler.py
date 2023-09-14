@@ -11,6 +11,7 @@ process), defer (save, but not process), and reject.
 
 import datetime
 import importlib
+import json
 import logging
 import random
 import re
@@ -281,6 +282,40 @@ def match_old_buildid(throttler, data):
     return buildid_date < (now - datetime.timedelta(days=730))
 
 
+WINDOWS_8_1_BUILD_NUMBER = 9600
+
+
+def match_unsupported_windows(throttler, data):
+    """Match Windows versions we don't support."""
+    telemetry_environment = safe_get(data, "TelemetryEnvironment")
+    if not telemetry_environment:
+        return False
+
+    try:
+        telemetry_environment_data = json.loads(telemetry_environment)
+    except (json.decoder.JSONDecodeError, UnicodeDecodeError):
+        return False
+
+    system_data = telemetry_environment_data.get("system")
+    if not system_data or not isinstance(system_data, dict):
+        return False
+
+    os_data = system_data.get("os")
+    if not os_data or not isinstance(os_data, dict):
+        return False
+
+    os_name = os_data.get("name")
+    if not os_name or os_name != "Windows_NT":
+        return False
+
+    windows_build_number = os_data.get("windowsBuildNumber")
+    if not windows_build_number or not isinstance(windows_build_number, int):
+        return False
+
+    # At this point, we should have a windowsBuildNumber with a valid value.
+    return windows_build_number <= WINDOWS_8_1_BUILD_NUMBER
+
+
 #: This accepts crash reports for all products
 ALL_PRODUCTS = []
 
@@ -371,6 +406,19 @@ MOZILLA_RULES = [
         key="ipc_channel_error",
         condition=lambda throttler, x: x == "ShutDownKill",
         result=(10, CONTINUE, REJECT),
+    ),
+    # Accept 25% crash reports from Firefox ESR Windows <= 8.1
+    Rule(
+        rule_name="is_firefox_esr_unsupported_windows",
+        key="*",
+        condition=(
+            lambda throttler, data: (
+                safe_get(data, "ProductName") == "Firefox"
+                and safe_get(data, "ReleaseChannel") == "esr"
+                and match_unsupported_windows(throttler, data)
+            )
+        ),
+        result=(25, CONTINUE, REJECT),
     ),
     # Accept crash reports in ReleaseChannel=aurora, beta, esr channels
     Rule(
