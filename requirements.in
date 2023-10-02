@@ -30,3 +30,4 @@ werkzeug==2.3.6
 
 # NOTE(willkg): required until we update to python 3.11
 exceptiongroup==1.1.2
+tomli==2.0.1
