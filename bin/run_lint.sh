@@ -32,12 +32,12 @@ else
 
     echo ">>> license check (${PYTHON_VERSION})"
     if [[ -d ".git" ]]; then
-        # If the .git directory exists, we can let license_check.py do
+        # If the .git directory exists, we can let license-check.py do
         # git ls-files.
-        python bin/license_check.py
+        python bin/license-check.py
     else
         # The .git directory doesn't exist, so run it on all the Python
         # files in the tree.
-        python bin/license_check.py .
+        python bin/license-check.py .
     fi
 fi
