@@ -378,6 +378,104 @@ class Testmozilla_rules:
         # by any of the rules, so it gets caught up by the last rule
         assert throttler.throttle(raw_crash) == (ACCEPT, "accept_everything", 100)
 
+    @pytest.mark.parametrize(
+        "productname, packagename",
+        [
+            # Test packagename is accepted
+            ("Fenix", "org.mozilla.firefox"),
+            ("Focus", "org.mozilla.focus"),
+            ("ReferenceBrowser", "org.mozilla.reference.browser"),
+            # Test a product that has no Android packages
+            ("Thunderbird", "org.example.fork"),
+        ],
+    )
+    def test_packagename_accept(self, caplog, productname, packagename):
+        """Verify supported packagename is accepted"""
+        with caplog.at_level(logging.INFO, logger="antenna"):
+            # Need a throttler with the default configuration which includes product ->
+            # supported packagenames
+            throttler = Throttler(ConfigManager.from_dict({}))
+            raw_crash = {}
+            raw_crash["ProductName"] = productname
+            raw_crash["Android_PackageName"] = packagename
+
+            assert throttler.throttle(raw_crash) == (ACCEPT, "accept_everything", 100)
+
+    @pytest.mark.parametrize(
+        "productname, packagename",
+        [
+            # Test empty packagename is rejected
+            ("Fenix", ""),
+            # Test supported product / unsupported packagename is rejected
+            ("Fenix", "org.example.fork"),
+            ("Focus", "org.example.fork"),
+        ],
+    )
+    def test_packagename_reject(self, caplog, productname, packagename):
+        """Verify unsupported packagename is rejected"""
+        with caplog.at_level(logging.INFO, logger="antenna"):
+            # Need a throttler with the default configuration which includes product ->
+            # supported packagenames
+            throttler = Throttler(ConfigManager.from_dict({}))
+            raw_crash = {}
+            raw_crash["ProductName"] = productname
+            raw_crash["Android_PackageName"] = packagename
+
+            assert throttler.throttle(raw_crash) == (
+                REJECT,
+                "unsupported_packagename",
+                100,
+            )
+            assert caplog.record_tuples == [
+                (
+                    "antenna.throttler",
+                    logging.INFO,
+                    f"Android_PackageName rejected: {productname} '{packagename}'",
+                )
+            ]
+
+    def test_packagename_reject_no_packagename(self, caplog):
+        """Verify missing packagename for product that requires it is rejected"""
+        with caplog.at_level(logging.INFO, logger="antenna"):
+            # Need a throttler with the default configuration which includes product ->
+            # supported packagenames
+            throttler = Throttler(ConfigManager.from_dict({}))
+            raw_crash = {}
+            raw_crash["ProductName"] = "Fenix"
+
+            assert throttler.throttle(raw_crash) == (
+                REJECT,
+                "unsupported_packagename",
+                100,
+            )
+            assert caplog.record_tuples == [
+                (
+                    "antenna.throttler",
+                    logging.INFO,
+                    "Android_PackageName rejected: Fenix no Android_PackageName",
+                )
+            ]
+
+    def test_packagename_no_unsupported_packagenames(self):
+        """Verify packagename rule doesn't do anything if using ALL_PRODUCT_PACKAGENAMES"""
+        throttler = Throttler(
+            ConfigManager.from_dict(
+                {"PRODUCT_PACKAGENAMES": "antenna.throttler.ALL_PRODUCT_PACKAGENAMES"}
+            )
+        )
+        # Test supported product with no Android_PackageName, but no
+        # product_packagenames set
+        raw_crash = {"ProductName": "Fenix"}
+        assert throttler.throttle(raw_crash) == (ACCEPT, "accept_everything", 100)
+
+        # Test supported product with unsupported Android_PackageName, but no
+        # product_packagenames set
+        raw_crash = {
+            "ProductName": "Fenix",
+            "Android_PackageName": "org.example.fork",
+        }
+        assert throttler.throttle(raw_crash) == (ACCEPT, "accept_everything", 100)
+
     def test_throttleable(self, throttler):
         # Throttleable=0 should match
         raw_crash = {"ProductName": "Test", "Throttleable": "0"}
