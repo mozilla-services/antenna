@@ -100,6 +100,11 @@ class Throttler:
             doc="Python dotted path to list of supported products",
             parser=parse_attribute,
         )
+        product_packagenames = Option(
+            default="antenna.throttler.MOZILLA_PRODUCT_PACKAGENAMES",
+            doc="Python dotted path to map of product -> list of supported packagenames",
+            parser=parse_attribute,
+        )
 
     def __init__(self, config):
         self.config = config.with_options(self)
@@ -254,10 +259,34 @@ def match_unsupported_product(throttler, data):
     """Match unsupported products."""
     products = throttler.config("products")
     product_name = safe_get(data, "ProductName")
-    is_not_supported = product_name not in products
+    is_not_supported = products and product_name not in products
 
-    if products and is_not_supported:
-        logger.info("ProductName rejected: %r" % product_name)
+    if is_not_supported:
+        logger.info("ProductName rejected: %r", product_name)
+        return True
+    return False
+
+
+def match_unsupported_android_packagename(throttler, data):
+    """Match unsupported Android_PackageName values"""
+    product_name = safe_get(data, "ProductName")
+
+    packagenames = throttler.config("product_packagenames").get(product_name, [])
+    packagename = safe_get(data, "Android_PackageName", default=None)
+
+    is_not_supported = packagenames and packagename not in packagenames
+
+    if is_not_supported:
+        # NOTE(willkg): safe_get converts None to "None", so we need to test for that
+        # here
+        if packagename == "None":
+            logger.info(
+                "Android_PackageName rejected: %s no Android_PackageName", product_name
+            )
+        else:
+            logger.info(
+                "Android_PackageName rejected: %s %r", product_name, packagename
+            )
         return True
     return False
 
@@ -332,6 +361,33 @@ MOZILLA_PRODUCTS = [
 ]
 
 
+#: This accepts crash reports for all product packagenames
+ALL_PRODUCT_PACKAGENAMES = {}
+
+
+# Supported packagenames values; these have to match the Android_PackageName of the
+# incoming crash report
+MOZILLA_PRODUCT_PACKAGENAMES = {
+    "Fenix": [
+        "org.mozilla.firefox",
+        "org.mozilla.firefox_beta",
+        # This is the Nightly version of Firefox Android, not to be confused with
+        # "org.mozilla.fenix.nightly", a retired version we no longer care about
+        "org.mozilla.fenix",
+    ],
+    "Focus": [
+        "org.mozilla.focus",
+        "org.mozilla.focus.beta",
+        "org.mozilla.focus.nightly",
+        # This is the German version of Focus
+        "org.mozilla.klar",
+    ],
+    "ReferenceBrowser": [
+        "org.mozilla.reference.browser",
+    ],
+}
+
+
 #: Rule set to accept all incoming crashes
 ACCEPT_ALL = [
     # Accept everything
@@ -376,6 +432,14 @@ MOZILLA_RULES = [
         rule_name="unsupported_product",
         key="*",
         condition=match_unsupported_product,
+        result=REJECT,
+    ),
+    # bug #1819628: Reject crash reports for unsupported packagenames; this does nothing
+    # if the dict of product -> packagename list is empty
+    Rule(
+        rule_name="unsupported_packagename",
+        key="*",
+        condition=match_unsupported_android_packagename,
         result=REJECT,
     ),
     # Accept crash reports submitted through about:crashes
