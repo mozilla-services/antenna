@@ -44,7 +44,6 @@ class TestFSCrashStorage:
         )
 
         result = client.simulate_post("/submit", headers=headers, body=data)
-        client.join_app()
 
         assert result.status_code == 200
 

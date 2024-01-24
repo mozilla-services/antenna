@@ -10,8 +10,8 @@ from botocore.client import ClientError
 from everett.manager import Option
 import gevent
 
+from antenna.app import register_for_verification
 from antenna.ext.crashpublish_base import CrashPublishBase
-from antenna.heartbeat import register_for_verification
 from antenna.util import retry
 
 

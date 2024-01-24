@@ -394,8 +394,8 @@ class BreakpadSubmitterResource:
         # CrashID to the client
         self.cleanup_crash_report(raw_crash)
 
-        # Add crash report to crashmover queue
-        self.crashmover.add_crashreport(
+        # Handle crash report synchronously
+        self.crashmover.handle_crashreport(
             raw_crash=raw_crash, dumps=crash_report.dumps, crash_id=crash_id
         )
 
