@@ -39,7 +39,9 @@ class TestCrashMover:
             {
                 "CRASHMOVER_CRASHSTORAGE_CLASS": (
                     f"{BadCrashStorage.__module__}.{BadCrashStorage.__name__}"
-                )
+                ),
+                "CRASHMOVER_MAX_ATTEMPTS": "2",
+                "CRASHMOVER_RETRY_SLEEP_SECONDS": "0",
             }
         )
 
@@ -51,7 +53,7 @@ class TestCrashMover:
         )
         assert not succeeded
 
-        # We're using BadCrashStorage so the crashmover should retry 20
+        # We're using BadCrashStorage so the crashmover should try 2
         # times logging a message each time and then give up
         records = [
             rec[2] for rec in caplog.record_tuples if rec[0] == "antenna.crashmover"
@@ -59,7 +61,7 @@ class TestCrashMover:
         assert records == [
             *(
                 f"CrashMover.crashmover_save: exception , retry attempt {i}"
-                for i in range(20)
+                for i in range(2)
             ),
             f"{crash_id}: too many errors trying to save; dropped",
         ]
@@ -80,7 +82,9 @@ class TestCrashMover:
             {
                 "CRASHMOVER_CRASHPUBLISH_CLASS": (
                     f"{BadCrashPublish.__module__}.{BadCrashPublish.__name__}"
-                )
+                ),
+                "CRASHMOVER_MAX_ATTEMPTS": "2",
+                "CRASHMOVER_RETRY_SLEEP_SECONDS": "0",
             }
         )
 
@@ -92,7 +96,7 @@ class TestCrashMover:
         )
         assert succeeded
 
-        # We're using BadCrashStorage so the crashmover should retry 20
+        # We're using BadCrashStorage so the crashmover should try 2
         # times logging a message each time and then give up
         records = [
             rec[2] for rec in caplog.record_tuples if rec[0] == "antenna.crashmover"
@@ -102,7 +106,7 @@ class TestCrashMover:
             f"{crash_id} saved",
             *(
                 f"CrashMover.crashmover_publish: exception , retry attempt {i}"
-                for i in range(5)
+                for i in range(2)
             ),
             f"{crash_id}: too many errors trying to publish; dropped",
         ]

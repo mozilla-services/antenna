@@ -15,16 +15,7 @@ LOGGER = logging.getLogger(__name__)
 MYMETRICS = markus.get_metrics("crashmover")
 
 
-#: Maximum number of attempts to save or publish a crash before we give up
-MAX_ATTEMPTS = 5
-
-#: Seconds to sleep between attempts to save or publish a crash
-RETRY_SLEEP_SECONDS = 2
-
-
-def _incr_wait_generator(
-    counter, attempts=MAX_ATTEMPTS, sleep_seconds=RETRY_SLEEP_SECONDS
-):
+def _incr_wait_generator(counter, attempts, sleep_seconds):
     def _generator_generator():
         for _ in range(attempts - 1):
             MYMETRICS.incr(counter)
@@ -79,6 +70,18 @@ class CrashMover:
             doc="The class in charge of publishing crashes.",
         )
 
+        max_attempts = Option(
+            default="5",
+            parser=int,
+            doc="Maximum number of attempts to save or publish a crash before giving up.",
+        )
+
+        retry_sleep_seconds = Option(
+            default="2",
+            parser=int,
+            doc="Seconds to sleep between attempts to save or publish a crash.",
+        )
+
     def __init__(self, config):
         self.config = config.with_options(self)
 
@@ -88,6 +91,25 @@ class CrashMover:
         self.crashpublish = self.config("crashpublish_class")(
             config.with_namespace("crashpublish")
         )
+
+        # configure retries on save and publish
+        self.crashmover_save = retry(
+            module_logger=LOGGER,
+            wait_time_generator=_incr_wait_generator(
+                counter="save_crash_exception.count",
+                attempts=self.config("max_attempts"),
+                sleep_seconds=self.config("retry_sleep_seconds"),
+            ),
+        )(self.crashmover_save)
+
+        self.crashmover_publish = retry(
+            module_logger=LOGGER,
+            wait_time_generator=_incr_wait_generator(
+                counter="publish_crash_exception.count",
+                attempts=self.config("max_attempts"),
+                sleep_seconds=self.config("retry_sleep_seconds"),
+            ),
+        )(self.crashmover_publish)
 
     def get_components(self):
         """Return map of namespace -> component for traversing component tree."""
@@ -136,20 +158,12 @@ class CrashMover:
 
         return True
 
-    @retry(
-        module_logger=LOGGER,
-        wait_time_generator=_incr_wait_generator("save_crash_exception.count"),
-    )
     @MYMETRICS.timer("crash_save.time")
     def crashmover_save(self, crash_report):
         """Save crash report to storage."""
         self.crashstorage.save_crash(crash_report)
         LOGGER.info("%s saved", crash_report.crash_id)
 
-    @retry(
-        module_logger=LOGGER,
-        wait_time_generator=_incr_wait_generator("publish_crash_exception.count"),
-    )
     @MYMETRICS.timer("crash_publish.time")
     def crashmover_publish(self, crash_report):
         """Publish crash_id in publish queue."""
