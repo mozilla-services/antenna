@@ -22,7 +22,6 @@ ${CMD_PREFIX} gunicorn \
     --worker-class="${GUNICORN_WORKER_CLASS}" \
     --max-requests="${GUNICORN_MAX_REQUESTS}" \
     --max-requests-jitter="${GUNICORN_MAX_REQUESTS_JITTER}" \
-    --config=antenna/gunicornhooks.py \
     --log-file=- \
     --error-logfile=- \
     --access-logfile=- \
