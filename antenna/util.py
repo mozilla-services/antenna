@@ -214,6 +214,7 @@ def retry(
     wait_time_generator=wait_time_generator,
     sleep_function=time.sleep,
     module_logger=None,
+    on_retry=None,
 ):
     """Retry decorated function with wait times, max attempts, and logging.
 
@@ -252,7 +253,7 @@ def retry(
         This allows you to retry based on a failed exception or failed return.
 
     :arg wait_time_generator:
-        Generator function that returns wait times until a maximum number of
+        Function that returns a generator of wait times until a maximum number of
         attempts have been tried.
 
     :arg fun sleep_function:
@@ -324,6 +325,10 @@ def retry(
                         raise MaxAttemptsError(
                             f"Maximum retry attempts: {exc!r}"
                         ) from exc
+
+                # execute callback before retrying
+                if on_retry is not None:
+                    on_retry()
 
                 sleep_function(next(wait_times))
                 attempts += 1

@@ -384,19 +384,19 @@ class BreakpadSubmitterResource:
             resp.text = "Discarded=rule_%s" % rule_name
             return
 
-        # If the result is a FAKEACCEPT, then we return a crash id, but throw the crash
-        # away
-        if throttle_result is FAKEACCEPT:
-            resp.text = "CrashID=bp-%s\n" % crash_id
-            return
+        # If the result is not FAKEACCEPT, then clean up the crash report and save it
+        if throttle_result is not FAKEACCEPT:
+            self.cleanup_crash_report(raw_crash)
 
-        # If we're accepting the cash report, then clean it up, save it and return the
-        # CrashID to the client
-        self.cleanup_crash_report(raw_crash)
+            # Handle crash report synchronously
+            success = self.crashmover.handle_crashreport(
+                raw_crash=raw_crash, dumps=crash_report.dumps, crash_id=crash_id
+            )
 
-        # Handle crash report synchronously
-        self.crashmover.handle_crashreport(
-            raw_crash=raw_crash, dumps=crash_report.dumps, crash_id=crash_id
-        )
+            if not success:
+                # return 500 to indicate the client should retry
+                resp.status = falcon.HTTP_500
+                return
 
+        # return the CrashID to the client
         resp.text = "CrashID=bp-%s\n" % crash_id

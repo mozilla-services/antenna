@@ -8,13 +8,29 @@ import logging
 from everett.manager import Option, parse_class
 import markus
 
+from antenna.util import MaxAttemptsError, retry
+
 
 LOGGER = logging.getLogger(__name__)
 MYMETRICS = markus.get_metrics("crashmover")
 
 
-#: Maximum number of attempts to save a crash before we give up
-MAX_ATTEMPTS = 20
+#: Maximum number of attempts to save or publish a crash before we give up
+MAX_ATTEMPTS = 5
+
+#: Seconds to sleep between attempts to save or publish a crash
+RETRY_SLEEP_SECONDS = 2
+
+
+def _incr_wait_generator(
+    counter, attempts=MAX_ATTEMPTS, sleep_seconds=RETRY_SLEEP_SECONDS
+):
+    def _generator_generator():
+        for _ in range(attempts - 1):
+            MYMETRICS.incr(counter)
+            yield sleep_seconds
+
+    return _generator_generator
 
 
 @dataclass
@@ -95,46 +111,45 @@ class CrashMover:
         :arg dumps: map of name to memory dump
         :arg crash_id: the crash id for the crash report
 
+        :returns: True if the crash report was saved, regardless of whether the crash
+            id was published for processing.
         """
 
         crash_report = CrashReport(raw_crash, dumps, crash_id)
-        for errors in range(1, MAX_ATTEMPTS + 1):
-            try:
-                self.crashmover_save(crash_report)
-                break
-            except Exception:
-                MYMETRICS.incr("save_crash_exception.count")
-                LOGGER.exception(
-                    f"Exception when saving crash ({crash_id}); error {errors}/{MAX_ATTEMPTS}"
-                )
-        else:
-            # After MAX_ATTEMPTS, we give up on this crash
+
+        try:
+            self.crashmover_save(crash_report)
+        except MaxAttemptsError:
+            # After max attempts, we give up on this crash
             LOGGER.error(f"{crash_id}: too many errors trying to save; dropped")
             MYMETRICS.incr("save_crash_dropped.count")
             return False
 
-        for errors in range(1, MAX_ATTEMPTS + 1):
-            try:
-                self.crashmover_publish(crash_report)
-                MYMETRICS.incr("save_crash.count")
-                return True
-            except Exception:
-                MYMETRICS.incr("publish_crash_exception.count")
-                LOGGER.exception(
-                    f"Exception when publishing crash ({crash_id}); error {errors}/{MAX_ATTEMPTS}"
-                )
+        try:
+            self.crashmover_publish(crash_report)
+            MYMETRICS.incr("save_crash.count")
+        except MaxAttemptsError:
+            LOGGER.error(f"{crash_id}: too many errors trying to publish; dropped")
+            MYMETRICS.incr("publish_crash_dropped.count")
+            # return True even when publish fails because it will be automatically
+            # published later via self-healing mechanisms
 
-        # After MAX_ATTEMPTS, we give up on this crash
-        LOGGER.error(f"{crash_id}: too many errors trying to publish; dropped")
-        MYMETRICS.incr("publish_crash_dropped.count")
-        return False
+        return True
 
+    @retry(
+        module_logger=LOGGER,
+        wait_time_generator=_incr_wait_generator("save_crash_exception.count"),
+    )
     @MYMETRICS.timer("crash_save.time")
     def crashmover_save(self, crash_report):
         """Save crash report to storage."""
         self.crashstorage.save_crash(crash_report)
         LOGGER.info("%s saved", crash_report.crash_id)
 
+    @retry(
+        module_logger=LOGGER,
+        wait_time_generator=_incr_wait_generator("publish_crash_exception.count"),
+    )
     @MYMETRICS.timer("crash_publish.time")
     def crashmover_publish(self, crash_report):
         """Publish crash_id in publish queue."""

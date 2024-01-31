@@ -11,10 +11,7 @@ from antenna.ext.crashstorage_base import CrashStorageBase
 
 
 class BadCrashStorage(CrashStorageBase):
-    def save_dumps(self, crash_id, dumps):
-        raise Exception
-
-    def save_raw_crash(self, crash_id, raw_crash):
+    def save_crash(self, crash_report):
         raise Exception
 
 
@@ -61,8 +58,8 @@ class TestCrashMover:
         ]
         assert records == [
             *(
-                f"Exception when saving crash ({crash_id}); error {i}/20"
-                for i in range(1, 21)
+                f"CrashMover.crashmover_save: exception , retry attempt {i}"
+                for i in range(20)
             ),
             f"{crash_id}: too many errors trying to save; dropped",
         ]
@@ -93,7 +90,7 @@ class TestCrashMover:
             dumps=dumps,
             crash_id=crash_id,
         )
-        assert not succeeded
+        assert succeeded
 
         # We're using BadCrashStorage so the crashmover should retry 20
         # times logging a message each time and then give up
@@ -104,8 +101,8 @@ class TestCrashMover:
         assert records == [
             f"{crash_id} saved",
             *(
-                f"Exception when publishing crash ({crash_id}); error {i}/20"
-                for i in range(1, 21)
+                f"CrashMover.crashmover_publish: exception , retry attempt {i}"
+                for i in range(5)
             ),
             f"{crash_id}: too many errors trying to publish; dropped",
         ]
