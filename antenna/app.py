@@ -266,7 +266,7 @@ class AntennaApp(falcon.App):
         LOGGER.debug("Verification starting.")
         for fun in _registered_verify:
             LOGGER.debug("Verifying %s" % fun.__qualname__)
-            # Don't handle any excpetions here--just die and let other
+            # Don't handle any exceptions here--just die and let other
             # machinery handle it
             fun()
         LOGGER.debug("Verification complete: everything is good!")
