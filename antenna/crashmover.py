@@ -93,7 +93,7 @@ class CrashMover:
         )
 
         # configure retries on save and publish
-        self.crashmover_save = retry(
+        self.crashmover_save_with_retry = retry(
             module_logger=LOGGER,
             wait_time_generator=_incr_wait_generator(
                 counter="save_crash_exception.count",
@@ -102,7 +102,7 @@ class CrashMover:
             ),
         )(self.crashmover_save)
 
-        self.crashmover_publish = retry(
+        self.crashmover_publish_with_retry = retry(
             module_logger=LOGGER,
             wait_time_generator=_incr_wait_generator(
                 counter="publish_crash_exception.count",
@@ -140,7 +140,7 @@ class CrashMover:
         crash_report = CrashReport(raw_crash, dumps, crash_id)
 
         try:
-            self.crashmover_save(crash_report)
+            self.crashmover_save_with_retry(crash_report)
         except MaxAttemptsError:
             # After max attempts, we give up on this crash
             LOGGER.error("%s: too many errors trying to save; dropped", crash_id)
@@ -148,7 +148,7 @@ class CrashMover:
             return False
 
         try:
-            self.crashmover_publish(crash_report)
+            self.crashmover_publish_with_retry(crash_report)
             MYMETRICS.incr("save_crash.count")
         except MaxAttemptsError:
             LOGGER.error("%s: too many errors trying to publish; dropped", crash_id)
