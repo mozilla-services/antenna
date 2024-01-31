@@ -33,6 +33,17 @@ services:
     volumes:
       - .:/app
 
+  devcontainer:
+    extends:
+      service: test
+    build:
+      dockerfile: .devcontainer/Dockerfile
+      args:
+        userid: ${USE_UID:-10001}
+        groupid: ${USE_GID:-10001}
+    image: local/antenna-devcontainer
+    entrypoint: ["sleep", "inf"]
+
   # Container that we use in CI--it can't volume mount things
   ci:
     image: local/antenna_deploy_base
