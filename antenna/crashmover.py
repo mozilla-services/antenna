@@ -143,7 +143,7 @@ class CrashMover:
             self.crashmover_save(crash_report)
         except MaxAttemptsError:
             # After max attempts, we give up on this crash
-            LOGGER.error(f"{crash_id}: too many errors trying to save; dropped")
+            LOGGER.error("%s: too many errors trying to save; dropped", crash_id)
             MYMETRICS.incr("save_crash_dropped.count")
             return False
 
@@ -151,7 +151,7 @@ class CrashMover:
             self.crashmover_publish(crash_report)
             MYMETRICS.incr("save_crash.count")
         except MaxAttemptsError:
-            LOGGER.error(f"{crash_id}: too many errors trying to publish; dropped")
+            LOGGER.error("%s: too many errors trying to publish; dropped", crash_id)
             MYMETRICS.incr("publish_crash_dropped.count")
             # return True even when publish fails because it will be automatically
             # published later via self-healing mechanisms
