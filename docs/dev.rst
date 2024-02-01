@@ -332,8 +332,7 @@ To reformat the code:
 
 We're using:
 
-* `black <https://black.readthedocs.io/en/stable/>`_:  code formatting
-* `flake8 <https://flake8.pycqa.org/en/latest/>`_: linting
+* `ruff <https://docs.astral.sh/ruff/>`_: code formatting and linting
 * `bandit <https://bandit.readthedocs.io/en/latest/>`_: security linting
 
 
