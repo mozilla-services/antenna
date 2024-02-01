@@ -102,8 +102,7 @@ services:
   # https://github.com/willkg/kent
   fakesentry:
     build:
-      context: .
-      dockerfile: ./docker/Dockerfile.fakesentry
+      context: docker/images/fakesentry
     image: local/antenna_fakesentry
     ports:
       - "8090:8090"
