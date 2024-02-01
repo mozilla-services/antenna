@@ -71,7 +71,7 @@ devcontainerbuild: .env .docker-build .devcontainer-build  ## | Build VS Code de
 	touch .devcontainer-build
 
 .PHONY: devcontainer
-devcontainer: .env .docker-build  ## | Run VS Code development container.
+devcontainer: .env .devcontainer-build  ## | Run VS Code development container.
 	${DC} up --detach devcontainer
 
 .PHONY: shell
