@@ -44,6 +44,16 @@ services:
       - localstack
       - statsd
 
+  # like web but CI can't volume mount things
+  ci-web:
+    extends:
+      service: ci
+    env_file:
+      # exclude docker/config/test.env because this will be used for systemtest
+      # which requires store and publish to actually happen
+      - docker/config/local_dev.env
+    command: web
+
   # Web container is a prod-like fully-functioning Antenna container
   web:
     extends:

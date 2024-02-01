@@ -3,6 +3,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from http.client import HTTPConnection, HTTPSConnection, RemoteDisconnected
+from contextlib import contextmanager
 import logging
 import urllib
 
@@ -14,6 +15,7 @@ from testlib import mini_poster
 logger = logging.getLogger(__name__)
 
 
+@contextmanager
 def http_post(posturl, headers, data):
     parsed = urllib.parse.urlparse(posturl)
     if ":" in parsed.netloc:
@@ -27,7 +29,10 @@ def http_post(posturl, headers, data):
     else:
         conn = HTTPConnection(host, int(port))
     conn.request("POST", parsed.path, headers=headers, body=data)
-    return conn.getresponse()
+    try:
+        yield conn.getresponse()
+    finally:
+        conn.close()
 
 
 class TestContentLength:
@@ -41,10 +46,9 @@ class TestContentLength:
         del headers["Content-Length"]
 
         # Do an HTTP POST with no Content-Length
-        resp = http_post(posturl, headers, payload)
-
-        assert resp.getcode() == 200
-        assert str(resp.read(), encoding="utf-8").startswith("CrashID=")
+        with http_post(posturl, headers, payload) as resp:
+            assert resp.getcode() == 200
+            assert str(resp.read(), encoding="utf-8").startswith("CrashID=")
 
     def test_content_length_0(self, posturl, crash_generator):
         """Post a crash with a content-length 0"""
@@ -56,13 +60,12 @@ class TestContentLength:
         # Add wrong content-length
         headers["Content-Length"] = "0"
 
-        resp = http_post(posturl, headers, payload)
-
-        assert resp.getcode() == 400
-        assert (
-            str(resp.read(), encoding="utf-8")
-            == "Discarded=malformed_no_content_length"
-        )
+        with http_post(posturl, headers, payload) as resp:
+            assert resp.getcode() == 400
+            assert (
+                str(resp.read(), encoding="utf-8")
+                == "Discarded=malformed_no_content_length"
+            )
 
     def test_content_length_20(self, posturl, crash_generator):
         """Post a crash with a content-length 20 which is less than content"""
@@ -76,13 +79,12 @@ class TestContentLength:
         # Add wrong content-length
         headers["Content-Length"] = "20"
 
-        resp = http_post(posturl, headers, payload)
-
-        assert resp.getcode() == 400
-        assert (
-            str(resp.read(), encoding="utf-8")
-            == "Discarded=malformed_invalid_payload_structure"
-        )
+        with http_post(posturl, headers, payload) as resp:
+            assert resp.getcode() == 400
+            assert (
+                str(resp.read(), encoding="utf-8")
+                == "Discarded=malformed_invalid_payload_structure"
+            )
 
     def test_content_length_1000(self, posturl, crash_generator, nginx):
         """Post a crash with a content-length greater than size of payload."""
@@ -98,8 +100,8 @@ class TestContentLength:
         headers["Content-Length"] = "1000"
 
         try:
-            resp = http_post(posturl, headers, payload)
-            status_code = resp.getcode()
+            with http_post(posturl, headers, payload) as resp:
+                status_code = resp.getcode()
         except RemoteDisconnected:
             # If there's an ELB and nginx times out waiting for the rest of the
             # request, then we get an HTTP 504. If there's no ELB (we're
@@ -122,6 +124,5 @@ class TestContentLength:
         # Add wrong content-length
         headers["Content-Length"] = "foo"
 
-        resp = http_post(posturl, headers, payload)
-
-        assert resp.getcode() == 400
+        with http_post(posturl, headers, payload) as resp:
+            assert resp.getcode() == 400
