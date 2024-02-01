@@ -60,7 +60,10 @@ setup: my.env .docker-build  ## | Set up services.
 
 .PHONY: run
 run: my.env .docker-build  ## | Run the webapp and services.
-	${DC} up web fakesentry
+	${DC} up \
+		--no-attach statsd \
+		--no-attach localstack \
+		web fakesentry
 
 .PHONY: shell
 shell: my.env .docker-build  ## | Open a shell in the web image.
