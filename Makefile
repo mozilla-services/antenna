@@ -63,7 +63,10 @@ setup: my.env .docker-build  ## | Set up services.
 
 .PHONY: run
 run: my.env .docker-build  ## | Run the webapp and services.
-	${DC} up web fakesentry
+	${DC} up \
+		--no-attach statsd \
+		--no-attach localstack \
+		web fakesentry
 
 .PHONY: devcontainerbuild
 devcontainerbuild: .env  ## | Build VS Code development container.
