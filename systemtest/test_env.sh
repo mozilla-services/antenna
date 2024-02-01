@@ -50,6 +50,6 @@ echo "HOST: ${HOST}"
 echo "NGINX_TESTS: ${NGINX_TESTS}"
 
 # make sure to run systemtest even if this script is called from the git root
-cd "$(dirname "$0")/.."
+cd /app/systemtest
 
 pytest -vv
