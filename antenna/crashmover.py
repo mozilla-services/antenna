@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import logging
 
 from everett.manager import Option, parse_class
+import gevent
 import markus
 
 from antenna.util import MaxAttemptsError, retry
@@ -100,6 +101,7 @@ class CrashMover:
                 attempts=self.config("max_attempts"),
                 sleep_seconds=self.config("retry_sleep_seconds"),
             ),
+            sleep_function=gevent.sleep,
         )(self.crashmover_save)
 
         self.crashmover_publish_with_retry = retry(
@@ -109,6 +111,7 @@ class CrashMover:
                 attempts=self.config("max_attempts"),
                 sleep_seconds=self.config("retry_sleep_seconds"),
             ),
+            sleep_function=gevent.sleep,
         )(self.crashmover_publish)
 
     def get_components(self):
