@@ -6,7 +6,7 @@ import logging
 
 from everett.manager import Option, parse_class
 
-from antenna.heartbeat import register_for_verification
+from antenna.app import register_for_verification
 from antenna.ext.crashstorage_base import CrashStorageBase
 from antenna.util import get_date_from_crash_id, json_ordered_dumps
 

@@ -38,7 +38,6 @@ from antenna.health_resource import (
     LBHeartbeatResource,
     VersionResource,
 )
-from antenna.heartbeat import HeartbeatManager
 from antenna.libdockerflow import get_release_name
 from antenna.liblogging import setup_logging, log_config
 from antenna.libmarkus import setup_metrics
@@ -163,8 +162,6 @@ class AntennaApp(falcon.App):
             config=config_manager.with_namespace("breakpad"), crashmover=self.crashmover
         )
 
-        self.hb = HeartbeatManager()
-
     def uncaught_error_handler(self, req, resp, ex, params):
         """Handle uncaught exceptions
 
@@ -266,15 +263,13 @@ class AntennaApp(falcon.App):
         for key in get_config_for_class(self.__class__).keys():
             self.config(key)
 
-        self.hb.verify()
-
-    def start_heartbeat(self, is_alive):
-        """Start the Antenna heartbeat coroutine."""
-        self.hb.start_heartbeat(is_alive)
-
-    def join_heartbeat(self):
-        """Join on the Antenna heartbeat coroutine."""
-        self.hb.join_heartbeat()
+        LOGGER.debug("Verification starting.")
+        for fun in _registered_verify:
+            LOGGER.debug("Verifying %s", fun.__qualname__)
+            # Don't handle any exceptions here--just die and let other
+            # machinery handle it
+            fun()
+        LOGGER.debug("Verification complete: everything is good!")
 
 
 def get_app(config_manager=None):
@@ -309,3 +304,18 @@ def get_app(config_manager=None):
     app = SentryWsgiMiddleware(app)
 
     return app
+
+
+# All functions registered to run at verification step
+_registered_verify = set()
+
+
+def reset_verify_funs():
+    """Reset the list of registered hb functions--used for tests."""
+    _registered_verify.clear()
+
+
+def register_for_verification(fun):
+    """Register a function for verification."""
+    LOGGER.debug("registered %s for verification", fun.__qualname__)
+    _registered_verify.add(fun)
