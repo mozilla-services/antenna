@@ -66,7 +66,7 @@ run: my.env .docker-build  ## | Run the webapp and services.
 	${DC} up web fakesentry
 
 .PHONY: devcontainerbuild
-devcontainerbuild: .env .docker-build .devcontainer-build  ## | Build VS Code development container.
+devcontainerbuild: .env  ## | Build VS Code development container.
 	${DC} build devcontainer
 	touch .devcontainer-build
 
