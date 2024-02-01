@@ -11,7 +11,6 @@ import uuid
 import boto3
 from botocore.client import ClientError, Config
 from everett.manager import Option
-import gevent
 
 from antenna.util import retry
 
@@ -140,7 +139,6 @@ class S3Connection:
             ValueError,
         ],
         wait_time_generator=wait_times_connect,
-        sleep_function=gevent.sleep,
         module_logger=logger,
     )
     def _build_client(self):
@@ -193,7 +191,6 @@ class S3Connection:
             ClientError
         ],
         wait_time_generator=wait_times_save,
-        sleep_function=gevent.sleep,
         module_logger=logger,
     )
     def save_file(self, path, data):

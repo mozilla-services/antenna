@@ -171,11 +171,6 @@ You can see crashes being accepted and saved::
     {"Timestamp": 1493998645733482752, "Type": "antenna.breakpad_resource", "Logger": "antenna", "Hostname": "ebf44d051438", "EnvVersion": "2.0", "Severity": 6, "Pid": 15, "Fields": {"host_id": "ebf44d051438", "message": "8e01b4e0-f38f-4b16-bc5a-043971170505 saved"}}
 
 
-You can see the heartbeat kicking off::
-
-    {"Timestamp": 1493998645532856576, "Type": "antenna.heartbeat", "Logger": "antenna", "Hostname": "ebf44d051438", "EnvVersion": "2.0", "Severity": 7, "Pid": 15, "Fields": {"host_id": "ebf44d051438", "message": "thump"}}
-
-
 Statsd
 ------
 
