@@ -18,12 +18,19 @@ Running tests
 In a terminal, run::
 
     $ make shell
-    app@xxx:/app$ cd systemtests
-    app@xxx:/app/systemtests$ ./test_env.sh ENV
+    app@xxx:/app$ ./systemtests/test_env.sh ENV
 
 
-If you're running against ``localdev``, you'll need to be running antenna
-in another terminal.
+If you're running against ``local``, you'll need to be running antenna
+in another terminal::
+
+    $ make run
+
+
+CI
+--
+
+These tests are run in CI without nginx.
 
 
 Rules of systemtest
@@ -32,15 +39,12 @@ Rules of systemtest
 1. Thou shalt not import anything from ``antenna``.
 
 2. If the test requires nginx (for example, testing whether crash reports
-   > 20mb are rejected which is configured in nginx), then add this
-   decorator::
+   > 20mb are rejected which is configured in nginx), then use the nginx
+   pytest fixture to optionally skip::
 
-      @pytest.mark.skipif(
-          bool(os.environ.get('NONGINX')),
-          reason=(
-              'Requires nginx which you probably do not have running '
-              'via localhost'
-          ))
+      def test_my_nginx_test(nginx):
+          if not nginx:
+              pytest.skip("test requires nginx")
 
 3. Tests can check S3 to see if a file exists by listing objects, but
    cannot get the file.
