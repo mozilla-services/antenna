@@ -252,7 +252,7 @@ def retry(
         This allows you to retry based on a failed exception or failed return.
 
     :arg wait_time_generator:
-        Generator function that returns wait times until a maximum number of
+        Function that returns a generator of wait times until a maximum number of
         attempts have been tried.
 
     :arg fun sleep_function:
