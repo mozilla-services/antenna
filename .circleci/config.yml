@@ -8,7 +8,7 @@ version: 2.1
 jobs:
   main:
     docker:
-      - image: cimg/base:2023.01
+      - image: cimg/base:2024.01
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
@@ -18,7 +18,7 @@ jobs:
       - checkout
 
       - setup_remote_docker:
-          version: 20.10.18
+          version: docker24
           docker_layer_caching: true
 
       - run:
@@ -76,6 +76,13 @@ jobs:
                 statsd \
                 fakesentry
             docker-compose run --rm ci shell ./bin/run_tests.sh
+
+      - run:
+          name: Run systemtest
+          command: |
+            docker compose run --rm ci shell ./bin/run_setup.sh
+            docker compose up --detach --wait --wait-timeout=10 ci-web
+            docker compose run --rm ci shell bash -c 'cd systemtest && NGINX_TESTS=0 POST_CHECK=1 HOST=http://ci-web:8000 pytest -vv'
 
       - run:
           name: Push to Dockerhub
