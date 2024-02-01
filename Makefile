@@ -52,9 +52,8 @@ my.env:
 
 .PHONY: build
 build: my.env  ## | Build docker images.
-	${DC} build ${DOCKER_BUILD_OPTS} --build-arg userid=${ANTENNA_UID} --build-arg groupid=${ANTENNA_GID} --progress plain deploy-base
-	${DC} build --progress plain fakesentry
-	${DC} build --progress plain localstack statsd
+	${DC} --progress plain build ${DOCKER_BUILD_OPTS} --build-arg userid=${ANTENNA_UID} --build-arg groupid=${ANTENNA_GID} deploy-base
+	${DC} --progress plain build fakesentry localstack statsd
 	touch .docker-build
 
 .PHONY: setup
