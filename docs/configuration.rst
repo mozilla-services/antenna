@@ -62,9 +62,6 @@ following:
    connections (crash reports). Gunicorn's default is 1000. That's what we use
    in production.
 
-   Note that the Antenna heartbeat insinuates itself into this coroutine pool,
-   so you need 2 at a bare minimum.
-
    This is the ``worker-connections`` Gunicorn configuration setting.
 
    https://docs.gunicorn.org/en/stable/settings.html#worker-connections
@@ -75,10 +72,7 @@ following:
 
 .. everett:option:: GUNICORN_WORKER_CLASS
    :parser: str
-   :default: "gevent"
-
-   This has to be set to ``gevent``. Antenna does some ``GeventWorker``
-   specific things and won't work with anything else.
+   :default: "sync"
 
    This is the ``worker-class`` Gunicorn configuration setting.
 

@@ -21,7 +21,7 @@ REPO_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 from antenna.app import get_app, setup_logging  # noqa
-from antenna.heartbeat import reset_hb_funs  # noqa
+from antenna.app import reset_verify_funs  # noqa
 from testlib.s3mock import S3Mock  # noqa
 
 
@@ -30,8 +30,8 @@ def pytest_runtest_setup():
     setup_logging(logging_level="DEBUG", debug=True, host_id="", processname="antenna")
     markus.configure([{"class": "markus.backends.logging.LoggingMetrics"}])
 
-    # Wipe any registered heartbeat functions
-    reset_hb_funs()
+    # Wipe any registered verify functions
+    reset_verify_funs()
 
 
 @pytest.fixture
@@ -82,20 +82,6 @@ class AntennaTestClient(TestClient):
     def get_resource_by_name(self, name):
         """Retrieves the Falcon API resource by name"""
         return self.app.app.get_resource_by_name(name)
-
-    def join_app(self):
-        """This goes through and calls join on all gevent pools in the app
-
-        Call this after doing a ``.get()`` or ``.post()`` to force all post
-        processing to occur before this returns.
-
-        For example::
-
-            resp = client.get(...)
-            client.join_app()
-
-        """
-        self.get_crashmover().join_pool()
 
 
 @pytest.fixture

@@ -70,21 +70,18 @@ production, see documentation_.
          web_1 | + PORT=8000
          web_1 | + GUNICORN_WORKERS=1
          web_1 | + GUNICORN_WORKER_CONNECTIONS=4
-         web_1 | + GUNICORN_WORKER_CLASS=gevent
+         web_1 | + GUNICORN_WORKER_CLASS=sync
          web_1 | + GUNICORN_MAX_REQUESTS=0
          web_1 | + GUNICORN_MAX_REQUESTS_JITTER=0
          web_1 | + CMD_PREFIX=
-         web_1 | + gunicorn --workers=1 --worker-connections=4 --worker-class=gevent --max-requests=0 --max-requests-jitter=0 --config=antenna/gunicornhooks.py --log-file=- --error-logfile=- --access-logfile=- --bind 0.0.0.0:8000 antenna.wsgi:application
+         web_1 | + gunicorn --workers=1 --worker-connections=4 --worker-class=sync --max-requests=0 --max-requests-jitter=0 --config=antenna/gunicornhooks.py --log-file=- --error-logfile=- --access-logfile=- --bind 0.0.0.0:8000 antenna.wsgi:application
          web_1 | [2022-09-13 14:21:45 +0000] [8] [INFO] Starting gunicorn 20.1.0
          web_1 | [2022-09-13 14:21:45 +0000] [8] [INFO] Listening at: http://0.0.0.0:8000 (8)
-         web_1 | [2022-09-13 14:21:45 +0000] [8] [INFO] Using worker: gevent
+         web_1 | [2022-09-13 14:21:45 +0000] [8] [INFO] Using worker: sync
          web_1 | [2022-09-13 14:21:45 +0000] [9] [INFO] Booting worker with pid: 9
          web_1 | 2022-09-13 14:21:45,461 INFO - antenna - antenna.liblogging - set up logging logging_level=DEBUG debug=True host_id=097fa14aec1e processname=antenna
-         web_1 | 2022-09-13 14:21:45,573 DEBUG - antenna - antenna.heartbeat - registered S3CrashStorage.verify_write_to_bucket for verification
-         web_1 | 2022-09-13 14:21:45,612 DEBUG - antenna - antenna.heartbeat - registered SQSCrashPublish.verify_queue for verification
-         web_1 | 2022-09-13 14:21:45,612 DEBUG - antenna - antenna.heartbeat - registered CrashMover.hb_report_health_stats for heartbeats
-         web_1 | 2022-09-13 14:21:45,612 DEBUG - antenna - antenna.heartbeat - registered CrashMover.hb_run_crashmover for heartbeats
-         web_1 | 2022-09-13 14:21:45,612 DEBUG - antenna - antenna.heartbeat - registered CrashMover.has_work_to_do for life
+         web_1 | 2022-09-13 14:21:45,573 DEBUG - antenna - antenna.app - registered S3CrashStorage.verify_write_to_bucket for verification
+         web_1 | 2022-09-13 14:21:45,612 DEBUG - antenna - antenna.app - registered SQSCrashPublish.verify_queue for verification
          web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - BASEDIR=/app
          web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - LOGGING_LEVEL=DEBUG
          web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - LOCAL_DEV_ENV=True
@@ -111,12 +108,11 @@ production, see documentation_.
          web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - BREAKPAD_THROTTLER_RULES=antenna.throttler.MOZILLA_RULES
          web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - BREAKPAD_THROTTLER_PRODUCTS=antenna.throttler.MOZILLA_PRODUCTS
          web_1 | 2022-09-13 14:21:45,661 INFO - antenna - markus.backends.datadog - DatadogMetrics configured: statsd:8125 mcboatface
-         web_1 | 2022-09-13 14:21:45,668 DEBUG - antenna - antenna.heartbeat - Verification starting.
-         web_1 | 2022-09-13 14:21:45,669 DEBUG - antenna - antenna.heartbeat - Verifying SQSCrashPublish.verify_queue
-         web_1 | 2022-09-13 14:21:45,678 DEBUG - antenna - antenna.heartbeat - Verifying S3CrashStorage.verify_write_to_bucket
-         web_1 | 2022-09-13 14:21:45,699 DEBUG - antenna - antenna.heartbeat - Verification complete: everything is good!
+         web_1 | 2022-09-13 14:21:45,668 DEBUG - antenna - antenna.app - Verification starting.
+         web_1 | 2022-09-13 14:21:45,669 DEBUG - antenna - antenna.app - Verifying SQSCrashPublish.verify_queue
+         web_1 | 2022-09-13 14:21:45,678 DEBUG - antenna - antenna.app - Verifying S3CrashStorage.verify_write_to_bucket
+         web_1 | 2022-09-13 14:21:45,699 DEBUG - antenna - antenna.app - Verification complete: everything is good!
          web_1 | 2022-09-13 14:21:45,699 INFO - antenna - antenna.app - Antenna is running! http://localhost:8000/
-         web_1 | 2022-09-13 14:21:45,699 INFO - antenna - antenna.heartbeat - Starting heartbeat
          web_1 | 2022-09-13 14:21:45,700 INFO - antenna - markus - METRICS|2022-09-13 14:21:45|gauge|crashmover.work_queue_size|0|
 
    2. Verify things are running:
@@ -332,8 +328,7 @@ To reformat the code:
 
 We're using:
 
-* `black <https://black.readthedocs.io/en/stable/>`_:  code formatting
-* `flake8 <https://flake8.pycqa.org/en/latest/>`_: linting
+* `ruff <https://docs.astral.sh/ruff/>`_: code formatting and linting
 * `bandit <https://bandit.readthedocs.io/en/latest/>`_: security linting
 
 

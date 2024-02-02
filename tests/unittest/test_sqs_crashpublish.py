@@ -123,7 +123,6 @@ class TestSQSCrashPublishIntegration:
         sqs.get_published_crashids(queue_name)
 
         result = client.simulate_post("/submit", headers=headers, body=data)
-        client.join_app()
 
         # Verify the collector returns a 200 status code and the crash id
         # we fed it.

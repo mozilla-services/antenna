@@ -8,10 +8,9 @@ import random
 import boto3
 from botocore.client import ClientError
 from everett.manager import Option
-import gevent
 
+from antenna.app import register_for_verification
 from antenna.ext.crashpublish_base import CrashPublishBase
-from antenna.heartbeat import register_for_verification
 from antenna.util import retry
 
 
@@ -125,7 +124,6 @@ class SQSCrashPublish(CrashPublishBase):
             ValueError,
         ],
         wait_time_generator=wait_times_connect,
-        sleep_function=gevent.sleep,
         module_logger=logger,
     )
     def _build_client(self):
