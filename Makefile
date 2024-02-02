@@ -40,6 +40,9 @@ help:
 .docker-build:
 	make build
 
+.devcontainer-build:
+	make devcontainerbuild
+
 my.env:
 	@if [ ! -f my.env ]; \
 	then \
@@ -61,6 +64,15 @@ setup: my.env .docker-build  ## | Set up services.
 .PHONY: run
 run: my.env .docker-build  ## | Run the webapp and services.
 	${DC} up web fakesentry
+
+.PHONY: devcontainerbuild
+devcontainerbuild: .env  ## | Build VS Code development container.
+	${DC} build devcontainer
+	touch .devcontainer-build
+
+.PHONY: devcontainer
+devcontainer: .env .devcontainer-build  ## | Run VS Code development container.
+	${DC} up --detach devcontainer
 
 .PHONY: shell
 shell: my.env .docker-build  ## | Open a shell in the web image.
