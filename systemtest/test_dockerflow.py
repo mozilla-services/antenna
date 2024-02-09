@@ -12,7 +12,7 @@ LOGGER = logging.getLogger(__name__)
 
 class TestDockerflow:
     def test_version(self, baseurl):
-        resp = requests.get(baseurl + "__version__")
+        resp = requests.get(baseurl + "__version__", timeout=5)
         assert resp.status_code == 200
         data = resp.json()
         assert isinstance(data, dict)
@@ -22,9 +22,9 @@ class TestDockerflow:
         assert data_keys == [] or data_keys == ["build", "commit", "source", "version"]
 
     def test_heartbeat(self, baseurl):
-        resp = requests.get(baseurl + "__heartbeat__")
+        resp = requests.get(baseurl + "__heartbeat__", timeout=5)
         assert resp.status_code == 200
 
     def test_lbheartbeat(self, baseurl):
-        resp = requests.get(baseurl + "__lbheartbeat__")
+        resp = requests.get(baseurl + "__lbheartbeat__", timeout=5)
         assert resp.status_code == 200

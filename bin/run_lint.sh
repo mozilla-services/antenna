@@ -26,9 +26,6 @@ else
     ruff check $FILES
     ruff format --check $FILES
 
-    echo ">>> bandit (${PYTHON_VERSION})"
-    bandit -r antenna/
-
     echo ">>> license check (${PYTHON_VERSION})"
     if [[ -d ".git" ]]; then
         # If the .git directory exists, we can let license-check.py do

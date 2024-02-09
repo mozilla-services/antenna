@@ -83,7 +83,7 @@ def get_config():
 
 
 def fetch(url, is_json=True):
-    resp = requests.get(url)
+    resp = requests.get(url, timeout=5)
     if resp.status_code != 200:
         print(url)
         print(f"{resp.status_code}, {resp.content}")

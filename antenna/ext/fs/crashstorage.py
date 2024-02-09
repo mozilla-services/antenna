@@ -47,7 +47,7 @@ class FSCrashStorage(CrashStorageBase):
 
     class Config:
         fs_root = Option(
-            default="/tmp/antenna_crashes",  # nosec
+            default="/tmp/antenna_crashes",  # noqa: S108
             doc="path to where files should be stored",
         )
 

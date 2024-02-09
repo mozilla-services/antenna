@@ -128,7 +128,7 @@ class Throttler:
                 if rule.result in (ACCEPT, DEFER, REJECT, FAKEACCEPT):
                     return rule.result, rule.rule_name, 100
 
-                if (random.random() * 100.0) <= rule.result[0]:  # nosec
+                if (random.random() * 100.0) <= rule.result[0]:  # noqa: S311
                     response = rule.result[1]
                 else:
                     response = rule.result[2]
