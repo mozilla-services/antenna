@@ -10,6 +10,16 @@ from click.testing import CliRunner
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "bin"))
 
 
+class TestPubSubCli:
+    def test_basic(self):
+        """Basic test to make sure pubsub_cli imports and runs at all."""
+        from pubsub_cli import pubsub_group
+
+        runner = CliRunner()
+        result = runner.invoke(pubsub_group, [])
+        assert result.exit_code == 0
+
+
 class TestS3Cli:
     def test_basic(self):
         """Basic test to make sure s3_cli imports and runs at all."""
