@@ -240,7 +240,7 @@ def cmdline(args):
         default=30,
         type=float,
         help=(
-            "How many seconds to wait for the server to send data"
+            "How many seconds to wait for the server to send data "
             "before giving up, as a float."
         ),
     )
