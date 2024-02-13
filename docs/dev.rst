@@ -156,7 +156,7 @@ production, see documentation_.
          web_1 | 2022-09-13 14:23:19,374 INFO - antenna - markus - METRICS|2022-09-13 14:23:19|incr|crashmover.save_crash.count|1|
          web_1 | 2022-09-13 14:23:22,814 INFO - antenna - markus - METRICS|2022-09-13 14:23:22|gauge|crashmover.work_queue_size|0|
 
-   4. See the data in localstack:
+   4. See the data in localstack/gcs-emulator:
 
       The ``localstack`` container stores data in memory and the data doesn't
       persist between container restarts.
@@ -166,6 +166,12 @@ production, see documentation_.
       .. code-block:: shell
 
          $ docker compose run --rm web shell python bin/s3_cli.py list_buckets
+
+      For gcs-emulator you can use ``bin/gcs_cli.py`` to access it:
+
+      .. code-block:: shell
+
+         $ docker compose run --rm web shell python bin/gcs_cli.py list_buckets
 
       If you do this a lot, turn it into a shell script.
 
