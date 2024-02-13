@@ -39,7 +39,7 @@ class Test25mbLimit:
             raise ValueError("payload size %s", len(payload))
 
         try:
-            resp = requests.post(posturl, headers=headers, data=payload)
+            resp = requests.post(posturl, headers=headers, data=payload, timeout=120)
             return resp.status_code
 
         except requests.exceptions.SSLError as exc:
@@ -87,7 +87,7 @@ class Test25mbLimit:
         # Reduce the size of the content length
         headers["Content-Length"] = str(25 * 1024 * 1024)
         try:
-            resp = requests.post(posturl, headers=headers, data=payload)
+            resp = requests.post(posturl, headers=headers, data=payload, timeout=120)
             status_code = resp.status_code
         except requests.exceptions.SSLError as exc:
             if "EOF occurred in violation of protocol" in str(exc):

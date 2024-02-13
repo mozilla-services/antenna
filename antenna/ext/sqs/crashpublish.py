@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 def wait_times_connect():
     """Return generator for wait times with jitter between failed connection attempts."""
     for i in [5] * 5:
-        yield i + random.uniform(-2, 2)  # nosec
+        yield i + random.uniform(-2, 2)  # noqa: S311
 
 
 class SQSCrashPublish(CrashPublishBase):
