@@ -57,9 +57,9 @@ class TestFSCrashStorage:
         # should have written--no more and no less.
         assert sorted([nix_tmpdir(fn) for fn in files]) == sorted(
             [
-                "/antenna_crashes/20160918/raw_crash/de1bb258-cbbf-4589-a673-34f800160918.json",
-                "/antenna_crashes/20160918/dump_names/de1bb258-cbbf-4589-a673-34f800160918.json",
-                "/antenna_crashes/20160918/upload_file_minidump/de1bb258-cbbf-4589-a673-34f800160918",
+                "/antenna_crashes/v1/raw_crash/20160918/de1bb258-cbbf-4589-a673-34f800160918",
+                "/antenna_crashes/v1/dump_names/de1bb258-cbbf-4589-a673-34f800160918",
+                "/antenna_crashes/v1/dump/de1bb258-cbbf-4589-a673-34f800160918",
             ]
         )
 
@@ -69,7 +69,7 @@ class TestFSCrashStorage:
                 contents[nix_tmpdir(fn)] = fp.read()
 
         assert contents[
-            "/antenna_crashes/20160918/raw_crash/de1bb258-cbbf-4589-a673-34f800160918.json"
+            "/antenna_crashes/v1/raw_crash/20160918/de1bb258-cbbf-4589-a673-34f800160918"
         ] == (
             b"{"
             + b'"ProductName": "Test", '
@@ -91,14 +91,12 @@ class TestFSCrashStorage:
 
         assert (
             contents[
-                "/antenna_crashes/20160918/dump_names/de1bb258-cbbf-4589-a673-34f800160918.json"
+                "/antenna_crashes/v1/dump_names/de1bb258-cbbf-4589-a673-34f800160918"
             ]
             == b'["upload_file_minidump"]'
         )
 
         assert (
-            contents[
-                "/antenna_crashes/20160918/upload_file_minidump/de1bb258-cbbf-4589-a673-34f800160918"
-            ]
+            contents["/antenna_crashes/v1/dump/de1bb258-cbbf-4589-a673-34f800160918"]
             == b"abcd1234"
         )

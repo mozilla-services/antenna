@@ -9,7 +9,7 @@ import os.path
 from everett.manager import Option
 
 from antenna.ext.crashstorage_base import CrashStorageBase
-from antenna.util import get_date_from_crash_id, json_ordered_dumps
+from antenna.util import json_ordered_dumps
 
 
 logger = logging.getLogger(__name__)
@@ -19,18 +19,19 @@ class FSCrashStorage(CrashStorageBase):
     """Save raw crash files to the file system.
 
     This generates a tree something like this which mirrors what we do
-    on S3:
+    on S3 and GCS:
 
     ::
 
         <FS_ROOT>/
-            <YYYYMMDD>/
-                raw_crash/
-                    <CRASHID>.json
-                dump_names/
-                    <CRASHID>.json
-                <DUMP_NAME>/
-                    <CRASHID>
+           v1/
+               dump_names/
+                   <CRASHID>
+               <DUMPNAME>/
+                   <CRASHID>
+               raw_crash/
+                   <YYYYMMDD>/
+                       <CRASHID>
 
 
     Couple of things to note:
@@ -63,26 +64,8 @@ class FSCrashStorage(CrashStorageBase):
         if not os.path.isdir(self.root):
             os.makedirs(self.root)
 
-    def _get_raw_crash_path(self, crash_id):
-        """Return path for where the raw crash should go."""
-        return os.path.join(
-            self.root, get_date_from_crash_id(crash_id), "raw_crash", crash_id + ".json"
-        )
-
-    def _get_dump_names_path(self, crash_id):
-        """Return path for where the dump_names list should go."""
-        return os.path.join(
-            self.root,
-            get_date_from_crash_id(crash_id),
-            "dump_names",
-            crash_id + ".json",
-        )
-
-    def _get_dump_name_path(self, crash_id, dump_name):
-        """Return path for a given dump."""
-        return os.path.join(
-            self.root, get_date_from_crash_id(crash_id), dump_name, crash_id
-        )
+    def _path_join(self, *paths):
+        return os.path.join(self.root, *paths)
 
     def _save_file(self, fn, contents):
         logger.debug("Saving file %r", fn)

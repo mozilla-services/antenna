@@ -4,6 +4,8 @@
 
 import logging
 
+from antenna.util import get_date_from_crash_id
+
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +18,25 @@ class CrashStorageBase:
 
     def __init__(self, config):
         self.config = config.with_options(self)
+
+    def _path_join(self, *paths):
+        return "/".join(paths)
+
+    def _get_raw_crash_path(self, crash_id):
+        date = get_date_from_crash_id(crash_id)
+        return self._path_join("v1", "raw_crash", date, crash_id)
+
+    def _get_dump_names_path(self, crash_id):
+        return self._path_join("v1", "dump_names", crash_id)
+
+    def _get_dump_name_path(self, crash_id, dump_name):
+        # NOTE(willkg): This is something that Socorro collector did. I'm not
+        # really sure why, but in order to maintain backwards compatability, we
+        # need to keep doing it.
+        if dump_name in (None, "", "upload_file_minidump"):
+            dump_name = "dump"
+
+        return self._path_join("v1", dump_name, crash_id)
 
     def publish_crash(self, crash_report):
         """Save the crash report."""
