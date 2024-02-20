@@ -173,7 +173,7 @@ def multipart_encode(raw_crash, boundary=None, mimetype="multipart/form-data"):
     return output, headers
 
 
-def post_crash(url, crash_payload, compressed=False):
+def post_crash(url, crash_payload, compressed=False, timeout=30):
     """Posts a crash to specified url
 
     .. Note:: This is not full-featured. It's for testing purposes only.
@@ -193,7 +193,7 @@ def post_crash(url, crash_payload, compressed=False):
         payload = compress(payload)
         headers["Content-Encoding"] = "gzip"
 
-    return requests.post(url, headers=headers, data=payload)
+    return requests.post(url, headers=headers, data=payload, timeout=timeout)
 
 
 def get_json_data(fn):
@@ -232,6 +232,16 @@ def cmdline(args):
         help=(
             "This is in name:path form. You can have multple dumps, but they have to "
             "have different names."
+        ),
+    )
+    parser.add_argument(
+        "--timeout",
+        dest="timeout",
+        default=30,
+        type=float,
+        help=(
+            "How many seconds to wait for the server to send data "
+            "before giving up, as a float."
         ),
     )
     parser.add_argument("--verbose", dest="verbose", action="store_true")
@@ -318,7 +328,12 @@ def cmdline(args):
     if use_json:
         logger.info("Sending metadata in single JSON field...")
 
-    resp = post_crash(url=url, crash_payload=crash_payload, compressed=compressed)
+    resp = post_crash(
+        url=url,
+        crash_payload=crash_payload,
+        compressed=compressed,
+        timeout=parsed.timeout,
+    )
 
     logger.info("Post response: %s %r" % (resp.status_code, resp.content))
     return 0

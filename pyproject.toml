@@ -1,6 +1,6 @@
 [tool.ruff]
-# Enable pycodestyle (E), pyflakes (F), and bugbear (B) rules
-select = ["E", "F", "B"]
+# Enable pycodestyle (E), pyflakes (F), bugbear (B), and bandit (S) rules
+select = ["E", "F", "B", "S"]
 line-length = 88
 # Ignore line length violations that aren't fixed by formatting
 ignore = ["E501"]
@@ -8,6 +8,12 @@ target-version = "py310"
 
 [tool.ruff.flake8-quotes]
 docstring-quotes = "double"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+"systemtest/*" = ["S101"]
+"bin/license-check.py" = ["S603", "S607"]
+"bin/release.py" = ["S310", "S603", "S607"]
 
 
 [tool.paul-mclendahand]

@@ -35,7 +35,7 @@ def wait_times_connect():
 
     """
     for i in [5] * 5:
-        yield i + random.uniform(-2, 2)  # nosec
+        yield i + random.uniform(-2, 2)  # noqa: S311
 
 
 def wait_times_save():

@@ -20,7 +20,7 @@ class TestDiscarded:
         # Mangle the header changing the boundary to something wrong
         headers["Content-Type"] = "multipart/form-data; boundary=foo"
 
-        resp = requests.post(posturl, headers=headers, data=payload)
+        resp = requests.post(posturl, headers=headers, data=payload, timeout=30)
 
         assert resp.status_code == 400
         assert (
@@ -34,7 +34,7 @@ class TestDiscarded:
         payload, headers = mini_poster.multipart_encode(raw_crash)
 
         # Send no Content-Type header
-        resp = requests.post(posturl, headers={}, data=payload)
+        resp = requests.post(posturl, headers={}, data=payload, timeout=30)
 
         assert resp.status_code == 400
         assert (
@@ -50,7 +50,7 @@ class TestDiscarded:
         headers["Content-Length"] = "0"
 
         # Send no payload
-        resp = requests.post(posturl, headers=headers, data="")
+        resp = requests.post(posturl, headers=headers, data="", timeout=30)
 
         assert resp.status_code == 400
         assert (
@@ -68,7 +68,7 @@ class TestDiscarded:
         # Junkify the payload
         payload = "foobarbaz"
 
-        resp = requests.post(posturl, headers=headers, data=payload)
+        resp = requests.post(posturl, headers=headers, data=payload, timeout=30)
 
         assert resp.status_code == 400
         assert (
@@ -86,7 +86,7 @@ class TestDiscarded:
         # Compress the payload, but don't set the header
         payload = mini_poster.compress(payload)
 
-        resp = requests.post(posturl, headers=headers, data=payload)
+        resp = requests.post(posturl, headers=headers, data=payload, timeout=30)
 
         assert resp.status_code == 400
         assert (
@@ -106,7 +106,7 @@ class TestDiscarded:
         # Add compressed header, but don't compress the payload
         headers["Content-Encoding"] = "gzip"
 
-        resp = requests.post(posturl, headers=headers, data=payload)
+        resp = requests.post(posturl, headers=headers, data=payload, timeout=30)
 
         assert resp.status_code == 400
         assert str(resp.content, encoding="utf-8") == "Discarded=malformed_bad_gzip"

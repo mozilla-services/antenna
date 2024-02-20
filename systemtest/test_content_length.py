@@ -25,9 +25,9 @@ def http_post(posturl, headers, data):
         port = "443" if posturl.startswith("https") else "80"
 
     if posturl.startswith("https"):
-        conn = HTTPSConnection(host, int(port))
+        conn = HTTPSConnection(host, int(port), timeout=120)
     else:
-        conn = HTTPConnection(host, int(port))
+        conn = HTTPConnection(host, int(port), timeout=120)
     conn.request("POST", parsed.path, headers=headers, body=data)
     try:
         yield conn.getresponse()
