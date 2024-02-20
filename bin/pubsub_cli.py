@@ -29,7 +29,7 @@ def list_topics(ctx, project_id):
         "pubsub emulator times out for list_topics as of gcloud cli 463.0.0"
     )
 
-    print("Listing topics in project %s:" % project_id)
+    click.echo(f"Listing topics in project {project_id}.")
     publisher = pubsub_v1.PublisherClient()
 
     for topic in publisher.list_topics(project=project_id):
@@ -42,7 +42,7 @@ def list_topics(ctx, project_id):
 @click.pass_context
 def list_subscriptions(ctx, project_id, topic_name):
     """List subscriptions for a given topic."""
-    click.echo('Listing subscriptions in topic "%s":' % topic_name)
+    click.echo(f"Listing subscriptions in topic {topic_name!r}:")
     publisher = pubsub_v1.PublisherClient()
     topic_path = publisher.topic_path(project_id, topic_name)
 
@@ -61,7 +61,7 @@ def create_topic(ctx, project_id, topic_name):
 
     try:
         publisher.create_topic(name=topic_path)
-        click.echo("Topic created: %s" % topic_path)
+        click.echo(f"Topic created: {topic_path}")
     except AlreadyExists:
         click.echo("Topic already created.")
 
@@ -79,7 +79,7 @@ def create_subscription(ctx, project_id, topic_name, subscription_name):
     subscription_path = subscriber.subscription_path(project_id, subscription_name)
     try:
         subscriber.create_subscription(name=subscription_path, topic=topic_path)
-        click.echo("Subscription created: %s" % subscription_path)
+        click.echo(f"Subscription created: {subscription_path}")
     except AlreadyExists:
         click.echo("Subscription already created.")
 
@@ -96,15 +96,15 @@ def delete_topic(ctx, project_id, topic_name):
 
     # Delete all subscriptions
     for subscription in publisher.list_topic_subscriptions(topic=topic_path):
-        click.echo("Deleting %s..." % subscription)
+        click.echo(f"Deleting {subscription} ...")
         subscriber.delete_subscription(subscription=subscription)
 
     # Delete topic
     try:
         publisher.delete_topic(topic=topic_path)
-        click.echo("Topic deleted: %s" % topic_name)
+        click.echo(f"Topic deleted: {topic_name}")
     except NotFound:
-        click.echo("Topic %s does not exist." % topic_name)
+        click.echo(f"Topic {topic_name} does not exist.")
 
 
 @pubsub_group.command("publish")
@@ -114,7 +114,7 @@ def delete_topic(ctx, project_id, topic_name):
 @click.pass_context
 def publish(ctx, project_id, topic_name, crash_id):
     """Publish crash_id to a given topic."""
-    click.echo('Publishing crash_id to topic "%s":' % topic_name)
+    click.echo(f"Publishing crash_id to topic {topic_name!r}:")
     publisher = pubsub_v1.PublisherClient()
     topic_path = publisher.topic_path(project_id, topic_name)
 
@@ -130,7 +130,7 @@ def publish(ctx, project_id, topic_name, crash_id):
 @click.pass_context
 def pull(ctx, project_id, subscription_name, ack, max_messages):
     """Pull crash id from a given subscription."""
-    click.echo('Pulling crash id from subscription "%s":' % subscription_name)
+    click.echo(f"Pulling crash id from subscription {subscription_name!r}:")
     subscriber = pubsub_v1.SubscriberClient()
     subscription_path = subscriber.subscription_path(project_id, subscription_name)
 
@@ -142,7 +142,7 @@ def pull(ctx, project_id, subscription_name, ack, max_messages):
 
     ack_ids = []
     for msg in response.received_messages:
-        click.echo("crash id: %s" % msg.message.data)
+        click.echo(f"crash id: {msg.message.data}")
         ack_ids.append(msg.ack_id)
 
     if ack:
