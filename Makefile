@@ -108,10 +108,6 @@ lintfix: my.env .docker-build  ## | Reformat code.
 
 .PHONY: test
 test: my.env .docker-build  ## | Run unit tests.
-	# Make sure services are started up
-	${DC} up --detach localstack
-	${DC} up --detach statsd
-	${DC} up --detach fakesentry
 	# Run tests
 	${DC} run --rm test shell ./bin/run_tests.sh
 

@@ -24,3 +24,9 @@ python ./bin/s3_cli.py list_buckets
 echo "Delete and create SQS queue..."
 python ./bin/sqs_cli.py delete "${CRASHMOVER_CRASHPUBLISH_QUEUE_NAME}"
 python ./bin/sqs_cli.py create "${CRASHMOVER_CRASHPUBLISH_QUEUE_NAME}"
+
+echo "Delete and create Pub/Sub topic..."
+python ./bin/pubsub_cli.py delete_topic "${CRASHMOVER_CRASHPUBLISH_PROJECT_ID}" "${CRASHMOVER_CRASHPUBLISH_TOPIC_NAME}"
+python ./bin/pubsub_cli.py create_topic "${CRASHMOVER_CRASHPUBLISH_PROJECT_ID}" "${CRASHMOVER_CRASHPUBLISH_TOPIC_NAME}"
+python ./bin/pubsub_cli.py create_subscription "${CRASHMOVER_CRASHPUBLISH_PROJECT_ID}" "${CRASHMOVER_CRASHPUBLISH_TOPIC_NAME}" "${CRASHMOVER_CRASHPUBLISH_SUBSCRIPTION_NAME}"
+python ./bin/pubsub_cli.py list_topics "${CRASHMOVER_CRASHPUBLISH_PROJECT_ID}"

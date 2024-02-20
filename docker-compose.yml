@@ -29,6 +29,7 @@ services:
     links:
       - fakesentry
       - localstack
+      - pubsub
       - statsd
     volumes:
       - .:/app
@@ -53,6 +54,7 @@ services:
     links:
       - fakesentry
       - localstack
+      - pubsub
       - statsd
 
   # like web but CI can't volume mount things
@@ -78,7 +80,23 @@ services:
     links:
       - fakesentry
       - localstack
+      - pubsub
       - statsd
+
+  # https://cloud.google.com/sdk/docs/downloads-docker
+  # official pubsub emulator
+  pubsub:
+    # also available as google/cloud-sdk:<version>-emulators
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:463.0.0-emulators
+    command:
+      - gcloud
+      - beta
+      - emulators
+      - pubsub
+      - start
+      - --host-port=0.0.0.0:${PUBSUB_PORT:-5010}
+    ports:
+      - 5010:5010
 
   # https://hub.docker.com/r/localstack/localstack/
   # localstack running a fake S3 and SQS
