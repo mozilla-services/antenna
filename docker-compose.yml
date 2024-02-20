@@ -28,6 +28,7 @@ services:
       - docker/config/test.env
     links:
       - fakesentry
+      - gcs-emulator
       - localstack
       - pubsub
       - statsd
@@ -53,6 +54,7 @@ services:
       - docker/config/test.env
     links:
       - fakesentry
+      - gcs-emulator
       - localstack
       - pubsub
       - statsd
@@ -79,6 +81,7 @@ services:
     command: web
     links:
       - fakesentry
+      - gcs-emulator
       - localstack
       - pubsub
       - statsd
@@ -125,3 +128,18 @@ services:
     ports:
       - "8090:8090"
     command: run --host 0.0.0.0 --port 8090
+
+  # https://github.com/fsouza/fake-gcs-server
+  # Fake GCP GCS server for local development and testing
+  gcs-emulator:
+    build:
+      context: docker/images/gcs-emulator
+    image: local/tecken_gcs_emulator
+    command: -port 8001 -scheme http
+    ports:
+      - "${EXPOSE_GCS_EMULATOR_PORT:-8001}:8001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "--insecure", "http://localhost:8001/storage/v1/b"]
+      interval: 1s
+      timeout: 3s
+      retries: 5

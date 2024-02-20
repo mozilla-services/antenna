@@ -20,6 +20,16 @@ class TestPubSubCli:
         assert result.exit_code == 0
 
 
+class TestGcsCli:
+    def test_basic(self):
+        """Basic test to make sure gcs_cli imports and runs at all."""
+        from gcs_cli import gcs_group
+
+        runner = CliRunner()
+        result = runner.invoke(gcs_group, [])
+        assert result.exit_code == 0
+
+
 class TestS3Cli:
     def test_basic(self):
         """Basic test to make sure s3_cli imports and runs at all."""

@@ -21,6 +21,11 @@ python ./bin/s3_cli.py delete "${CRASHMOVER_CRASHSTORAGE_BUCKET_NAME}"
 python ./bin/s3_cli.py create "${CRASHMOVER_CRASHSTORAGE_BUCKET_NAME}"
 python ./bin/s3_cli.py list_buckets
 
+echo "Delete and create GCS bucket..."
+python ./bin/gcs_cli.py delete "${CRASHMOVER_CRASHSTORAGE_GCS_BUCKET_NAME}"
+python ./bin/gcs_cli.py create "${CRASHMOVER_CRASHSTORAGE_GCS_BUCKET_NAME}"
+python ./bin/gcs_cli.py list_buckets
+
 echo "Delete and create SQS queue..."
 python ./bin/sqs_cli.py delete "${CRASHMOVER_CRASHPUBLISH_QUEUE_NAME}"
 python ./bin/sqs_cli.py create "${CRASHMOVER_CRASHPUBLISH_QUEUE_NAME}"
