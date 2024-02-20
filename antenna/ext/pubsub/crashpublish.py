@@ -24,8 +24,6 @@ class PubSubCrashPublish(CrashPublishBase):
 
     1. Google Compute project
     2. topic in that project
-    3. service account with publisher permissions to the topic
-    4. JSON creds file for the service account placed in
     5. subscription for that topic so you can consume queued items
 
     If something in the above isn't created, then Antenna may not start.
@@ -45,10 +43,6 @@ class PubSubCrashPublish(CrashPublishBase):
     """
 
     class Config:
-        service_account_file = Option(
-            default="",
-            doc="The absolute path to the Google Cloud service account credentials file.",
-        )
         project_id = Option(doc="Google Cloud project id.")
         topic_name = Option(doc="The Pub/Sub topic name to publish to.")
 
@@ -60,13 +54,7 @@ class PubSubCrashPublish(CrashPublishBase):
 
         # publish messages immediately without queuing.
         batch_settings = BatchSettings(max_messages=1)
-        service_account_file = self.config("service_account_file")
-        if service_account_file:
-            self.publisher = PublisherClient.from_service_account_file(
-                service_account_file, batch_settings
-            )
-        else:
-            self.publisher = PublisherClient(batch_settings)
+        self.publisher = PublisherClient(batch_settings)
 
         self.topic_path = self.publisher.topic_path(self.project_id, self.topic_name)
 
