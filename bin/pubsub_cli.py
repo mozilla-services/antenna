@@ -25,14 +25,10 @@ def pubsub_group():
 @click.pass_context
 def list_topics(ctx, project_id):
     """List topics for this project."""
-    raise NotImplementedError(
-        "pubsub emulator times out for list_topics as of gcloud cli 463.0.0"
-    )
-
     click.echo(f"Listing topics in project {project_id}.")
     publisher = pubsub_v1.PublisherClient()
 
-    for topic in publisher.list_topics(project=project_id):
+    for topic in publisher.list_topics(project=f"projects/{project_id}"):
         click.echo(topic.name)
 
 
