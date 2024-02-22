@@ -1,4 +1,6 @@
-FROM python:3.10.9-slim@sha256:6862d8ed663a47f649ba5aababed01e44741a032e80d5800db619f5113f65434
+# This should be kept in sync with the python version used in .devcontainer/Dockerfile and
+# docker/Dockerfile
+FROM python:3.11.7-slim-bullseye@sha256:18faee15e9f6e5eaa7a4098e093a8513275a5075cfeae59091fae641cc703d1a
 
 WORKDIR /app/
 
