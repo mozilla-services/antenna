@@ -91,6 +91,7 @@ jobs:
             docker compose run --rm ci shell ./bin/run_setup.sh
             docker compose up --detach --wait --wait-timeout=10 ci-web
             docker compose run --rm ci shell bash -c 'cd systemtest && NGINX_TESTS=0 POST_CHECK=1 HOST=http://ci-web:8000 pytest -vv'
+            sed '$d' -i my.env # remove config on last line
 
       - run:
           name: Push to Dockerhub

@@ -263,10 +263,11 @@ Google Pub/Sub
 The ``PubSubCrashPublish`` class will publish crash ids to a Google Pub/Sub
 topic.
 
-.. autocomponent:: antenna.ext.pubsub.crashpublish.PubSubCrashPublish
+.. autocomponentconfig:: antenna.ext.pubsub.crashpublish.PubSubCrashPublish
    :show-docstring:
    :case: upper
-   :namespace: crashpublish
+   :namespace: crashmover_crashpublish
+   :show-table:
 
    When set as the BreakpadSubmitterResource crashpublish class, configuration
    for this class is in the ``CRASHMOVER_CRASHPUBLISH`` namespace.
