@@ -1,3 +1,4 @@
+# This should be kept in sync with the python version used in .devcontainer/Dockerfile
 FROM python:3.11.6-slim-bullseye@sha256:44c644f4146ef0af8a06a1eeec5bd2cc2956c8976b2c8809efde69df4a3a614b
 
 # Set up user and group
