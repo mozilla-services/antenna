@@ -4,7 +4,7 @@ select = ["E", "F", "B", "S"]
 line-length = 88
 # Ignore line length violations that aren't fixed by formatting
 ignore = ["E501"]
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.flake8-quotes]
 docstring-quotes = "double"
