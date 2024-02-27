@@ -9,6 +9,7 @@ import sys
 import boto3
 from botocore.client import Config
 from everett.manager import ConfigManager, ConfigOSEnv
+from google.cloud import pubsub_v1
 import pytest
 
 
@@ -116,6 +117,45 @@ def s3conn(config):
     )
 
 
+class PubSubHelper:
+    def __init__(self, project_id, topic_name, subscription_name):
+        self._publisher = pubsub_v1.PublisherClient(
+            pubsub_v1.types.BatchSettings(max_messages=1)
+        )
+        self._subscriber = pubsub_v1.SubscriberClient()
+
+        self.topic_path = self._subscriber.topic_path(project_id, topic_name)
+        self.subscription_path = self._subscriber.subscription_path(
+            project_id, subscription_name
+        )
+
+    def list_crashids(self):
+        """Get crash ids published to the subscribed topic.
+
+        You need to create the subscription before publishing to the topic.
+        Subscriptions can't see what was published before they were created.
+
+        """
+        # if there are no messages then pull will block for a long time, so
+        # publish a message to ensure that failing tests don't take forever
+        self._publisher.publish(topic=self.topic_path, data=b"ignore", timeout=5)
+        crashids = []
+
+        resp = self._subscriber.pull(
+            subscription=self.subscription_path, max_messages=100
+        )
+        ack_ids = []
+        for msg in resp.received_messages:
+            if msg.message.data != b"ignore":
+                crashids.append(msg.message.data.decode("utf-8"))
+            ack_ids.append(msg.ack_id)
+        if ack_ids:
+            self._subscriber.acknowledge(
+                subscription=self.subscription_path, ack_ids=ack_ids
+            )
+        return crashids
+
+
 class SQSHelper:
     def __init__(self, access_key, secret_access_key, endpoint_url, region, queue_name):
         self.access_key = access_key
@@ -170,8 +210,22 @@ class SQSHelper:
 
 
 @pytest.fixture
-def sqshelper(config):
-    """Generate and returns a PubSub helper using env config."""
+def queue_helper(config):
+    """Generate and returns a PubSub or SQS helper using env config."""
+    logger = logging.getLogger(__name__ + ".queue_helper")
+    if (
+        config("crashmover_crashpublish_class")
+        == "antenna.ext.pubsub.crashpublish.PubSubCrashPublish"
+    ):
+        logger.debug("using pubsub")
+        return PubSubHelper(
+            project_id=config("crashmover_crashpublish_project_id", default=""),
+            topic_name=config("crashmover_crashpublish_topic_name", default=""),
+            subscription_name=config(
+                "crashmover_crashpublish_subscription_name", default=""
+            ),
+        )
+    logger.debug("using sqs")
     return SQSHelper(
         access_key=config("crashmover_crashpublish_access_key", default=""),
         secret_access_key=config(
@@ -231,10 +285,10 @@ class CrashVerifier:
             key = self.dump_key(crash_id, name)
             assert key in s3conn.list_objects(prefix=key)
 
-    def verify_published_data(self, crash_id, sqshelper):
+    def verify_published_data(self, crash_id, queue_helper):
         # Verify crash id was published--this might pick up a bunch of stuff,
         # so we just verify it's one of the things we picked up
-        assert crash_id in sqshelper.list_crashids()
+        assert crash_id in queue_helper.list_crashids()
 
 
 @pytest.fixture

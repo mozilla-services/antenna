@@ -34,7 +34,7 @@ SLEEP_TIME = 5
 
 class TestPostCrash:
     def test_regular(
-        self, posturl, s3conn, sqshelper, crash_generator, crash_verifier, postcheck
+        self, posturl, s3conn, queue_helper, crash_generator, crash_verifier, postcheck
     ):
         """Post a valid crash and verify the contents made it to S3."""
         if not postcheck:
@@ -53,10 +53,10 @@ class TestPostCrash:
 
         # Verify stored and published crash data
         crash_verifier.verify_stored_data(crash_id, raw_crash, dumps, s3conn)
-        crash_verifier.verify_published_data(crash_id, sqshelper)
+        crash_verifier.verify_published_data(crash_id, queue_helper)
 
     def test_compressed_crash(
-        self, posturl, s3conn, sqshelper, crash_generator, crash_verifier, postcheck
+        self, posturl, s3conn, queue_helper, crash_generator, crash_verifier, postcheck
     ):
         """Post a compressed crash and verify contents made it to S3."""
         if not postcheck:
@@ -75,4 +75,4 @@ class TestPostCrash:
 
         # Verify stored and published crash data
         crash_verifier.verify_stored_data(crash_id, raw_crash, dumps, s3conn)
-        crash_verifier.verify_published_data(crash_id, sqshelper)
+        crash_verifier.verify_published_data(crash_id, queue_helper)
