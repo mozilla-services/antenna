@@ -249,15 +249,20 @@ class SQSHelper:
         return crashids
 
 
-@pytest.fixture
-def queue_helper(config):
+@pytest.fixture(params=["pubsub", "sqs"])
+def queue_helper(config, request):
     """Generate and returns a PubSub or SQS helper using env config."""
-    logger = logging.getLogger(__name__ + ".queue_helper")
+    configured_backend = "sqs"
     if (
         config("crashmover_crashpublish_class")
         == "antenna.ext.pubsub.crashpublish.PubSubCrashPublish"
     ):
-        logger.debug("using pubsub")
+        configured_backend = "pubsub"
+
+    if configured_backend != request.param:
+        pytest.skip(f"test requires {request.param}")
+
+    if configured_backend == "pubsub":
         return PubSubHelper(
             project_id=config("crashmover_crashpublish_project_id", default=""),
             topic_name=config("crashmover_crashpublish_topic_name", default=""),
@@ -265,7 +270,6 @@ def queue_helper(config):
                 "crashmover_crashpublish_subscription_name", default=""
             ),
         )
-    logger.debug("using sqs")
     return SQSHelper(
         access_key=config("crashmover_crashpublish_access_key", default=""),
         secret_access_key=config(
