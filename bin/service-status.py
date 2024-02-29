@@ -88,7 +88,10 @@ def fetch(url, is_json=True):
     errors if it's not valid JSON.
 
     """
-    fp = urlopen(url, timeout=5)
+    if not url.startswith(("http:", "https:")):
+        raise ValueError("URL must start with 'http:' or 'https:'")
+    # NOTE(willkg): ruff S310 can't determine whether we've validated the url or not
+    fp = urlopen(url, timeout=5)  # noqa: S310
     data = fp.read()
     if is_json:
         return json.loads(data)
