@@ -12,7 +12,7 @@ from google.cloud import storage
 
 from antenna.app import register_for_verification
 from antenna.ext.crashstorage_base import CrashStorageBase
-from antenna.util import json_ordered_dumps
+from antenna.util import get_date_from_crash_id, json_ordered_dumps
 
 logger = logging.getLogger(__name__)
 
@@ -115,6 +115,23 @@ class GcsCrashStorage(CrashStorageBase):
             self.client.get_bucket(self.bucket)
         except Exception as exc:
             state.add_error("GcsCrashStorage", repr(exc))
+
+    def _get_raw_crash_path(self, crash_id):
+        return "v1/raw_crash/{date}/{crash_id}".format(
+            date=get_date_from_crash_id(crash_id),
+            crash_id=crash_id,
+        )
+
+    def _get_dump_names_path(self, crash_id):
+        return f"v1/dump_names/{crash_id}"
+
+    def _get_dump_name_path(self, crash_id, dump_name):
+        if dump_name in (None, ""):
+            dump_name = "dump"
+
+        return "v1/{dump_name}/{crash_id}".format(
+            dump_name=dump_name, crash_id=crash_id
+        )
 
     def save_raw_crash(self, crash_id, raw_crash):
         """Save the raw crash and related dumps.

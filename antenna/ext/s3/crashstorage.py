@@ -8,7 +8,7 @@ from everett.manager import Option, parse_class
 
 from antenna.app import register_for_verification
 from antenna.ext.crashstorage_base import CrashStorageBase
-from antenna.util import json_ordered_dumps
+from antenna.util import get_date_from_crash_id, json_ordered_dumps
 
 
 logger = logging.getLogger(__name__)
@@ -62,6 +62,26 @@ class S3CrashStorage(CrashStorageBase):
     def check_health(self, state):
         """Check connection health."""
         self.connection.check_health(state)
+
+    def _get_raw_crash_path(self, crash_id):
+        return "v1/raw_crash/{date}/{crash_id}".format(
+            date=get_date_from_crash_id(crash_id),
+            crash_id=crash_id,
+        )
+
+    def _get_dump_names_path(self, crash_id):
+        return f"v1/dump_names/{crash_id}"
+
+    def _get_dump_name_path(self, crash_id, dump_name):
+        # NOTE(willkg): This is something that Socorro collector did. I'm not
+        # really sure why, but in order to maintain backwards compatability, we
+        # need to keep doing it.
+        if dump_name in (None, "", "upload_file_minidump"):
+            dump_name = "dump"
+
+        return "v1/{dump_name}/{crash_id}".format(
+            dump_name=dump_name, crash_id=crash_id
+        )
 
     def save_raw_crash(self, crash_id, raw_crash):
         """Save the raw crash and related dumps.

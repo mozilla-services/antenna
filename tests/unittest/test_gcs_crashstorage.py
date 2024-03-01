@@ -65,7 +65,7 @@ class TestGcsCrashStorageIntegration:
         assert blob_calls == [
             call("test/testwrite.txt"),
             call(f"v1/dump_names/{crash_id}"),
-            call(f"v1/dump/{crash_id}"),
+            call(f"v1/upload_file_minidump/{crash_id}"),
             call(f"v1/raw_crash/20160918/{crash_id}"),
         ]
         # upload_contents = [c.args[0].read() for c in upload_calls]
