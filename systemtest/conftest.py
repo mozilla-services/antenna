@@ -75,6 +75,12 @@ class GcsHelper:
             "bucket": self.bucket,
         }
 
+    def dump_key(self, crash_id, name):
+        if name in (None, ""):
+            name = "upload_file_minidump"
+
+        return f"v1/{name}/{crash_id}"
+
     def list_objects(self, prefix):
         """Return list of keys in GCS bucket."""
         self.logger.info('listing "%s" for prefix "%s"', self.bucket, prefix)
@@ -119,6 +125,12 @@ class S3Helper:
 
         client = session.client(**client_kwargs)
         return client
+
+    def dump_key(self, crash_id, name):
+        if name in (None, "", "upload_file_minidump"):
+            name = "dump"
+
+        return f"v1/{name}/{crash_id}"
 
     def list_objects(self, prefix):
         """Return list of keys in S3 bucket."""
@@ -309,12 +321,6 @@ class CrashVerifier:
     def dump_names_key(self, crash_id):
         return f"v1/dump_names/{crash_id}"
 
-    def dump_key(self, crash_id, name):
-        if name in (None, "", "upload_file_minidump"):
-            name = "dump"
-
-        return f"v1/{name}/{crash_id}"
-
     def verify_stored_data(self, crash_id, raw_crash, dumps, storage_helper):
         # Verify the raw crash file made it
         key = self.raw_crash_key(crash_id)
@@ -326,7 +332,7 @@ class CrashVerifier:
 
         # Verify the dumps made it
         for name in dumps.keys():
-            key = self.dump_key(crash_id, name)
+            key = storage_helper.dump_key(crash_id, name)
             assert key in storage_helper.list_objects(prefix=key)
 
     def verify_published_data(self, crash_id, queue_helper):

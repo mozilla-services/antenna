@@ -127,7 +127,7 @@ class GcsCrashStorage(CrashStorageBase):
 
     def _get_dump_name_path(self, crash_id, dump_name):
         if dump_name in (None, ""):
-            dump_name = "dump"
+            dump_name = "upload_file_minidump"
 
         return "v1/{dump_name}/{crash_id}".format(
             dump_name=dump_name, crash_id=crash_id
@@ -135,11 +135,6 @@ class GcsCrashStorage(CrashStorageBase):
 
     def save_raw_crash(self, crash_id, raw_crash):
         """Save the raw crash and related dumps.
-
-        .. Note::
-
-           If you're saving the raw crash and dumps, make sure to save the raw
-           crash last.
 
         :arg str crash_id: The crash id as a string.
         :arg dict raw_crash: dict The raw crash as a dict.
@@ -173,8 +168,5 @@ class GcsCrashStorage(CrashStorageBase):
         raw_crash = crash_report.raw_crash
         dumps = crash_report.dumps
 
-        # Save dumps first
         self.save_dumps(crash_id, dumps)
-
-        # Save raw crash
         self.save_raw_crash(crash_id, raw_crash)
