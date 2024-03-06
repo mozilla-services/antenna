@@ -19,12 +19,15 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from antenna.app import get_app, setup_logging  # noqa: E402
 from antenna.app import reset_verify_funs  # noqa: E402
+import antenna.libmarkus  # noqa: E402
 
 
 def pytest_runtest_setup():
     # Make sure we set up logging and metrics to sane default values.
     setup_logging(logging_level="DEBUG", debug=True, host_id="", processname="antenna")
     markus.configure([{"class": "markus.backends.logging.LoggingMetrics"}])
+    # prevent antenna from reconfiguring markus
+    antenna.libmarkus._IS_MARKUS_SETUP = True
 
     # Wipe any registered verify functions
     reset_verify_funs()
