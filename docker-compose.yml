@@ -136,7 +136,7 @@ services:
   gcs-emulator:
     build:
       context: docker/images/gcs-emulator
-    image: local/tecken_gcs_emulator
+    image: local/antenna_gcs_emulator
     command: -port 8001 -scheme http
     ports:
       - "${EXPOSE_GCS_EMULATOR_PORT:-8001}:8001"
