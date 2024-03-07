@@ -5,12 +5,15 @@
 import logging
 from pathlib import Path
 import sys
+import os
 
 import boto3
 from botocore.client import Config
 from everett.manager import ConfigManager, ConfigOSEnv
 from google.cloud import pubsub_v1
 import pytest
+from google.auth.credentials import AnonymousCredentials
+from google.cloud import storage
 
 
 # Add repository root so we can import testlib
@@ -36,7 +39,7 @@ def nginx(config):
 
 @pytest.fixture
 def postcheck(config):
-    """Return whether or not we can verify the file was saved (need access to S3)"""
+    """Return whether or not we can verify the file was saved (need access to storage)"""
     return config("post_check", default="0") == "1"
 
 
@@ -53,7 +56,39 @@ def posturl(config):
     return config("host", default="http://web:8000/").rstrip("/") + "/submit"
 
 
-class S3Connection:
+class GcsHelper:
+    def __init__(self, bucket):
+        self.bucket = bucket
+
+        self.logger = logging.getLogger(__name__ + ".gcs_helper")
+
+        if os.environ.get("STORAGE_EMULATOR_HOST"):
+            self.client = storage.Client(
+                credentials=AnonymousCredentials(), project="test"
+            )
+        else:
+            self.client = storage.Client()
+
+    def get_config(self):
+        return {
+            "helper": "gcs",
+            "bucket": self.bucket,
+        }
+
+    def dump_key(self, crash_id, name):
+        if name in (None, ""):
+            name = "upload_file_minidump"
+
+        return f"v1/{name}/{crash_id}"
+
+    def list_objects(self, prefix):
+        """Return list of keys in GCS bucket."""
+        self.logger.info('listing "%s" for prefix "%s"', self.bucket, prefix)
+        bucket = self.client.get_bucket(self.bucket)
+        return [blob.name for blob in list(bucket.list_blobs(prefix=prefix))]
+
+
+class S3Helper:
     def __init__(self, access_key, secret_access_key, endpoint_url, region, bucket):
         self.access_key = access_key
         self.secret_access_key = secret_access_key
@@ -61,11 +96,12 @@ class S3Connection:
         self.region = region
         self.bucket = bucket
 
-        self.logger = logging.getLogger(__name__ + ".s3conn")
+        self.logger = logging.getLogger(__name__ + ".s3_helper")
         self.conn = self.connect()
 
     def get_config(self):
         return {
+            "helper": "s3",
             "endpoint_url": self.endpoint_url,
             "region": self.region,
             "bucket": self.bucket,
@@ -90,6 +126,12 @@ class S3Connection:
         client = session.client(**client_kwargs)
         return client
 
+    def dump_key(self, crash_id, name):
+        if name in (None, "", "upload_file_minidump"):
+            name = "dump"
+
+        return f"v1/{name}/{crash_id}"
+
     def list_objects(self, prefix):
         """Return list of keys in S3 bucket."""
         self.logger.info('listing "%s" for prefix "%s"', self.bucket, prefix)
@@ -98,15 +140,25 @@ class S3Connection:
         )
         return [obj["Key"] for obj in resp["Contents"]]
 
-    def load(self, key):
-        resp = self.conn.get_object(Bucket=self.bucket, Key=key)
-        return resp["Body"].read()
 
+@pytest.fixture(params=["gcs", "s3"])
+def storage_helper(config, request):
+    """Generate and returns an S3 or GCS helper using env config."""
+    configured_backend = "s3"
+    if (
+        config("crashmover_crashstorage_class")
+        == "antenna.ext.gcs.crashstorage.GcsCrashStorage"
+    ):
+        configured_backend = "gcs"
 
-@pytest.fixture
-def s3conn(config):
-    """Generate and returns an S3 connection using env config."""
-    return S3Connection(
+    if configured_backend != request.param:
+        pytest.skip(f"test requires {request.param}")
+
+    if configured_backend == "gcs":
+        return GcsHelper(
+            bucket=config("crashmover_crashstorage_bucket_name"),
+        )
+    return S3Helper(
         access_key=config("crashmover_crashstorage_access_key", default=""),
         secret_access_key=config(
             "crashmover_crashstorage_secret_access_key", default=""
@@ -269,25 +321,19 @@ class CrashVerifier:
     def dump_names_key(self, crash_id):
         return f"v1/dump_names/{crash_id}"
 
-    def dump_key(self, crash_id, name):
-        if name in (None, "", "upload_file_minidump"):
-            name = "dump"
-
-        return f"v1/{name}/{crash_id}"
-
-    def verify_stored_data(self, crash_id, raw_crash, dumps, s3conn):
+    def verify_stored_data(self, crash_id, raw_crash, dumps, storage_helper):
         # Verify the raw crash file made it
         key = self.raw_crash_key(crash_id)
-        assert key in s3conn.list_objects(prefix=key)
+        assert key in storage_helper.list_objects(prefix=key)
 
         # Verify the dump_names file made it
         key = self.dump_names_key(crash_id)
-        assert key in s3conn.list_objects(prefix=key)
+        assert key in storage_helper.list_objects(prefix=key)
 
         # Verify the dumps made it
         for name in dumps.keys():
-            key = self.dump_key(crash_id, name)
-            assert key in s3conn.list_objects(prefix=key)
+            key = storage_helper.dump_key(crash_id, name)
+            assert key in storage_helper.list_objects(prefix=key)
 
     def verify_published_data(self, crash_id, queue_helper):
         # Verify crash id was published--this might pick up a bunch of stuff,

@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class TestDiscarded:
-    def test_wrong_boundary(self, posturl, s3conn, crash_generator):
+    def test_wrong_boundary(self, posturl, crash_generator):
         """Post a crash with a header with wrong boundary marker."""
         raw_crash, dumps = crash_generator.generate()
         payload, headers = mini_poster.multipart_encode(raw_crash)
@@ -28,7 +28,7 @@ class TestDiscarded:
             == "Discarded=malformed_invalid_payload_structure"
         )
 
-    def test_missing_content_type(self, posturl, s3conn, crash_generator):
+    def test_missing_content_type(self, posturl, crash_generator):
         """Test crash missing a content-type header is discarded"""
         raw_crash, dumps = crash_generator.generate()
         payload, headers = mini_poster.multipart_encode(raw_crash)
@@ -41,7 +41,7 @@ class TestDiscarded:
             str(resp.content, encoding="utf-8") == "Discarded=malformed_no_content_type"
         )
 
-    def test_no_payload(self, posturl, s3conn, crash_generator):
+    def test_no_payload(self, posturl, crash_generator):
         """Test crash with no payload is discarded"""
         raw_crash, dumps = crash_generator.generate()
         payload, headers = mini_poster.multipart_encode(raw_crash)
@@ -58,7 +58,7 @@ class TestDiscarded:
             == "Discarded=malformed_no_content_length"
         )
 
-    def test_junk_payload(self, posturl, s3conn, crash_generator):
+    def test_junk_payload(self, posturl, crash_generator):
         """Test crash with a junk payload is discarded"""
         raw_crash, dumps = crash_generator.generate()
 
@@ -76,7 +76,7 @@ class TestDiscarded:
             == "Discarded=malformed_invalid_payload_structure"
         )
 
-    def test_compressed_payload_bad_header(self, posturl, s3conn, crash_generator):
+    def test_compressed_payload_bad_header(self, posturl, crash_generator):
         """Test crash with a compressed payload, but missing header is discarded"""
         raw_crash, dumps = crash_generator.generate()
 
@@ -94,9 +94,7 @@ class TestDiscarded:
             == "Discarded=malformed_invalid_payload_structure"
         )
 
-    def test_compressed_header_non_compressed_payload(
-        self, posturl, s3conn, crash_generator
-    ):
+    def test_compressed_header_non_compressed_payload(self, posturl, crash_generator):
         """Test crash with a compressed header, but non-compressed payload is discarded"""
         raw_crash, dumps = crash_generator.generate()
 

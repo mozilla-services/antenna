@@ -241,6 +241,25 @@ supported.
    configuration here.
 
 
+Google Cloud Storage
+--------------------
+
+The ``GcsCrashStorage`` class will save crash data to Google Cloud Storage.
+
+.. autocomponentconfig:: antenna.ext.gcs.crashstorage.GcsCrashStorage
+   :show-docstring:
+   :case: upper
+   :namespace: crashmover_crashstorage
+   :show-table:
+
+   When set as the CrashMover crashstorage class, configuration
+   for this class is in the ``CRASHMOVER_CRASHSTORAGE`` namespace.
+
+   Example::
+
+       CRASHMOVER_CRASHSTORAGE_BUCKET_NAME=mybucket
+
+
 Crash publish
 =============
 
