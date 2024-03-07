@@ -39,7 +39,7 @@ def nginx(config):
 
 @pytest.fixture
 def postcheck(config):
-    """Return whether or not we can verify the file was saved (need access to S3/GCS)"""
+    """Return whether or not we can verify the file was saved (need access to storage)"""
     return config("post_check", default="0") == "1"
 
 
