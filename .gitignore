@@ -54,3 +54,4 @@ target/
 /fakes3_root/
 docker-compose.override.yml
 my.env
+.env
