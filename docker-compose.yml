@@ -93,7 +93,7 @@ services:
       - docker/config/local_dev.env
       - my.env
     ports:
-      - "8000:8000"
+      - "${EXPOSE_ANTENNA_PORT:-8000}:8000"
     command: web
     links:
       - fakesentry
@@ -115,7 +115,7 @@ services:
       - start
       - --host-port=0.0.0.0:${PUBSUB_PORT:-5010}
     ports:
-      - 5010:5010
+      - "${EXPOSE_PUBSUB_EMULATOR_PORT:-5010}:5010"
 
   # https://hub.docker.com/r/localstack/localstack/
   # localstack running a fake S3 and SQS
@@ -127,14 +127,14 @@ services:
       - HOSTNAME=localstack
       - HOSTNAME_EXTERNAL=localstack
     ports:
-      - "4566:4566"
+      - "${EXPOSE_LOCALSTACK_PORT:-4566}:4566"
 
   # https://hub.docker.com/r/kamon/grafana_graphite/
   # username: admin, password: admin
   statsd:
     image: kamon/grafana_graphite
     ports:
-      - "9000:3000"  # grafana port
+      - "${EXPOSE_GRAFANA_PORT:-9000}:3000"
 
   # https://github.com/willkg/kent
   fakesentry:
@@ -142,7 +142,7 @@ services:
       context: docker/images/fakesentry
     image: local/antenna_fakesentry
     ports:
-      - "8090:8090"
+      - "${EXPOSE_SENTRY_PORT:-8090}:8090"
     command: run --host 0.0.0.0 --port 8090
 
   # https://github.com/fsouza/fake-gcs-server
