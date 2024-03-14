@@ -6,20 +6,15 @@
 
 # This runs the system tests. It expects the following things to exist:
 #
-# * "python3" available in PATH
+# * "pytest" available in PATH
 #
 # To run this from the root of this repository, do this:
 #
-#     $ ./tests/systemtests/run_tests.sh
-#
-# Set POSTURL to the url to post to.
-#
-# Set NONGINX=1 if you're running against a local dev environment. This
-# will skip tests that require nginx.
+#     $ ./systemtest/test_env.sh ENV
 
 set -e
 
-USAGE="Usage: test_env.sh [local|stage]"
+USAGE="Usage: test_env.sh [local|stage] [pytest args]"
 
 if [[ $# -eq 0 ]]; then
     echo "${USAGE}"
@@ -52,4 +47,4 @@ echo "NGINX_TESTS: ${NGINX_TESTS}"
 # make sure to run systemtest even if this script is called from the git root
 cd /app/systemtest
 
-pytest -vv
+pytest -vv "${@:2}"

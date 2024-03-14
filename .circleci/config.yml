@@ -91,7 +91,8 @@ jobs:
             echo 'CRASHMOVER_CRASHSTORAGE_CLASS=antenna.ext.gcs.crashstorage.GcsCrashStorage' >> my.env
             docker compose run --rm ci shell ./bin/run_setup.sh
             docker compose up --detach --wait --wait-timeout=10 ci-web
-            docker compose run --rm ci shell bash -c 'cd systemtest && NGINX_TESTS=0 POST_CHECK=1 HOST=http://ci-web:8000 pytest -vv'
+            # Use -m "not aws" to select gcp and unmarked tests
+            docker compose run --rm ci shell bash -c 'cd systemtest && NGINX_TESTS=0 POST_CHECK=1 HOST=http://ci-web:8000 pytest -vv -m "not aws"'
             # remove config on last two lines
             sed '$d' -i my.env
             sed '$d' -i my.env
