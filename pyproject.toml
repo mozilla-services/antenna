@@ -16,6 +16,26 @@ docstring-quotes = "double"
 "bin/release.py" = ["S310", "S603", "S607"]
 
 
+[tool.pytest.ini_options]
+addopts = "-rsxX --tb=native --showlocals -m 'not gcp'"
+norecursedirs = [".git", "docs", "bin"]
+testpaths = "tests/unittest/"
+
+markers = [
+    "aws: tests that require aws backends to be configured in the environment. this is the default.",
+    "gcp: tests that require gcp backends to be configured in the environment. skipped unless explicitly requested.",
+]
+
+filterwarnings = [
+    "error",
+    # Falcon currently uses cgi which is going away in python 3.13
+    "ignore:'cgi' is deprecated and slated for removal in Python 3.13:DeprecationWarning:falcon",
+    # sentry-sdk has a Falcon integration that needs some help and is currently
+    # using a thing in Falcon that kicks up a DeprecatedWarning
+    "ignore:The api_helpers module.*:falcon.util.deprecation.DeprecatedWarning",
+]
+
+
 [tool.paul-mclendahand]
 github_user = "mozilla-services"
 github_project = "antenna"

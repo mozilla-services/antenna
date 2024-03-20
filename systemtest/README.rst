@@ -18,7 +18,15 @@ Running tests
 In a terminal, run::
 
     $ make shell
-    app@xxx:/app$ ./systemtests/test_env.sh ENV
+    app@xxx:/app$ ./systemtest/test_env.sh ENV
+
+
+Additional arguments will be passed through to pytest. For example, if testing gcp backends, use
+pytest markers to select the tests for the configured cloud provider::
+
+    $ make shell
+    app@xxx:/app$ ./systemtest/test_env.sh ENV -m gcp  # only gcp
+    app@xxx:/app$ ./systemtest/test_env.sh ENV -m 'not aws'  # gcp and unmarked
 
 
 If you're running against ``local``, you'll need to be running antenna

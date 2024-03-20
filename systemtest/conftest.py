@@ -56,6 +56,21 @@ def posturl(config):
     return config("host", default="http://web:8000/").rstrip("/") + "/submit"
 
 
+@pytest.fixture(
+    # define these params once and reference this fixture to prevent undesirable
+    # combinations, i.e. tests marked with aws *and* gcp for pubsub+s3 or sqs+gcs
+    params=[
+        # tests that require a specific cloud provider backend must be marked with that
+        # provider, and non-default backends must be excluded by default, for example
+        # via pytest.ini's addopts, i.e. addopts = -m 'not gcp'
+        pytest.param("aws", marks=pytest.mark.aws),
+        pytest.param("gcp", marks=pytest.mark.gcp),
+    ]
+)
+def cloud_provider(request):
+    return request.param
+
+
 class GcsHelper:
     def __init__(self, bucket):
         self.bucket = bucket
@@ -141,20 +156,21 @@ class S3Helper:
         return [obj["Key"] for obj in resp["Contents"]]
 
 
-@pytest.fixture(params=["gcs", "s3"])
-def storage_helper(config, request):
-    """Generate and returns an S3 or GCS helper using env config."""
-    configured_backend = "s3"
+@pytest.fixture
+def storage_helper(config, cloud_provider):
+    """Generate and return a storage helper using env config."""
+    actual_backend = "s3"
     if (
         config("crashmover_crashstorage_class")
         == "antenna.ext.gcs.crashstorage.GcsCrashStorage"
     ):
-        configured_backend = "gcs"
+        actual_backend = "gcs"
 
-    if configured_backend != request.param:
-        pytest.skip(f"test requires {request.param}")
+    expect_backend = "gcs" if cloud_provider == "gcp" else "s3"
+    if actual_backend != expect_backend:
+        pytest.fail(f"test requires {expect_backend} but found {actual_backend}")
 
-    if configured_backend == "gcs":
+    if actual_backend == "gcs":
         return GcsHelper(
             bucket=config("crashmover_crashstorage_bucket_name"),
         )
@@ -261,20 +277,21 @@ class SQSHelper:
         return crashids
 
 
-@pytest.fixture(params=["pubsub", "sqs"])
-def queue_helper(config, request):
-    """Generate and returns a PubSub or SQS helper using env config."""
-    configured_backend = "sqs"
+@pytest.fixture
+def queue_helper(config, cloud_provider):
+    """Generate and return a queue helper using env config."""
+    actual_backend = "sqs"
     if (
         config("crashmover_crashpublish_class")
         == "antenna.ext.pubsub.crashpublish.PubSubCrashPublish"
     ):
-        configured_backend = "pubsub"
+        actual_backend = "pubsub"
 
-    if configured_backend != request.param:
-        pytest.skip(f"test requires {request.param}")
+    expect_backend = "pubsub" if cloud_provider == "gcp" else "sqs"
+    if actual_backend != expect_backend:
+        pytest.fail(f"test requires {expect_backend} but found {actual_backend}")
 
-    if configured_backend == "pubsub":
+    if actual_backend == "pubsub":
         return PubSubHelper(
             project_id=config("crashmover_crashpublish_project_id", default=""),
             topic_name=config("crashmover_crashpublish_topic_name", default=""),
