@@ -126,8 +126,8 @@ class GcsCrashStorage(CrashStorageBase):
         return f"v1/dump_names/{crash_id}"
 
     def _get_dump_name_path(self, crash_id, dump_name):
-        if dump_name in (None, ""):
-            dump_name = "upload_file_minidump"
+        if dump_name in (None, "", "upload_file_minidump"):
+            dump_name = "dump"
 
         return "v1/{dump_name}/{crash_id}".format(
             dump_name=dump_name, crash_id=crash_id
