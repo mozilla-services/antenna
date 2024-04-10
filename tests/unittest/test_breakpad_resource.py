@@ -464,3 +464,22 @@ class TestBreakpadSubmitterResourceIntegration:
         # Extract the uuid from the response content and verify that it's the
         # crash id we sent
         assert result.content.decode("utf-8") == f"CrashID=bp-{crash_id}\n"
+
+    def test_add_user_agent_to_metadata(self, client):
+        expected_user_agent = "wow"
+        crash_id = "de1bb258-cbbf-4589-a673-34f800160918"
+        data, headers = multipart_encode(
+            {
+                "uuid": crash_id,
+                "ProductName": "Firefox",
+                "Version": "1.0",
+                "upload_file_minidump": ("fakecrash.dump", io.BytesIO(b"abcd1234")),
+            }
+        )
+        headers["User-Agent"] = expected_user_agent
+        client.simulate_post("/submit", headers=headers, body=data)
+
+        crashstorage = client.get_crashmover().crashstorage
+        report = crashstorage.load_crash(crash_id)
+
+        assert report.raw_crash["metadata"]["user_agent"] == expected_user_agent

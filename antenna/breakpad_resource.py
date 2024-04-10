@@ -347,6 +347,10 @@ class BreakpadSubmitterResource:
             for dump_name, dump in crash_report.dumps.items()
         }
 
+        # Add User-Agent to metadata
+        user_agent = req.user_agent or "None"
+        raw_crash["metadata"]["user_agent"] = user_agent
+
         # Add version information
         raw_crash["version"] = 2
 
