@@ -10,6 +10,7 @@ import uuid
 from everett.manager import Option
 from google.auth.credentials import AnonymousCredentials
 from google.cloud import storage
+from google.cloud.exceptions import NotFound
 
 from antenna.app import register_for_verification
 from antenna.crashmover import CrashReport
@@ -193,21 +194,21 @@ class GcsCrashStorage(CrashStorageBase):
         raw_crash_key = self._get_raw_crash_path(crash_id)
         try:
             raw_crash = json.loads(self._load_file(raw_crash_key))
-        except Exception as exc:
+        except NotFound as exc:
             raise CrashIDNotFound(f"{crash_id} not found") from exc
 
         dump_names_path = self._get_dump_names_path(crash_id)
         try:
             dump_names = json.loads(self._load_file(dump_names_path))
-        except Exception:
+        except NotFound:
             logger.error("raw_crash exists, but dump_names doesn't exist")
 
         for dump_name in dump_names:
             dump_name_path = self._get_dump_name_path(crash_id, dump_name)
             try:
                 dumps[dump_name] = self._load_file(dump_name_path)
-            except Exception:
-                dumps[dump_name] = b"bad file"
+            except NotFound:
+                dumps[dump_name] = b"missing file"
 
         return CrashReport(
             crash_id=crash_id,
