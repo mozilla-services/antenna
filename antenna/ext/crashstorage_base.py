@@ -17,7 +17,7 @@ class CrashStorageBase:
     def __init__(self, config):
         self.config = config.with_options(self)
 
-    def publish_crash(self, crash_report):
+    def save_crash(self, crash_report):
         """Save the crash report."""
         raise NotImplementedError
 
