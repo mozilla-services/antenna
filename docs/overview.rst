@@ -93,17 +93,8 @@ This is the rough data flow:
 
    If the throttler accepts the crash, Antenna generates a crash id.
 
-3. The ``BreakpadSubmitterResource`` adds the crash report data to the
-   ``crashmover_queue``.
-
-   At this point, the HTTP POST has been handled, the crash id is sent to the
-   crash reporter client and the HTTP connection ends.
-
-   Time passes depending on how many things are in the
-   ``crashmover_queue``.
-
-4. A crashmover coroutine frees up, pulls the crash report data out of the
-   ``crashmover_queue``, and then tries to save it to crashstorage.
+3. Then ``BreakpadSubmitterResource`` passes the data to the crashmover
+   to save and publish.
 
    If crashstorage is ``S3CrashStorage``, then the crashmover saves the crash
    report data to AWS S3.
@@ -111,11 +102,8 @@ This is the rough data flow:
    If the save is successful, then the crashmover publishes the crash report
    id to the AWS SQS standard queue for processing.
 
-   If publishing is successful, the crashmover moves on to the next crash
-   report in the queue.
-
-   If the save or publish is not successful, the crashmover puts the crash
-   report data back in the queue and moves on with the next crash.
+   At this point, the HTTP POST has been handled, the crash id is sent to the
+   crash reporter client and the HTTP connection ends.
 
 
 Diagnostics

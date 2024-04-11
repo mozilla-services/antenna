@@ -54,22 +54,6 @@ following:
    `bin/run_web.sh <https://github.com/mozilla-services/antenna/blob/main/bin/run_web.sh>`_.
 
 
-.. everett:option:: GUNICORN_WORKER_CONNECTIONS
-   :parser: str
-   :default: "4"
-
-   This is the number of coroutines to spin off to handle incoming HTTP
-   connections (crash reports). Gunicorn's default is 1000. That's what we use
-   in production.
-
-   This is the ``worker-connections`` Gunicorn configuration setting.
-
-   https://docs.gunicorn.org/en/stable/settings.html#worker-connections
-
-   This is used in
-   `bin/run_web.sh <https://github.com/mozilla-services/antenna/blob/main/bin/run_web.sh>`_.
-
-
 .. everett:option:: GUNICORN_WORKER_CLASS
    :parser: str
    :default: "sync"

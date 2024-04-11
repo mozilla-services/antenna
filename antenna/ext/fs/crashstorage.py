@@ -160,29 +160,20 @@ class FSCrashStorage(CrashStorageBase):
         dumps = {}
         dump_names_fn = self._get_dump_names_path(crash_id)
 
-        try:
-            with open(dump_names_fn, "rb") as fp:
-                dump_names = json.load(fp)
-        except (IOError, OSError):
-            dump_names = []
-
-        for dump_name in dump_names:
-            dump_fn = self._get_dump_name_path(crash_id, dump_name)
-            try:
-                with open(dump_fn, "rb") as fp:
-                    dumps[dump_name] = fp.read()
-            except (IOError, OSError):
-                dumps[dump_name] = b"bad file"
-
         raw_crash_fn = self._get_raw_crash_path(crash_id)
         try:
             with open(raw_crash_fn, "rb") as fp:
                 raw_crash = json.load(fp)
-        except (IOError, OSError):
-            raw_crash = {}
+        except FileNotFoundError as exc:
+            raise CrashIDNotFound(f"no data for {crash_id}") from exc
 
-        if not raw_crash and not dumps:
-            raise CrashIDNotFound(f"no data for {crash_id}")
+        with open(dump_names_fn, "rb") as fp:
+            dump_names = json.load(fp)
+
+        for dump_name in dump_names:
+            dump_fn = self._get_dump_name_path(crash_id, dump_name)
+            with open(dump_fn, "rb") as fp:
+                dumps[dump_name] = fp.read()
 
         return CrashReport(
             crash_id=crash_id,
