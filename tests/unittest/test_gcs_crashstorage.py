@@ -7,8 +7,6 @@ import os
 from unittest.mock import Mock, patch, ANY
 
 import pytest
-from google.auth.credentials import AnonymousCredentials
-from google.cloud import storage
 from google.cloud.exceptions import NotFound, Unauthorized
 
 from antenna.ext.crashstorage_base import CrashIDNotFound
@@ -22,36 +20,12 @@ def mock_generate_test_filepath():
         yield
 
 
-@pytest.fixture
-def gcs_client():
-    if os.environ.get("STORAGE_EMULATOR_HOST"):
-        client = storage.Client(
-            credentials=AnonymousCredentials(),
-            project="test",
-        )
-        try:
-            yield client
-        finally:
-            for bucket in client.list_buckets():
-                try:
-                    bucket.delete(force=True)
-                except NotFound:
-                    pass  # same difference
-    else:
-        pytest.skip("requires gcs emulator")
-
-
 class TestGcsCrashStorageIntegration:
     logging_names = ["antenna"]
 
-    def test_crash_storage(self, client, gcs_client):
-        bucket_name = "fakebucket"
-        # clean up bucket left around from previous tests
-        try:
-            gcs_client.get_bucket(bucket_name).delete(force=True)
-        except NotFound:
-            pass  # same difference
-        gcs_bucket = gcs_client.create_bucket(bucket_name)
+    def test_crash_storage(self, client, gcs_helper):
+        bucket_name = os.environ["CRASHMOVER_CRASHSTORAGE_BUCKET_NAME"]
+        gcs_bucket = gcs_helper.bucket(bucket_name)
 
         crash_id = "de1bb258-cbbf-4589-a673-34f800160918"
         data, headers = multipart_encode(
@@ -101,11 +75,12 @@ class TestGcsCrashStorageIntegration:
             b'["upload_file_minidump"]',
         ]
 
-    def test_missing_bucket_halts_startup(self, client, gcs_client):
+    def test_missing_bucket_halts_startup(self, client, gcs_helper):
         bucket_name = "missingbucket"
-        # ensure bucket is actually missing
+
+        # Ensure bucket is actually missing
         with pytest.raises(NotFound):
-            gcs_client.get_bucket(bucket_name)
+            gcs_helper.get_bucket(bucket_name)
 
         with pytest.raises(NotFound) as excinfo:
             # Rebuild the app the test client is using with relevant
@@ -160,18 +135,7 @@ class TestGcsCrashStorageIntegration:
         assert result.status_code == 500
         assert result.content == b""
 
-    def test_load_file(self, client, gcs_client):
-        def get_env_var(key):
-            return os.environ[f"CRASHMOVER_CRASHSTORAGE_{key}"]
-
-        bucket_name = get_env_var("BUCKET_NAME")
-        # clean up bucket left around from previous tests
-        try:
-            gcs_client.get_bucket(bucket_name).delete(force=True)
-        except NotFound:
-            pass  # same difference
-        gcs_bucket = gcs_client.create_bucket(bucket_name)
-
+    def test_load_file(self, client, gcs_helper):
         crash_id = "de1bb258-cbbf-4589-a673-34f800160918"
         data, headers = multipart_encode(
             {
@@ -186,7 +150,6 @@ class TestGcsCrashStorageIntegration:
         client.rebuild_app(
             {
                 "CRASHMOVER_CRASHSTORAGE_CLASS": "antenna.ext.gcs.crashstorage.GcsCrashStorage",
-                "CRASHMOVER_CRASHSTORAGE_BUCKET_NAME": gcs_bucket.name,
             }
         )
 
@@ -219,25 +182,13 @@ class TestGcsCrashStorageIntegration:
             "version": 2,
         }
 
-    def test_load_file_no_data(self, client, gcs_client):
-        def get_env_var(key):
-            return os.environ[f"CRASHMOVER_CRASHSTORAGE_{key}"]
-
-        bucket_name = get_env_var("BUCKET_NAME")
-        # clean up bucket left around from previous tests
-        try:
-            gcs_client.get_bucket(bucket_name).delete(force=True)
-        except NotFound:
-            pass  # same difference
-        gcs_bucket = gcs_client.create_bucket(bucket_name)
-
+    def test_load_file_no_data(self, client, gcs_helper):
         crash_id = "de1bb258-cbbf-4589-a673-34f800160918"
 
         # Rebuild the app the test client is using with relevant configuration.
         client.rebuild_app(
             {
                 "CRASHMOVER_CRASHSTORAGE_CLASS": "antenna.ext.gcs.crashstorage.GcsCrashStorage",
-                "CRASHMOVER_CRASHSTORAGE_BUCKET_NAME": gcs_bucket.name,
             }
         )
 

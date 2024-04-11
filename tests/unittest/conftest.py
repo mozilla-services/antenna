@@ -3,14 +3,20 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import contextlib
+import os
 from pathlib import Path
 import sys
 from unittest import mock
 
+import boto3
+from botocore.client import ClientError as BotoClientError, Config as BotoConfig
 from everett.manager import ConfigManager, ConfigDictEnv, ConfigOSEnv
 from falcon.request import Request
 from falcon.testing.helpers import create_environ
 from falcon.testing.client import TestClient
+from google.auth.credentials import AnonymousCredentials
+from google.cloud import storage as gcs_storage
+from google.cloud.exceptions import NotFound as GCSNotFound
 import markus
 from markus.testing import MetricsMock
 import pytest
@@ -73,6 +79,10 @@ class AntennaTestClient(TestClient):
             new app with
 
         """
+        # Drop all the existing verify functions
+        reset_verify_funs()
+
+        # Build the new app
         self.app = get_app(self.build_config(new_config))
 
     def get_crashmover(self):
@@ -120,6 +130,85 @@ def s3mock():
     """
     with S3Mock() as s3:
         yield s3
+
+
+@pytest.fixture
+def gcs_client():
+    if os.environ.get("STORAGE_EMULATOR_HOST"):
+        client = gcs_storage.Client(
+            credentials=AnonymousCredentials(),
+            project="test",
+        )
+        try:
+            yield client
+        finally:
+            for bucket in client.list_buckets():
+                try:
+                    bucket.delete(force=True)
+                except GCSNotFound:
+                    pass  # same difference
+    else:
+        pytest.skip("requires gcs emulator")
+
+
+@pytest.fixture
+def gcs_helper(gcs_client):
+    """Sets up bucket, yields gcs_client, and tears down after test is done."""
+    # Set up
+    bucket_name = os.environ["CRASHMOVER_CRASHSTORAGE_BUCKET_NAME"]
+    try:
+        gcs_client.get_bucket(bucket_name).delete(force=True)
+    except GCSNotFound:
+        pass  # same difference
+    gcs_client.create_bucket(bucket_name)
+
+    yield gcs_client
+
+    # Tear down
+    gcs_client.get_bucket(bucket_name).delete(force=True)
+
+
+@pytest.fixture
+def s3_client():
+    def get_env_var(key):
+        return os.environ[f"CRASHMOVER_CRASHSTORAGE_{key}"]
+
+    session = boto3.session.Session(
+        aws_access_key_id=get_env_var("ACCESS_KEY"),
+        aws_secret_access_key=get_env_var("SECRET_ACCESS_KEY"),
+    )
+    client = session.client(
+        service_name="s3",
+        config=BotoConfig(s3={"addressing_style": "path"}),
+        endpoint_url=get_env_var("ENDPOINT_URL"),
+    )
+    return client
+
+
+@pytest.fixture
+def s3_helper(s3_client):
+    """Sets up bucket, yields s3_client, and tears down when test is done."""
+
+    def delete_bucket(s3_client, bucket_name):
+        resp = s3_client.list_objects(Bucket=bucket_name)
+        for obj in resp.get("Contents", []):
+            key = obj["Key"]
+            s3_client.delete_object(Bucket=bucket_name, Key=key)
+
+        # Then delete the bucket
+        s3_client.delete_bucket(Bucket=bucket_name)
+
+    # Set up
+    bucket_name = os.environ["CRASHMOVER_CRASHSTORAGE_BUCKET_NAME"]
+    try:
+        delete_bucket(s3_client, bucket_name)
+    except BotoClientError:
+        s3_client.create_bucket(Bucket=bucket_name)
+
+    yield s3_client
+
+    # Tear down
+    delete_bucket(s3_client, bucket_name)
 
 
 @pytest.fixture
