@@ -2,10 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-from collections import deque
 import io
 import itertools
 import string
+from unittest.mock import ANY
 
 from everett.manager import ConfigManager
 import pytest
@@ -20,33 +20,17 @@ from testlib.mini_poster import compress, multipart_encode
 
 
 class FakeCrashMover:
-    def __init__(self):
-        self.crashmover_queue = deque()
+    """Fake crash mover that raises an error when used"""
 
-    def add_crashreport(self, *args, **kwargs):
-        self.crashmover_queue.append((args, kwargs))
+    def handle_crashreport(self, raw_crash, dumps, crash_id):
+        raise NotImplementedError
 
 
-class TestBreakpadSubmitterResource:
-    empty_config = ConfigManager.from_dict({})
+EMPTY_CONFIG = ConfigManager.from_dict({})
 
-    def test_submit_crash_report_reply(self, client):
-        data, headers = multipart_encode(
-            {
-                "ProductName": "Firefox",
-                "Version": "60.0a1",
-                "ReleaseChannel": "nightly",
-                "upload_file_minidump": ("fakecrash.dump", io.BytesIO(b"abcd1234")),
-            }
-        )
 
-        result = client.simulate_post("/submit", headers=headers, body=data)
-        assert result.status_code == 200
-        assert result.headers["Content-Type"].startswith("text/plain")
-        assert result.content.startswith(b"CrashID=bp")
-
+class TestBreakpadSubmitterResourceExtract:
     def test_extract_payload(self, request_generator):
-        crashmover = FakeCrashMover()
         data, headers = multipart_encode(
             {
                 "ProductName": "Firefox",
@@ -58,7 +42,9 @@ class TestBreakpadSubmitterResource:
             method="POST", path="/submit", headers=headers, body=data
         )
 
-        bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
+        bsp = BreakpadSubmitterResource(
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+        )
         crash_report = CrashReport(
             annotations={
                 "ProductName": "Firefox",
@@ -76,7 +62,6 @@ class TestBreakpadSubmitterResource:
         # are 165 annotations specified in CrashAnnotations.yaml. It's likely crash
         # reports send annotations not specified in that file, but 200 is probably a
         # good enough number to test with.
-        crashmover = FakeCrashMover()
         data = {
             "ProductName": "Firefox",
             "Version": "1.0",
@@ -99,7 +84,9 @@ class TestBreakpadSubmitterResource:
             method="POST", path="/submit", headers=headers, body=body
         )
 
-        bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
+        bsp = BreakpadSubmitterResource(
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+        )
         crash_report = bsp.extract_payload(req)
 
         # Build set of expected keys--only the annotations
@@ -110,7 +97,6 @@ class TestBreakpadSubmitterResource:
         assert crash_report.dumps == {"upload_file_minidump": b"abcd1234"}
 
     def test_extract_payload_multipart_mixed(self, request_generator):
-        crashmover = FakeCrashMover()
         data, headers = multipart_encode(
             {
                 "ProductName": "Firefox",
@@ -123,7 +109,9 @@ class TestBreakpadSubmitterResource:
             method="POST", path="/submit", headers=headers, body=data
         )
 
-        bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
+        bsp = BreakpadSubmitterResource(
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+        )
         crash_report = CrashReport(
             annotations={
                 "ProductName": "Firefox",
@@ -137,7 +125,6 @@ class TestBreakpadSubmitterResource:
         assert bsp.extract_payload(req) == crash_report
 
     def test_extract_payload_2_dumps(self, request_generator):
-        crashmover = FakeCrashMover()
         data, headers = multipart_encode(
             {
                 "ProductName": "Firefox",
@@ -154,7 +141,9 @@ class TestBreakpadSubmitterResource:
             method="POST", path="/submit", headers=headers, body=data
         )
 
-        bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
+        bsp = BreakpadSubmitterResource(
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+        )
         crash_report = CrashReport(
             annotations={
                 "ProductName": "Firefox",
@@ -171,31 +160,32 @@ class TestBreakpadSubmitterResource:
         assert bsp.extract_payload(req) == crash_report
 
     def test_extract_payload_bad_content_type(self, request_generator):
-        crashmover = FakeCrashMover()
         headers = {"Content-Type": "application/json"}
         req = request_generator(
             method="POST", path="/submit", headers=headers, body="{}"
         )
 
-        bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
+        bsp = BreakpadSubmitterResource(
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+        )
         with pytest.raises(MalformedCrashReport, match="wrong_content_type"):
             bsp.extract_payload(req)
 
-    def test_extract_payload_no_annotations(self, request_generator):
+    def test_extract_payload_no_annotations(self, client, request_generator):
         """Verify no annotations raises error"""
-        crashmover = FakeCrashMover()
         data, headers = multipart_encode({})
         req = request_generator(
             method="POST", path="/submit", headers=headers, body=data
         )
 
-        bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
+        bsp = BreakpadSubmitterResource(
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+        )
         with pytest.raises(MalformedCrashReport, match="no_annotations"):
             bsp.extract_payload(req)
 
     def test_extract_payload_filename_not_text(self, request_generator):
         """Verify part that has a filename is not treated as text"""
-        crashmover = FakeCrashMover()
         data = (
             b"--442e931e47c9474f9bcd9b73e47aa38d\r\n"
             b'Content-Disposition: form-data; name="ProductName"\r\n'
@@ -217,7 +207,9 @@ class TestBreakpadSubmitterResource:
             method="POST", path="/submit", headers=headers, body=data
         )
 
-        bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
+        bsp = BreakpadSubmitterResource(
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+        )
         crash_report = CrashReport(
             annotations={
                 "ProductName": "Firefox",
@@ -232,7 +224,6 @@ class TestBreakpadSubmitterResource:
 
     def test_extract_payload_invalid_annotation_value(self, request_generator):
         """Verify annotation that's not utf-8 is logged"""
-        crashmover = FakeCrashMover()
         data = (
             b"--442e931e47c9474f9bcd9b73e47aa38d\r\n"
             b'Content-Disposition: form-data; name="Version"\r\n'
@@ -257,7 +248,9 @@ class TestBreakpadSubmitterResource:
             method="POST", path="/submit", headers=headers, body=data
         )
 
-        bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
+        bsp = BreakpadSubmitterResource(
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+        )
         crash_report = CrashReport(
             annotations={"Version": "100"},
             notes=[
@@ -269,7 +262,6 @@ class TestBreakpadSubmitterResource:
         assert bsp.extract_payload(req) == crash_report
 
     def test_extract_payload_compressed(self, request_generator):
-        crashmover = FakeCrashMover()
         data, headers = multipart_encode(
             {
                 "ProductName": "Firefox",
@@ -285,7 +277,9 @@ class TestBreakpadSubmitterResource:
             method="POST", path="/submit", headers=headers, body=data
         )
 
-        bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
+        bsp = BreakpadSubmitterResource(
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+        )
         crash_report = CrashReport(
             annotations={
                 "ProductName": "Firefox",
@@ -299,7 +293,6 @@ class TestBreakpadSubmitterResource:
         assert bsp.extract_payload(req) == crash_report
 
     def test_extract_payload_json(self, request_generator):
-        crashmover = FakeCrashMover()
         data, headers = multipart_encode(
             {
                 "extra": '{"ProductName":"Firefox","Version":"1.0"}',
@@ -310,7 +303,9 @@ class TestBreakpadSubmitterResource:
             method="POST", path="/submit", headers=headers, body=data
         )
 
-        bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
+        bsp = BreakpadSubmitterResource(
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+        )
         crash_report = CrashReport(
             annotations={
                 "ProductName": "Firefox",
@@ -324,8 +319,6 @@ class TestBreakpadSubmitterResource:
         assert bsp.extract_payload(req) == crash_report
 
     def test_extract_payload_invalid_json_malformed(self, request_generator):
-        crashmover = FakeCrashMover()
-
         # If the JSON doesn't parse (invalid control character), it raises
         # a MalformedCrashReport
         data, headers = multipart_encode({"extra": '{"ProductName":"Firefox\n"}'})
@@ -333,13 +326,13 @@ class TestBreakpadSubmitterResource:
             method="POST", path="/submit", headers=headers, body=data
         )
 
-        bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
+        bsp = BreakpadSubmitterResource(
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+        )
         with pytest.raises(MalformedCrashReport, match="invalid_json"):
             bsp.extract_payload(req)
 
     def test_extract_payload_invalid_json_not_dict(self, request_generator):
-        crashmover = FakeCrashMover()
-
         # If the JSON doesn't parse (invalid control character), it raises
         # a MalformedCrashReport
         data, headers = multipart_encode({"extra": '"badvalue"'})
@@ -347,13 +340,13 @@ class TestBreakpadSubmitterResource:
             method="POST", path="/submit", headers=headers, body=data
         )
 
-        bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
+        bsp = BreakpadSubmitterResource(
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+        )
         with pytest.raises(MalformedCrashReport, match="invalid_json_value"):
             bsp.extract_payload(req)
 
     def text_extract_payload_kvpairs_and_json(self, request_generator, metricsmock):
-        crashmover = FakeCrashMover()
-
         # If there's a JSON blob and also kv pairs, then that's a malformed
         # crash
         data, headers = multipart_encode(
@@ -367,13 +360,93 @@ class TestBreakpadSubmitterResource:
             method="POST", path="/submit", headers=headers, body=data
         )
 
-        bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
+        bsp = BreakpadSubmitterResource(
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+        )
         with metricsmock as metrics:
             result = bsp.extract_payload(req)
             assert result == ({}, {})
             assert metrics.has_record(stat="malformed", tags=["reason:has_json_and_kv"])
 
+
+@pytest.mark.parametrize(
+    "raw_crash, expected",
+    [
+        ({}, {"metadata": {"collector_notes": []}}),
+        (
+            {"TelemetryClientId": "ou812"},
+            {
+                "metadata": {
+                    "collector_notes": ["Removed TelemetryClientId from raw crash."]
+                }
+            },
+        ),
+        (
+            {"TelemetryServerURL": "ou812"},
+            {
+                "metadata": {
+                    "collector_notes": ["Removed TelemetryServerURL from raw crash."]
+                }
+            },
+        ),
+    ],
+)
+def test_cleanup_crash_report(raw_crash, expected):
+    bsp = BreakpadSubmitterResource(config=EMPTY_CONFIG, crashmover=FakeCrashMover())
+    bsp.cleanup_crash_report(raw_crash)
+    assert raw_crash == expected
+
+
+def test_get_throttle_result(client):
+    raw_crash = {"ProductName": "Firefox", "ReleaseChannel": "nightly"}
+
+    bsp = BreakpadSubmitterResource(config=EMPTY_CONFIG, crashmover=FakeCrashMover())
+    assert bsp.get_throttle_result(raw_crash) == (ACCEPT, "is_nightly", 100)
+
+
+class TestBreakpadSubmitterResourceIntegration:
+    def test_submit_crash_report(self, client):
+        data, headers = multipart_encode(
+            {
+                "ProductName": "Firefox",
+                "Version": "60.0a1",
+                "ReleaseChannel": "nightly",
+                "upload_file_minidump": ("fakecrash.dump", io.BytesIO(b"abcd1234")),
+            }
+        )
+
+        result = client.simulate_post("/submit", headers=headers, body=data)
+        assert result.status_code == 200
+        assert result.headers["Content-Type"].startswith("text/plain")
+        assert result.content.startswith(b"CrashID=bp")
+
+        crash_id = result.content.decode("utf-8").strip()[len("CrashID=bp-") :]
+
+        crashstorage = client.get_crashmover().crashstorage
+        crash_report = crashstorage.load_crash(crash_id)
+        assert crash_report.crash_id == crash_id
+        assert crash_report.dumps == {"upload_file_minidump": b"abcd1234"}
+        assert crash_report.raw_crash == {
+            "ProductName": "Firefox",
+            "ReleaseChannel": "nightly",
+            "Version": "60.0a1",
+            "metadata": {
+                "collector_notes": [],
+                "dump_checksums": {
+                    "upload_file_minidump": "e9cee71ab932fde863338d08be4de9dfe39ea049bdafb342ce659ec5450b69ae"
+                },
+                "payload": "multipart",
+                "payload_compressed": "0",
+                "payload_size": 632,
+                "throttle_rule": "is_nightly",
+            },
+            "submitted_timestamp": ANY,
+            "uuid": crash_id,
+            "version": 2,
+        }
+
     def test_existing_uuid(self, client):
+        """Verify if the crash report has a uuid already, it's reused."""
         crash_id = "de1bb258-cbbf-4589-a673-34f800160918"
         data, headers = multipart_encode(
             {
@@ -390,43 +463,4 @@ class TestBreakpadSubmitterResource:
 
         # Extract the uuid from the response content and verify that it's the
         # crash id we sent
-        assert result.content.decode("utf-8") == "CrashID=bp-%s\n" % crash_id
-
-    @pytest.mark.parametrize(
-        "raw_crash, expected",
-        [
-            ({}, {"metadata": {"collector_notes": []}}),
-            (
-                {"TelemetryClientId": "ou812"},
-                {
-                    "metadata": {
-                        "collector_notes": ["Removed TelemetryClientId from raw crash."]
-                    }
-                },
-            ),
-            (
-                {"TelemetryServerURL": "ou812"},
-                {
-                    "metadata": {
-                        "collector_notes": [
-                            "Removed TelemetryServerURL from raw crash."
-                        ]
-                    }
-                },
-            ),
-        ],
-    )
-    def test_cleanup_crash_report(self, client, raw_crash, expected):
-        bsp = BreakpadSubmitterResource(
-            config=self.empty_config,
-            crashmover=client.get_crashmover(),
-        )
-        bsp.cleanup_crash_report(raw_crash)
-        assert raw_crash == expected
-
-    def test_get_throttle_result(self):
-        crashmover = FakeCrashMover()
-        raw_crash = {"ProductName": "Firefox", "ReleaseChannel": "nightly"}
-
-        bsp = BreakpadSubmitterResource(config=self.empty_config, crashmover=crashmover)
-        assert bsp.get_throttle_result(raw_crash) == (ACCEPT, "is_nightly", 100)
+        assert result.content.decode("utf-8") == f"CrashID=bp-{crash_id}\n"
