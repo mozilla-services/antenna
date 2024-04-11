@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+import json
 import logging
 import os
 import uuid
@@ -11,7 +12,8 @@ from google.auth.credentials import AnonymousCredentials
 from google.cloud import storage
 
 from antenna.app import register_for_verification
-from antenna.ext.crashstorage_base import CrashStorageBase
+from antenna.crashmover import CrashReport
+from antenna.ext.crashstorage_base import CrashStorageBase, CrashIDNotFound
 from antenna.util import get_date_from_crash_id, json_ordered_dumps
 
 logger = logging.getLogger(__name__)
@@ -104,6 +106,18 @@ class GcsCrashStorage(CrashStorageBase):
         blob = bucket.blob(path)
         blob.upload_from_string(data)
 
+    def _load_file(self, path):
+        """Load a single file from GCS.
+
+        :arg str path: the path to load from
+
+        :returns: data as bytes
+
+        """
+        bucket = self.client.get_bucket(self.bucket)
+        blob = bucket.blob(path)
+        return blob.download_as_bytes()
+
     def verify_write_to_bucket(self):
         """Verify GCS bucket exists and can be written to."""
         self._save_file(generate_test_filepath(), b"test")
@@ -170,3 +184,33 @@ class GcsCrashStorage(CrashStorageBase):
 
         self.save_dumps(crash_id, dumps)
         self.save_raw_crash(crash_id, raw_crash)
+
+    def load_crash(self, crash_id):
+        """Load crash data."""
+        raw_crash = {}
+        dumps = {}
+
+        raw_crash_key = self._get_raw_crash_path(crash_id)
+        try:
+            raw_crash = json.loads(self._load_file(raw_crash_key))
+        except Exception as exc:
+            raise CrashIDNotFound(f"{crash_id} not found") from exc
+
+        dump_names_path = self._get_dump_names_path(crash_id)
+        try:
+            dump_names = json.loads(self._load_file(dump_names_path))
+        except Exception:
+            logger.error("raw_crash exists, but dump_names doesn't exist")
+
+        for dump_name in dump_names:
+            dump_name_path = self._get_dump_name_path(crash_id, dump_name)
+            try:
+                dumps[dump_name] = self._load_file(dump_name_path)
+            except Exception:
+                dumps[dump_name] = b"bad file"
+
+        return CrashReport(
+            crash_id=crash_id,
+            raw_crash=raw_crash,
+            dumps=dumps,
+        )

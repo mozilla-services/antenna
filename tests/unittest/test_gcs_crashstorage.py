@@ -4,13 +4,14 @@
 
 import io
 import os
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, ANY
 
 import pytest
 from google.auth.credentials import AnonymousCredentials
-from google.cloud.exceptions import NotFound, Unauthorized
 from google.cloud import storage
+from google.cloud.exceptions import NotFound, Unauthorized
 
+from antenna.ext.crashstorage_base import CrashIDNotFound
 from testlib.mini_poster import multipart_encode
 
 
@@ -158,3 +159,88 @@ class TestGcsCrashStorageIntegration:
         # Verify the collector returns a 500 status code and no crash id.
         assert result.status_code == 500
         assert result.content == b""
+
+    def test_load_file(self, client, gcs_client):
+        def get_env_var(key):
+            return os.environ[f"CRASHMOVER_CRASHSTORAGE_{key}"]
+
+        bucket_name = get_env_var("BUCKET_NAME")
+        # clean up bucket left around from previous tests
+        try:
+            gcs_client.get_bucket(bucket_name).delete(force=True)
+        except NotFound:
+            pass  # same difference
+        gcs_bucket = gcs_client.create_bucket(bucket_name)
+
+        crash_id = "de1bb258-cbbf-4589-a673-34f800160918"
+        data, headers = multipart_encode(
+            {
+                "uuid": crash_id,
+                "ProductName": "Firefox",
+                "Version": "1.0",
+                "upload_file_minidump": ("fakecrash.dump", io.BytesIO(b"abcd1234")),
+            }
+        )
+
+        # Rebuild the app the test client is using with relevant configuration.
+        client.rebuild_app(
+            {
+                "CRASHMOVER_CRASHSTORAGE_CLASS": "antenna.ext.gcs.crashstorage.GcsCrashStorage",
+                "CRASHMOVER_CRASHSTORAGE_BUCKET_NAME": gcs_bucket.name,
+            }
+        )
+
+        result = client.simulate_post("/submit", headers=headers, body=data)
+
+        # Verify the collector returns a 200 status code and the crash id
+        # we fed it.
+        assert result.status_code == 200
+
+        gcs_crashstorage = client.get_crashmover().crashstorage
+        report = gcs_crashstorage.load_crash(crash_id)
+
+        assert report.crash_id == crash_id
+        assert report.dumps == {"upload_file_minidump": b"abcd1234"}
+        assert report.raw_crash == {
+            "ProductName": "Firefox",
+            "Version": "1.0",
+            "metadata": {
+                "collector_notes": [],
+                "dump_checksums": {
+                    "upload_file_minidump": "e9cee71ab932fde863338d08be4de9dfe39ea049bdafb342ce659ec5450b69ae"
+                },
+                "payload": "multipart",
+                "payload_compressed": "0",
+                "payload_size": 648,
+                "throttle_rule": "accept_everything",
+            },
+            "submitted_timestamp": ANY,
+            "uuid": "de1bb258-cbbf-4589-a673-34f800160918",
+            "version": 2,
+        }
+
+    def test_load_file_no_data(self, client, gcs_client):
+        def get_env_var(key):
+            return os.environ[f"CRASHMOVER_CRASHSTORAGE_{key}"]
+
+        bucket_name = get_env_var("BUCKET_NAME")
+        # clean up bucket left around from previous tests
+        try:
+            gcs_client.get_bucket(bucket_name).delete(force=True)
+        except NotFound:
+            pass  # same difference
+        gcs_bucket = gcs_client.create_bucket(bucket_name)
+
+        crash_id = "de1bb258-cbbf-4589-a673-34f800160918"
+
+        # Rebuild the app the test client is using with relevant configuration.
+        client.rebuild_app(
+            {
+                "CRASHMOVER_CRASHSTORAGE_CLASS": "antenna.ext.gcs.crashstorage.GcsCrashStorage",
+                "CRASHMOVER_CRASHSTORAGE_BUCKET_NAME": gcs_bucket.name,
+            }
+        )
+
+        gcs_crashstorage = client.get_crashmover().crashstorage
+        with pytest.raises(CrashIDNotFound):
+            gcs_crashstorage.load_crash(crash_id)

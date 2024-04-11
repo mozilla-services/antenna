@@ -2,12 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+import json
 import logging
 
 from everett.manager import Option, parse_class
 
 from antenna.app import register_for_verification
-from antenna.ext.crashstorage_base import CrashStorageBase
+from antenna.crashmover import CrashReport
+from antenna.ext.crashstorage_base import CrashStorageBase, CrashIDNotFound
 from antenna.util import get_date_from_crash_id, json_ordered_dumps
 
 
@@ -141,3 +143,33 @@ class S3CrashStorage(CrashStorageBase):
 
         # Save raw crash
         self.save_raw_crash(crash_id, raw_crash)
+
+    def load_crash(self, crash_id):
+        """Load crash data."""
+        raw_crash = {}
+        dumps = {}
+
+        raw_crash_key = self._get_raw_crash_path(crash_id)
+        try:
+            raw_crash = json.loads(self.connection.load_file(raw_crash_key))
+        except self.connection.KeyNotFound as exc:
+            raise CrashIDNotFound(f"{crash_id} not found") from exc
+
+        dump_names_path = self._get_dump_names_path(crash_id)
+        try:
+            dump_names = json.loads(self.connection.load_file(dump_names_path))
+        except self.connection.KeyNotFound:
+            pass
+
+        for dump_name in dump_names:
+            dump_name_path = self._get_dump_name_path(crash_id, dump_name)
+            try:
+                dumps[dump_name] = self.connection.load_file(dump_name_path)
+            except self.connection.KeyNotFound:
+                dumps[dump_name] = b"bad file"
+
+        return CrashReport(
+            crash_id=crash_id,
+            raw_crash=raw_crash,
+            dumps=dumps,
+        )

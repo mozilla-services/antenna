@@ -6,7 +6,9 @@ import io
 import os
 
 from freezegun import freeze_time
+import pytest
 
+from antenna.ext.crashstorage_base import CrashIDNotFound
 from testlib.mini_poster import multipart_encode
 
 
@@ -21,7 +23,7 @@ def get_tree(path):
 
 class TestFSCrashStorage:
     @freeze_time("2011-09-06 00:00:00", tz_offset=0)
-    def test_storage_files(self, client, tmpdir):
+    def test_crashmover_save(self, client, tmpdir):
         """Verify posting a crash gets to crash storage in the right shape"""
         data, headers = multipart_encode(
             {
@@ -102,3 +104,70 @@ class TestFSCrashStorage:
             ]
             == b"abcd1234"
         )
+
+    @freeze_time("2011-09-06 00:00:00", tz_offset=0)
+    def test_load_crash(self, client, tmpdir):
+        crash_id = "de1bb258-cbbf-4589-a673-34f800110906"
+        data, headers = multipart_encode(
+            {
+                "uuid": crash_id,
+                "ProductName": "Test",
+                "Version": "1.0",
+                "upload_file_minidump": ("fakecrash.dump", io.BytesIO(b"abcd1234")),
+            }
+        )
+
+        # Rebuild the app the test client is using with relevant configuration.
+        client.rebuild_app(
+            {
+                "BASEDIR": str(tmpdir),
+                "BREAKPAD_THROTTLER_RULES": "antenna.throttler.ACCEPT_ALL",
+                "BREAKPAD_THROTTLER_PRODUCTS": "antenna.throttler.ALL_PRODUCTS",
+                "CRASHMOVER_CRASHSTORAGE_CLASS": "antenna.ext.fs.crashstorage.FSCrashStorage",
+                "CRASHMOVER_CRASHSTORAGE_FS_ROOT": str(tmpdir.join("antenna_crashes")),
+            }
+        )
+
+        result = client.simulate_post("/submit", headers=headers, body=data)
+
+        assert result.status_code == 200
+
+        fs_crashstorage = client.get_crashmover().crashstorage
+        crash_report = fs_crashstorage.load_crash(crash_id)
+        assert crash_report.crash_id == crash_id
+        assert crash_report.dumps == {"upload_file_minidump": b"abcd1234"}
+        assert crash_report.raw_crash == {
+            "uuid": crash_id,
+            "ProductName": "Test",
+            "Version": "1.0",
+            "metadata": {
+                "collector_notes": [],
+                "dump_checksums": {
+                    "upload_file_minidump": "e9cee71ab932fde863338d08be4de9dfe39ea049bdafb342ce659ec5450b69ae"
+                },
+                "payload": "multipart",
+                "payload_compressed": "0",
+                "payload_size": 645,
+                "throttle_rule": "accept_everything",
+            },
+            "submitted_timestamp": "2011-09-06T00:00:00+00:00",
+            "version": 2,
+        }
+
+    def test_load_file_not_found(self, client, tmpdir):
+        crash_id = "de1bb258-cbbf-4589-a673-34f800110906"
+
+        # Rebuild the app the test client is using with relevant configuration.
+        client.rebuild_app(
+            {
+                "BASEDIR": str(tmpdir),
+                "BREAKPAD_THROTTLER_RULES": "antenna.throttler.ACCEPT_ALL",
+                "BREAKPAD_THROTTLER_PRODUCTS": "antenna.throttler.ALL_PRODUCTS",
+                "CRASHMOVER_CRASHSTORAGE_CLASS": "antenna.ext.fs.crashstorage.FSCrashStorage",
+                "CRASHMOVER_CRASHSTORAGE_FS_ROOT": str(tmpdir.join("antenna_crashes")),
+            }
+        )
+
+        fs_crashstorage = client.get_crashmover().crashstorage
+        with pytest.raises(CrashIDNotFound):
+            fs_crashstorage.load_crash(crash_id)
