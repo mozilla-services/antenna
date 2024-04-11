@@ -84,9 +84,7 @@ class S3Connection:
 
     **Retrying saves**
 
-    When saving crashes, this connection will retry saving several times. Then
-    give up. The crashmover coroutine will put the crash back in the queue to
-    retry later. Crashes are never thrown out.
+    When saving crashes, this connection will retry saving several times. Then give up.
 
     """
 

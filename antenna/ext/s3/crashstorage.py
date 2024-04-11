@@ -156,17 +156,11 @@ class S3CrashStorage(CrashStorageBase):
             raise CrashIDNotFound(f"{crash_id} not found") from exc
 
         dump_names_path = self._get_dump_names_path(crash_id)
-        try:
-            dump_names = json.loads(self.connection.load_file(dump_names_path))
-        except self.connection.KeyNotFound:
-            pass
+        dump_names = json.loads(self.connection.load_file(dump_names_path))
 
         for dump_name in dump_names:
             dump_name_path = self._get_dump_name_path(crash_id, dump_name)
-            try:
-                dumps[dump_name] = self.connection.load_file(dump_name_path)
-            except self.connection.KeyNotFound:
-                dumps[dump_name] = b"bad file"
+            dumps[dump_name] = self.connection.load_file(dump_name_path)
 
         return CrashReport(
             crash_id=crash_id,

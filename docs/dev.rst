@@ -69,12 +69,11 @@ production, see documentation_.
 
          web_1 | + PORT=8000
          web_1 | + GUNICORN_WORKERS=1
-         web_1 | + GUNICORN_WORKER_CONNECTIONS=4
          web_1 | + GUNICORN_WORKER_CLASS=sync
          web_1 | + GUNICORN_MAX_REQUESTS=0
          web_1 | + GUNICORN_MAX_REQUESTS_JITTER=0
          web_1 | + CMD_PREFIX=
-         web_1 | + gunicorn --workers=1 --worker-connections=4 --worker-class=sync --max-requests=0 --max-requests-jitter=0 --config=antenna/gunicornhooks.py --log-file=- --error-logfile=- --access-logfile=- --bind 0.0.0.0:8000 antenna.wsgi:application
+         web_1 | + gunicorn --workers=1 --worker-class=sync --max-requests=0 --max-requests-jitter=0 --config=antenna/gunicornhooks.py --log-file=- --error-logfile=- --access-logfile=- --bind 0.0.0.0:8000 antenna.wsgi:application
          web_1 | [2022-09-13 14:21:45 +0000] [8] [INFO] Starting gunicorn 20.1.0
          web_1 | [2022-09-13 14:21:45 +0000] [8] [INFO] Listening at: http://0.0.0.0:8000 (8)
          web_1 | [2022-09-13 14:21:45 +0000] [8] [INFO] Using worker: sync
@@ -256,7 +255,7 @@ Pull request summary should indicate the bug the pull request is related to. Use
     bug-nnnnnnn: removed frog from tree class
 
 For multiple bugs fixed within a single pull request, list the bugs out individually. For example::
-   
+
    bug-nnnnnnn, bug-nnnnnnn: removed frog from tree class
 
 Pull request descriptions should cover at least some of the following:
