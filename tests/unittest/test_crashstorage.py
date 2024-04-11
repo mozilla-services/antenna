@@ -38,9 +38,11 @@ class TestCrashStorage:
         # there's only one crash in it and then verify the contents of the crash.
 
         # Verify things got saved
-        assert crashmover.crashstorage.saved_things == [
-            {"crash_id": "de1bb258-cbbf-4589-a673-34f800160918"}
+        crash_ids = [
+            crash_report.crash_id
+            for crash_report in crashmover.crashstorage.saved_things
         ]
+        assert crash_ids == ["de1bb258-cbbf-4589-a673-34f800160918"]
 
         # Verify things got published
         assert crashmover.crashpublish.published_things == [

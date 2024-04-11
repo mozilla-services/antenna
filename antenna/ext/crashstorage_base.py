@@ -18,7 +18,11 @@ class CrashStorageBase:
         self.config = config.with_options(self)
 
     def save_crash(self, crash_report):
-        """Save the crash report."""
+        """Save the crash report
+
+        :arg crash_report: the CrashReport instance
+
+        """
         raise NotImplementedError
 
 
@@ -36,10 +40,9 @@ class NoOpCrashStorage(CrashStorageBase):
         self.saved_things = []
 
     def save_crash(self, crash_report):
-        """Save a raw crash."""
         crash_id = crash_report.crash_id
         logger.info("crash storage no-op: %s", crash_id)
-        self.saved_things.append({"crash_id": crash_id})
+        self.saved_things.append(crash_report)
 
         # Nix all but the last 10 crashes
         self.saved_things = self.saved_things[-10:]
