@@ -18,6 +18,10 @@ from antenna.util import retry
 logger = logging.getLogger(__name__)
 
 
+class KeyNotFound(Exception):
+    pass
+
+
 def generate_test_filepath():
     """Generate a unique-ish test filepath."""
     return "test/testfile-%s.txt" % uuid.uuid4()
@@ -85,6 +89,8 @@ class S3Connection:
     retry later. Crashes are never thrown out.
 
     """
+
+    KeyNotFound = KeyNotFound
 
     class Config:
         access_key = Option(
@@ -214,3 +220,31 @@ class S3Connection:
         self.client.upload_fileobj(
             Fileobj=io.BytesIO(data), Bucket=self.bucket, Key=path
         )
+
+    @retry(
+        retryable_exceptions=[
+            # FIXME(willkg): Seems like botocore always raises ClientError
+            # which is unhelpful for granularity purposes.
+            ClientError
+        ],
+        wait_time_generator=wait_times_save,
+        module_logger=logger,
+    )
+    def load_file(self, path):
+        """Load a file from S3.
+
+        This will retry a handful of times in short succession so as to deal
+        with some amount of fishiness. After that, the caller should retry
+        loading after a longer period of time.
+
+        :arg str path: the path to save to
+
+        :raises botocore.exceptions.ClientError: connection issues, permissions
+            issues, bucket is missing, etc.
+
+        """
+        try:
+            resp = self.client.get_object(Bucket=self.bucket, Key=path)
+            return resp["Body"].read()
+        except self.client.exceptions.NoSuchKey as exc:
+            raise KeyNotFound(f"{path} not found") from exc

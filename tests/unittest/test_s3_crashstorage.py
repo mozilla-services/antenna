@@ -4,7 +4,8 @@
 
 import io
 import logging
-from unittest.mock import patch
+import os
+from unittest.mock import patch, ANY
 
 import botocore
 import pytest
@@ -287,3 +288,55 @@ class TestS3CrashStorageIntegration:
 
     # FIXME(willkg): Add test for bad region
     # FIXME(willkg): Add test for invalid credentials
+
+    def test_load_crash(self, client):
+        def get_env_var(key):
+            return os.environ[f"CRASHMOVER_CRASHSTORAGE_{key}"]
+
+        crash_id = "de1bb258-cbbf-4589-a673-34f800160918"
+        data, headers = multipart_encode(
+            {
+                "uuid": crash_id,
+                "ProductName": "Firefox",
+                "Version": "1.0",
+                "upload_file_minidump": ("fakecrash.dump", io.BytesIO(b"abcd1234")),
+            }
+        )
+
+        client.rebuild_app(
+            {
+                "CRASHMOVER_CRASHSTORAGE_CLASS": "antenna.ext.s3.crashstorage.S3CrashStorage",
+                "CRASHMOVER_CRASHSTORAGE_ENDPOINT_URL": get_env_var("ENDPOINT_URL"),
+                "CRASHMOVER_CRASHSTORAGE_ACCESS_KEY": get_env_var("ACCESS_KEY"),
+                "CRASHMOVER_CRASHSTORAGE_SECRET_ACCESS_KEY": get_env_var(
+                    "SECRET_ACCESS_KEY"
+                ),
+                "CRASHMOVER_CRASHSTORAGE_BUCKET_NAME": get_env_var("BUCKET_NAME"),
+            }
+        )
+
+        result = client.simulate_post("/submit", headers=headers, body=data)
+        assert result.status_code == 200
+
+        s3_crashstorage = client.get_crashmover().crashstorage
+        crash_report = s3_crashstorage.load_crash(crash_id)
+
+        assert crash_report.crash_id == crash_id
+        assert crash_report.dumps == {"upload_file_minidump": b"abcd1234"}
+        assert crash_report.raw_crash == {
+            "uuid": crash_id,
+            "ProductName": "Firefox",
+            "Version": "1.0",
+            "metadata": {
+                "collector_notes": [],
+                "dump_checksums": {
+                    "upload_file_minidump": "e9cee71ab932fde863338d08be4de9dfe39ea049bdafb342ce659ec5450b69ae"
+                },
+                "payload": "multipart",
+                "payload_compressed": "0",
+                "payload_size": 648,
+                "throttle_rule": "accept_everything",
+            },
+            "submitted_timestamp": ANY,
+            "version": 2,
+        }

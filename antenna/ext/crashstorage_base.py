@@ -8,6 +8,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+class CrashIDNotFound(Exception):
+    pass
+
+
 class CrashStorageBase:
     """Crash storage base class."""
 
@@ -21,6 +25,18 @@ class CrashStorageBase:
         """Save the crash report
 
         :arg crash_report: the CrashReport instance
+
+        """
+        raise NotImplementedError
+
+    def load_crash(self, crash_id):
+        """Load crash report data by crash id.
+
+        :arg crash_id: the crash id to retrieve data for
+
+        :returns: CrashReport instance
+
+        :raises CrashIDNotFound: if crash report data doesn't exist
 
         """
         raise NotImplementedError
@@ -46,3 +62,10 @@ class NoOpCrashStorage(CrashStorageBase):
 
         # Nix all but the last 10 crashes
         self.saved_things = self.saved_things[-10:]
+
+    def load_crash(self, crash_id):
+        for crash_report in self.saved_things:
+            if crash_report.crash_id == crash_id:
+                return crash_report
+
+        raise CrashIDNotFound(f"no data for {crash_id}")

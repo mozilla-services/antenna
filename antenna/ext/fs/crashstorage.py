@@ -2,13 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+import json
 import logging
 import os
 import os.path
 
 from everett.manager import Option
 
-from antenna.ext.crashstorage_base import CrashStorageBase
+from antenna.crashmover import CrashReport
+from antenna.ext.crashstorage_base import CrashStorageBase, CrashIDNotFound
 from antenna.util import get_date_from_crash_id, json_ordered_dumps
 
 
@@ -151,3 +153,39 @@ class FSCrashStorage(CrashStorageBase):
 
         # Save raw crash
         self.save_raw_crash(crash_id, raw_crash)
+
+    def load_crash(self, crash_id):
+        """Load crash data."""
+        raw_crash = {}
+        dumps = {}
+        dump_names_fn = self._get_dump_names_path(crash_id)
+
+        try:
+            with open(dump_names_fn, "rb") as fp:
+                dump_names = json.load(fp)
+        except (IOError, OSError):
+            dump_names = []
+
+        for dump_name in dump_names:
+            dump_fn = self._get_dump_name_path(crash_id, dump_name)
+            try:
+                with open(dump_fn, "rb") as fp:
+                    dumps[dump_name] = fp.read()
+            except (IOError, OSError):
+                dumps[dump_name] = b"bad file"
+
+        raw_crash_fn = self._get_raw_crash_path(crash_id)
+        try:
+            with open(raw_crash_fn, "rb") as fp:
+                raw_crash = json.load(fp)
+        except (IOError, OSError):
+            raw_crash = {}
+
+        if not raw_crash and not dumps:
+            raise CrashIDNotFound(f"no data for {crash_id}")
+
+        return CrashReport(
+            crash_id=crash_id,
+            dumps=dumps,
+            raw_crash=raw_crash,
+        )
