@@ -4,7 +4,6 @@
 
 import io
 import logging
-import os
 from unittest.mock import patch, ANY
 
 import botocore
@@ -28,7 +27,7 @@ class TestS3CrashStorageIntegration:
         # write to it and the configuration is correct
         s3mock.add_step(
             method="PUT",
-            url="http://fakes3:4569/fakebucket/test/testwrite.txt",
+            url="http://fakes3:4569/testbucket/test/testwrite.txt",
             body=b"test",
             resp=s3mock.fake_response(status_code=200),
         )
@@ -37,7 +36,7 @@ class TestS3CrashStorageIntegration:
         s3mock.add_step(
             method="PUT",
             url=(
-                "http://fakes3:4569/fakebucket/v1/dump_names/"
+                "http://fakes3:4569/testbucket/v1/dump_names/"
                 + "de1bb258-cbbf-4589-a673-34f800160918"
             ),
             body=b'["upload_file_minidump"]',
@@ -45,14 +44,14 @@ class TestS3CrashStorageIntegration:
         )
         s3mock.add_step(
             method="PUT",
-            url="http://fakes3:4569/fakebucket/v1/dump/de1bb258-cbbf-4589-a673-34f800160918",
+            url="http://fakes3:4569/testbucket/v1/dump/de1bb258-cbbf-4589-a673-34f800160918",
             body=b"abcd1234",
             resp=s3mock.fake_response(status_code=200),
         )
         s3mock.add_step(
             method="PUT",
             url=(
-                "http://fakes3:4569/fakebucket/v1/raw_crash/20160918/"
+                "http://fakes3:4569/testbucket/v1/raw_crash/20160918/"
                 + "de1bb258-cbbf-4589-a673-34f800160918"
             ),
             # Not going to compare the body here because it's just the raw crash
@@ -72,9 +71,6 @@ class TestS3CrashStorageIntegration:
             {
                 "CRASHMOVER_CRASHSTORAGE_CLASS": "antenna.ext.s3.crashstorage.S3CrashStorage",
                 "CRASHMOVER_CRASHSTORAGE_ENDPOINT_URL": "http://fakes3:4569",
-                "CRASHMOVER_CRASHSTORAGE_ACCESS_KEY": "fakekey",
-                "CRASHMOVER_CRASHSTORAGE_SECRET_ACCESS_KEY": "fakesecretkey",
-                "CRASHMOVER_CRASHSTORAGE_BUCKET_NAME": "fakebucket",
             }
         )
 
@@ -95,7 +91,7 @@ class TestS3CrashStorageIntegration:
         # write to it and the configuration is correct
         s3mock.add_step(
             method="PUT",
-            url="http://fakes3:4569/fakebucket.with.periods/test/testwrite.txt",
+            url="http://fakes3:4569/testbucket.with.periods/test/testwrite.txt",
             body=b"test",
             resp=s3mock.fake_response(status_code=200),
         )
@@ -104,7 +100,7 @@ class TestS3CrashStorageIntegration:
         s3mock.add_step(
             method="PUT",
             url=(
-                "http://fakes3:4569/fakebucket.with.periods/v1/dump_names/"
+                "http://fakes3:4569/testbucket.with.periods/v1/dump_names/"
                 "de1bb258-cbbf-4589-a673-34f800160918"
             ),
             body=b'["upload_file_minidump"]',
@@ -113,7 +109,7 @@ class TestS3CrashStorageIntegration:
         s3mock.add_step(
             method="PUT",
             url=(
-                "http://fakes3:4569/fakebucket.with.periods/v1/dump/"
+                "http://fakes3:4569/testbucket.with.periods/v1/dump/"
                 "de1bb258-cbbf-4589-a673-34f800160918"
             ),
             body=b"abcd1234",
@@ -122,7 +118,7 @@ class TestS3CrashStorageIntegration:
         s3mock.add_step(
             method="PUT",
             url=(
-                "http://fakes3:4569/fakebucket.with.periods/v1/raw_crash/20160918/"
+                "http://fakes3:4569/testbucket.with.periods/v1/raw_crash/20160918/"
                 + "de1bb258-cbbf-4589-a673-34f800160918"
             ),
             # Not going to compare the body here because it's just the raw crash
@@ -142,10 +138,7 @@ class TestS3CrashStorageIntegration:
             {
                 "CRASHMOVER_CRASHSTORAGE_CLASS": "antenna.ext.s3.crashstorage.S3CrashStorage",
                 "CRASHMOVER_CRASHSTORAGE_ENDPOINT_URL": "http://fakes3:4569",
-                "CRASHMOVER_CRASHSTORAGE_REGION": "us-west-1",
-                "CRASHMOVER_CRASHSTORAGE_ACCESS_KEY": "fakekey",
-                "CRASHMOVER_CRASHSTORAGE_SECRET_ACCESS_KEY": "fakesecretkey",
-                "CRASHMOVER_CRASHSTORAGE_BUCKET_NAME": "fakebucket.with.periods",
+                "CRASHMOVER_CRASHSTORAGE_BUCKET_NAME": "testbucket.with.periods",
             }
         )
 
@@ -166,7 +159,7 @@ class TestS3CrashStorageIntegration:
         # write to it and the configuration is correct
         s3mock.add_step(
             method="PUT",
-            url="http://fakes3:4569/fakebucket/test/testwrite.txt",
+            url="http://fakes3:4569/testbucket/test/testwrite.txt",
             body=b"test",
             resp=s3mock.fake_response(status_code=404),
         )
@@ -178,9 +171,6 @@ class TestS3CrashStorageIntegration:
                 {
                     "CRASHMOVER_CRASHSTORAGE_CLASS": "antenna.ext.s3.crashstorage.S3CrashStorage",
                     "CRASHMOVER_CRASHSTORAGE_ENDPOINT_URL": "http://fakes3:4569",
-                    "CRASHMOVER_CRASHSTORAGE_ACCESS_KEY": "fakekey",
-                    "CRASHMOVER_CRASHSTORAGE_SECRET_ACCESS_KEY": "fakesecretkey",
-                    "CRASHMOVER_CRASHSTORAGE_BUCKET_NAME": "fakebucket",
                 }
             )
 
@@ -197,7 +187,7 @@ class TestS3CrashStorageIntegration:
         # write to it and the configuration is correct
         s3mock.add_step(
             method="PUT",
-            url="http://fakes3:4569/fakebucket/test/testwrite.txt",
+            url="http://fakes3:4569/testbucket/test/testwrite.txt",
             body=b"test",
             resp=s3mock.fake_response(status_code=200),
         )
@@ -206,7 +196,7 @@ class TestS3CrashStorageIntegration:
         s3mock.add_step(
             method="PUT",
             url=(
-                "http://fakes3:4569/fakebucket/v1/dump_names/"
+                "http://fakes3:4569/testbucket/v1/dump_names/"
                 "de1bb258-cbbf-4589-a673-34f800160918"
             ),
             body=b'["upload_file_minidump"]',
@@ -217,7 +207,7 @@ class TestS3CrashStorageIntegration:
         s3mock.add_step(
             method="PUT",
             url=(
-                "http://fakes3:4569/fakebucket/v1/dump_names/"
+                "http://fakes3:4569/testbucket/v1/dump_names/"
                 "de1bb258-cbbf-4589-a673-34f800160918"
             ),
             body=b'["upload_file_minidump"]',
@@ -226,7 +216,7 @@ class TestS3CrashStorageIntegration:
         s3mock.add_step(
             method="PUT",
             url=(
-                "http://fakes3:4569/fakebucket/v1/dump/"
+                "http://fakes3:4569/testbucket/v1/dump/"
                 "de1bb258-cbbf-4589-a673-34f800160918"
             ),
             body=b"abcd1234",
@@ -235,7 +225,7 @@ class TestS3CrashStorageIntegration:
         s3mock.add_step(
             method="PUT",
             url=(
-                "http://fakes3:4569/fakebucket/v1/raw_crash/"
+                "http://fakes3:4569/testbucket/v1/raw_crash/"
                 + "20160918/de1bb258-cbbf-4589-a673-34f800160918"
             ),
             # Not going to compare the body here because it's just the raw crash
@@ -255,9 +245,6 @@ class TestS3CrashStorageIntegration:
             {
                 "CRASHMOVER_CRASHSTORAGE_CLASS": "antenna.ext.s3.crashstorage.S3CrashStorage",
                 "CRASHMOVER_CRASHSTORAGE_ENDPOINT_URL": "http://fakes3:4569",
-                "CRASHMOVER_CRASHSTORAGE_ACCESS_KEY": "fakekey",
-                "CRASHMOVER_CRASHSTORAGE_SECRET_ACCESS_KEY": "fakesecretkey",
-                "CRASHMOVER_CRASHSTORAGE_BUCKET_NAME": "fakebucket",
             }
         )
 
@@ -289,10 +276,7 @@ class TestS3CrashStorageIntegration:
     # FIXME(willkg): Add test for bad region
     # FIXME(willkg): Add test for invalid credentials
 
-    def test_load_crash(self, client):
-        def get_env_var(key):
-            return os.environ[f"CRASHMOVER_CRASHSTORAGE_{key}"]
-
+    def test_load_crash(self, client, s3_helper):
         crash_id = "de1bb258-cbbf-4589-a673-34f800160918"
         data, headers = multipart_encode(
             {
@@ -306,12 +290,6 @@ class TestS3CrashStorageIntegration:
         client.rebuild_app(
             {
                 "CRASHMOVER_CRASHSTORAGE_CLASS": "antenna.ext.s3.crashstorage.S3CrashStorage",
-                "CRASHMOVER_CRASHSTORAGE_ENDPOINT_URL": get_env_var("ENDPOINT_URL"),
-                "CRASHMOVER_CRASHSTORAGE_ACCESS_KEY": get_env_var("ACCESS_KEY"),
-                "CRASHMOVER_CRASHSTORAGE_SECRET_ACCESS_KEY": get_env_var(
-                    "SECRET_ACCESS_KEY"
-                ),
-                "CRASHMOVER_CRASHSTORAGE_BUCKET_NAME": get_env_var("BUCKET_NAME"),
             }
         )
 

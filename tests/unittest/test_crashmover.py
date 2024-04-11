@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-import io
-
 from everett.manager import ConfigManager
 
 from antenna.ext.crashpublish_base import CrashPublishBase
@@ -32,7 +30,7 @@ class TestCrashMover:
             "ReleaseChannel": "nightly",
         }
         dumps = {
-            "upload_file_minidump": ("fakecrash.dump", io.BytesIO(b"abcd1234")),
+            "upload_file_minidump": b"abcd1234",
         }
 
         client.rebuild_app(
@@ -75,7 +73,7 @@ class TestCrashMover:
             "ReleaseChannel": "nightly",
         }
         dumps = {
-            "upload_file_minidump": ("fakecrash.dump", io.BytesIO(b"abcd1234")),
+            "upload_file_minidump": b"abcd1234",
         }
 
         client.rebuild_app(
