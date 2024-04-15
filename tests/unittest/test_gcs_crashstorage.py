@@ -176,6 +176,7 @@ class TestGcsCrashStorageIntegration:
                 "payload_compressed": "0",
                 "payload_size": 648,
                 "throttle_rule": "accept_everything",
+                "user_agent": ANY,
             },
             "submitted_timestamp": ANY,
             "uuid": "de1bb258-cbbf-4589-a673-34f800160918",
