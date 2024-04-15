@@ -223,11 +223,11 @@ easily see what's going on. You can use the hosted Sentry or run your own Sentry
 instance--either will work fine.
 
 
-AWS S3 file hierarchy
+Cloud storage file hierarchy
 ---------------------
 
-If you use the Amazon Web Services S3 crashstorage component, then crashes get
-saved in this hierarchy in the bucket:
+If you use the Amazon Web Services S3 or Google Cloud Storage crashstorage
+component, then crashes get saved in this hierarchy in the bucket:
 
 * ``/v1/raw_crash/<DATE>/<CRASHID>``
 * ``/v1/dump_names/<CRASHID>``

@@ -83,9 +83,9 @@ class TestGcsCrashStorageIntegration:
         blob_names = [b.name for b in blobs]
         assert blob_names == [
             "test/testwrite.txt",
+            f"v1/dump/{crash_id}",
             f"v1/dump_names/{crash_id}",
             f"v1/raw_crash/20160918/{crash_id}",
-            f"v1/upload_file_minidump/{crash_id}",
         ]
 
         blob_contents = [
@@ -96,8 +96,8 @@ class TestGcsCrashStorageIntegration:
         ]
         assert blob_contents == [
             b"test",
-            b'["upload_file_minidump"]',
             b"abcd1234",
+            b'["upload_file_minidump"]',
         ]
 
     def test_missing_bucket_halts_startup(self, client, gcs_client):

@@ -91,8 +91,8 @@ class GcsHelper:
         }
 
     def dump_key(self, crash_id, name):
-        if name in (None, ""):
-            name = "upload_file_minidump"
+        if name in (None, "", "upload_file_minidump"):
+            name = "dump"
 
         return f"v1/{name}/{crash_id}"
 
