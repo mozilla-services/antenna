@@ -4,6 +4,7 @@
 
 import io
 import os
+from unittest.mock import ANY
 
 from freezegun import freeze_time
 import pytest
@@ -33,6 +34,7 @@ class TestFSCrashStorage:
                 "upload_file_minidump": ("fakecrash.dump", io.BytesIO(b"abcd1234")),
             }
         )
+        headers["User-Agent"] = "wow"
 
         # Rebuild the app the test client is using with relevant configuration.
         client.rebuild_app(
@@ -83,7 +85,8 @@ class TestFSCrashStorage:
             + b'"payload": "multipart", '
             + b'"payload_compressed": "0", '
             + b'"payload_size": 645, '
-            + b'"throttle_rule": "accept_everything"'
+            + b'"throttle_rule": "accept_everything", '
+            + b'"user_agent": "wow"'
             + b"}, "
             + b'"submitted_timestamp": "2011-09-06T00:00:00+00:00", '
             + b'"uuid": "de1bb258-cbbf-4589-a673-34f800160918", '
@@ -149,6 +152,7 @@ class TestFSCrashStorage:
                 "payload_compressed": "0",
                 "payload_size": 645,
                 "throttle_rule": "accept_everything",
+                "user_agent": ANY,
             },
             "submitted_timestamp": "2011-09-06T00:00:00+00:00",
             "version": 2,

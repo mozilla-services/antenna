@@ -439,6 +439,7 @@ class TestBreakpadSubmitterResourceIntegration:
                 "payload_compressed": "0",
                 "payload_size": 632,
                 "throttle_rule": "is_nightly",
+                "user_agent": ANY,
             },
             "submitted_timestamp": ANY,
             "uuid": crash_id,
