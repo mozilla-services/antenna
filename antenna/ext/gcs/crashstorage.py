@@ -103,7 +103,7 @@ class GcsCrashStorage(CrashStorageBase):
         :arg bytes data: the data to save
 
         """
-        bucket = self.client.get_bucket(self.bucket)
+        bucket = self.client.bucket(self.bucket)
         blob = bucket.blob(path)
         blob.upload_from_string(data)
 
@@ -115,7 +115,7 @@ class GcsCrashStorage(CrashStorageBase):
         :returns: data as bytes
 
         """
-        bucket = self.client.get_bucket(self.bucket)
+        bucket = self.client.bucket(self.bucket)
         blob = bucket.blob(path)
         return blob.download_as_bytes()
 
@@ -126,8 +126,9 @@ class GcsCrashStorage(CrashStorageBase):
     def check_health(self, state):
         """Check GCS connection health."""
         try:
-            # get the bucket to verify GCS is up and we can connect to it.
-            self.client.get_bucket(self.bucket)
+            # check if a blob exists to verify GCS is up and we can connect to it,
+            # without exceeding the permissions granted by roles/storage.objectUser
+            self.client.bucket(self.bucket).blob(generate_test_filepath()).exists()
         except Exception as exc:
             state.add_error("GcsCrashStorage", repr(exc))
 

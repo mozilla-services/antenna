@@ -97,7 +97,7 @@ class TestGcsCrashStorageIntegration:
     @patch("google.cloud.storage.Client")
     def test_write_error(self, MockStorageClient, client):
         mock_client = MockStorageClient.return_value
-        bucket = mock_client.get_bucket.return_value
+        bucket = mock_client.bucket.return_value
         good_blob = Mock()
         bad_blob = Mock()
         bad_blob.upload_from_string.side_effect = Unauthorized("not authorized")
