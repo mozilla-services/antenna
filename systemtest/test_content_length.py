@@ -103,16 +103,23 @@ class TestContentLength:
             with http_post(posturl, headers, payload) as resp:
                 status_code = resp.getcode()
         except RemoteDisconnected:
-            # If there's an ELB and nginx times out waiting for the rest of the
-            # request, then we get an HTTP 504. If there's no ELB (we're
-            # connecting directly to nginx), then nginx just drops the
-            # connection and we get back a RemoteDisconnected error.
-            status_code = 504
+            # If there's no LB (we're connecting directly to nginx), then nginx
+            # may drop the connection and we get back a RemoteDisconnected error
+            status_code = None
 
-        # Verify we get an HTTP 504 because something timed out waiting for the
+        # Verify we get an error because something timed out waiting for the
         # HTTP client (us) to send the rest of the data which is expected
         # because we sent a bad content-length
-        assert status_code == 504
+        assert status_code in (
+            # without LB, nginx drops the connection
+            None,
+            # with LB in GCP if nginx drops the connection we get 502, or if LB
+            # times out first we get 408. clients might not retry a 4XX error
+            # like they will a 5XX, so we don't accept a 408 here.
+            502,
+            # with LB in AWS if nginx drops the connection we get 504
+            504,
+        )
 
     def test_content_length_non_int(self, posturl, crash_generator):
         """Post a crash with a content-length that isn't an int"""
