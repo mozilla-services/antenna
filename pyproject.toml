@@ -48,7 +48,7 @@ github_project = "antenna"
 bugzilla_product = "Socorro"
 bugzilla_component = "Infra"
 main_branch = "main"
-tag_name_template = "%Y.%m.%d"
+tag_name_template = "v%Y.%m.%d"
 
 
 [tool.service-status]
