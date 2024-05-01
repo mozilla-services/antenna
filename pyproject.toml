@@ -1,12 +1,13 @@
 [tool.ruff]
-# Enable pycodestyle (E), pyflakes (F), bugbear (B), and bandit (S) rules
-select = ["E", "F", "B", "S"]
 line-length = 88
-# Ignore line length violations that aren't fixed by formatting
-ignore = ["E501"]
 target-version = "py311"
 
-[tool.ruff.flake8-quotes]
+[tool.ruff.lint]
+# Enable pycodestyle (E), pyflakes (F), bugbear (B), and bandit (S) rules
+select = ["E", "F", "B", "S"]
+ignore = ["E501"]
+
+[tool.ruff.lint.flake8-quotes]
 docstring-quotes = "double"
 
 [tool.ruff.lint.per-file-ignores]
