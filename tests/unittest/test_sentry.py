@@ -97,7 +97,7 @@ BROKEN_EVENT = {
     "server_name": "",
     "timestamp": ANY,
     "transaction": "/__broken__",
-    "transaction_info": {},
+    "transaction_info": {"source": "route"},
 }
 
 
