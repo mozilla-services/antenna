@@ -2,6 +2,23 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+from contextlib import contextmanager
+import json
+import os
+
+
+@contextmanager
+def gcs_crashstorage_envvar():
+    # NOTE(willkg): we do this in a goofy way here because it means we don't actually
+    # have to set this in the environment which causes the app to fail at startup
+    # because the bucket doesn't exist
+    key = "CRASHMOVER_CRASHSTORAGE_CLASS"
+    os.environ[key] = "antenna.ext.gcs.crashstorage.GcsCrashStorage"
+
+    yield
+
+    del os.environ[key]
+
 
 class TestHealthChecks:
     def test_no_version(self, client, tmpdir):
@@ -10,9 +27,20 @@ class TestHealthChecks:
         client.rebuild_app({"BASEDIR": str(tmpdir)})
 
         result = client.simulate_get("/__version__")
-        assert result.content == b"{}"
+        version_info = {"cloud": "AWS"}
+        assert json.loads(result.content) == version_info
 
-    def test_version(self, client, tmpdir):
+    def test_no_version_gcp(self, client, tmpdir):
+        # Set basedir here to tmpdir which we *know* doesn't have a
+        # version.json in it.
+        client.rebuild_app({"BASEDIR": str(tmpdir)})
+
+        with gcs_crashstorage_envvar():
+            result = client.simulate_get("/__version__")
+        version_info = {"cloud": "GCP"}
+        assert json.loads(result.content) == version_info
+
+    def test_version_aws(self, client, tmpdir):
         client.rebuild_app({"BASEDIR": str(tmpdir)})
 
         # NOTE(willkg): The actual version.json has other things in it,
@@ -22,7 +50,22 @@ class TestHealthChecks:
         version_path.write('{"commit": "ou812"}')
 
         result = client.simulate_get("/__version__")
-        assert result.content == b'{"commit": "ou812"}'
+        version_info = {"commit": "ou812", "cloud": "AWS"}
+        assert json.loads(result.content) == version_info
+
+    def test_version_gcp(self, client, tmpdir):
+        client.rebuild_app({"BASEDIR": str(tmpdir)})
+
+        # NOTE(willkg): The actual version.json has other things in it,
+        # but our endpoint just spits out the file verbatim, so we
+        # can test with whatever.
+        version_path = tmpdir.join("/version.json")
+        version_path.write('{"commit": "ou812"}')
+
+        with gcs_crashstorage_envvar():
+            result = client.simulate_get("/__version__")
+        version_info = {"commit": "ou812", "cloud": "GCP"}
+        assert json.loads(result.content) == version_info
 
     def test_lb_heartbeat(self, client):
         resp = client.simulate_get("/__lbheartbeat__")
