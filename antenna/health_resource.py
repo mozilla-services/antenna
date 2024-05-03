@@ -5,6 +5,7 @@
 from collections import OrderedDict
 import json
 import logging
+import os
 
 import falcon
 import markus
@@ -35,11 +36,20 @@ class VersionResource:
     def on_get(self, req, resp):
         """Implement GET HTTP request."""
         mymetrics.incr("version.count")
-        version_info = json.dumps(get_version_info(self.basedir))
+        version_info = get_version_info(self.basedir)
+        # FIXME(willkg): there's no cloud provider environment variable to use, so
+        # we'll cheat and look at whether there's a "gcs" in
+        # CRASHMOVER_CRASHSTORAGE_CLASS; this is termporary and we can remove it
+        # once we've finished the GCP migration
+        version_info["cloud"] = (
+            "GCP"
+            if "gcs" in os.environ.get("CRASHMOVER_CRASHSTORAGE_CLASS", "")
+            else "AWS"
+        )
 
         resp.content_type = "application/json; charset=utf-8"
         resp.status = falcon.HTTP_200
-        resp.text = version_info
+        resp.text = json.dumps(version_info)
 
 
 class LBHeartbeatResource:
