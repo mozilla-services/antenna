@@ -30,10 +30,15 @@ case $1 in
         # The host to submit to
         export HOST=http://web:8000/
         ;;
-    "stage")
+    "stage" | "aws-stage")
         export NGINX_TESTS=1
         export POST_CHECK=0
         export HOST=https://crash-reports.allizom.org/
+        ;;
+    "gcp-stage")
+        export NGINX_TESTS=1
+        export POST_CHECK=0
+        export HOST=https://antenna-stage.socorro.nonprod.webservices.mozgcp.net/
         ;;
     *)
         echo "${USAGE}"
