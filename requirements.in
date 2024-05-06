@@ -22,7 +22,7 @@ more-itertools==10.2.0
 pip-tools==7.4.1
 pytest==8.2.0
 requests==2.31.0
-ruff==0.4.2
+ruff==0.4.3
 Sphinx==7.3.7
 sphinx-rtd-theme==2.0.0
 urlwait==1.0
