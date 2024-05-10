@@ -26,4 +26,4 @@ ruff==0.4.2
 Sphinx==7.3.7
 sphinx-rtd-theme==2.0.0
 urlwait==1.0
-werkzeug==3.0.2
+werkzeug==3.0.3
