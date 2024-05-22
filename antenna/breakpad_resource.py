@@ -18,8 +18,8 @@ from falcon.media.multipart import (
     MultipartParseError,
     MultipartParseOptions,
 )
-import markus
 
+from antenna.libmarkus import METRICS
 from antenna.throttler import REJECT, FAKEACCEPT, RESULT_TO_TEXT, Throttler
 from antenna.util import (
     create_crash_id,
@@ -30,7 +30,6 @@ from antenna.util import (
 
 
 logger = logging.getLogger(__name__)
-mymetrics = markus.get_metrics("breakpad_resource")
 
 
 #: Bad fields we should never save, so remove them from the payload before
@@ -144,7 +143,7 @@ class BreakpadSubmitterResource:
 
         # Decompress payload if it's compressed
         if req.env.get("HTTP_CONTENT_ENCODING") == "gzip":
-            mymetrics.incr("gzipped_crash")
+            METRICS.incr("breakpad_resource.gzipped_crash")
             crash_report.payload_compressed = "1"
 
             # If the content is gzipped, we pull it out and decompress it. We
@@ -154,14 +153,14 @@ class BreakpadSubmitterResource:
             start_time = time.perf_counter()
             try:
                 data = zlib.decompress(req.stream.read(content_length), gzip_header)
-                mymetrics.histogram(
-                    "gzipped_crash_decompress",
+                METRICS.histogram(
+                    "breakpad_resource.gzipped_crash_decompress",
                     value=(time.perf_counter() - start_time) * 1000.0,
                     tags=["result:success"],
                 )
             except zlib.error as exc:
-                mymetrics.histogram(
-                    "gzipped_crash_decompress",
+                METRICS.histogram(
+                    "breakpad_resource.gzipped_crash_decompress",
                     value=(time.perf_counter() - start_time) * 1000.0,
                     tags=["result:fail"],
                 )
@@ -178,14 +177,18 @@ class BreakpadSubmitterResource:
             req.env["CONTENT_LENGTH"] = str(content_length)
 
             data = io.BytesIO(data)
-            mymetrics.histogram(
-                "crash_size", value=content_length, tags=["payload:compressed"]
+            METRICS.histogram(
+                "breakpad_resource.crash_size",
+                value=content_length,
+                tags=["payload:compressed"],
             )
 
         else:
             data = req.bounded_stream
-            mymetrics.histogram(
-                "crash_size", value=content_length, tags=["payload:uncompressed"]
+            METRICS.histogram(
+                "breakpad_resource.crash_size",
+                value=content_length,
+                tags=["payload:uncompressed"],
             )
 
         has_json = False
@@ -299,7 +302,7 @@ class BreakpadSubmitterResource:
                 del raw_crash[bad_field]
                 notes.append("Removed %s from raw crash." % bad_field)
 
-    @mymetrics.timer_decorator("on_post.time")
+    @METRICS.timer_decorator("breakpad_resource.on_post.time")
     def on_post(self, req, resp):
         """Handle incoming HTTP POSTs.
 
@@ -321,12 +324,12 @@ class BreakpadSubmitterResource:
         except MalformedCrashReport as exc:
             # If this is malformed, then reject it with malformed error code.
             msg = str(exc)
-            mymetrics.incr("malformed", tags=["reason:%s" % msg])
+            METRICS.incr("breakpad_resource.malformed", tags=["reason:%s" % msg])
             resp.status = falcon.HTTP_400
             resp.text = "Discarded=malformed_%s" % msg
             return
 
-        mymetrics.incr("incoming_crash")
+        METRICS.incr("breakpad_resource.incoming_crash")
 
         raw_crash = crash_report.annotations
 
@@ -377,9 +380,10 @@ class BreakpadSubmitterResource:
             rule_name,
             RESULT_TO_TEXT[throttle_result],
         )
-        mymetrics.incr("throttle_rule", tags=["rule:%s" % rule_name])
-        mymetrics.incr(
-            "throttle", tags=["result:%s" % RESULT_TO_TEXT[throttle_result].lower()]
+        METRICS.incr("breakpad_resource.throttle_rule", tags=["rule:%s" % rule_name])
+        METRICS.incr(
+            "breakpad_resource.throttle",
+            tags=["result:%s" % RESULT_TO_TEXT[throttle_result].lower()],
         )
         raw_crash["metadata"]["throttle_rule"] = rule_name
 

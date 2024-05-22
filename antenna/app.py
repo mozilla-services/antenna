@@ -17,7 +17,6 @@ import falcon
 from falcon.errors import HTTPInternalServerError
 from fillmore.libsentry import set_up_sentry
 from fillmore.scrubber import Scrubber, Rule, SCRUB_RULES_DEFAULT
-import markus
 import sentry_sdk
 from sentry_sdk.hub import Hub
 from sentry_sdk.integrations.atexit import AtexitIntegration
@@ -40,11 +39,10 @@ from antenna.health_resource import (
 )
 from antenna.libdockerflow import get_release_name
 from antenna.liblogging import setup_logging, log_config
-from antenna.libmarkus import setup_metrics
+from antenna.libmarkus import setup_metrics, METRICS
 
 
 LOGGER = logging.getLogger(__name__)
-METRICS = markus.get_metrics("app")
 
 
 # Set up Sentry to scrub user ip addresses, exclude frame-local vars, exclude the
@@ -60,7 +58,7 @@ SCRUB_RULES_ANTENNA = [
 
 
 def count_sentry_scrub_error(msg):
-    METRICS.incr("sentry_scrub_error", value=1)
+    METRICS.incr("app.sentry_scrub_error", value=1)
 
 
 def configure_sentry(app_config):
