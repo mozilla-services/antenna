@@ -18,6 +18,7 @@ from google.auth.credentials import AnonymousCredentials
 from google.cloud import storage as gcs_storage
 from google.cloud.exceptions import NotFound as GCSNotFound
 import markus
+from markus.backends import BackendBase
 from markus.testing import MetricsMock
 import pytest
 
@@ -31,10 +32,27 @@ from antenna.app import reset_verify_funs  # noqa
 from testlib.s3mock import S3Mock  # noqa
 
 
+class CaptureMetricsUsed(BackendBase):
+    """Markus backend for capturing all the metrics that were emitted during tests"""
+
+    def __init__(self, options=None, filters=None):
+        self.options = options
+        self.filters = filters
+
+    def emit(self, record):
+        with open("metrics_emitted.txt", "a") as fp:
+            fp.write(f"{record.stat_type}\t{record.key}\t{record.tags!r}\n")
+
+
 def pytest_runtest_setup():
     # Make sure we set up logging and metrics to sane default values.
     setup_logging(logging_level="DEBUG", debug=True, host_id="", processname="antenna")
-    markus.configure([{"class": "markus.backends.logging.LoggingMetrics"}])
+    markus.configure(
+        [
+            {"class": "markus.backends.logging.LoggingMetrics"},
+            {"class": CaptureMetricsUsed},
+        ]
+    )
 
     # Wipe any registered verify functions
     reset_verify_funs()
