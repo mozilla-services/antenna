@@ -27,5 +27,9 @@ urlwait "${CRASHMOVER_CRASHPUBLISH_ENDPOINT_URL}" 15
 urlwait "http://${PUBSUB_EMULATOR_HOST}" 10
 urlwait "${STORAGE_EMULATOR_HOST}/storage/v1/b" 10
 
+if [ -f metrics_emitted.txt ]; then
+    rm metrics_emitted.txt
+fi
+
 # Run tests
 "${PYTEST}" $@
