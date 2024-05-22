@@ -14,12 +14,11 @@ _IS_MARKUS_SETUP = False
 LOGGER = logging.getLogger(__name__)
 
 
-def setup_metrics(statsd_host, statsd_port, statsd_namespace, debug=False):
+def setup_metrics(statsd_host, statsd_port, debug=False):
     """Initialize and configures the metrics system.
 
     :arg statsd_host: the statsd host to send metrics to
     :arg statsd_port: the port on the host to send metrics to
-    :arg statsd_namespace: the namespace (if any) for these metrics
     :arg debug: whether or not to additionally log metrics to the logger
 
     """
@@ -33,7 +32,6 @@ def setup_metrics(statsd_host, statsd_port, statsd_namespace, debug=False):
             "options": {
                 "statsd_host": statsd_host,
                 "statsd_port": statsd_port,
-                "statsd_namespace": statsd_namespace,
             },
         }
     ]
