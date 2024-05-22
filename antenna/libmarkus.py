@@ -48,3 +48,6 @@ def setup_metrics(statsd_host, statsd_port, debug=False):
     markus.configure(markus_backends)
 
     _IS_MARKUS_SETUP = True
+
+
+METRICS = markus.get_metrics()

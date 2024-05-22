@@ -8,13 +8,12 @@ import logging
 import os
 
 import falcon
-import markus
 
 from antenna.libdockerflow import get_version_info
+from antenna.libmarkus import METRICS
 
 
 logger = logging.getLogger(__name__)
-mymetrics = markus.get_metrics("health")
 
 
 class BrokenResource:
@@ -22,7 +21,7 @@ class BrokenResource:
 
     def on_get(self, req, resp):
         """Implement GET HTTP request."""
-        mymetrics.incr("broken.count")
+        METRICS.incr("health.broken.count")
         # This is intentional breakage
         raise Exception("intentional exception")
 
@@ -35,7 +34,7 @@ class VersionResource:
 
     def on_get(self, req, resp):
         """Implement GET HTTP request."""
-        mymetrics.incr("version.count")
+        METRICS.incr("health.version.count")
         version_info = get_version_info(self.basedir)
         # FIXME(willkg): there's no cloud provider environment variable to use, so
         # we'll cheat and look at whether there's a "gcs" in
@@ -57,7 +56,7 @@ class LBHeartbeatResource:
 
     def on_get(self, req, resp):
         """Implement GET HTTP request."""
-        mymetrics.incr("lbheartbeat.count")
+        METRICS.incr("health.lbheartbeat.count")
         resp.content_type = "application/json; charset=utf-8"
         resp.status = falcon.HTTP_200
 
@@ -99,7 +98,7 @@ class HeartbeatResource:
 
     def on_get(self, req, resp):
         """Implement GET HTTP request."""
-        mymetrics.incr("heartbeat.count")
+        METRICS.incr("health.heartbeat.count")
         state = HealthState()
 
         # So we're going to think of Antenna like a big object graph and
@@ -111,8 +110,8 @@ class HeartbeatResource:
                 resource.check_health(state)
 
         # Go through and call gauge for each statsd item.
-        for k, v in state.statsd.items():
-            mymetrics.gauge(k, value=v)
+        for key, value in state.statsd.items():
+            METRICS.gauge(f"health.{key}", value=value)
 
         if state.is_healthy():
             resp.status = falcon.HTTP_200
