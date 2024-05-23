@@ -15,7 +15,7 @@ from everett.manager import Option
 from antenna.util import retry
 
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 class KeyNotFound(Exception):
@@ -143,7 +143,7 @@ class S3Connection:
             ValueError,
         ],
         wait_time_generator=wait_times_connect,
-        module_logger=logger,
+        module_logger=LOGGER,
     )
     def _build_client(self):
         # Either they provided ACCESS_KEY and SECRET_ACCESS_KEY in which case
@@ -195,7 +195,7 @@ class S3Connection:
             ClientError
         ],
         wait_time_generator=wait_times_save,
-        module_logger=logger,
+        module_logger=LOGGER,
     )
     def save_file(self, path, data):
         """Save a single file to S3.
@@ -226,7 +226,7 @@ class S3Connection:
             ClientError
         ],
         wait_time_generator=wait_times_save,
-        module_logger=logger,
+        module_logger=LOGGER,
     )
     def load_file(self, path):
         """Load a file from S3.

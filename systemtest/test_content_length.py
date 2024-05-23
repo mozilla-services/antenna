@@ -4,15 +4,11 @@
 
 from http.client import HTTPConnection, HTTPSConnection, RemoteDisconnected
 from contextlib import contextmanager
-import logging
 import urllib
 
 import pytest
 
 from testlib import mini_poster
-
-
-logger = logging.getLogger(__name__)
 
 
 @contextmanager

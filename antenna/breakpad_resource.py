@@ -29,7 +29,7 @@ from antenna.util import (
 )
 
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 #: Bad fields we should never save, so remove them from the payload before
@@ -234,13 +234,13 @@ class BreakpadSubmitterResource:
                         # If there was a problem extracting the value as text, then log
                         # it and add a note
                         msg = f"extract payload text part exception: {mpe.description}"
-                        logger.error(msg)
+                        LOGGER.error(msg)
                         crash_report.notes.append(msg)
 
                 else:
                     if part.content_type != "application/octet-stream":
                         msg = f"unknown content type: {part.name} {part.content_type}"
-                        logging.info(msg)
+                        LOGGER.info(msg)
                         crash_report.notes.append(msg)
 
                     # This is a dump, so add it to dumps using a sanitized dump name.
@@ -253,7 +253,7 @@ class BreakpadSubmitterResource:
             # 1. boundaries are missing or malformed
             # 2. missing EOL sequences
             # 3. file parts are missing Content-Type declaration
-            logger.error(f"extract payload exception: {mpe.description}")
+            LOGGER.error(f"extract payload exception: {mpe.description}")
             raise MalformedCrashReport("invalid_payload_structure") from mpe
 
         if not crash_report.annotations:
@@ -263,7 +263,7 @@ class BreakpadSubmitterResource:
             # If the crash payload has both kvpairs and a JSON blob, then it's malformed
             # so we add a note and log it.
             msg = "includes annotations in both json-encoded extra and formdata parts"
-            logger.info(msg)
+            LOGGER.info(msg)
             crash_report.notes.append(msg)
 
         # Add a note about how the annotations were encoded in the crash report. For
@@ -365,7 +365,7 @@ class BreakpadSubmitterResource:
         # one.
         if "uuid" in raw_crash and validate_crash_id(raw_crash["uuid"]):
             crash_id = raw_crash["uuid"]
-            logger.info("%s has existing crash_id", crash_id)
+            LOGGER.info("%s has existing crash_id", crash_id)
 
         else:
             crash_id = create_crash_id(
@@ -374,7 +374,7 @@ class BreakpadSubmitterResource:
             raw_crash["uuid"] = crash_id
 
         # Log throttle result and add to raw crash
-        logger.info(
+        LOGGER.info(
             "%s: matched by %s; returned %s",
             crash_id,
             rule_name,

@@ -14,7 +14,7 @@ from antenna.ext.crashpublish_base import CrashPublishBase
 from antenna.util import retry
 
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 def wait_times_connect():
@@ -124,7 +124,7 @@ class SQSCrashPublish(CrashPublishBase):
             ValueError,
         ],
         wait_time_generator=wait_times_connect,
-        module_logger=logger,
+        module_logger=LOGGER,
     )
     def _build_client(self):
         # Either they provided ACCESS_KEY and SECRET_ACCESS_KEY in which case

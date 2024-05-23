@@ -4,16 +4,12 @@
 
 from collections import OrderedDict
 import json
-import logging
 import os
 
 import falcon
 
 from antenna.libdockerflow import get_version_info
 from antenna.libmarkus import METRICS
-
-
-logger = logging.getLogger(__name__)
 
 
 class BrokenResource:

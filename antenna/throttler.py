@@ -19,7 +19,7 @@ import re
 from everett.manager import Option
 
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 ACCEPT = 0  # save and process
@@ -250,7 +250,7 @@ def match_b2g(throttler, data):
         and safe_get(data, "ProductName").lower() == "b2g"
     )
     if is_b2g:
-        logger.info("ProductName B2G: fake accept")
+        LOGGER.info("ProductName B2G: fake accept")
         return True
     return False
 
@@ -262,7 +262,7 @@ def match_unsupported_product(throttler, data):
     is_not_supported = products and product_name not in products
 
     if is_not_supported:
-        logger.info("ProductName rejected: %r", product_name)
+        LOGGER.info("ProductName rejected: %r", product_name)
         return True
     return False
 
@@ -280,11 +280,11 @@ def match_unsupported_android_packagename(throttler, data):
         # NOTE(willkg): safe_get converts None to "None", so we need to test for that
         # here
         if packagename == "None":
-            logger.info(
+            LOGGER.info(
                 "Android_PackageName rejected: %s no Android_PackageName", product_name
             )
         else:
-            logger.info(
+            LOGGER.info(
                 "Android_PackageName rejected: %s %r", product_name, packagename
             )
         return True

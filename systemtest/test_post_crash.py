@@ -12,7 +12,7 @@ import pytest
 from testlib import mini_poster
 
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 def utc_now():
@@ -54,8 +54,8 @@ class TestPostCrash:
         time.sleep(SLEEP_TIME)
 
         crash_id = content_to_crashid(resp.content)
-        logger.debug("Crash ID is: %s", crash_id)
-        logger.debug("Storage helper: %s", storage_helper.get_config())
+        LOGGER.debug("Crash ID is: %s", crash_id)
+        LOGGER.debug("Storage helper: %s", storage_helper.get_config())
 
         # Verify stored and published crash data
         crash_verifier.verify_stored_data(crash_id, raw_crash, dumps, storage_helper)
@@ -82,8 +82,8 @@ class TestPostCrash:
         time.sleep(SLEEP_TIME)
 
         crash_id = content_to_crashid(resp.content)
-        logger.debug("Crash ID is: %s", crash_id)
-        logger.debug("Storage helper: %s", storage_helper.get_config())
+        LOGGER.debug("Crash ID is: %s", crash_id)
+        LOGGER.debug("Storage helper: %s", storage_helper.get_config())
 
         # Verify stored and published crash data
         crash_verifier.verify_stored_data(crash_id, raw_crash, dumps, storage_helper)
