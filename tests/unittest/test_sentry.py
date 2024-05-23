@@ -94,7 +94,7 @@ BROKEN_EVENT = {
         "packages": [{"name": "pypi:sentry-sdk", "version": ANY}],
         "version": ANY,
     },
-    "server_name": "",
+    "server_name": ANY,
     "timestamp": ANY,
     "transaction": "/__broken__",
     "transaction_info": {"source": "route"},

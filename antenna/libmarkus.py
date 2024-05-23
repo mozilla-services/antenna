@@ -7,22 +7,25 @@
 import logging
 
 import markus
+from markus.filters import AddTagFilter
 
 
 _IS_MARKUS_SETUP = False
 
 LOGGER = logging.getLogger(__name__)
+METRICS = markus.get_metrics()
 
 
-def setup_metrics(statsd_host, statsd_port, debug=False):
+def setup_metrics(statsd_host, statsd_port, hostname, debug=False):
     """Initialize and configures the metrics system.
 
     :arg statsd_host: the statsd host to send metrics to
     :arg statsd_port: the port on the host to send metrics to
+    :arg hostname: the host name
     :arg debug: whether or not to additionally log metrics to the logger
 
     """
-    global _IS_MARKUS_SETUP
+    global _IS_MARKUS_SETUP, METRICS
     if _IS_MARKUS_SETUP:
         return
 
@@ -45,9 +48,10 @@ def setup_metrics(statsd_host, statsd_port, debug=False):
                 },
             }
         )
+
+    if hostname:
+        METRICS.filters.append(AddTagFilter(f"host:{hostname}"))
+
     markus.configure(markus_backends)
 
     _IS_MARKUS_SETUP = True
-
-
-METRICS = markus.get_metrics()
