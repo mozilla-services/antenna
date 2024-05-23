@@ -5,6 +5,7 @@
 import logging
 import logging.config
 from pathlib import Path
+import socket
 import sys
 
 from everett.manager import (
@@ -69,7 +70,7 @@ def configure_sentry(app_config):
     set_up_sentry(
         sentry_dsn=app_config("secret_sentry_dsn"),
         release=get_release_name(app_config("basedir")),
-        host_id=app_config("host_id"),
+        host_id=app_config("hostname"),
         # Disable frame-local variables
         with_locals=False,
         # Disable request data from being added to Sentry events
@@ -132,14 +133,15 @@ class AntennaApp(falcon.App):
                 "will be used instead."
             ),
         )
-        host_id = Option(
-            default="",
+        hostname = Option(
+            default=socket.gethostname(),
             doc=(
                 "Identifier for the host that is running Antenna. This identifies this Antenna "
                 "instance in the logs and makes it easier to correlate Antenna logs with "
-                "other data. For example, the value could be a public hostname, an instance id, "
-                "or something like that. If you do not set this, then socket.gethostname() is "
-                "used instead."
+                "other data. For example, the value could be a an instance id, pod id, "
+                "or something like that.\n"
+                "\n"
+                "If you do not set this, then ``socket.gethostname()`` is used instead."
             ),
         )
 
@@ -211,6 +213,7 @@ class AntennaApp(falcon.App):
         setup_metrics(
             statsd_host=self.config("statsd_host"),
             statsd_port=self.config("statsd_port"),
+            hostname=self.config("hostname"),
             debug=self.config("local_dev_env"),
         )
 
@@ -281,7 +284,7 @@ def get_app(config_manager=None):
     setup_logging(
         logging_level=app_config("logging_level"),
         debug=app_config("local_dev_env"),
-        host_id=app_config("host_id"),
+        host_id=app_config("hostname"),
         processname="antenna",
     )
 
