@@ -14,7 +14,7 @@ from antenna.ext.crashstorage_base import CrashStorageBase, CrashIDNotFound
 from antenna.util import get_date_from_crash_id, json_ordered_dumps
 
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 class FSCrashStorage(CrashStorageBase):
@@ -87,7 +87,7 @@ class FSCrashStorage(CrashStorageBase):
         )
 
     def _save_file(self, fn, contents):
-        logger.debug("Saving file %r", fn)
+        LOGGER.debug("Saving file %r", fn)
         path = os.path.dirname(fn)
 
         # FIXME(willkg): What happens if there is something here already and
@@ -96,7 +96,7 @@ class FSCrashStorage(CrashStorageBase):
             try:
                 os.makedirs(path)
             except OSError:
-                logger.exception("Threw exception while trying to make path %r", path)
+                LOGGER.exception("Threw exception while trying to make path %r", path)
                 # FIXME(willkg): If we ever make this production-ready, we
                 # need a better option here.
                 return

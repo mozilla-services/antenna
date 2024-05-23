@@ -5,7 +5,7 @@
 import logging
 
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 class CrashIDNotFound(Exception):
@@ -57,7 +57,7 @@ class NoOpCrashStorage(CrashStorageBase):
 
     def save_crash(self, crash_report):
         crash_id = crash_report.crash_id
-        logger.info("crash storage no-op: %s", crash_id)
+        LOGGER.info("crash storage no-op: %s", crash_id)
         self.saved_things.append(crash_report)
 
         # Nix all but the last 10 crashes

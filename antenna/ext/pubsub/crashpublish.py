@@ -13,7 +13,7 @@ from antenna.ext.crashpublish_base import CrashPublishBase
 from antenna.app import register_for_verification
 
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 class PubSubCrashPublish(CrashPublishBase):
@@ -86,7 +86,7 @@ class PubSubCrashPublish(CrashPublishBase):
         self.topic_name = self.config("topic_name")
 
         if emulator := os.environ.get("PUBSUB_EMULATOR_HOST"):
-            logger.debug(
+            LOGGER.debug(
                 "PUBSUB_EMULATOR_HOST detected, connecting to emulator: %s",
                 emulator,
             )

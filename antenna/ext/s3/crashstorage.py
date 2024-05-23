@@ -3,7 +3,6 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import json
-import logging
 
 from everett.manager import Option, parse_class
 
@@ -11,9 +10,6 @@ from antenna.app import register_for_verification
 from antenna.crashmover import CrashReport
 from antenna.ext.crashstorage_base import CrashStorageBase, CrashIDNotFound
 from antenna.util import get_date_from_crash_id, json_ordered_dumps
-
-
-logger = logging.getLogger(__name__)
 
 
 class S3CrashStorage(CrashStorageBase):

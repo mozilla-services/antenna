@@ -5,7 +5,7 @@
 import logging
 
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 class CrashPublishBase:
@@ -47,7 +47,7 @@ class NoOpCrashPublish(CrashPublishBase):
     def publish_crash(self, crash_report):
         """Publish the crash id."""
         crash_id = crash_report.crash_id
-        logger.info("crash publish no-op: %s", crash_id)
+        LOGGER.info("crash publish no-op: %s", crash_id)
         self.published_things.append({"crash_id": crash_id})
 
         # Nix all but the last 10 crashes

@@ -15,7 +15,7 @@ import isodate
 from more_itertools import peekable
 
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 UTC = isodate.UTC
@@ -227,12 +227,12 @@ def retry(
     Example with arguments::
 
         import logging
-        logger = logging.getLogger(__name__)
+        LOGGER = logging.getLogger(__name__)
 
         @retry(
             retryable_exceptions=[SocketTimeout, ConnectionError],
             retryable_return=lambda resp: resp.status_code != 200,
-            module_logger=logger
+            module_logger=LOGGER
         )
         def some_thing_that_does_connections():
             pass

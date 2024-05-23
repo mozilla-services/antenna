@@ -17,7 +17,8 @@ from antenna.crashmover import CrashReport
 from antenna.ext.crashstorage_base import CrashStorageBase, CrashIDNotFound
 from antenna.util import get_date_from_crash_id, json_ordered_dumps
 
-logger = logging.getLogger(__name__)
+
+LOGGER = logging.getLogger(__name__)
 
 
 def generate_test_filepath():
@@ -83,7 +84,7 @@ class GcsCrashStorage(CrashStorageBase):
         self.bucket = self.config("bucket_name")
 
         if emulator := os.environ.get("STORAGE_EMULATOR_HOST"):
-            logger.debug(
+            LOGGER.debug(
                 "STORAGE_EMULATOR_HOST detected, connecting to emulator: %s",
                 emulator,
             )
