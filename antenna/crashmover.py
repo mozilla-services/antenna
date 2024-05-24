@@ -17,7 +17,7 @@ LOGGER = logging.getLogger(__name__)
 def _incr_wait_generator(counter, attempts, sleep_seconds):
     def _generator_generator():
         for _ in range(attempts - 1):
-            METRICS.incr(f"crashmover.{counter}")
+            METRICS.incr(f"collector.crashmover.{counter}")
             yield sleep_seconds
 
     return _generator_generator
@@ -124,7 +124,7 @@ class CrashMover:
         if hasattr(self.crashpublish, "check_health"):
             self.crashpublish.check_health(state)
 
-    @METRICS.timer("crashmover.crash_handling.time")
+    @METRICS.timer("collector.crashmover.crash_handling.time")
     def handle_crashreport(self, raw_crash, dumps, crash_id):
         """Handle a new crash report synchronously and return whether that succeeded.
 
@@ -143,27 +143,27 @@ class CrashMover:
         except MaxAttemptsError:
             # After max attempts, we give up on this crash
             LOGGER.error("%s: too many errors trying to save; dropped", crash_id)
-            METRICS.incr("crashmover.save_crash_dropped.count")
+            METRICS.incr("collector.crashmover.save_crash_dropped.count")
             return False
 
         try:
             self.crashmover_publish_with_retry(crash_report)
-            METRICS.incr("crashmover.save_crash.count")
+            METRICS.incr("collector.crashmover.save_crash.count")
         except MaxAttemptsError:
             LOGGER.error("%s: too many errors trying to publish; dropped", crash_id)
-            METRICS.incr("crashmover.publish_crash_dropped.count")
+            METRICS.incr("collector.crashmover.publish_crash_dropped.count")
             # return True even when publish fails because it will be automatically
             # published later via self-healing mechanisms
 
         return True
 
-    @METRICS.timer("crashmover.crash_save.time")
+    @METRICS.timer("collector.crashmover.crash_save.time")
     def crashmover_save(self, crash_report):
         """Save crash report to storage."""
         self.crashstorage.save_crash(crash_report)
         LOGGER.info("%s saved", crash_report.crash_id)
 
-    @METRICS.timer("crashmover.crash_publish.time")
+    @METRICS.timer("collector.crashmover.crash_publish.time")
     def crashmover_publish(self, crash_report):
         """Publish crash_id in publish queue."""
         self.crashpublish.publish_crash(crash_report)

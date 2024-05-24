@@ -13,7 +13,7 @@ from markus.filters import AddTagFilter
 _IS_MARKUS_SETUP = False
 
 LOGGER = logging.getLogger(__name__)
-METRICS = markus.get_metrics()
+METRICS = markus.get_metrics("socorro")
 
 
 def setup_metrics(statsd_host, statsd_port, hostname, debug=False):

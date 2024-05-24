@@ -19,6 +19,34 @@ from antenna.throttler import ACCEPT
 from testlib.mini_poster import compress, multipart_encode
 
 
+class AnyTagValue:
+    """Matches a markus metrics tag with any value"""
+
+    def __init__(self, key):
+        self.key = key
+
+    def __repr__(self):
+        return f"<AnyTagValue {self.key}>"
+
+    def get_other_key(self, other):
+        # This is comparing against a tag string
+        if ":" in other:
+            other_key, _ = other.split(":")
+        else:
+            other_key = other
+        return other_key
+
+    def __eq__(self, other):
+        if isinstance(other, AnyTagValue):
+            return self.key == other.key
+        return self.key == self.get_other_key(other)
+
+    def __lt__(self, other):
+        if isinstance(other, AnyTagValue):
+            return self.key < other.key
+        return self.key < self.get_other_key(other)
+
+
 class FakeCrashMover:
     """Fake crash mover that raises an error when used"""
 
@@ -346,13 +374,14 @@ class TestBreakpadSubmitterResourceExtract:
         with pytest.raises(MalformedCrashReport, match="invalid_json_value"):
             bsp.extract_payload(req)
 
-    def text_extract_payload_kvpairs_and_json(self, request_generator, metricsmock):
-        # If there's a JSON blob and also kv pairs, then that's a malformed
-        # crash
+    def test_extract_payload_kvpairs_and_json(self, request_generator, metricsmock):
+        # If there's a JSON blob and also kv pairs, use the annotations from "extra" and
+        # log a note
         data, headers = multipart_encode(
             {
                 "extra": '{"ProductName":"Firefox","Version":"1.0"}',
-                "BadKey": "BadValue",
+                # This annotation is dropped because it's not in "extra"
+                "IgnoredAnnotation": "someval",
                 "upload_file_minidump": ("fakecrash.dump", io.BytesIO(b"abcd1234")),
             }
         )
@@ -363,10 +392,20 @@ class TestBreakpadSubmitterResourceExtract:
         bsp = BreakpadSubmitterResource(
             config=EMPTY_CONFIG, crashmover=FakeCrashMover()
         )
-        with metricsmock as metrics:
-            result = bsp.extract_payload(req)
-            assert result == ({}, {})
-            assert metrics.has_record(stat="malformed", tags=["reason:has_json_and_kv"])
+        crash_report = CrashReport(
+            annotations={
+                "ProductName": "Firefox",
+                "Version": "1.0",
+            },
+            dumps={"upload_file_minidump": b"abcd1234"},
+            notes=[
+                "includes annotations in both json-encoded extra and formdata parts"
+            ],
+            payload="json",
+            payload_compressed="0",
+            payload_size=542,
+        )
+        assert bsp.extract_payload(req) == crash_report
 
 
 @pytest.mark.parametrize(
@@ -405,7 +444,7 @@ def test_get_throttle_result(client):
 
 
 class TestBreakpadSubmitterResourceIntegration:
-    def test_submit_crash_report(self, client):
+    def test_submit_crash_report(self, client, metricsmock):
         data, headers = multipart_encode(
             {
                 "ProductName": "Firefox",
@@ -415,7 +454,9 @@ class TestBreakpadSubmitterResourceIntegration:
             }
         )
 
-        result = client.simulate_post("/submit", headers=headers, body=data)
+        with metricsmock as mm:
+            result = client.simulate_post("/submit", headers=headers, body=data)
+
         assert result.status_code == 200
         assert result.headers["Content-Type"].startswith("text/plain")
         assert result.content.startswith(b"CrashID=bp")
@@ -445,6 +486,22 @@ class TestBreakpadSubmitterResourceIntegration:
             "uuid": crash_id,
             "version": 2,
         }
+
+        mm.assert_histogram("socorro.collector.breakpad_resource.crash_size", value=632)
+        mm.assert_incr("socorro.collector.breakpad_resource.incoming_crash")
+        mm.assert_incr(
+            "socorro.collector.breakpad_resource.throttle_rule",
+            tags=["rule:is_nightly", AnyTagValue("host")],
+        )
+        mm.assert_incr(
+            "socorro.collector.breakpad_resource.throttle",
+            tags=["result:accept", AnyTagValue("host")],
+        )
+        mm.assert_timing("socorro.collector.crashmover.crash_save.time")
+        mm.assert_timing("socorro.collector.crashmover.crash_publish.time")
+        mm.assert_incr("socorro.collector.crashmover.save_crash.count")
+        mm.assert_timing("socorro.collector.crashmover.crash_handling.time")
+        mm.assert_timing("socorro.collector.breakpad_resource.on_post.time")
 
     def test_existing_uuid(self, client):
         """Verify if the crash report has a uuid already, it's reused."""

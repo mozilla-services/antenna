@@ -146,4 +146,4 @@ def test_count_sentry_scrub_error():
     with MetricsMock() as metricsmock:
         metricsmock.clear_records()
         count_sentry_scrub_error("foo")
-        metricsmock.assert_incr("app.sentry_scrub_error", value=1)
+        metricsmock.assert_incr("socorro.collector.sentry_scrub_error", value=1)
