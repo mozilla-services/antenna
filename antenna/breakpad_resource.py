@@ -143,7 +143,7 @@ class BreakpadSubmitterResource:
 
         # Decompress payload if it's compressed
         if req.env.get("HTTP_CONTENT_ENCODING") == "gzip":
-            METRICS.incr("breakpad_resource.gzipped_crash")
+            METRICS.incr("collector.breakpad_resource.gzipped_crash")
             crash_report.payload_compressed = "1"
 
             # If the content is gzipped, we pull it out and decompress it. We
@@ -154,13 +154,13 @@ class BreakpadSubmitterResource:
             try:
                 data = zlib.decompress(req.stream.read(content_length), gzip_header)
                 METRICS.histogram(
-                    "breakpad_resource.gzipped_crash_decompress",
+                    "collector.breakpad_resource.gzipped_crash_decompress",
                     value=(time.perf_counter() - start_time) * 1000.0,
                     tags=["result:success"],
                 )
             except zlib.error as exc:
                 METRICS.histogram(
-                    "breakpad_resource.gzipped_crash_decompress",
+                    "collector.breakpad_resource.gzipped_crash_decompress",
                     value=(time.perf_counter() - start_time) * 1000.0,
                     tags=["result:fail"],
                 )
@@ -178,7 +178,7 @@ class BreakpadSubmitterResource:
 
             data = io.BytesIO(data)
             METRICS.histogram(
-                "breakpad_resource.crash_size",
+                "collector.breakpad_resource.crash_size",
                 value=content_length,
                 tags=["payload:compressed"],
             )
@@ -186,7 +186,7 @@ class BreakpadSubmitterResource:
         else:
             data = req.bounded_stream
             METRICS.histogram(
-                "breakpad_resource.crash_size",
+                "collector.breakpad_resource.crash_size",
                 value=content_length,
                 tags=["payload:uncompressed"],
             )
@@ -261,7 +261,7 @@ class BreakpadSubmitterResource:
 
         if has_json and has_kvpairs:
             # If the crash payload has both kvpairs and a JSON blob, then it's malformed
-            # so we add a note and log it.
+            # so we add a note and log it, but we don't reject it
             msg = "includes annotations in both json-encoded extra and formdata parts"
             LOGGER.info(msg)
             crash_report.notes.append(msg)
@@ -302,7 +302,7 @@ class BreakpadSubmitterResource:
                 del raw_crash[bad_field]
                 notes.append("Removed %s from raw crash." % bad_field)
 
-    @METRICS.timer_decorator("breakpad_resource.on_post.time")
+    @METRICS.timer_decorator("collector.breakpad_resource.on_post.time")
     def on_post(self, req, resp):
         """Handle incoming HTTP POSTs.
 
@@ -324,12 +324,14 @@ class BreakpadSubmitterResource:
         except MalformedCrashReport as exc:
             # If this is malformed, then reject it with malformed error code.
             msg = str(exc)
-            METRICS.incr("breakpad_resource.malformed", tags=["reason:%s" % msg])
+            METRICS.incr(
+                "collector.breakpad_resource.malformed", tags=["reason:%s" % msg]
+            )
             resp.status = falcon.HTTP_400
             resp.text = "Discarded=malformed_%s" % msg
             return
 
-        METRICS.incr("breakpad_resource.incoming_crash")
+        METRICS.incr("collector.breakpad_resource.incoming_crash")
 
         raw_crash = crash_report.annotations
 
@@ -380,9 +382,11 @@ class BreakpadSubmitterResource:
             rule_name,
             RESULT_TO_TEXT[throttle_result],
         )
-        METRICS.incr("breakpad_resource.throttle_rule", tags=["rule:%s" % rule_name])
         METRICS.incr(
-            "breakpad_resource.throttle",
+            "collector.breakpad_resource.throttle_rule", tags=["rule:%s" % rule_name]
+        )
+        METRICS.incr(
+            "collector.breakpad_resource.throttle",
             tags=["result:%s" % RESULT_TO_TEXT[throttle_result].lower()],
         )
         raw_crash["metadata"]["throttle_rule"] = rule_name
