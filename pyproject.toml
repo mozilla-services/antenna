@@ -20,7 +20,7 @@ docstring-quotes = "double"
 [tool.pytest.ini_options]
 addopts = "-rsxX --tb=native --showlocals -m 'not gcp'"
 norecursedirs = [".git", "docs", "bin"]
-testpaths = "tests/unittest/"
+testpaths = "tests/"
 
 markers = [
     "aws: tests that require aws backends to be configured in the environment. this is the default.",

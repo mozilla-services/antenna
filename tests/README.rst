@@ -1,29 +1,25 @@
-============
-Tests README
-============
+======
+README
+======
 
-In this directory are all the tests for Antenna. Each subdirectory holds a
-different test system. Consult the README in the subdirectory for details
-on setting up and running those tests.
+These test the Antenna code. We use the pytest test runner.
+
+Contents of this directory::
+
+    data/       -- holds test data
+    conftest.py -- holds pytest fixtures
+    test_*.py   -- a test file
 
 
-Subdirectories
-==============
+Run these tests from the repository root using::
 
-**tests/data/**
+    make test
 
-    Data to make it easier to test a local instance.
 
-**tests/unittest/**
+To run a single test or group of tests or with different options, do::
 
-    These are written in Python, use pytest as the test runner and are run
-    during normal development to unit test the code in Antenna.
+    make testshell
 
-    Run these with::
 
-        $ make test
-
-    Run with more options with::
-
-        $ make testshell
-        app@xxx:/app$ pytest
+This gives you a bash shell in the docker container where you can more easily
+do test runs and debugging.
