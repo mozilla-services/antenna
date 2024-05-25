@@ -24,7 +24,7 @@ import pytest
 
 
 # Add repository root so we can import antenna and testlib.
-REPO_ROOT = Path(__file__).parent.parent.parent
+REPO_ROOT = Path(__file__).parent.parent.resolve()
 sys.path.insert(0, str(REPO_ROOT))
 
 from antenna.app import get_app, setup_logging  # noqa

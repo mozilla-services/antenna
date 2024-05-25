@@ -214,7 +214,7 @@ production, see documentation_.
 
       <pytest output>
 
-      app@...$ pytest tests/unittest/test_crashstorage.py
+      app@...$ pytest tests/test_crashstorage.py
 
    We're using pytest_ for a test harness and test discovery.
 
@@ -423,7 +423,7 @@ For example:
 
    <pytest output>
 
-   app@...$ pytest tests/unittest/test_crashstorage.py
+   app@...$ pytest tests/test_crashstorage.py
 
 We're using pytest_ for a test harness and test discovery.
 

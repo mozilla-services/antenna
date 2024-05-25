@@ -7,7 +7,9 @@ import sys
 
 from click.testing import CliRunner
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "bin"))
+# Add bin/ directory so we can import scripts
+REPO_ROOT = Path(__file__).parent.parent.resolve()
+sys.path.insert(0, str(REPO_ROOT / "bin"))
 
 
 class TestPubSubCli:
