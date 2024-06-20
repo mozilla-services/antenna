@@ -19,7 +19,6 @@ from falcon.errors import HTTPInternalServerError
 from fillmore.libsentry import set_up_sentry
 from fillmore.scrubber import Scrubber, Rule, SCRUB_RULES_DEFAULT
 import sentry_sdk
-from sentry_sdk.hub import Hub
 from sentry_sdk.integrations.atexit import AtexitIntegration
 from sentry_sdk.integrations.boto3 import Boto3Integration
 from sentry_sdk.integrations.dedupe import DedupeIntegration
@@ -72,9 +71,9 @@ def configure_sentry(app_config):
         release=get_release_name(app_config("basedir")),
         host_id=app_config("hostname"),
         # Disable frame-local variables
-        with_locals=False,
+        include_local_variables=False,
         # Disable request data from being added to Sentry events
-        request_bodies="never",
+        max_request_body_size="never",
         # All integrations should be intentionally enabled
         default_integrations=False,
         integrations=[
@@ -171,22 +170,22 @@ class AntennaApp(falcon.App):
         """
         # NOTE(willkg): we might be able to get rid of the sentry event capture if the
         # FalconIntegration in sentry-sdk gets fixed
-        with sentry_sdk.configure_scope() as scope:
-            # The SentryWsgiMiddleware tacks on an unhelpful transaction value which
-            # makes things hard to find in the Sentry interface, so we stomp on that
-            # with the req.path
-            scope.transaction.name = req.path
-            hub = Hub.current
+        scope = sentry_sdk.Scope.get_current_scope()
+        # As of sentry-sdk 2.6.0, the SentryWsgiMiddleware tacks on an unhelpful
+        # transaction value "generic WSGI request" which makes things hard to find in
+        # the Sentry interface, so we stomp on that with the req.path
+        scope.set_transaction_name(req.path)
 
-            event, hint = event_from_exception(
-                ex,
-                client_options=hub.client.options,
-                mechanism={"type": "antenna", "handled": False},
-            )
+        # Build the sentry event and capture it
+        sentry_client = sentry_sdk.Scope.get_client()
+        event, hint = event_from_exception(
+            ex,
+            client_options=sentry_client.options,
+            mechanism={"type": "antenna", "handled": False},
+        )
+        sentry_sdk.capture_event(event, hint=hint)
 
-            event["transaction"] = req.path
-            hub.capture_event(event, hint=hint)
-
+        # Log an error and then have Falcon compose an error response
         LOGGER.error("Unhandled exception", exc_info=sys.exc_info())
         self._compose_error_response(req, resp, HTTPInternalServerError())
 
