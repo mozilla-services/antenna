@@ -18,7 +18,7 @@ google-cloud-pubsub==2.21.1
 bandit==1.7.8
 click==8.1.7
 freezegun==1.5.0
-more-itertools==10.2.0
+more-itertools==10.3.0
 pip-tools==7.4.1
 pytest==8.2.1
 requests==2.32.3
