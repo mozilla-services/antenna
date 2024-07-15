@@ -30,23 +30,3 @@ class TestGcsCli:
         runner = CliRunner()
         result = runner.invoke(gcs_group, [])
         assert result.exit_code == 0
-
-
-class TestS3Cli:
-    def test_basic(self):
-        """Basic test to make sure s3_cli imports and runs at all."""
-        from s3_cli import s3_group
-
-        runner = CliRunner()
-        result = runner.invoke(s3_group, [])
-        assert result.exit_code == 0
-
-
-class TestSQSCli:
-    def test_basic(self):
-        """Basic test to make sure sqs_cli imports and runs at all."""
-        from sqs_cli import sqs_group
-
-        runner = CliRunner()
-        result = runner.invoke(sqs_group, [])
-        assert result.exit_code == 0

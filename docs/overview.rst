@@ -32,28 +32,17 @@ Requirements
 
 Antenna is built with the following requirements:
 
-1. **Return a crash id to the client quickly**
-
-   Antenna should return a crash id and close the HTTP connection as quickly as
-   possible. This means we need to save to AWS S3 as a separate step.
-
-2. **Try hard not to drop crashes**
-
-   Antenna tries hard not to drop crashes and lose data. It tries to get the
-   crash to AWS S3 as quickly as possible so that it's sitting on as few crash
-   reports as possible.
-
-3. **Minimal dependencies**
+1. **Minimal dependencies**
 
    Every dependency we add is another software cycle we have to track causing us
    to have to update our code when they change.
 
-4. **Make setting it up straight-forward**
+2. **Make setting it up straight-forward**
 
    Antenna should be straight-forward to set up. Minimal configuration options.
    Good defaults. Good documentation.
 
-5. **Easy to test**
+3. **Easy to test**
 
    Antenna should be built in such a way that it's easy to write tests for.
    Tests that are easy to read and easy to write are easy to verify and this
@@ -96,11 +85,11 @@ This is the rough data flow:
 3. Then ``BreakpadSubmitterResource`` passes the data to the crashmover
    to save and publish.
 
-   If crashstorage is ``S3CrashStorage``, then the crashmover saves the crash
-   report data to AWS S3.
+   If crashstorage is ``GcsCrashStorage``, then the crashmover saves the crash
+   report data to Google Cloud Storage.
 
    If the save is successful, then the crashmover publishes the crash report
-   id to the AWS SQS standard queue for processing.
+   id to the Google Cloud Pub/Sub standard queue topic for processing.
 
    At this point, the HTTP POST has been handled, the crash id is sent to the
    crash reporter client and the HTTP connection ends.
@@ -194,12 +183,12 @@ Here are some good ones:
 
 * ``breakpad_resource.crash_save.time``
 
-  Timing. This is the time it took to save the crash to S3.
+  Timing. This is the time it took to save the crash to Google Cloud Storage.
 
 * ``breakpad_resource.crash_handling.time``
 
   Timing. This is the total time the crash was in Antenna-land from receiving
-  the crash to saving it to S3.
+  the crash to saving it to Google Cloud Storage.
 
 
 Sentry
@@ -214,8 +203,8 @@ instance--either will work fine.
 Cloud storage file hierarchy
 ---------------------
 
-If you use the Amazon Web Services S3 or Google Cloud Storage crashstorage
-component, then crashes get saved in this hierarchy in the bucket:
+If you use the Google Cloud Storage crashstorage component, then crashes get
+saved in this hierarchy in the bucket:
 
 * ``/v1/raw_crash/<DATE>/<CRASHID>``
 * ``/v1/dump_names/<CRASHID>``

@@ -23,7 +23,6 @@ export PYTHONPATH=/app/:${PYTHONPATH:-}
 PYTEST="$(which pytest)"
 
 # Wait for services to be ready (both have the same endpoint url)
-urlwait "${CRASHMOVER_CRASHPUBLISH_ENDPOINT_URL}" 15
 urlwait "http://${PUBSUB_EMULATOR_HOST}" 10
 urlwait "${STORAGE_EMULATOR_HOST}/storage/v1/b" 10
 

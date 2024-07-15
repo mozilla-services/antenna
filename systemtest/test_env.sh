@@ -25,17 +25,12 @@ case $1 in
     "local")
         # Whether or not we're running behind nginx and to run nginx tests
         export NGINX_TESTS=0
-        # Whether or not we can verify the file was saved (need access to S3)
+        # Whether or not we can verify the file was saved (need access to GCS)
         export POST_CHECK=1
         # The host to submit to
         export HOST=http://web:8000/
         ;;
-    "stage" | "aws-stage")
-        export NGINX_TESTS=1
-        export POST_CHECK=0
-        export HOST=https://crash-reports.allizom.org/
-        ;;
-    "gcp-stage")
+    "stage" | "gcp-stage")
         export NGINX_TESTS=1
         export POST_CHECK=0
         export HOST=https://antenna-stage.socorro.nonprod.webservices.mozgcp.net/

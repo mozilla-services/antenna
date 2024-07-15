@@ -32,8 +32,8 @@ Antenna exposes several URL endpoints to help you run it at scale.
 ``/__heartbeat__``
 
     This endpoint returns some more data. Depending on how you have Antenna
-    configured, this might do a HEAD on the s3 bucket or other things. It
-    returns its findings in the HTTP response body.
+    configured, this might write a test file to the Google Cloud Storage bucket
+    or other things. It returns its findings in the HTTP response body.
 
 ``/__version__``
 
@@ -64,11 +64,11 @@ Environments
 Will this run in Heroku? Probably, but you'll need to do some Heroku footwork to
 set it up.
 
-Will this run on AWS? Yes--that's what we do.
+Will this run on GCP? Yes--that's what we do.
 
 Will this run on [insert favorite environment]? I have no experience with other
 systems, but it's probably the case you can get it to work. If you can't save
-crashes to Amazon S3, you can always write your own storage class to save it
+crashes to Google Cloud Storage, you can always write your own storage class to save it
 somewhere else.
 
 
@@ -96,11 +96,11 @@ What happens after Antenna collects a crash?
 ============================================
 
 Antenna saves the crash to the crash storage system you specify. We save our
-crashes to AWS S3.
+crashes to Google Cloud Storage.
 
 Then it publishes the crash to the designated crash queue. We queue crashes for
-processing with AWS SQS. The processor pulls crash report ids to process from
-the AWS SQS queue.
+processing with Google Cloud Pub/Sub. The processor pulls crash report ids to
+process from Pub/Sub.
 
 
 Troubleshooting
@@ -122,28 +122,28 @@ Things to check:
 3. Is the configuration correct?
 
 
-AWS S3 bucket permission issues
--------------------------------
+Google Cloud Storage bucket permission issues
+---------------------------------------------
 
-At startup, Antenna will try to Head the AWS S3 bucket and if it fails, will
-refuse to start up. It does this so that it doesn't start up, then get a crash
-and then fail to submit the crash due to permission issues. At that point, you'd
-have lost the crash.
+At startup, Antenna will try to write to the Google Cloud Storage bucket and if it
+fails, will refuse to start up. It does this so that it doesn't start up, then
+get a crash and then fail to submit the crash due to permission issues. At that
+point, you'd have lost the crash.
 
 If you're seeing errors like::
 
-    [ERROR] antenna.app: Unhandled startup exception: ... botocore.exceptions.ClientError:
-    An error occurred (403) when calling the HeadBucket operation: Forbidden
+    2024-07-15 23:15:30,532 DEBUG - antenna - antenna.app - Verifying GcsCrashStorage.verify_write_to_bucket
+    [2024-07-15 23:15:30 +0000] [9] [ERROR] Worker (pid:10) exited with code 3
 
 it means that the credentials that Antenna is using don't have the right
-permissions to the AWS S3 bucket.
+permissions to the Google Cloud Storage bucket.
 
 Things to check:
 
-1. Check the bucket and region that Antenna is configured with. It'll be in the
-   logs when Antenna starts up.
+1. Check the bucket that Antenna is configured with. It'll be in the logs when
+   Antenna starts up.
 
-2. Check that Antenna has the right AWS credentials.
+2. Check that Antenna has the right GCP credentials.
 
 3. Try using the credentials that Antenna is using to access the bucket.
 

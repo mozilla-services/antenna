@@ -20,7 +20,6 @@ from fillmore.libsentry import set_up_sentry
 from fillmore.scrubber import Scrubber, Rule, SCRUB_RULES_DEFAULT
 import sentry_sdk
 from sentry_sdk.integrations.atexit import AtexitIntegration
-from sentry_sdk.integrations.boto3 import Boto3Integration
 from sentry_sdk.integrations.dedupe import DedupeIntegration
 from sentry_sdk.integrations.excepthook import ExcepthookIntegration
 from sentry_sdk.integrations.modules import ModulesIntegration
@@ -78,7 +77,6 @@ def configure_sentry(app_config):
         default_integrations=False,
         integrations=[
             AtexitIntegration(),
-            Boto3Integration(),
             ExcepthookIntegration(),
             DedupeIntegration(),
             StdlibIntegration(),

@@ -109,12 +109,10 @@ class TestContentLength:
         assert status_code in (
             # without LB, nginx drops the connection
             None,
-            # with LB in GCP if nginx drops the connection we get 502, or if LB
-            # times out first we get 408. clients might not retry a 4XX error
-            # like they will a 5XX, so we don't accept a 408 here.
-            502,
-            # with LB in AWS if nginx drops the connection we get 504
-            504,
+            # with GCLB if nginx drops the connection we get 502, or if GCLB
+            # times out first we get 408. Only accept 408 here because we don't
+            # want clients that can't send a body to trigger 5xx alerts.
+            408,
         )
 
     def test_content_length_non_int(self, posturl, crash_generator):

@@ -21,7 +21,7 @@ class FSCrashStorage(CrashStorageBase):
     """Save raw crash files to the file system.
 
     This generates a tree something like this which mirrors what we do
-    on S3:
+    on GCS:
 
     ::
 

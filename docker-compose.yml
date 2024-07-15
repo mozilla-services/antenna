@@ -29,7 +29,6 @@ services:
     links:
       - fakesentry
       - gcs-emulator
-      - localstack
       - pubsub
       - statsd
     volumes:
@@ -49,7 +48,6 @@ services:
     links:
       - fakesentry
       - gcs-emulator
-      - localstack
       - pubsub
       - statsd
     volumes:
@@ -65,7 +63,6 @@ services:
     links:
       - fakesentry
       - gcs-emulator
-      - localstack
       - pubsub
       - statsd
 
@@ -81,7 +78,6 @@ services:
     links:
       - fakesentry
       - gcs-emulator
-      - localstack
       - pubsub
       - statsd
 
@@ -98,7 +94,6 @@ services:
     links:
       - fakesentry
       - gcs-emulator
-      - localstack
       - pubsub
       - statsd
 
@@ -116,18 +111,6 @@ services:
       - --host-port=0.0.0.0:${PUBSUB_PORT:-5010}
     ports:
       - "${EXPOSE_PUBSUB_EMULATOR_PORT:-5010}:5010"
-
-  # https://hub.docker.com/r/localstack/localstack/
-  # localstack running a fake S3 and SQS
-  localstack:
-    image: localstack/localstack:3.4.0
-    environment:
-      - SERVICES=s3,sqs
-      - DEFAULT_REGION=us-east-1
-      - HOSTNAME=localstack
-      - HOSTNAME_EXTERNAL=localstack
-    ports:
-      - "${EXPOSE_LOCALSTACK_PORT:-4566}:4566"
 
   # https://hub.docker.com/r/kamon/grafana_graphite/
   # username: admin, password: admin
