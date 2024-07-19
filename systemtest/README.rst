@@ -21,12 +21,10 @@ In a terminal, run::
     app@xxx:/app$ ./systemtest/test_env.sh ENV
 
 
-Additional arguments will be passed through to pytest. For example, if testing gcp backends, use
-pytest markers to select the tests for the configured cloud provider::
+Additional arguments will be passed through to pytest. For example::
 
     $ make shell
-    app@xxx:/app$ ./systemtest/test_env.sh ENV -m gcp  # only gcp
-    app@xxx:/app$ ./systemtest/test_env.sh ENV -m 'not aws'  # gcp and unmarked
+    app@xxx:/app$ ./systemtest/test_env.sh ENV -- test_dockerflow.py
 
 
 If you're running against ``local``, you'll need to be running antenna
@@ -54,7 +52,7 @@ Rules of systemtest
           if not nginx:
               pytest.skip("test requires nginx")
 
-3. Tests can check S3 to see if a file exists by listing objects, but
+3. Tests can check GCS to see if a file exists by listing objects, but
    cannot get the file.
 
 4. Tests won't check Pub/Sub at all unless they're using the Pub/Sub

@@ -83,7 +83,6 @@ BROKEN_EVENT = {
     "sdk": {
         "integrations": [
             "atexit",
-            "boto3",
             "dedupe",
             "excepthook",
             "modules",

@@ -289,7 +289,7 @@ def cmdline(args):
 
     elif "v1/" in parsed.raw_crash:
         # If there's a 'v1' in the raw_crash filename, then it's probably the case that
-        # willkg wants all the pieces for a crash he pulled from S3. We like willkg, so
+        # willkg wants all the pieces for a crash he pulled from GCS. We like willkg, so
         # we'll help him out by doing the legwork.
         raw_crash_path = Path(parsed.raw_crash)
         if str(raw_crash_path.parents[2]).endswith("v1"):

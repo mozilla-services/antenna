@@ -8,8 +8,6 @@ from pathlib import Path
 import sys
 from unittest import mock
 
-import boto3
-from botocore.client import ClientError as BotoClientError, Config as BotoConfig
 from everett.manager import ConfigManager, ConfigDictEnv, ConfigOSEnv
 from falcon.request import Request
 from falcon.testing.helpers import create_environ
@@ -29,7 +27,6 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from antenna.app import get_app, setup_logging  # noqa
 from antenna.app import reset_verify_funs  # noqa
-from testlib.s3mock import S3Mock  # noqa
 
 
 class CaptureMetricsUsed(BackendBase):
@@ -133,24 +130,6 @@ def client():
 
 
 @pytest.fixture
-def s3mock():
-    """Returns an s3mock context that lets you do S3-related tests
-
-    Usage::
-
-        def test_something(s3mock):
-            s3mock.add_step(
-                method='PUT',
-                url='...'
-                resp=s3mock.fake_response(status_code=200)
-            )
-
-    """
-    with S3Mock() as s3:
-        yield s3
-
-
-@pytest.fixture
 def gcs_client():
     if os.environ.get("STORAGE_EMULATOR_HOST"):
         client = gcs_storage.Client(
@@ -184,49 +163,6 @@ def gcs_helper(gcs_client):
 
     # Tear down
     gcs_client.get_bucket(bucket_name).delete(force=True)
-
-
-@pytest.fixture
-def s3_client():
-    def get_env_var(key):
-        return os.environ[f"CRASHMOVER_CRASHSTORAGE_{key}"]
-
-    session = boto3.session.Session(
-        aws_access_key_id=get_env_var("ACCESS_KEY"),
-        aws_secret_access_key=get_env_var("SECRET_ACCESS_KEY"),
-    )
-    client = session.client(
-        service_name="s3",
-        config=BotoConfig(s3={"addressing_style": "path"}),
-        endpoint_url=get_env_var("ENDPOINT_URL"),
-    )
-    return client
-
-
-@pytest.fixture
-def s3_helper(s3_client):
-    """Sets up bucket, yields s3_client, and tears down when test is done."""
-
-    def delete_bucket(s3_client, bucket_name):
-        resp = s3_client.list_objects(Bucket=bucket_name)
-        for obj in resp.get("Contents", []):
-            key = obj["Key"]
-            s3_client.delete_object(Bucket=bucket_name, Key=key)
-
-        # Then delete the bucket
-        s3_client.delete_bucket(Bucket=bucket_name)
-
-    # Set up
-    bucket_name = os.environ["CRASHMOVER_CRASHSTORAGE_BUCKET_NAME"]
-    try:
-        delete_bucket(s3_client, bucket_name)
-    except BotoClientError:
-        s3_client.create_bucket(Bucket=bucket_name)
-
-    yield s3_client
-
-    # Tear down
-    delete_bucket(s3_client, bucket_name)
 
 
 @pytest.fixture

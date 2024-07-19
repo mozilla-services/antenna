@@ -17,9 +17,7 @@ when you run Antenna using ``docker compose``.
 
 In a server environment, configuration is pulled in from the process environment.
 
-Here's an example. This uses Datadog installed on the EC2 node for metrics and
-also IAM bound to the EC2 node that Antenna is running on so it doesn't need S3
-credentials for crashstorage.
+Here's an example. This uses statsd with datadog extensions installed on localhost for metrics.
 
 ::
 
@@ -27,9 +25,9 @@ credentials for crashstorage.
     STATSD_NAMESPACE=mcboatface
 
     # BreakdpadSubmitterResource settings
-    CRASHMOVER_CRASHSTORAGE_CLASS=antenna.ext.s3.crashstorage.S3CrashStorage
+    CRASHMOVER_CRASHSTORAGE_CLASS=antenna.ext.gcs.crashstorage.GcsCrashStorage
 
-    # S3CrashStorage and S3Connection settings
+    # GcsCrashStorage settings
     CRASHMOVER_CRASHSTORAGE_BUCKET_NAME=org-myorg-mybucket
 
 
@@ -189,42 +187,6 @@ and implement that.
        CRASHMOVER_CRASHSTORAGE_FS_ROOT=/tmp/whatever
 
 
-AWS S3
-------
-
-The ``S3CrashStorage`` class will save crash data to AWS S3. You might be able
-to use this to save to other S3-like systems, but that's not tested or
-supported.
-
-.. autocomponentconfig:: antenna.ext.s3.connection.S3Connection
-   :show-docstring:
-   :case: upper
-   :namespace: crashmover_crashstorage
-   :show-table:
-
-   When set as the CrashMover crashstorage class, configuration
-   for this class is in the ``CRASHMOVER_CRASHSTORAGE`` namespace.
-
-   Example::
-
-       CRASHMOVER_CRASHSTORAGE_BUCKET_NAME=mybucket
-       CRASHMOVER_CRASHSTORAGE_REGION=us-west-2
-       CRASHMOVER_CRASHSTORAGE_ACCESS_KEY=somethingsomething
-       CRASHMOVER_CRASHSTORAGE_SECRET_ACCESS_KEY=somethingsomething
-
-
-.. autocomponentconfig:: antenna.ext.s3.crashstorage.S3CrashStorage
-   :show-docstring:
-   :case: upper
-   :namespace: crashmover_crashstorage
-
-   When set as the CrashMover crashstorage class, configuration
-   for this class is in the ``CRASHMOVER_CRASHSTORAGE`` namespace.
-
-   Generally, if the default connection class is fine, you don't need to do any
-   configuration here.
-
-
 Google Cloud Storage
 --------------------
 
@@ -276,18 +238,3 @@ topic.
    for this class is in the ``CRASHMOVER_CRASHPUBLISH`` namespace.
 
    You need to set the project id and topic name.
-
-
-AWS SQS
--------
-
-The ``SQSCrashPublish`` class will publish crash ids to an AWS SQS queue.
-
-.. autocomponentconfig:: antenna.ext.sqs.crashpublish.SQSCrashPublish
-   :show-docstring:
-   :case: upper
-   :namespace: crashmover_crashpublish
-   :show-table:
-
-   When set as the CrashMover crashpublish class, configuration
-   for this class is in the ``CRASHMOVER_CRASHPUBLISH`` namespace.

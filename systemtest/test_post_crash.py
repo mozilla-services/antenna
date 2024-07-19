@@ -42,7 +42,7 @@ class TestPostCrash:
         crash_verifier,
         postcheck,
     ):
-        """Post a valid crash and verify the contents made it to S3."""
+        """Post a valid crash and verify the contents made it to storage."""
         if not postcheck:
             pytest.skip("no access to storage")
 
@@ -70,7 +70,7 @@ class TestPostCrash:
         crash_verifier,
         postcheck,
     ):
-        """Post a compressed crash and verify contents made it to S3."""
+        """Post a compressed crash and verify contents made it to storage."""
         if not postcheck:
             pytest.skip("no access to storage")
 

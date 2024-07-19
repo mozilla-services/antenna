@@ -7,8 +7,6 @@ from pathlib import Path
 import sys
 import os
 
-import boto3
-from botocore.client import Config
 from everett.manager import ConfigManager, ConfigOSEnv
 from google.cloud import pubsub_v1
 import pytest
@@ -56,21 +54,6 @@ def posturl(config):
     return config("host", default="http://web:8000/").rstrip("/") + "/submit"
 
 
-@pytest.fixture(
-    # define these params once and reference this fixture to prevent undesirable
-    # combinations, i.e. tests marked with aws *and* gcp for pubsub+s3 or sqs+gcs
-    params=[
-        # tests that require a specific cloud provider backend must be marked with that
-        # provider, and non-default backends must be excluded by default, for example
-        # via pytest.ini's addopts, i.e. addopts = -m 'not gcp'
-        pytest.param("aws", marks=pytest.mark.aws),
-        pytest.param("gcp", marks=pytest.mark.gcp),
-    ]
-)
-def cloud_provider(request):
-    return request.param
-
-
 class GcsHelper:
     def __init__(self, bucket):
         self.bucket = bucket
@@ -103,84 +86,10 @@ class GcsHelper:
         return [blob.name for blob in list(bucket.list_blobs(prefix=prefix))]
 
 
-class S3Helper:
-    def __init__(self, access_key, secret_access_key, endpoint_url, region, bucket):
-        self.access_key = access_key
-        self.secret_access_key = secret_access_key
-        self.endpoint_url = endpoint_url
-        self.region = region
-        self.bucket = bucket
-
-        self.logger = logging.getLogger(__name__ + ".s3_helper")
-        self.conn = self.connect()
-
-    def get_config(self):
-        return {
-            "helper": "s3",
-            "endpoint_url": self.endpoint_url,
-            "region": self.region,
-            "bucket": self.bucket,
-        }
-
-    def connect(self):
-        session_kwargs = {}
-        if self.access_key and self.secret_access_key:
-            session_kwargs["aws_access_key_id"] = self.access_key
-            session_kwargs["aws_secret_access_key"] = self.secret_access_key
-
-        session = boto3.session.Session(**session_kwargs)
-
-        client_kwargs = {
-            "service_name": "s3",
-            "region_name": self.region,
-            "config": Config(s3={"addression_style": "path"}),
-        }
-        if self.endpoint_url:
-            client_kwargs["endpoint_url"] = self.endpoint_url
-
-        client = session.client(**client_kwargs)
-        return client
-
-    def dump_key(self, crash_id, name):
-        if name in (None, "", "upload_file_minidump"):
-            name = "dump"
-
-        return f"v1/{name}/{crash_id}"
-
-    def list_objects(self, prefix):
-        """Return list of keys in S3 bucket."""
-        self.logger.info('listing "%s" for prefix "%s"', self.bucket, prefix)
-        resp = self.conn.list_objects(
-            Bucket=self.bucket, Prefix=prefix, RequestPayer="requester"
-        )
-        return [obj["Key"] for obj in resp["Contents"]]
-
-
 @pytest.fixture
-def storage_helper(config, cloud_provider):
+def storage_helper(config):
     """Generate and return a storage helper using env config."""
-    actual_backend = "s3"
-    if (
-        config("crashmover_crashstorage_class")
-        == "antenna.ext.gcs.crashstorage.GcsCrashStorage"
-    ):
-        actual_backend = "gcs"
-
-    expect_backend = "gcs" if cloud_provider == "gcp" else "s3"
-    if actual_backend != expect_backend:
-        pytest.fail(f"test requires {expect_backend} but found {actual_backend}")
-
-    if actual_backend == "gcs":
-        return GcsHelper(
-            bucket=config("crashmover_crashstorage_bucket_name"),
-        )
-    return S3Helper(
-        access_key=config("crashmover_crashstorage_access_key", default=""),
-        secret_access_key=config(
-            "crashmover_crashstorage_secret_access_key", default=""
-        ),
-        endpoint_url=config("crashmover_crashstorage_endpoint_url", default=""),
-        region=config("crashmover_crashstorage_region", default="us-west-2"),
+    return GcsHelper(
         bucket=config("crashmover_crashstorage_bucket_name"),
     )
 
@@ -224,89 +133,15 @@ class PubSubHelper:
         return crashids
 
 
-class SQSHelper:
-    def __init__(self, access_key, secret_access_key, endpoint_url, region, queue_name):
-        self.access_key = access_key
-        self.secret_access_key = secret_access_key
-        self.endpoint_url = endpoint_url
-        self.region = region
-        self.queue_name = queue_name
-        self.client = self.connect()
-
-    def connect(self):
-        session_kwargs = {}
-        if self.access_key and self.secret_access_key:
-            session_kwargs["aws_access_key_id"] = self.access_key
-            session_kwargs["aws_secret_access_key"] = self.secret_access_key
-
-        session = boto3.session.Session(**session_kwargs)
-
-        client_kwargs = {
-            "service_name": "sqs",
-            "region_name": self.region,
-        }
-        if self.endpoint_url:
-            client_kwargs["endpoint_url"] = self.endpoint_url
-
-        client = session.client(**client_kwargs)
-        return client
-
-    def list_crashids(self):
-        """Return crash ids in the SQS queue."""
-        queue_url = self.client.get_queue_url(QueueName=self.queue_name)["QueueUrl"]
-
-        crashids = []
-        while True:
-            resp = self.client.receive_message(
-                QueueUrl=queue_url,
-                WaitTimeSeconds=0,
-                VisibilityTimeout=2,
-            )
-            msgs = resp.get("Messages", [])
-            if not msgs:
-                break
-
-            for msg in msgs:
-                data = msg["Body"]
-                handle = msg["ReceiptHandle"]
-                if data != "test":
-                    crashids.append(data)
-
-                self.client.delete_message(QueueUrl=queue_url, ReceiptHandle=handle)
-
-        return crashids
-
-
 @pytest.fixture
-def queue_helper(config, cloud_provider):
+def queue_helper(config):
     """Generate and return a queue helper using env config."""
-    actual_backend = "sqs"
-    if (
-        config("crashmover_crashpublish_class")
-        == "antenna.ext.pubsub.crashpublish.PubSubCrashPublish"
-    ):
-        actual_backend = "pubsub"
-
-    expect_backend = "pubsub" if cloud_provider == "gcp" else "sqs"
-    if actual_backend != expect_backend:
-        pytest.fail(f"test requires {expect_backend} but found {actual_backend}")
-
-    if actual_backend == "pubsub":
-        return PubSubHelper(
-            project_id=config("crashmover_crashpublish_project_id", default=""),
-            topic_name=config("crashmover_crashpublish_topic_name", default=""),
-            subscription_name=config(
-                "crashmover_crashpublish_subscription_name", default=""
-            ),
-        )
-    return SQSHelper(
-        access_key=config("crashmover_crashpublish_access_key", default=""),
-        secret_access_key=config(
-            "crashmover_crashpublish_secret_access_key", default=""
+    return PubSubHelper(
+        project_id=config("crashmover_crashpublish_project_id", default=""),
+        topic_name=config("crashmover_crashpublish_topic_name", default=""),
+        subscription_name=config(
+            "crashmover_crashpublish_subscription_name", default=""
         ),
-        endpoint_url=config("crashmover_crashpublish_endpoint_url", default=""),
-        region=config("crashmover_crashpublish_region", default=""),
-        queue_name=config("crashmover_crashpublish_queue_name", default=""),
     )
 
 

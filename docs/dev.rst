@@ -48,7 +48,7 @@ production, see documentation_.
 
    Anytime you want to update the containers, you can run ``make build``.
 
-5. Set up local SQS and S3 services:
+5. Set up local Pub/Sub and GCS services:
 
    .. code-block:: shell
 
@@ -79,8 +79,8 @@ production, see documentation_.
          web_1 | [2022-09-13 14:21:45 +0000] [8] [INFO] Using worker: sync
          web_1 | [2022-09-13 14:21:45 +0000] [9] [INFO] Booting worker with pid: 9
          web_1 | 2022-09-13 14:21:45,461 INFO - antenna - antenna.liblogging - set up logging logging_level=DEBUG debug=True host_id=097fa14aec1e processname=antenna
-         web_1 | 2022-09-13 14:21:45,573 DEBUG - antenna - antenna.app - registered S3CrashStorage.verify_write_to_bucket for verification
-         web_1 | 2022-09-13 14:21:45,612 DEBUG - antenna - antenna.app - registered SQSCrashPublish.verify_queue for verification
+         web_1 | 2022-09-13 14:21:45,573 DEBUG - antenna - antenna.app - registered GcsCrashStorage.verify_write_to_bucket for verification
+         web_1 | 2022-09-13 14:21:45,612 DEBUG - antenna - antenna.app - registered PubSubCrashPublish.verify_topic for verification
          web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - BASEDIR=/app
          web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - LOGGING_LEVEL=DEBUG
          web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - LOCAL_DEV_ENV=True
@@ -90,26 +90,19 @@ production, see documentation_.
          web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - SECRET_SENTRY_DSN=*****
          web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - HOST_ID=
          web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - CRASHMOVER_CONCURRENT_CRASHMOVERS=8
-         web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_CLASS=antenna.ext.s3.crashstorage.S3CrashStorage
-         web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_CLASS=antenna.ext.sqs.crashpublish.SQSCrashPublish
-         web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_CONNECTION_CLASS=antenna.ext.s3.connection.S3Connection
-         web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_ACCESS_KEY=foo
-         web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_SECRET_ACCESS_KEY=*****
-         web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_REGION=us-east-1
-         web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_ENDPOINT_URL=http://localstack:4566
+         web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_CLASS=antenna.ext.gcs.crashstorage.GcsCrashStorage
+         web_1 | 2022-09-13 14:21:45,613 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_CLASS=antenna.ext.pubsub.crashpublish.PubSubCrashPublish
          web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - CRASHMOVER_CRASHSTORAGE_BUCKET_NAME=antennabucket
-         web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_ACCESS_KEY=foo
-         web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_SECRET_ACCESS_KEY=*****
-         web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_REGION=us-east-1
-         web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_ENDPOINT_URL=http://localstack:4566
-         web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_QUEUE_NAME=local_dev_socorro_standard
+         web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_PROJECT_ID=local-dev-socorro
+         web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_TOPIC_NAME=local_dev_socorro_standard
+         web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - CRASHMOVER_CRASHPUBLISH_TIMEOUT=5
          web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - BREAKPAD_DUMP_FIELD=upload_file_minidump
          web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - BREAKPAD_THROTTLER_RULES=antenna.throttler.MOZILLA_RULES
          web_1 | 2022-09-13 14:21:45,614 INFO - antenna - antenna.app - BREAKPAD_THROTTLER_PRODUCTS=antenna.throttler.MOZILLA_PRODUCTS
          web_1 | 2022-09-13 14:21:45,661 INFO - antenna - markus.backends.datadog - DatadogMetrics configured: statsd:8125 mcboatface
          web_1 | 2022-09-13 14:21:45,668 DEBUG - antenna - antenna.app - Verification starting.
-         web_1 | 2022-09-13 14:21:45,669 DEBUG - antenna - antenna.app - Verifying SQSCrashPublish.verify_queue
-         web_1 | 2022-09-13 14:21:45,678 DEBUG - antenna - antenna.app - Verifying S3CrashStorage.verify_write_to_bucket
+         web_1 | 2022-09-13 14:21:45,669 DEBUG - antenna - antenna.app - Verifying PubSubCrashPublish.verify_topic
+         web_1 | 2022-09-13 14:21:45,678 DEBUG - antenna - antenna.app - Verifying GcsCrashStorage.verify_write_to_bucket
          web_1 | 2022-09-13 14:21:45,699 DEBUG - antenna - antenna.app - Verification complete: everything is good!
          web_1 | 2022-09-13 14:21:45,699 INFO - antenna - antenna.app - Antenna is running! http://localhost:8000/
          web_1 | 2022-09-13 14:21:45,700 INFO - antenna - markus - METRICS|2022-09-13 14:21:45|gauge|crashmover.work_queue_size|0|
@@ -122,7 +115,7 @@ production, see documentation_.
 
          $ docker compose ps
 
-      You should see containers with names ``web``, ``statsd`` and ``localstack``.
+      You should see containers with names ``web``, ``statsd``, ``pubsub`` and ``gcs-emulator``.
 
    3. Send in a crash report:
 
@@ -155,18 +148,12 @@ production, see documentation_.
          web_1 | 2022-09-13 14:23:19,374 INFO - antenna - markus - METRICS|2022-09-13 14:23:19|incr|crashmover.save_crash.count|1|
          web_1 | 2022-09-13 14:23:22,814 INFO - antenna - markus - METRICS|2022-09-13 14:23:22|gauge|crashmover.work_queue_size|0|
 
-   4. See the data in localstack/gcs-emulator:
+   4. See the data in gcs-emulator:
 
-      The ``localstack`` container stores data in memory and the data doesn't
+      The ``gcs-emulator`` container stores data in memory and the data doesn't
       persist between container restarts.
 
-      You can use the ``bin/s3_cli.py`` to access it:
-
-      .. code-block:: shell
-
-         $ docker compose run --rm web shell python bin/s3_cli.py list_buckets
-
-      For gcs-emulator you can use ``bin/gcs_cli.py`` to access it:
+      You can use the ``bin/gcs_cli.py`` to access it:
 
       .. code-block:: shell
 

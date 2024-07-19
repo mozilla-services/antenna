@@ -49,7 +49,7 @@ class CrashMover:
 
     For example::
 
-        CRASHMOVER_CRASHSTORAGE_CLASS=antenna.ext.s3.crashstorage.S3CrashStorage
+        CRASHMOVER_CRASHSTORAGE_CLASS=antenna.ext.gcs.crashstorage.GcsCrashStorage
 
 
     """

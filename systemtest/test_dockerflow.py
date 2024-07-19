@@ -12,11 +12,10 @@ class TestDockerflow:
         data = resp.json()
         assert isinstance(data, dict)
         data_keys = list(sorted(data.keys()))
-        # It's got "cloud" in the local dev environment and 5 keys in a server
+        # It's got nothing in the local dev environment and 4 keys in a server
         # environment
-        assert data_keys == ["cloud"] or data_keys == [
+        assert data_keys == [] or data_keys == [
             "build",
-            "cloud",
             "commit",
             "source",
             "version",
