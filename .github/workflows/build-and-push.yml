@@ -54,7 +54,7 @@ jobs:
       - name: Run systemtest
         run: |
           make setup
-          docker compose up --detach --wait --wait-timeout=10 web
+          docker compose up --detach --wait --wait-timeout=10 web nginx
           docker compose run --rm web shell systemtest/test_env.sh local
 
       - name: Set Docker image tag to "latest" for updates of the main branch

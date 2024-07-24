@@ -53,7 +53,7 @@ my.env:
 .PHONY: build
 build: my.env  ## | Build docker images.
 	${DC} --progress plain build ${DOCKER_BUILD_OPTS} --build-arg userid=${ANTENNA_UID} --build-arg groupid=${ANTENNA_GID} deploy-base
-	${DC} --progress plain build fakesentry gcs-emulator statsd
+	${DC} --progress plain build fakesentry gcs-emulator statsd nginx
 	touch .docker-build
 
 .PHONY: setup
@@ -65,7 +65,8 @@ run: my.env .docker-build  ## | Run the webapp and services.
 	${DC} up \
 		--attach web \
 		--attach fakesentry \
-		web fakesentry
+		--attach nginx \
+		web fakesentry nginx
 
 .PHONY: devcontainerbuild
 devcontainerbuild: .env  ## | Build VS Code development container.

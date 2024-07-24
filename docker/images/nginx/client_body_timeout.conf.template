@@ -1,0 +1,3 @@
+# must be higher than GCLB timeout so that GCLB returns 408 and
+# known misbehaving clients don't trigger HTTP 5XX alerts
+client_body_timeout $CLIENT_BODY_TIMEOUT;
