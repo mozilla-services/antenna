@@ -39,20 +39,18 @@ jobs:
         run: make build
       - name: Verify requirements.txt contains correct dependencies
         run: |
-          docker compose run --rm --no-deps ci shell ./bin/run_verify_reqs.sh
+          docker compose run --rm --user="$(id --user):$(id --group)" --no-deps test shell ./bin/run_verify_reqs.sh
       - name: Run lint check
         run: |
-          make my.env
-          docker compose run --rm --no-deps ci shell ./bin/run_lint.sh
+          docker compose run --rm --user="$(id --user):$(id --group)" --no-deps test shell ./bin/run_lint.sh
       - name: Run tests
         run: |
-          make my.env
-          docker compose run --rm ci shell ./bin/run_tests.sh
+          docker compose run --rm --user="$(id --user):$(id --group)" test shell ./bin/run_tests.sh
       - name: Run systemtest
         run: |
-          docker compose run --rm ci-web shell ./bin/run_setup.sh
-          docker compose up --detach --wait --wait-timeout=10 ci-web
-          docker compose run --rm ci-web shell bash -c 'cd systemtest && NGINX_TESTS=0 POST_CHECK=1 HOST=http://ci-web:8000 pytest -vv'
+          make setup
+          docker compose up --detach --wait --wait-timeout=10 web
+          docker compose run --rm --user="$(id --user):$(id --group)" web shell bash -c 'cd systemtest && NGINX_TESTS=0 POST_CHECK=1 HOST=http://web:8000 pytest -vv'
 
       - name: Set Docker image tag to "latest" for updates of the main branch
         if: github.ref == 'refs/heads/main'
