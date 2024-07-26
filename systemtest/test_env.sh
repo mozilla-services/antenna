@@ -24,11 +24,11 @@ fi
 case $1 in
     "local")
         # Whether or not we're running behind nginx and to run nginx tests
-        export NGINX_TESTS=0
+        export NGINX_TESTS=1
         # Whether or not we can verify the file was saved (need access to GCS)
         export POST_CHECK=1
         # The host to submit to
-        export HOST=http://web:8000/
+        export HOST=http://nginx:8080/
         ;;
     "stage" | "gcp-stage")
         export NGINX_TESTS=1

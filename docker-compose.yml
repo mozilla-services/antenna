@@ -56,8 +56,6 @@ services:
     env_file:
       - docker/config/local_dev.env
       - my.env
-    ports:
-      - "${EXPOSE_ANTENNA_PORT:-8000}:8000"
     command: web
     links:
       - fakesentry
@@ -102,7 +100,11 @@ services:
     build:
       context: docker/images/gcs-emulator
     image: local/antenna_gcs_emulator
-    command: -port 8001 -scheme http
+    command: >-
+      -port 8001
+      -scheme http
+      -external-url http://gcs-emulator:8001
+      -public-host gcs-emulator:8001
     ports:
       - "${EXPOSE_GCS_EMULATOR_PORT:-8001}:8001"
     healthcheck:
@@ -110,3 +112,15 @@ services:
       interval: 1s
       timeout: 3s
       retries: 5
+
+  nginx:
+    build:
+      context: docker/images/nginx
+    image: local/antenna_nginx
+    environment:
+      - UPSTREAM=web:8000
+      - CLIENT_BODY_TIMEOUT=2s
+    ports:
+      - "${EXPOSE_ANTENNA_PORT:-8000}:8080"
+    links:
+      - web
