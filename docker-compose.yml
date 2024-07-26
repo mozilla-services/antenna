@@ -17,8 +17,6 @@ services:
   # building docs.
   base:
     image: local/antenna_deploy_base
-    volumes:
-      - .:/app
 
   # Test container
   test:
@@ -31,8 +29,6 @@ services:
       - gcs-emulator
       - pubsub
       - statsd
-    volumes:
-      - .:/app
 
   devcontainer:
     build:
@@ -52,34 +48,6 @@ services:
       - statsd
     volumes:
       - .:/app
-
-  # Container that we use in CI--it can't volume mount things
-  ci:
-    image: local/antenna_deploy_base
-    env_file:
-      - docker/config/local_dev.env
-      - docker/config/test.env
-      - my.env
-    links:
-      - fakesentry
-      - gcs-emulator
-      - pubsub
-      - statsd
-
-  # like web but CI can't volume mount things
-  ci-web:
-    image: local/antenna_deploy_base
-    env_file:
-      # exclude docker/config/test.env because this will be used for systemtest
-      # which requires store and publish to actually happen
-      - docker/config/local_dev.env
-      - my.env
-    command: web
-    links:
-      - fakesentry
-      - gcs-emulator
-      - pubsub
-      - statsd
 
   # Web container is a prod-like fully-functioning Antenna container
   web:
