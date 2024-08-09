@@ -8,6 +8,7 @@ import string
 from unittest.mock import ANY
 
 from everett.manager import ConfigManager
+from markus.testing import AnyTagValue
 import pytest
 
 from antenna.breakpad_resource import (
@@ -17,34 +18,6 @@ from antenna.breakpad_resource import (
 )
 from antenna.throttler import ACCEPT
 from testlib.mini_poster import compress, multipart_encode
-
-
-class AnyTagValue:
-    """Matches a markus metrics tag with any value"""
-
-    def __init__(self, key):
-        self.key = key
-
-    def __repr__(self):
-        return f"<AnyTagValue {self.key}>"
-
-    def get_other_key(self, other):
-        # This is comparing against a tag string
-        if ":" in other:
-            other_key, _ = other.split(":")
-        else:
-            other_key = other
-        return other_key
-
-    def __eq__(self, other):
-        if isinstance(other, AnyTagValue):
-            return self.key == other.key
-        return self.key == self.get_other_key(other)
-
-    def __lt__(self, other):
-        if isinstance(other, AnyTagValue):
-            return self.key < other.key
-        return self.key < self.get_other_key(other)
 
 
 class FakeCrashMover:
