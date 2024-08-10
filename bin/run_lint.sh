@@ -12,7 +12,7 @@
 
 set -euo pipefail
 
-FILES="antenna bin testlib tests systemtest"
+FILES="antenna bin docs testlib tests systemtest"
 PYTHON_VERSION=$(python --version)
 
 

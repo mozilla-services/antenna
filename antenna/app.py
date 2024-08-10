@@ -37,8 +37,8 @@ from antenna.health_resource import (
     VersionResource,
 )
 from antenna.libdockerflow import get_release_name
-from antenna.liblogging import setup_logging, log_config
-from antenna.libmarkus import setup_metrics, METRICS
+from antenna.liblogging import set_up_logging, log_config
+from antenna.libmarkus import set_up_metrics, METRICS
 
 
 LOGGER = logging.getLogger(__name__)
@@ -207,7 +207,7 @@ class AntennaApp(falcon.App):
         log_config(LOGGER, self.config_manager, self)
 
         # Set up metrics
-        setup_metrics(
+        set_up_metrics(
             statsd_host=self.config("statsd_host"),
             statsd_port=self.config("statsd_port"),
             hostname=self.config("hostname"),
@@ -278,7 +278,7 @@ def get_app(config_manager=None):
 
     # Set up logging and sentry first, so we have something to log to. Then
     # build and log everything else.
-    setup_logging(
+    set_up_logging(
         logging_level=app_config("logging_level"),
         debug=app_config("local_dev_env"),
         host_id=app_config("hostname"),

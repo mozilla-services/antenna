@@ -25,7 +25,7 @@ import pytest
 REPO_ROOT = Path(__file__).parent.parent.resolve()
 sys.path.insert(0, str(REPO_ROOT))
 
-from antenna.app import get_app, setup_logging  # noqa
+from antenna.app import get_app, set_up_logging  # noqa
 from antenna.app import reset_verify_funs  # noqa
 
 
@@ -43,7 +43,7 @@ class CaptureMetricsUsed(BackendBase):
 
 def pytest_runtest_setup():
     # Make sure we set up logging and metrics to sane default values.
-    setup_logging(logging_level="DEBUG", debug=True, host_id="", processname="antenna")
+    set_up_logging(logging_level="DEBUG", debug=True, host_id="", processname="antenna")
     markus.configure(
         [
             {"class": "markus.backends.logging.LoggingMetrics"},

@@ -1,0 +1,135 @@
+# statsd metrics emitted using Markus.
+#
+# When adding a new metric, make sure to add it here first.
+---
+
+socorro.collector.sentry_scrub_error:
+  type: "incr"
+  description: |
+    Emitted every time there was an error in the Sentry event scrubbing code.
+
+socorro.collector.breakpad_resource.gzipped_crash:
+  type: "incr"
+  description: |
+    Counter for crash report payloads submitted that were compressed.
+
+socorro.collector.breakpad_resource.gzipped_crash_decompress:
+  type: "histogram"
+  description: |
+    Timer for how long it takes to decompress a compressed crash report
+    payload.
+
+    Tags:
+
+    * ``result``: ``success`` or ``fail`` depending on whether there
+      was an error when decompressing
+
+socorro.collector.breakpad_resource.crash_size:
+  type: "histogram"
+  description: |
+    Histogram for crash report payload size.
+
+    Tags:
+
+    * ``payload``: ``compressed`` or ``uncompressed``
+
+socorro.collector.breakpad_resource.on_post.time:
+  type: "timing"
+  description: |
+    Timer for how long it takes to handle a crash report HTTP POST request.
+
+socorro.collector.breakpad_resource.malformed:
+  type: "incr"
+  description: |
+    Counter for how many malformed crash report payloads have been submitted.
+
+    Tags:
+
+    * ``reason``: a short string specifying how the crash report payload was
+      malformed.
+
+socorro.collector.breakpad_resource.incoming_crash:
+  type: "incr"
+  description: |
+    Counter for number of well-formed crash reports submitted.
+
+socorro.collector.breakpad_resource.throttle_rule:
+  type: "incr"
+  description: |
+    Counter for which throttle rule dictated how the crash report was directed.
+
+    Tags:
+
+    * ``rule``: a short string indicating the rule used
+
+socorro.collector.breakpad_resource.throttle:
+  type: "incr"
+  description: |
+    Counter for the throttle result.
+
+    Tags:
+
+    * ``result``: ``accept``, ``defer``, ``reject``, ``fakeaccept``, or
+      ``continue``
+
+socorro.collector.crashmover.retry_count:
+  type: "incr"
+  description: |
+    Counter for retry attempts for the crashmover operations.
+
+    Tags:
+
+    * ``count``: the retry count
+
+socorro.collector.crashmover.crash_handling.time:
+  type: "timing"
+  description: |
+    Timer for how long it takes to store the crash report data and publish for
+    processing.
+
+socorro.collector.crashmover.save_crash_dropped.count:
+  type: "incr"
+  description: |
+    Counter for how many crash reports couldn't be saved to storage because
+    of errors.
+
+socorro.collector.crashmover.save_crash.count:
+  type: "incr"
+  description: |
+    Counter for how many crash reports were saved and published for processing.
+
+socorro.collector.crashmover.publish_crash_dropped.count:
+  type: "incr"
+  description: |
+    Counter for how many crash reports were saved, but were not published for
+    processing because of errors.
+
+socorro.collector.crashmover.crash_save.time:
+  type: "timing"
+  description: |
+    Timer for how long it takes to save a crash report to storage.
+
+socorro.collector.crashmover.crash_publish.time:
+  type: "timing"
+  description: |
+    Timer for how long it takes to publish a crash report for processing.
+
+socorro.collector.health.broken.count:
+  type: "incr"
+  description: |
+    Counter for ``/__broken__`` view.
+
+socorro.collector.health.version.count:
+  type: "incr"
+  description: |
+    Counter for ``/__version__`` view.
+
+socorro.collector.health.lbheartbeat.count:
+  type: "incr"
+  description: |
+    Counter for ``/__lbheartbeat__`` view.
+
+socorro.collector.health.heartbeat.count:
+  type: "incr"
+  description: |
+    Counter for ``/__heartbeat__`` view.
