@@ -201,7 +201,7 @@ instance--either will work fine.
 
 
 Cloud storage file hierarchy
----------------------
+----------------------------
 
 If you use the Google Cloud Storage crashstorage component, then crashes get
 saved in this hierarchy in the bucket:

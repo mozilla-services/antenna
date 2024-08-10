@@ -36,7 +36,7 @@ class TestHealthChecks:
         assert resp.status_code == 200
         # NOTE(willkg): This isn't mocked out, so it's entirely likely that
         # this expected result will change over time.
-        assert resp.json == {"errors": [], "info": {}}
+        assert resp.json == {"errors": []}
 
     def test_broken(self, client):
         resp = client.simulate_get("/__broken__")

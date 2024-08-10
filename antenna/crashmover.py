@@ -17,7 +17,7 @@ LOGGER = logging.getLogger(__name__)
 def _incr_wait_generator(counter, attempts, sleep_seconds):
     def _generator_generator():
         for _ in range(attempts - 1):
-            METRICS.incr(f"collector.crashmover.{counter}")
+            METRICS.incr("collector.crashmover.retry_count", tags=[f"count:{counter}"])
             yield sleep_seconds
 
     return _generator_generator

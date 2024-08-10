@@ -52,13 +52,6 @@ class HealthState:
 
     def __init__(self):
         self.errors = []
-        self.statsd = {}
-
-    def add_statsd(self, name, key, value):
-        """Add a key -> value gauge."""
-        if not isinstance(name, str):
-            name = name.__class__.__name__
-        self.statsd["%s.%s" % (name, key)] = value
 
     def add_error(self, name, msg):
         """Add an error."""
@@ -73,7 +66,7 @@ class HealthState:
 
     def to_dict(self):
         """Convert state to a dict."""
-        return OrderedDict([("errors", self.errors), ("info", self.statsd)])
+        return OrderedDict([("errors", self.errors)])
 
 
 class HeartbeatResource:
@@ -94,10 +87,6 @@ class HeartbeatResource:
         for resource in self.antenna_app.get_resources():
             if hasattr(resource, "check_health"):
                 resource.check_health(state)
-
-        # Go through and call gauge for each statsd item.
-        for key, value in state.statsd.items():
-            METRICS.gauge(f"collector.health.{key}", value=value)
 
         if state.is_healthy():
             resp.status = falcon.HTTP_200

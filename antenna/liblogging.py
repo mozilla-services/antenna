@@ -17,12 +17,12 @@ from everett.manager import (
 )
 
 
-_IS_LOGGING_SETUP = False
+_IS_LOGGING_SET_UP = False
 
 LOGGER = logging.getLogger(__name__)
 
 
-def setup_logging(logging_level, debug=False, host_id=None, processname=None):
+def set_up_logging(logging_level, debug=False, host_id=None, processname=None):
     """Initialize Python logging configuration.
 
     Note: This only sets up logging once per process. Additional calls will get ignored.
@@ -33,8 +33,8 @@ def setup_logging(logging_level, debug=False, host_id=None, processname=None):
     :arg processname: the process name to log
 
     """
-    global _IS_LOGGING_SETUP
-    if _IS_LOGGING_SETUP:
+    global _IS_LOGGING_SET_UP
+    if _IS_LOGGING_SET_UP:
         return
 
     host_id = host_id or socket.gethostname()
@@ -100,7 +100,7 @@ def setup_logging(logging_level, debug=False, host_id=None, processname=None):
         f"set up logging logging_level={logging_level} debug={debug} "
         + f"host_id={host_id} processname={processname}"
     )
-    _IS_LOGGING_SETUP = True
+    _IS_LOGGING_SET_UP = True
 
 
 def traverse_tree(instance, namespace=None):

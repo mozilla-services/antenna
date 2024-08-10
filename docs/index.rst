@@ -9,6 +9,7 @@
    dev
    contributing
    configuration
+   metrics
    deploy
 
 .. toctree::
