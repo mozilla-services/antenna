@@ -3,10 +3,14 @@
 # When adding a new metric, make sure to add it here first.
 ---
 
-socorro.collector.sentry_scrub_error:
+socorro.sentry_scrub_error:
   type: "incr"
   description: |
     Emitted every time there was an error in the Sentry event scrubbing code.
+
+    Tags:
+
+    * ``service``: ``collector``
 
 socorro.collector.breakpad_resource.gzipped_crash:
   type: "incr"

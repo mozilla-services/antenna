@@ -57,7 +57,7 @@ SCRUB_RULES_ANTENNA = [
 
 
 def count_sentry_scrub_error(msg):
-    METRICS.incr("collector.sentry_scrub_error", value=1)
+    METRICS.incr("sentry_scrub_error", value=1, tags=["service:collector"])
 
 
 def configure_sentry(app_config):

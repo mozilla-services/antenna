@@ -5,7 +5,7 @@
 from unittest.mock import ANY
 
 from fillmore.test import diff_structure
-from markus.testing import MetricsMock
+from markus.testing import AnyTagValue, MetricsMock
 from werkzeug.test import Client
 
 from antenna.app import get_app, count_sentry_scrub_error
@@ -145,4 +145,8 @@ def test_count_sentry_scrub_error():
     with MetricsMock() as metricsmock:
         metricsmock.clear_records()
         count_sentry_scrub_error("foo")
-        metricsmock.assert_incr("socorro.collector.sentry_scrub_error", value=1)
+        metricsmock.assert_incr(
+            "socorro.sentry_scrub_error",
+            value=1,
+            tags=["service:collector", AnyTagValue("host")],
+        )
