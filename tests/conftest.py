@@ -15,8 +15,6 @@ from falcon.testing.client import TestClient
 from google.auth.credentials import AnonymousCredentials
 from google.cloud import storage as gcs_storage
 from google.cloud.exceptions import NotFound as GCSNotFound
-import markus
-from markus.backends import BackendBase
 from markus.testing import MetricsMock
 import pytest
 
@@ -25,32 +23,34 @@ import pytest
 REPO_ROOT = Path(__file__).parent.parent.resolve()
 sys.path.insert(0, str(REPO_ROOT))
 
-from antenna.app import get_app, set_up_logging  # noqa
+
+from antenna.app import AntennaApp, build_config_manager, get_app, set_up_logging  # noqa
 from antenna.app import reset_verify_funs  # noqa
+from antenna.libmarkus import set_up_metrics  # noqa
 
 
-class CaptureMetricsUsed(BackendBase):
-    """Markus backend for capturing all the metrics that were emitted during tests"""
+def pytest_sessionstart():
+    config = build_config_manager().with_options(AntennaApp)
 
-    def __init__(self, options=None, filters=None):
-        self.options = options
-        self.filters = filters
+    # Make sure we set up logging and metrics
+    set_up_logging(
+        logging_level="DEBUG",
+        debug=True,
+        host_id=config("hostname"),
+        processname="antenna",
+    )
 
-    def emit(self, record):
-        with open("metrics_emitted.txt", "a") as fp:
-            fp.write(f"{record.stat_type}\t{record.key}\t{record.tags!r}\n")
+    # FIXME(willkg): when we fix settings so they're not tied to the app, we can
+    # simplify this
+    set_up_metrics(
+        statsd_host=config("statsd_host"),
+        statsd_port=config("statsd_port"),
+        hostname=config("hostname"),
+        debug=config("local_dev_env"),
+    )
 
 
 def pytest_runtest_setup():
-    # Make sure we set up logging and metrics to sane default values.
-    set_up_logging(logging_level="DEBUG", debug=True, host_id="", processname="antenna")
-    markus.configure(
-        [
-            {"class": "markus.backends.logging.LoggingMetrics"},
-            {"class": CaptureMetricsUsed},
-        ]
-    )
-
     # Wipe any registered verify functions
     reset_verify_funs()
 
