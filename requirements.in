@@ -3,7 +3,7 @@ attrs==23.2.0
 dockerflow==2024.4.2
 everett==3.3.0
 falcon==3.1.3
-fillmore==2.0.0
+fillmore==2.0.1
 google-cloud-storage==2.18.2
 gunicorn==23.0.0
 isodate==0.6.1
@@ -15,11 +15,11 @@ google-cloud-pubsub==2.23.0
 bandit==1.7.9
 click==8.1.7
 freezegun==1.5.1
-more-itertools==10.4.0
+more-itertools==10.5.0
 pip-tools==7.4.1
-pytest==8.3.2
+pytest==8.3.3
 requests==2.32.3
-ruff==0.5.5
+ruff==0.6.4
 Sphinx==7.4.7
 sphinx-rtd-theme==2.0.0
 urlwait==1.0
