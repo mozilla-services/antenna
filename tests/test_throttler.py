@@ -502,10 +502,14 @@ class Testmozilla_rules:
             (None, (ACCEPT, "accept_everything", 100)),
             ("", (ACCEPT, "accept_everything", 100)),
             ("content", (ACCEPT, "accept_everything", 100)),
-            ("gpu", (ACCEPT, "is_gpu", 100)),
+            ("gpu", (ACCEPT, "is_background", 100)),
+            ("rdd", (ACCEPT, "is_background", 100)),
+            ("plugin", (ACCEPT, "is_background", 100)),
+            ("utility", (ACCEPT, "is_background", 100)),
+            ("socket", (ACCEPT, "is_background", 100)),
         ],
     )
-    def test_gpu(self, throttler, processtype, expected):
+    def test_background(self, throttler, processtype, expected):
         raw_crash = {"ProductName": "BarTest"}
         if processtype:
             raw_crash["ProcessType"] = processtype

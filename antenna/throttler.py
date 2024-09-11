@@ -457,10 +457,13 @@ MOZILLA_RULES = [
     Rule(rule_name="has_phc", key="PHCKind", condition=always_match, result=ACCEPT),
     # Bug #1547804: Accept crash reports from gpu crashes; we don't get many
     # and our sampling reduces that to a handful that's hard to do things with
+    # Bug 1916751: Accept crash reports from rdd, plugin, utility and socket processes
+    # for the same reasons as for Bug 1547804 above.
     Rule(
-        rule_name="is_gpu",
+        rule_name="is_background",
         key="ProcessType",
-        condition=lambda throttler, x: x == "gpu",
+        condition=lambda throttler, x: x
+        in ("gpu", "rdd", "plugin", "utility", "socket"),
         result=ACCEPT,
     ),
     # Bug #1624949: Throttle ipc_channel_error=ShutDownKill crash reports at
