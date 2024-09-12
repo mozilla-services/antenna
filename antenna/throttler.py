@@ -462,8 +462,9 @@ MOZILLA_RULES = [
     Rule(
         rule_name="is_background",
         key="ProcessType",
-        condition=lambda throttler, x: x
-        in ("gpu", "rdd", "plugin", "utility", "socket"),
+        condition=lambda throttler, x: (
+            x in {"gpu", "plugin", "rdd", "socket", "utility"}
+        ),
         result=ACCEPT,
     ),
     # Bug #1624949: Throttle ipc_channel_error=ShutDownKill crash reports at
