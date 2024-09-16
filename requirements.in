@@ -19,7 +19,7 @@ more-itertools==10.5.0
 pip-tools==7.4.1
 pytest==8.3.3
 requests==2.32.3
-ruff==0.6.4
+ruff==0.6.5
 Sphinx==7.4.7
 sphinx-rtd-theme==2.0.0
 urlwait==1.0
