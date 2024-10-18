@@ -8,7 +8,7 @@ google-cloud-storage==2.18.2
 gunicorn==23.0.0
 isodate==0.6.1
 markus[datadog]==5.0.0
-sentry-sdk==2.15.0
+sentry-sdk==2.16.0
 google-cloud-pubsub==2.25.2
 
 # Development requirements
