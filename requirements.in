@@ -2,7 +2,7 @@
 attrs==24.2.0
 dockerflow==2024.4.2
 everett==3.3.0
-falcon==3.1.3
+falcon==4.0.0
 fillmore==2.0.1
 google-cloud-storage==2.18.2
 gunicorn==23.0.0
