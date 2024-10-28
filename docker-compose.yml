@@ -38,6 +38,7 @@ services:
         groupid: ${USE_GID:-10001}
     image: local/antenna-devcontainer
     entrypoint: ["sleep", "inf"]
+    stop_signal: SIGKILL  # Doesn't seem to respond to anything else
     env_file:
       - docker/config/local_dev.env
       - docker/config/test.env
@@ -75,6 +76,7 @@ services:
       - pubsub
       - start
       - --host-port=0.0.0.0:${PUBSUB_PORT:-5010}
+    stop_signal: SIGINT
     ports:
       - "${EXPOSE_PUBSUB_EMULATOR_PORT:-5010}:5010"
 
