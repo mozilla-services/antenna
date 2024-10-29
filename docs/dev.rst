@@ -535,3 +535,17 @@ pick up changes:
 .. code-block:: shell
 
    $ make devcontainer
+
+
+Upgrading to a new Python version
+=================================
+
+To upgrade Python to a new minor or major version, you need to change the version in
+these files:
+
+* ``.devcontainer/Dockerfile``
+* ``.github/dependabot.yml``
+* ``.readthedocs.yaml``
+* ``docker/Dockerfile``
+* ``docker/images/fakesentry/Dockerfile``
+* ``pyproject.toml``
