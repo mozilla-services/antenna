@@ -12,11 +12,6 @@
    metrics
    deploy
 
-.. toctree::
-   :caption: Project documentation
-
-   spec_v1
-
 
 Indices and tables
 ==================
