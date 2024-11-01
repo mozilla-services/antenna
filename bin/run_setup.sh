@@ -13,12 +13,12 @@
 set -euo pipefail
 
 echo "Delete and create GCS bucket..."
-python ./bin/gcs_cli.py delete "${CRASHMOVER_CRASHSTORAGE_BUCKET_NAME}"
-python ./bin/gcs_cli.py create "${CRASHMOVER_CRASHSTORAGE_BUCKET_NAME}"
-python ./bin/gcs_cli.py list_buckets
+gcs-cli delete "${CRASHMOVER_CRASHSTORAGE_BUCKET_NAME}"
+gcs-cli create "${CRASHMOVER_CRASHSTORAGE_BUCKET_NAME}"
+gcs-cli list_buckets
 
 echo "Delete and create Pub/Sub topic..."
-python ./bin/pubsub_cli.py delete_topic "${CRASHMOVER_CRASHPUBLISH_PROJECT_ID}" "${CRASHMOVER_CRASHPUBLISH_TOPIC_NAME}"
-python ./bin/pubsub_cli.py create_topic "${CRASHMOVER_CRASHPUBLISH_PROJECT_ID}" "${CRASHMOVER_CRASHPUBLISH_TOPIC_NAME}"
-python ./bin/pubsub_cli.py create_subscription "${CRASHMOVER_CRASHPUBLISH_PROJECT_ID}" "${CRASHMOVER_CRASHPUBLISH_TOPIC_NAME}" "${CRASHMOVER_CRASHPUBLISH_SUBSCRIPTION_NAME}"
-python ./bin/pubsub_cli.py list_topics "${CRASHMOVER_CRASHPUBLISH_PROJECT_ID}"
+pubsub-cli delete_topic "${CRASHMOVER_CRASHPUBLISH_PROJECT_ID}" "${CRASHMOVER_CRASHPUBLISH_TOPIC_NAME}"
+pubsub-cli create_topic "${CRASHMOVER_CRASHPUBLISH_PROJECT_ID}" "${CRASHMOVER_CRASHPUBLISH_TOPIC_NAME}"
+pubsub-cli create_subscription "${CRASHMOVER_CRASHPUBLISH_PROJECT_ID}" "${CRASHMOVER_CRASHPUBLISH_TOPIC_NAME}" "${CRASHMOVER_CRASHPUBLISH_SUBSCRIPTION_NAME}"
+pubsub-cli list_topics "${CRASHMOVER_CRASHPUBLISH_PROJECT_ID}"
