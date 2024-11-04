@@ -4,6 +4,8 @@
 #
 #    pip-compile --generate-hashes --strip-extras
 #
+--extra-index-url https://us-python.pkg.dev/moz-fx-cavendish-prod/cavendish-prod-python/simple/
+
 alabaster==0.7.16 \
     --hash=sha256:75a8b99c28a5dad50dd7f8ccdd447a121ddb3892da9e53d1ca5cca3106d58d65 \
     --hash=sha256:b46733c07dce03ae4e150330b975c75737fa60f0a7c591b6c8bf4928a28e2c92
@@ -133,6 +135,7 @@ click==8.1.7 \
     --hash=sha256:ca9853ad459e787e2192211578cc907e7594e294c7ccc834310722b41b9ca6de
     # via
     #   -r requirements.in
+    #   obs-common
     #   pip-tools
 datadog==0.49.1 \
     --hash=sha256:4a56d57490ea699a0dfd9253547485a57b4120e93489defadcf95c66272374d6 \
@@ -234,11 +237,15 @@ google-cloud-core==2.4.1 \
 google-cloud-pubsub==2.26.1 \
     --hash=sha256:932d4434d86af25673082b48d54b318a448d1a7cd718404c33bf008ae9a8bb22 \
     --hash=sha256:d46a302c2c7a008e399f4c04b4be6341d8aa7a537a25810ec8d38a5c125f816d
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   obs-common
 google-cloud-storage==2.18.2 \
     --hash=sha256:97a4d45c368b7d401ed48c4fdfe86e1e1cb96401c9e199e419d289e2c0370166 \
     --hash=sha256:aaf7acd70cdad9f274d29332673fcab98708d0e1f4dceb5a5356aaef06af4d99
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   obs-common
 google-crc32c==1.5.0 \
     --hash=sha256:024894d9d3cfbc5943f8f230e23950cd4906b2fe004c72e29b209420a1e6b05a \
     --hash=sha256:02c65b9817512edc6a4ae7c7e987fea799d2e0ee40c53ec573a692bee24de876 \
@@ -501,6 +508,9 @@ more-itertools==10.5.0 \
     --hash=sha256:037b0d3203ce90cca8ab1defbbdac29d5f993fc20131f3664dc8d6acfa872aef \
     --hash=sha256:5482bfef7849c25dc3c6dd53a6173ae4795da2a41a80faea6700d9f5846c5da6
     # via -r requirements.in
+obs-common==2024.11.1.post1 \
+    --hash=sha256:ed02bbdd7ef793feedeb2a6c91f02ad669ceb9c1913e1d9aff209731e3353e18
+    # via -r requirements.in
 opentelemetry-api==1.27.0 \
     --hash=sha256:953d5871815e7c30c81b56d910c707588000fff7a3ca1c73e6531911d53065e7 \
     --hash=sha256:ed673583eaa5f81b5ce5e86ef7cdaf622f88ef65f0b9aab40b843dcae5bef342
@@ -649,6 +659,7 @@ requests==2.32.3 \
     #   datadog
     #   google-api-core
     #   google-cloud-storage
+    #   obs-common
     #   sphinx
 rich==13.6.0 \
     --hash=sha256:2b38e2fe9ca72c9a00170a1a2d20c63c790d0e10ef1fe35eba76e1e7b1d7d245 \
@@ -684,6 +695,7 @@ sentry-sdk==2.17.0 \
     # via
     #   -r requirements.in
     #   fillmore
+    #   obs-common
 six==1.16.0 \
     --hash=sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926 \
     --hash=sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254

@@ -153,11 +153,11 @@ production, see documentation_.
       The ``gcs-emulator`` container stores data in memory and the data doesn't
       persist between container restarts.
 
-      You can use the ``bin/gcs_cli.py`` to access it:
+      You can use ``gcs-cli`` to access it:
 
       .. code-block:: shell
 
-         $ docker compose run --rm web shell python bin/gcs_cli.py list_buckets
+         $ docker compose run --rm web shell gcs-cli list_buckets
 
       If you do this a lot, turn it into a shell script.
 
