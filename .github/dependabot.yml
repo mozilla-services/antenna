@@ -9,7 +9,11 @@ updates:
     open-pull-requests-limit: 10
 
   - package-ecosystem: "docker"
-    directory: "/docker"
+    directories:
+      - "/docker"
+      - "/docker/images/fakesentry"
+      - "/docker/images/gcs-emulator"
+      - "/docker/images/nginx"
     schedule:
       interval: "weekly"
     rebase-strategy: "disabled"
