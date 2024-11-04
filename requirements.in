@@ -1,7 +1,7 @@
 # Production requirements
 attrs==24.2.0
 dockerflow==2024.4.2
-everett==3.3.0
+everett==3.4.0
 falcon==4.0.1
 fillmore==2.0.1
 google-cloud-storage==2.18.2
