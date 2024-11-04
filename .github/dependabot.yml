@@ -11,9 +11,7 @@ updates:
   - package-ecosystem: "docker"
     directories:
       - "/docker"
-      - "/docker/images/fakesentry"
-      - "/docker/images/gcs-emulator"
-      - "/docker/images/nginx"
+      - "/docker/images/*"
     schedule:
       interval: "weekly"
     rebase-strategy: "disabled"
