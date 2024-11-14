@@ -17,20 +17,19 @@ Running tests
 
 In a terminal, run::
 
-    $ make shell
-    app@xxx:/app$ ./systemtest/test_env.sh ENV
+    $ just setup
+    $ just shell ./systemtest/test_env.sh ENV
 
 
 Additional arguments will be passed through to pytest. For example::
 
-    $ make shell
-    app@xxx:/app$ ./systemtest/test_env.sh ENV -- test_dockerflow.py
+    $ just shell ./systemtest/test_env.sh ENV -- test_dockerflow.py
 
 
 If you're running against ``local``, you'll need to be running antenna
 in another terminal::
 
-    $ make run
+    $ just run
 
 
 CI

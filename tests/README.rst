@@ -13,13 +13,16 @@ Contents of this directory::
 
 Run these tests from the repository root using::
 
-    make test
+    $ just test
 
 
 To run a single test or group of tests or with different options, do::
 
-    make testshell
+    $ just test tests/test_some_file.py
 
 
-This gives you a bash shell in the docker container where you can more easily
-do test runs and debugging.
+Or to get a bash shell in the docker container where you can more easily
+do test runs and debugging::
+
+    $ just test-shell
+    app@test:/app$ tests/test_some_file.py
