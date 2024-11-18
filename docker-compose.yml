@@ -7,6 +7,9 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
+      args:
+        userid: ${USE_UID:-10001}
+        groupid: ${USE_GID:-10001}
     image: local/antenna_deploy_base
 
   # ------------------------------------------------------------------
@@ -56,7 +59,7 @@ services:
       service: base
     env_file:
       - docker/config/local_dev.env
-      - my.env
+      - .env
     command: web
     links:
       - fakesentry

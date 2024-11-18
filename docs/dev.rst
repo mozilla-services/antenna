@@ -18,7 +18,7 @@ is also used for local development of Antenna.
 For more comprehensive documentation or instructions on how to set this up in
 production, see documentation_.
 
-1. Install required software: Docker, make, and git.
+1. Install required software: Docker, just, and git.
 
 2. Clone the repository to your local machine.
 
@@ -32,30 +32,30 @@ production, see documentation_.
 
    .. code-block:: shell
 
-      $ make my.env
+      $ just _env
 
-   Then edit the file and set the ``ANTENNA_UID`` and ``ANTENNA_GID``
+   Then edit the ``.env`` file and set the ``USE_UID`` and ``USE_GID``
    variables. These will get used when creating the app user in the base image.
 
-   If you ever want different values, change them in ``my.env`` and re-run
-   ``make build``.
+   If you ever want different values, change them in ``.env`` and re-run
+   ``just build``.
 
 4. Download and build Antenna docker containers:
 
    .. code-block:: shell
 
-      $ make build
+      $ just build
 
-   Anytime you want to update the containers, you can run ``make build``.
+   Anytime you want to update the containers, you can run ``just build``.
 
 5. Set up local Pub/Sub and GCS services:
 
    .. code-block:: shell
 
-      $ make setup
+      $ just setup
 
    Anytime you want to wipe service state and recreate them, you can re-run
-   this make rule.
+   this just rule.
 
 6. Run with a prod-like fully-functional configuration.
 
@@ -63,7 +63,7 @@ production, see documentation_.
 
       .. code-block:: shell
 
-         $ make run
+         $ just run
 
       You should see a lot of output. It'll start out with something like this::
 
@@ -188,7 +188,7 @@ production, see documentation_.
 
    .. code-block:: shell
 
-      $ make test
+      $ just test
 
    If you need to run specific tests or pass in different arguments, you can run
    bash in the base container and then run ``pytest`` with whatever args you
@@ -196,7 +196,7 @@ production, see documentation_.
 
    .. code-block:: shell
 
-      $ make shell
+      $ just shell
       app@...$ pytest
 
       <pytest output>
@@ -308,7 +308,7 @@ To lint the code:
 
 .. code-block:: shell
 
-   $ make lint
+   $ just lint
 
 If you hit issues, use ``# noqa``.
 
@@ -316,7 +316,7 @@ To reformat the code:
 
 .. code-block:: shell
 
-   $ make lintfix
+   $ just lint --fix
 
 We're using:
 
@@ -353,7 +353,7 @@ For example, to add ``foobar`` version 5:
 
    .. code-block:: shell
 
-      make rebuildreqs
+      just rebuild-reqs
 
    to apply the updates to ``requirements.txt``
 
@@ -361,7 +361,7 @@ For example, to add ``foobar`` version 5:
 
    .. code-block:: shell
 
-      $ make build
+      $ just build
 
 If there are problems, it'll tell you.
 
@@ -370,7 +370,7 @@ dependencies. To do this, run:
 
 .. code-block:: shell
 
-   $ make updatereqs
+   $ just rebuild-reqs --update
 
 
 Documentation
@@ -384,7 +384,7 @@ To build the docs, run this:
 
 .. code-block:: shell
 
-   $ make docs
+   $ just docs
 
 
 Testing
@@ -394,7 +394,7 @@ To run the tests, run this:
 
 .. code-block:: shell
 
-   $ make test
+   $ just test
 
 
 Tests go in ``tests/``. Data required by tests goes in ``tests/data/``.
@@ -405,7 +405,7 @@ For example:
 
 .. code-block:: shell
 
-   $ make shell
+   $ just shell
    app@...$ pytest
 
    <pytest output>
@@ -429,7 +429,7 @@ development instance. There are a few options:
 
    .. code-block:: bash
 
-      $ make shell
+      $ just shell
       app@c392a11dbfec:/app$ python -m testlib.mini_poster --url URL
 
 2. Use Firefox and set the ``MOZ_CRASHREPORTER_URL`` environment variable:
@@ -514,7 +514,7 @@ first run:
 
 .. code-block:: shell
 
-   $ make devcontainerbuild
+   $ just build devcontainer
 
 Additionally on mac there is the potential that running git from inside any
 container that mounts the current directory to `/app`, such as the development
@@ -534,7 +534,7 @@ pick up changes:
 
 .. code-block:: shell
 
-   $ make devcontainer
+   $ just run -d devcontainer
 
 
 Upgrading to a new Python version

@@ -18,7 +18,7 @@ jobs:
       contents: read
       deployments: write
       id-token: write
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       # Disable docker compose volume mounts in docker-compose.override.yml
       COMPOSE_FILE: docker-compose.yml
@@ -39,24 +39,21 @@ jobs:
           "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" > version.json
       - name: Output version.json
         run: cat version.json
+      - name: Install just
+        run: sudo apt-get update && sudo apt-get install -y just
       - name: Build Docker images
-        run: make build
+        run: just build
       - name: Verify requirements.txt contains correct dependencies
-        run: |
-          docker compose run --rm --no-deps test shell ./bin/run_verify_reqs.sh
+        run: just verify-reqs
       - name: Run lint check
-        run: |
-          make my.env
-          docker compose run --rm --no-deps test shell ./bin/run_lint.sh
+        run: just lint
       - name: Run tests
-        run: |
-          make my.env
-          docker compose run --rm test shell ./bin/run_tests.sh
+        run: just test
       - name: Run systemtest
         run: |
-          make setup
-          docker compose up --detach --wait --wait-timeout=10 web nginx
-          docker compose run --rm web shell systemtest/test_env.sh local
+          just setup
+          just run --detach --wait --wait-timeout=10 web nginx
+          just shell systemtest/test_env.sh local
 
       - name: Set Docker image tag to "latest" for updates of the main branch
         if: github.ref == 'refs/heads/main'
