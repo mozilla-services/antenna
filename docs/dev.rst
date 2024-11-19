@@ -157,7 +157,7 @@ production, see documentation_.
 
       .. code-block:: shell
 
-         $ docker compose run --rm web shell gcs-cli list_buckets
+         $ docker compose run --rm web shell gcs-cli list-buckets
 
       If you do this a lot, turn it into a shell script.
 
