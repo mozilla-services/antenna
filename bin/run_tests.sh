@@ -31,4 +31,4 @@ if [ -f metrics_emitted.txt ]; then
 fi
 
 # Run tests
-"${PYTEST}" $@
+exec "${PYTEST}" "$@"

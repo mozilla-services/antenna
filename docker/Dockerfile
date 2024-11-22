@@ -16,8 +16,7 @@ RUN apt-get update && \
         apt-transport-https \
         build-essential \
         git \
-        gcc \
-        tini && \
+        gcc && \
     apt-get autoremove -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
@@ -40,4 +39,4 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PORT 8000
 EXPOSE $PORT
 
-ENTRYPOINT ["tini", "--", "/app/bin/entrypoint.sh"]
+ENTRYPOINT ["/app/bin/entrypoint.sh"]

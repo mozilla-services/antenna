@@ -18,7 +18,7 @@ STATSD_HOST=${STATSD_HOST:-localhost}
 STATSD_PORT=${STATSD_PORT:-8125}
 HOSTNAME=${HOSTNAME:-$(hostname)}
 
-${CMD_PREFIX} gunicorn \
+exec ${CMD_PREFIX} gunicorn \
     --workers="${GUNICORN_WORKERS}" \
     --worker-class="${GUNICORN_WORKER_CLASS}" \
     --max-requests="${GUNICORN_MAX_REQUESTS}" \
