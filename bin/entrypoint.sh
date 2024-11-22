@@ -25,13 +25,13 @@ shift
 
 case ${SERVICE} in
 web)  ## Run web service
-    /app/bin/run_web.sh "$@"
+    exec /app/bin/run_web.sh "$@"
     ;;
 shell)  ## Open a shell or run something else
-    if [ -z "$*" ]; then
-        bash
+    if [ $# -eq 0 ]; then
+        exec bash
     else
-        "$@"
+        exec "$@"
     fi
     ;;
 *)
