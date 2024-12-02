@@ -17,7 +17,7 @@ click==8.1.7
 freezegun==1.5.1
 more-itertools==10.5.0
 pip-tools==7.4.1
-pytest==8.3.3
+pytest==8.3.4
 requests==2.32.3
 ruff==0.8.0
 Sphinx==8.1.3
