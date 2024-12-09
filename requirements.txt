@@ -508,8 +508,8 @@ more-itertools==10.5.0 \
     --hash=sha256:037b0d3203ce90cca8ab1defbbdac29d5f993fc20131f3664dc8d6acfa872aef \
     --hash=sha256:5482bfef7849c25dc3c6dd53a6173ae4795da2a41a80faea6700d9f5846c5da6
     # via -r requirements.in
-obs-common==2024.11.21 \
-    --hash=sha256:601c60f79a052d2f0440bdb0da4875f8bdde9fc9f91918d3841a9f6c0b206456
+obs-common==2024.12.6 \
+    --hash=sha256:50082b51f88c05116eb8479cf18d8308be879e4bb8e0e3abd05cfffe070c50f7
     # via -r requirements.in
 opentelemetry-api==1.27.0 \
     --hash=sha256:953d5871815e7c30c81b56d910c707588000fff7a3ca1c73e6531911d53065e7 \
