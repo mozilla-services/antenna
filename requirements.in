@@ -13,7 +13,7 @@ google-cloud-pubsub==2.27.1
 
 # Development requirements
 bandit==1.8.0
-click==8.1.7
+click==8.1.8
 freezegun==1.5.1
 more-itertools==10.5.0
 pip-tools==7.4.1
