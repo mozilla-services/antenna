@@ -9,7 +9,7 @@ gunicorn==23.0.0
 isodate==0.7.2
 markus[datadog]==5.1.0
 sentry-sdk==2.19.2
-google-cloud-pubsub==2.27.1
+google-cloud-pubsub==2.27.3
 
 # Development requirements
 bandit==1.8.0
