@@ -1,5 +1,5 @@
 # Production requirements
-attrs==25.1.0
+attrs==25.3.0
 dockerflow==2024.4.2
 everett==3.4.0
 falcon==4.0.2
