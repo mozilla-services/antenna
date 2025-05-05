@@ -20,6 +20,7 @@ RUN apt-get update && \
 
 # Install Python dependencies
 COPY requirements.txt /app/
+# NOTE(smarnach): Unpin pip once https://github.com/jazzband/pip-tools/issues/2176 is resolved.
 RUN pip install -U 'pip>=20' && \
     pip install --no-cache-dir --no-deps --only-binary :all: -r requirements.txt && \
     pip install --no-cache-dir ipython && \

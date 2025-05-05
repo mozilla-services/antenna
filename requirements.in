@@ -16,6 +16,7 @@ bandit==1.8.3
 click==8.1.8
 freezegun==1.5.1
 more-itertools==10.6.0
+# NOTE(smarnach): Unpin pip in docker/Dockerfile once https://github.com/jazzband/pip-tools/issues/2176 is resolved.
 pip-tools==7.4.1
 pytest==8.3.5
 requests==2.32.3
