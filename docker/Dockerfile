@@ -23,7 +23,7 @@ RUN apt-get update && \
 
 COPY --chown=app:app requirements.txt /app/
 
-RUN pip install -U 'pip>=20' && \
+RUN pip install -U 'pip<25.1' && \
     pip install --no-cache-dir --no-deps --only-binary :all: -r requirements.txt && \
     pip check --disable-pip-version-check
 
