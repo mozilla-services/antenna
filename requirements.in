@@ -13,7 +13,7 @@ google-cloud-pubsub==2.29.0
 
 # Development requirements
 bandit==1.8.3
-click==8.2.0
+click==8.2.1
 freezegun==1.5.2
 more-itertools==10.7.0
 # NOTE(smarnach): Unpin pip in docker/Dockerfile once https://github.com/jazzband/pip-tools/issues/2176 is resolved.
