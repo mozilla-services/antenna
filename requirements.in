@@ -12,7 +12,7 @@ sentry-sdk==2.34.1
 google-cloud-pubsub==2.30.0
 
 # Development requirements
-bandit==1.8.5
+bandit==1.8.6
 click==8.2.1
 freezegun==1.5.4
 more-itertools==10.7.0
