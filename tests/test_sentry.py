@@ -37,11 +37,11 @@ BROKEN_EVENT = {
                 "stacktrace": {
                     "frames": [
                         {
-                            "abs_path": "/app/falcon/app.py",
+                            "abs_path": "/usr/local/lib/python3.11/site-packages/falcon/app.py",
                             "context_line": ANY,
                             "filename": "falcon/app.py",
-                            "function": "falcon.app.App.__call__",
-                            "in_app": True,
+                            "function": "__call__",
+                            "in_app": False,
                             "lineno": ANY,
                             "module": "falcon.app",
                             "post_context": ANY,
