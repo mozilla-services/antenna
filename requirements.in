@@ -4,12 +4,12 @@ dockerflow==2024.4.2
 everett==3.5.0
 falcon==4.2.0
 fillmore==2.2.0
-google-cloud-storage==3.6.0
+google-cloud-storage==3.7.0
 gunicorn==23.0.0
 isodate==0.7.2
 markus[datadog]==5.2.0
-sentry-sdk==2.46.0
-google-cloud-pubsub==2.33.0
+sentry-sdk==2.48.0
+google-cloud-pubsub==2.34.0
 
 # Development requirements
 bandit==1.9.2
@@ -18,9 +18,9 @@ freezegun==1.5.5
 more-itertools==10.8.0
 # NOTE(smarnach): Unpin pip in docker/Dockerfile once https://github.com/jazzband/pip-tools/issues/2176 is resolved.
 pip-tools==7.4.1
-pytest==9.0.1
+pytest==9.0.2
 requests==2.32.5
-ruff==0.14.7
+ruff==0.14.10
 Sphinx==8.2.3
 sphinx-rtd-theme==3.0.2
 urlwait==1.0
