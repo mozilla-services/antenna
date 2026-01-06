@@ -1,6 +1,6 @@
 # NOTE(smarnach): To upgrade Python to a new minor or major version, see
 # https://antenna.readthedocs.io/en/latest/dev.html#upgrading-to-a-new-python-version
-FROM --platform=linux/amd64 python:3.11.14-slim-bookworm@sha256:2c5bc243b1cc47985ee4fb768bb0bbd4490481c5d0897a62da31b7f30b7304a7
+FROM --platform=linux/amd64 python:3.11.14-slim-bookworm@sha256:30f12e0592b7d24ca9a80d6d93701981291fcc452e9f9fb4174ef80deb1217af
 
 # Set up user and group
 ARG groupid=10001
