@@ -8,7 +8,7 @@ google-cloud-storage==3.7.0
 gunicorn==23.0.0
 isodate==0.7.2
 markus[datadog]==5.2.0
-sentry-sdk==2.48.0
+sentry-sdk==2.49.0
 google-cloud-pubsub==2.34.0
 
 # Development requirements
@@ -24,7 +24,7 @@ ruff==0.14.10
 Sphinx==8.2.3
 sphinx-rtd-theme==3.0.2
 urlwait==1.0
-werkzeug==3.1.4
+werkzeug==3.1.5
 # Mozilla obs-team libraries that are published to GAR instead of pypi
 --extra-index-url https://us-python.pkg.dev/moz-fx-cavendish-prod/cavendish-prod-python/simple/
-obs-common==2025.9.2.2
+obs-common==2026.1.8
