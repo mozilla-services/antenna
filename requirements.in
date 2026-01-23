@@ -4,15 +4,15 @@ dockerflow==2024.4.2
 everett==3.5.0
 falcon==4.2.0
 fillmore==2.2.0
-google-cloud-storage==3.7.0
-gunicorn==23.0.0
+google-cloud-storage==3.8.0
+gunicorn==24.0.0
 isodate==0.7.2
 markus[datadog]==5.2.0
-sentry-sdk==2.49.0
+sentry-sdk==2.50.0
 google-cloud-pubsub==2.34.0
 
 # Development requirements
-bandit==1.9.2
+bandit==1.9.3
 click==8.2.1
 freezegun==1.5.5
 more-itertools==10.8.0
@@ -20,11 +20,11 @@ more-itertools==10.8.0
 pip-tools==7.4.1
 pytest==9.0.2
 requests==2.32.5
-ruff==0.14.10
+ruff==0.14.14
 Sphinx==8.2.3
-sphinx-rtd-theme==3.0.2
+sphinx-rtd-theme==3.1.0
 urlwait==1.0
 werkzeug==3.1.5
 # Mozilla obs-team libraries that are published to GAR instead of pypi
 --extra-index-url https://us-python.pkg.dev/moz-fx-cavendish-prod/cavendish-prod-python/simple/
-obs-common==2026.1.8
+obs-common==2026.1.21
