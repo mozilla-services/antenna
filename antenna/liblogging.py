@@ -62,7 +62,7 @@ def set_up_logging(logging_level, debug=False, host_id=None, processname=None):
                 "format": "%(asctime)s %(levelname)s - %(processname)s - %(name)s - %(message)s"
             },
             "mozlog": {
-                "()": "dockerflow.logging.JsonLogFormatter",
+                "()": "dockerflow.logging.MozlogFormatter",
                 "logger_name": "antenna",
             },
         },
