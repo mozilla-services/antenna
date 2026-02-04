@@ -1,14 +1,14 @@
 # Production requirements
 attrs==25.4.0
-dockerflow==2024.4.2
+dockerflow==2026.1.26
 everett==3.5.0
 falcon==4.2.0
 fillmore==2.2.0
 google-cloud-storage==3.8.0
-gunicorn==24.0.0
+gunicorn==24.1.1
 isodate==0.7.2
 markus[datadog]==5.2.0
-sentry-sdk==2.50.0
+sentry-sdk==2.51.0
 google-cloud-pubsub==2.34.0
 
 # Development requirements
@@ -21,7 +21,7 @@ pip-tools==7.4.1
 pytest==9.0.2
 requests==2.32.5
 ruff==0.14.14
-Sphinx==8.2.3
+Sphinx==9.0.4
 sphinx-rtd-theme==3.1.0
 urlwait==1.0
 werkzeug==3.1.5
