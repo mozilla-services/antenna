@@ -18,10 +18,14 @@ RUN groupadd --gid $groupid --non-unique app && \
 RUN apt-get update && \
     apt-get install -y ripgrep tig
 
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+USER app
+
 # Install Python dependencies
-COPY requirements.txt /app/
-# NOTE(smarnach): Unpin pip once https://github.com/jazzband/pip-tools/issues/2176 is resolved.
-RUN pip install -U 'pip>=20' && \
-    pip install --no-cache-dir --no-deps --only-binary :all: -r requirements.txt && \
-    pip install --no-cache-dir ipython && \
-    pip check --disable-pip-version-check
+RUN --mount=type=cache,uid=$userid,gid=$groupid,target=/home/app/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --locked --group devcontainer
+ENV PATH="/app/.venv/bin:$PATH"

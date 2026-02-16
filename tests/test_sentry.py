@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+import site
 from unittest.mock import ANY
 
 from fillmore.test import diff_structure
@@ -10,6 +11,8 @@ from werkzeug.test import Client
 
 from antenna.app import get_app, count_sentry_scrub_error
 
+
+[SITE_PACKAGES] = site.getsitepackages()
 
 # NOTE(willkg): If this changes, we should update it and look for new things that should
 # be scrubbed. Use ANY for things that change between tests.
@@ -37,7 +40,7 @@ BROKEN_EVENT = {
                 "stacktrace": {
                     "frames": [
                         {
-                            "abs_path": "/usr/local/lib/python3.11/site-packages/falcon/app.py",
+                            "abs_path": SITE_PACKAGES + "/falcon/app.py",
                             "context_line": ANY,
                             "filename": "falcon/app.py",
                             "function": "__call__",

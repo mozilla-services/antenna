@@ -51,6 +51,7 @@ services:
       - statsd
     volumes:
       - .:/app
+      - /app/.venv
 
   # Web container is a prod-like fully-functioning Antenna container
   web:
