@@ -1,4 +1,4 @@
-.git
-**/*.swp
-**/*.pyc
-__pycache__
+.git/
+.ruff_cache/
+.venv/
+__pycache__/

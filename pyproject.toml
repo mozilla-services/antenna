@@ -1,3 +1,58 @@
+[project]
+name = "Antenna"
+description = "The collector component of the Socorro crash ingestion pipeline"
+readme = "README.rst"
+version = "1.0.0"  # Required, but unused
+requires-python = "==3.11.*"
+dependencies = [
+    "attrs",
+    "bandit",
+    "click",
+    "dockerflow",
+    "everett",
+    "falcon",
+    "fillmore",
+    "freezegun",
+    "google-cloud-pubsub",
+    "google-cloud-storage",
+    "gunicorn",
+    "isodate",
+    "markus[datadog]",
+    "more-itertools",
+    "obs-common",
+    "pytest",
+    "requests",
+    "ruff",
+    "sentry-sdk",
+    "sphinx",
+    "sphinx-rtd-theme",
+    "urlwait",
+    "werkzeug",
+]
+
+[dependency-groups]
+devcontainer = [
+    "ipython",
+]
+
+[project.urls]
+Homepage = "https://github.com/mozilla-services/antenna"
+
+[tool.uv]
+environments = ["""
+    sys_platform == 'linux' and
+    platform_machine == 'x86_64' and
+    implementation_name == 'cpython'
+"""]
+package = false
+
+[[tool.uv.index]]
+name = "cavendish"
+url = "https://us-python.pkg.dev/moz-fx-cavendish-prod/cavendish-prod-python/simple/"
+
+[tool.uv.sources]
+obs-common = { index = "cavendish" }
+
 [tool.ruff]
 line-length = 88
 target-version = "py311"

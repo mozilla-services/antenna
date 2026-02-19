@@ -67,13 +67,9 @@ test *args:
 docs:
     docker compose run --rm --no-deps base shell ./bin/build_docs.sh
 
-# Rebuild requirements.txt file after requirements.in changes.
-rebuild-reqs *args:
-    docker compose run --rm --no-deps base shell pip-compile --generate-hashes --strip-extras {{args}}
-
-# Verify that the requirements file is built by the version of Python that runs in the container.
-verify-reqs:
-    docker compose run --rm --no-deps base shell ./bin/run_verify_reqs.sh
+# Run uv inside the container
+uv *args: _env
+	docker compose run --rm --no-deps web shell uv {{args}}
 
 # Check how far behind different server environments are from main tip.
 service-status *args:
