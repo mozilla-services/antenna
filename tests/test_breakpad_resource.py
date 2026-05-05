@@ -262,6 +262,22 @@ class TestBreakpadSubmitterResourceExtract:
         )
         assert bsp.extract_payload(req) == crash_report
 
+    def test_extract_payload_invalid_dump_name(self, request_generator):
+        """Verify reports with reserved dump names get rejected."""
+        data, headers = multipart_encode(
+            {
+                "processed_crash": ("fakecrash.dump", io.BytesIO(b"abcd1234")),
+            }
+        )
+        req = request_generator(
+            method="POST", path="/submit", headers=headers, body=data
+        )
+        bsp = BreakpadSubmitterResource(
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+        )
+        with pytest.raises(MalformedCrashReport, match="invalid_dump_name"):
+            bsp.extract_payload(req)
+
     def test_extract_payload_compressed(self, request_generator):
         data, headers = multipart_encode(
             {
