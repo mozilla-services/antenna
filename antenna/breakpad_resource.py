@@ -42,6 +42,14 @@ BAD_FIELDS = [
 ]
 
 
+# Dump names that conflict with internally used folder names in the crash storage.
+RESERVED_DUMP_NAMES = [
+    "dump_names",
+    "processed_crash",
+    "raw_crash",
+]
+
+
 class MalformedCrashReport(Exception):
     """Exception raised when the crash report payload is malformed.
 
@@ -245,6 +253,8 @@ class BreakpadSubmitterResource:
 
                     # This is a dump, so add it to dumps using a sanitized dump name.
                     dump_name = sanitize_key_name(part.name)
+                    if dump_name in RESERVED_DUMP_NAMES:
+                        raise MalformedCrashReport("invalid_dump_name")
                     crash_report.dumps[dump_name] = part.stream.read()
 
         except MultipartParseError as mpe:
