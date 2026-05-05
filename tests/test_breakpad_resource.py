@@ -492,8 +492,34 @@ class TestBreakpadSubmitterResourceIntegration:
         mm.assert_timing("socorro.collector.crashmover.crash_handling.time")
         mm.assert_timing("socorro.collector.breakpad_resource.on_post.time")
 
-    def test_existing_uuid(self, client):
-        """Verify if the crash report has a uuid already, it's reused."""
+    def test_existing_uuid_accepted(self, client):
+        """Verify if the crash report has a uuid already, it's reused only if
+        the crash report was submitted by the stage submitter."""
+        client.rebuild_app({"BREAKPAD_STAGE_SUBMITTER_BEARER_TOKEN": "123"})
+        crash_id = "de1bb258-cbbf-4589-a673-34f800160918"
+        data, headers = multipart_encode(
+            {
+                "uuid": crash_id,
+                "ProductName": "Firefox",
+                "Version": "60.0a1",
+                "ReleaseChannel": "nightly",
+                "upload_file_minidump": ("fakecrash.dump", io.BytesIO(b"abcd1234")),
+            }
+        )
+
+        headers = {**headers, "Authorization": "Bearer 123"}
+
+        result = client.simulate_post("/submit", headers=headers, body=data)
+        assert result.status_code == 200
+
+        # Extract the uuid from the response content and verify that it's the
+        # crash id we sent
+        assert result.content.decode("utf-8") == f"CrashID=bp-{crash_id}\n"
+
+    def test_existing_uuid_rejected(self, client):
+        """Verify if the crash report has a uuid already, but it's not submitted
+        by the stage submitter, it's rejected."""
+        client.rebuild_app({"BREAKPAD_STAGE_SUBMITTER_BEARER_TOKEN": "123"})
         crash_id = "de1bb258-cbbf-4589-a673-34f800160918"
         data, headers = multipart_encode(
             {
@@ -508,9 +534,9 @@ class TestBreakpadSubmitterResourceIntegration:
         result = client.simulate_post("/submit", headers=headers, body=data)
         assert result.status_code == 200
 
-        # Extract the uuid from the response content and verify that it's the
-        # crash id we sent
-        assert result.content.decode("utf-8") == f"CrashID=bp-{crash_id}\n"
+        # Extract the uuid from the response content and verify it's a different
+        # crash id.
+        assert result.content.decode("utf-8") != f"CrashID=bp-{crash_id}\n"
 
     def test_add_user_agent_to_metadata(self, client):
         expected_user_agent = "wow"

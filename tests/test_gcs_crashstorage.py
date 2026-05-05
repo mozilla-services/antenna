@@ -27,10 +27,8 @@ class TestGcsCrashStorageIntegration:
         bucket_name = os.environ["CRASHMOVER_CRASHSTORAGE_BUCKET_NAME"]
         gcs_bucket = gcs_helper.bucket(bucket_name)
 
-        crash_id = "de1bb258-cbbf-4589-a673-34f800160918"
         data, headers = multipart_encode(
             {
-                "uuid": crash_id,
                 "ProductName": "Firefox",
                 "Version": "1.0",
                 "upload_file_minidump": ("fakecrash.dump", io.BytesIO(b"abcd1234")),
@@ -47,10 +45,11 @@ class TestGcsCrashStorageIntegration:
 
         result = client.simulate_post("/submit", headers=headers, body=data)
 
-        # Verify the collector returns a 200 status code and the crash id
-        # we fed it.
+        # Verify the collector returns a 200 status code
         assert result.status_code == 200
-        assert result.content == f"CrashID=bp-{crash_id}\n".encode("utf-8")
+        text = result.content.decode().strip()
+        crash_id = text.split("bp-")[1]
+        assert result.content == f"CrashID=bp-{crash_id}\n".encode()
 
         # Assert we uploaded files to gcs
         blobs = sorted(gcs_bucket.list_blobs(), key=lambda b: b.name)

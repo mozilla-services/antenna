@@ -138,7 +138,6 @@ class TestPubSubCrashPublishIntegration:
 
         data, headers = multipart_encode(
             {
-                "uuid": "de1bb258-cbbf-4589-a673-34f800160918",
                 "ProductName": "Firefox",
                 "Version": "1.0",
                 "upload_file_minidump": ("fakecrash.dump", io.BytesIO(b"abcd1234")),
@@ -159,11 +158,12 @@ class TestPubSubCrashPublishIntegration:
 
         result = client.simulate_post("/submit", headers=headers, body=data)
 
-        # Verify the collector returns a 200 status code and the crash id
-        # we fed it.
+        # Verify the collector returns a 200 status code
         assert result.status_code == 200
-        assert result.content == b"CrashID=bp-de1bb258-cbbf-4589-a673-34f800160918\n"
+        text = result.content.decode().strip()
+        crash_id = text.split("bp-")[1]
+        assert result.content == f"CrashID=bp-{crash_id}\n".encode()
 
         # Assert crash id was published
         crashids = pubsub.get_published_crashids(subscription_path)
-        assert crashids == [b"de1bb258-cbbf-4589-a673-34f800160918"]
+        assert crashids == [f"{crash_id}".encode()]

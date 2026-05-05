@@ -87,6 +87,9 @@ class BreakpadSubmitterResource:
             default="upload_file_minidump",
             doc="The name of the field in the POST data for dumps.",
         )
+        stage_submitter_bearer_token = Option(
+            default="", doc=("Stage submitter bearer auth token.")
+        )
 
     def __init__(self, config, crashmover):
         self.config = config.with_options(self)
@@ -373,9 +376,19 @@ class BreakpadSubmitterResource:
         # to generate a crash id.
         throttle_result, rule_name, percentage = self.get_throttle_result(raw_crash)
 
-        # Use a uuid if they gave us one and it's valid--otherwise create a new
-        # one.
-        if "uuid" in raw_crash and validate_crash_id(raw_crash["uuid"]):
+        # Use a uuid if provided if it's from the stage submitter
+        auth_header = req.get_header("Authorization")
+        is_from_submitter = (
+            auth_header is not None
+            and auth_header.startswith("Bearer ")
+            and auth_header.split(" ", 1)[1]
+            == self.config("stage_submitter_bearer_token")
+        )
+        if (
+            "uuid" in raw_crash
+            and is_from_submitter
+            and validate_crash_id(raw_crash["uuid"])
+        ):
             crash_id = raw_crash["uuid"]
             LOGGER.info("%s has existing crash_id", crash_id)
 
