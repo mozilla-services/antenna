@@ -6,6 +6,7 @@ import io
 import os
 from unittest.mock import Mock, patch, ANY
 
+from freezegun import freeze_time
 import pytest
 from google.cloud.exceptions import NotFound, Unauthorized
 
@@ -23,6 +24,7 @@ def mock_generate_test_filepath():
 class TestGcsCrashStorageIntegration:
     logging_names = ["antenna"]
 
+    @freeze_time("2011-09-06 00:00:00", tz_offset=0)
     def test_crash_storage(self, client, gcs_helper):
         bucket_name = os.environ["CRASHMOVER_CRASHSTORAGE_BUCKET_NAME"]
         gcs_bucket = gcs_helper.bucket(bucket_name)
@@ -59,7 +61,7 @@ class TestGcsCrashStorageIntegration:
             "test/testwrite.txt",
             f"v1/dump/{crash_id}",
             f"v1/dump_names/{crash_id}",
-            f"v1/raw_crash/20160918/{crash_id}",
+            f"v1/raw_crash/20110906/{crash_id}",
         ]
 
         blob_contents = [
@@ -108,10 +110,8 @@ class TestGcsCrashStorageIntegration:
 
         bucket.blob = get_blob
 
-        crash_id = "de1bb258-cbbf-4589-a673-34f800160918"
         data, headers = multipart_encode(
             {
-                "uuid": crash_id,
                 "ProductName": "Firefox",
                 "Version": "1.0",
                 "upload_file_minidump": ("fakecrash.dump", io.BytesIO(b"abcd1234")),
@@ -135,10 +135,8 @@ class TestGcsCrashStorageIntegration:
         assert result.content == b""
 
     def test_load_file(self, client, gcs_helper):
-        crash_id = "de1bb258-cbbf-4589-a673-34f800160918"
         data, headers = multipart_encode(
             {
-                "uuid": crash_id,
                 "ProductName": "Firefox",
                 "Version": "1.0",
                 "upload_file_minidump": ("fakecrash.dump", io.BytesIO(b"abcd1234")),
@@ -153,6 +151,8 @@ class TestGcsCrashStorageIntegration:
         )
 
         result = client.simulate_post("/submit", headers=headers, body=data)
+
+        crash_id = result.content.decode("utf-8").strip()[len("CrashID=bp-") :]
 
         # Verify the collector returns a 200 status code and the crash id
         # we fed it.
@@ -173,12 +173,12 @@ class TestGcsCrashStorageIntegration:
                 },
                 "payload": "multipart",
                 "payload_compressed": "0",
-                "payload_size": 648,
+                "payload_size": 486,
                 "throttle_rule": "accept_everything",
                 "user_agent": ANY,
             },
             "submitted_timestamp": ANY,
-            "uuid": "de1bb258-cbbf-4589-a673-34f800160918",
+            "uuid": f"{crash_id}",
             "version": 2,
         }
 

@@ -28,7 +28,6 @@ class TestFSCrashStorage:
         """Verify posting a crash gets to crash storage in the right shape"""
         data, headers = multipart_encode(
             {
-                "uuid": "de1bb258-cbbf-4589-a673-34f800160918",
                 "ProductName": "Test",
                 "Version": "1.0",
                 "upload_file_minidump": ("fakecrash.dump", io.BytesIO(b"abcd1234")),
@@ -51,6 +50,8 @@ class TestFSCrashStorage:
 
         assert result.status_code == 200
 
+        crash_id = result.content.decode("utf-8").strip()[len("CrashID=bp-") :]
+
         files = get_tree(str(tmpdir))
 
         def nix_tmpdir(fn):
@@ -61,9 +62,9 @@ class TestFSCrashStorage:
         # should have written--no more and no less.
         assert sorted([nix_tmpdir(fn) for fn in files]) == sorted(
             [
-                "/antenna_crashes/20160918/raw_crash/de1bb258-cbbf-4589-a673-34f800160918.json",
-                "/antenna_crashes/20160918/dump_names/de1bb258-cbbf-4589-a673-34f800160918.json",
-                "/antenna_crashes/20160918/upload_file_minidump/de1bb258-cbbf-4589-a673-34f800160918",
+                f"/antenna_crashes/20110906/raw_crash/{crash_id}.json",
+                f"/antenna_crashes/20110906/dump_names/{crash_id}.json",
+                f"/antenna_crashes/20110906/upload_file_minidump/{crash_id}",
             ]
         )
 
@@ -72,9 +73,7 @@ class TestFSCrashStorage:
             with open(fn, "rb") as fp:
                 contents[nix_tmpdir(fn)] = fp.read()
 
-        assert contents[
-            "/antenna_crashes/20160918/raw_crash/de1bb258-cbbf-4589-a673-34f800160918.json"
-        ] == (
+        assert contents[f"/antenna_crashes/20110906/raw_crash/{crash_id}.json"] == (
             b"{"
             + b'"ProductName": "Test", '
             + b'"Version": "1.0", '
@@ -84,36 +83,30 @@ class TestFSCrashStorage:
             + b'{"upload_file_minidump": "e9cee71ab932fde863338d08be4de9dfe39ea049bdafb342ce659ec5450b69ae"}, '
             + b'"payload": "multipart", '
             + b'"payload_compressed": "0", '
-            + b'"payload_size": 645, '
+            + b'"payload_size": 483, '
             + b'"throttle_rule": "accept_everything", '
             + b'"user_agent": "wow"'
             + b"}, "
             + b'"submitted_timestamp": "2011-09-06T00:00:00+00:00", '
-            + b'"uuid": "de1bb258-cbbf-4589-a673-34f800160918", '
+            + b'"uuid": "%s", ' % crash_id.encode()
             + b'"version": 2'
             + b"}"
         )
 
         assert (
-            contents[
-                "/antenna_crashes/20160918/dump_names/de1bb258-cbbf-4589-a673-34f800160918.json"
-            ]
+            contents[f"/antenna_crashes/20110906/dump_names/{crash_id}.json"]
             == b'["upload_file_minidump"]'
         )
 
         assert (
-            contents[
-                "/antenna_crashes/20160918/upload_file_minidump/de1bb258-cbbf-4589-a673-34f800160918"
-            ]
+            contents[f"/antenna_crashes/20110906/upload_file_minidump/{crash_id}"]
             == b"abcd1234"
         )
 
     @freeze_time("2011-09-06 00:00:00", tz_offset=0)
     def test_load_crash(self, client, tmpdir):
-        crash_id = "de1bb258-cbbf-4589-a673-34f800110906"
         data, headers = multipart_encode(
             {
-                "uuid": crash_id,
                 "ProductName": "Test",
                 "Version": "1.0",
                 "upload_file_minidump": ("fakecrash.dump", io.BytesIO(b"abcd1234")),
@@ -135,6 +128,8 @@ class TestFSCrashStorage:
 
         assert result.status_code == 200
 
+        crash_id = result.content.decode("utf-8").strip()[len("CrashID=bp-") :]
+
         fs_crashstorage = client.get_crashmover().crashstorage
         crash_report = fs_crashstorage.load_crash(crash_id)
         assert crash_report.crash_id == crash_id
@@ -150,7 +145,7 @@ class TestFSCrashStorage:
                 },
                 "payload": "multipart",
                 "payload_compressed": "0",
-                "payload_size": 645,
+                "payload_size": 483,
                 "throttle_rule": "accept_everything",
                 "user_agent": ANY,
             },

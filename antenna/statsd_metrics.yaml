@@ -76,6 +76,12 @@ socorro.collector.breakpad_resource.throttle:
     * ``result``: ``accept``, ``defer``, ``reject``, ``fakeaccept``, or
       ``continue``
 
+socorro.collector.breakpad_resource.unauthorized_uuid:
+  type: "incr"
+  description: |
+    Counter for how many unauthorized crash report payloads containing a 
+    uuid have been submitted.
+
 socorro.collector.crashmover.retry_count:
   type: "incr"
   description: |

@@ -492,9 +492,8 @@ class TestBreakpadSubmitterResourceIntegration:
         mm.assert_timing("socorro.collector.crashmover.crash_handling.time")
         mm.assert_timing("socorro.collector.breakpad_resource.on_post.time")
 
-    def test_existing_uuid_accepted(self, client):
-        """Verify if the crash report has a uuid already, it's reused only if
-        the crash report was submitted by the stage submitter."""
+    def test_with_auth_existing_valid_uuid_accepted(self, client):
+        """Verify that an authenticated request containing a valid uuid is accepted"""
         client.rebuild_app({"BREAKPAD_STAGE_SUBMITTER_BEARER_TOKEN": "123"})
         crash_id = "de1bb258-cbbf-4589-a673-34f800160918"
         data, headers = multipart_encode(
@@ -516,9 +515,8 @@ class TestBreakpadSubmitterResourceIntegration:
         # crash id we sent
         assert result.content.decode("utf-8") == f"CrashID=bp-{crash_id}\n"
 
-    def test_existing_uuid_rejected(self, client):
-        """Verify if the crash report has a uuid already, but it's not submitted
-        by the stage submitter, it's rejected."""
+    def test_no_auth_existing_valid_uuid_rejected(self, client):
+        """Verify that an unauthenticated request containing a uuid is rejected."""
         client.rebuild_app({"BREAKPAD_STAGE_SUBMITTER_BEARER_TOKEN": "123"})
         crash_id = "de1bb258-cbbf-4589-a673-34f800160918"
         data, headers = multipart_encode(
@@ -532,25 +530,43 @@ class TestBreakpadSubmitterResourceIntegration:
         )
 
         result = client.simulate_post("/submit", headers=headers, body=data)
-        assert result.status_code == 200
+        assert result.status_code == 401
 
-        # Extract the uuid from the response content and verify it's a different
-        # crash id.
-        assert result.content.decode("utf-8") != f"CrashID=bp-{crash_id}\n"
+        assert result.content.decode("utf-8") == "Discarded=unauthorized_uuid"
+
+    def test_with_auth_existing_invalid_uuid_rejected(self, client):
+        """Verify that an authenticated request containing an invalid uuid is rejected."""
+        client.rebuild_app({"BREAKPAD_STAGE_SUBMITTER_BEARER_TOKEN": "123"})
+        data, headers = multipart_encode(
+            {
+                "uuid": "456",
+                "ProductName": "Firefox",
+                "Version": "60.0a1",
+                "ReleaseChannel": "nightly",
+                "upload_file_minidump": ("fakecrash.dump", io.BytesIO(b"abcd1234")),
+            }
+        )
+
+        headers = {**headers, "Authorization": "Bearer 123"}
+
+        result = client.simulate_post("/submit", headers=headers, body=data)
+        assert result.status_code == 400
+
+        assert result.content.decode("utf-8") == "Discarded=malformed_invalid_uuid"
 
     def test_add_user_agent_to_metadata(self, client):
         expected_user_agent = "wow"
-        crash_id = "de1bb258-cbbf-4589-a673-34f800160918"
         data, headers = multipart_encode(
             {
-                "uuid": crash_id,
                 "ProductName": "Firefox",
                 "Version": "1.0",
                 "upload_file_minidump": ("fakecrash.dump", io.BytesIO(b"abcd1234")),
             }
         )
         headers["User-Agent"] = expected_user_agent
-        client.simulate_post("/submit", headers=headers, body=data)
+        result = client.simulate_post("/submit", headers=headers, body=data)
+
+        crash_id = result.content.decode("utf-8").strip()[len("CrashID=bp-") :]
 
         crashstorage = client.get_crashmover().crashstorage
         report = crashstorage.load_crash(crash_id)
