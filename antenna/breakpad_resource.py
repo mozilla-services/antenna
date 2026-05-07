@@ -3,6 +3,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import hashlib
+import hmac
 import io
 import json
 import logging
@@ -86,6 +87,9 @@ class BreakpadSubmitterResource:
         dump_field = Option(
             default="upload_file_minidump",
             doc="The name of the field in the POST data for dumps.",
+        )
+        stage_submitter_bearer_token = Option(
+            default="", doc=("Stage submitter bearer auth token.")
         )
 
     def __init__(self, config, crashmover):
@@ -373,11 +377,38 @@ class BreakpadSubmitterResource:
         # to generate a crash id.
         throttle_result, rule_name, percentage = self.get_throttle_result(raw_crash)
 
-        # Use a uuid if they gave us one and it's valid--otherwise create a new
-        # one.
-        if "uuid" in raw_crash and validate_crash_id(raw_crash["uuid"]):
-            crash_id = raw_crash["uuid"]
-            LOGGER.info("%s has existing crash_id", crash_id)
+        # Only the stage submitter can set the crash id via the uuid field
+        configured_token = self.config("stage_submitter_bearer_token")
+        auth_header = req.get_header("Authorization")
+        is_from_submitter = (
+            # If there's no configured token, treat the request as unauthenticated.
+            bool(configured_token)
+            and auth_header is not None
+            and auth_header.startswith("Bearer ")
+            and hmac.compare_digest(auth_header.split(" ", 1)[1], configured_token)
+        )
+        if "uuid" in raw_crash and not is_from_submitter:
+            # Reject an unauthenticated crash report with the uuid field.
+            METRICS.incr(
+                "collector.breakpad_resource.unauthorized_uuid",
+            )
+            resp.status = falcon.HTTP_401
+            resp.text = "Discarded=unauthorized_uuid"
+            return
+        if "uuid" in raw_crash:
+            if not validate_crash_id(raw_crash["uuid"]):
+                # Reject an authenticated request with an invalid uuid.
+                METRICS.incr(
+                    "collector.breakpad_resource.malformed",
+                    tags=["reason:invalid_uuid"],
+                )
+                resp.status = falcon.HTTP_400
+                resp.text = "Discarded=malformed_invalid_uuid"
+                return
+            else:
+                # Finally! An authenticated request with a valid uuid.
+                crash_id = raw_crash["uuid"]
+                LOGGER.info("%s has existing crash_id", crash_id)
 
         else:
             crash_id = create_crash_id(

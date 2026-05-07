@@ -50,6 +50,7 @@ docs/_build/
 target/
 
 # Docker things
+.devcontainer-build
 /.docker-build
 /fakes3_root/
 my.env
