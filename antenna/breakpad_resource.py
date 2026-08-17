@@ -164,7 +164,15 @@ class BreakpadSubmitterResource:
             gzip_header = 16 + zlib.MAX_WBITS
             start_time = time.perf_counter()
             try:
-                data = zlib.decompress(req.stream.read(content_length), gzip_header)
+                MAX_DECOMPRESSED_SIZE = 100 * 1024 * 1024
+                decompressor = zlib.decompressobj(gzip_header)
+                data = decompressor.decompress(
+                    req.stream.read(content_length), MAX_DECOMPRESSED_SIZE
+                )
+
+                if decompressor.unconsumed_tail:
+                    raise MalformedCrashReport("decompressed_gzip_too_large")
+
                 METRICS.histogram(
                     "collector.breakpad_resource.gzipped_crash_decompress",
                     value=(time.perf_counter() - start_time) * 1000.0,
