@@ -404,7 +404,7 @@ class TestBreakpadSubmitterResourceExtract:
                 "extra": '{"ProductName":"Firefox","Version":"1.0"}',
                 "upload_file_minidump": (
                     "fakecrash.dump",
-                    io.BytesIO(b"a" * (110 * 1024 * 1024)),
+                    io.BytesIO(b"a" * (210 * 1024 * 1024)),
                 ),
             }
         )
