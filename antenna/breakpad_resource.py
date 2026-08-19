@@ -164,7 +164,7 @@ class BreakpadSubmitterResource:
             gzip_header = 16 + zlib.MAX_WBITS
             start_time = time.perf_counter()
             try:
-                MAX_DECOMPRESSED_SIZE = 200 * 1024 * 1024
+                MAX_DECOMPRESSED_SIZE = 400 * 1024 * 1024
                 decompressor = zlib.decompressobj(gzip_header)
                 data = decompressor.decompress(
                     req.stream.read(content_length), MAX_DECOMPRESSED_SIZE
