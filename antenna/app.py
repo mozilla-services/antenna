@@ -120,6 +120,11 @@ class AntennaApp(falcon.App):
             parser=bool,
             doc="Whether or not this is a local development environment.",
         )
+        max_decompressed_body_size = Option(
+            default=str(400 * 1024 * 1024),
+            parser=int,
+            doc="The max body decompression size limit",
+        )
         statsd_host = Option(default="localhost", doc="Hostname for statsd server.")
         statsd_port = Option(default="8125", doc="Port for statsd server.", parser=int)
         secret_sentry_dsn = Option(
@@ -155,7 +160,9 @@ class AntennaApp(falcon.App):
         # This is the breakpad resource that handles incoming crash reports POSTed to
         # /submit
         self.breakpad = BreakpadSubmitterResource(
-            config=config_manager.with_namespace("breakpad"), crashmover=self.crashmover
+            config=config_manager.with_namespace("breakpad"),
+            crashmover=self.crashmover,
+            max_decompressed_body_size=self.config("max_decompressed_body_size"),
         )
 
     def uncaught_error_handler(self, req, resp, ex, params):

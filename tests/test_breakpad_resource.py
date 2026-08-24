@@ -44,7 +44,9 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+            config=EMPTY_CONFIG,
+            crashmover=FakeCrashMover(),
+            max_decompressed_body_size=400 * 1024 * 1024,
         )
         crash_report = CrashReport(
             annotations={
@@ -86,7 +88,9 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+            config=EMPTY_CONFIG,
+            crashmover=FakeCrashMover(),
+            max_decompressed_body_size=400 * 1024 * 1024,
         )
         crash_report = bsp.extract_payload(req)
 
@@ -111,7 +115,9 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+            config=EMPTY_CONFIG,
+            crashmover=FakeCrashMover(),
+            max_decompressed_body_size=400 * 1024 * 1024,
         )
         crash_report = CrashReport(
             annotations={
@@ -143,7 +149,9 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+            config=EMPTY_CONFIG,
+            crashmover=FakeCrashMover(),
+            max_decompressed_body_size=400 * 1024 * 1024,
         )
         crash_report = CrashReport(
             annotations={
@@ -167,7 +175,9 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+            config=EMPTY_CONFIG,
+            crashmover=FakeCrashMover(),
+            max_decompressed_body_size=400 * 1024 * 1024,
         )
         with pytest.raises(MalformedCrashReport, match="wrong_content_type"):
             bsp.extract_payload(req)
@@ -180,7 +190,9 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+            config=EMPTY_CONFIG,
+            crashmover=FakeCrashMover(),
+            max_decompressed_body_size=400 * 1024 * 1024,
         )
         with pytest.raises(MalformedCrashReport, match="no_annotations"):
             bsp.extract_payload(req)
@@ -209,7 +221,9 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+            config=EMPTY_CONFIG,
+            crashmover=FakeCrashMover(),
+            max_decompressed_body_size=400 * 1024 * 1024,
         )
         crash_report = CrashReport(
             annotations={
@@ -250,7 +264,9 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+            config=EMPTY_CONFIG,
+            crashmover=FakeCrashMover(),
+            max_decompressed_body_size=400 * 1024 * 1024,
         )
         crash_report = CrashReport(
             annotations={"Version": "100"},
@@ -273,7 +289,9 @@ class TestBreakpadSubmitterResourceExtract:
             method="POST", path="/submit", headers=headers, body=data
         )
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+            config=EMPTY_CONFIG,
+            crashmover=FakeCrashMover(),
+            max_decompressed_body_size=400 * 1024 * 1024,
         )
         with pytest.raises(MalformedCrashReport, match="invalid_dump_name"):
             bsp.extract_payload(req)
@@ -295,7 +313,9 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+            config=EMPTY_CONFIG,
+            crashmover=FakeCrashMover(),
+            max_decompressed_body_size=400 * 1024 * 1024,
         )
         crash_report = CrashReport(
             annotations={
@@ -321,7 +341,9 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+            config=EMPTY_CONFIG,
+            crashmover=FakeCrashMover(),
+            max_decompressed_body_size=400 * 1024 * 1024,
         )
         crash_report = CrashReport(
             annotations={
@@ -344,7 +366,9 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+            config=EMPTY_CONFIG,
+            crashmover=FakeCrashMover(),
+            max_decompressed_body_size=400 * 1024 * 1024,
         )
         with pytest.raises(MalformedCrashReport, match="invalid_json"):
             bsp.extract_payload(req)
@@ -358,7 +382,9 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+            config=EMPTY_CONFIG,
+            crashmover=FakeCrashMover(),
+            max_decompressed_body_size=400 * 1024 * 1024,
         )
         with pytest.raises(MalformedCrashReport, match="invalid_json_value"):
             bsp.extract_payload(req)
@@ -379,7 +405,9 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+            config=EMPTY_CONFIG,
+            crashmover=FakeCrashMover(),
+            max_decompressed_body_size=400 * 1024 * 1024,
         )
         crash_report = CrashReport(
             annotations={
@@ -397,14 +425,14 @@ class TestBreakpadSubmitterResourceExtract:
         assert bsp.extract_payload(req) == crash_report
 
     def test_extract_payload_decompressed_gzip_too_large(self, request_generator):
-        # This test ensures that a large compressed payload that exceeds 100MB is rejected.
-        # A 110 MB payload is decompressed which then raises a MalformedCrashReport error
+        # This test ensures that a large compressed payload that exceeds
+        # max_decompressed_body_size is rejected.
         data, headers = multipart_encode(
             {
                 "extra": '{"ProductName":"Firefox","Version":"1.0"}',
                 "upload_file_minidump": (
                     "fakecrash.dump",
-                    io.BytesIO(b"a" * (410 * 1024 * 1024)),
+                    io.BytesIO(b"abcd1234"),
                 ),
             }
         )
@@ -417,7 +445,9 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
+            config=EMPTY_CONFIG,
+            crashmover=FakeCrashMover(),
+            max_decompressed_body_size=5,
         )
         with pytest.raises(MalformedCrashReport, match="decompressed_gzip_too_large"):
             bsp.extract_payload(req)
@@ -446,7 +476,11 @@ class TestBreakpadSubmitterResourceExtract:
     ],
 )
 def test_cleanup_crash_report(raw_crash, expected):
-    bsp = BreakpadSubmitterResource(config=EMPTY_CONFIG, crashmover=FakeCrashMover())
+    bsp = BreakpadSubmitterResource(
+        config=EMPTY_CONFIG,
+        crashmover=FakeCrashMover(),
+        max_decompressed_body_size=400 * 1024 * 1024,
+    )
     bsp.cleanup_crash_report(raw_crash)
     assert raw_crash == expected
 
@@ -454,7 +488,11 @@ def test_cleanup_crash_report(raw_crash, expected):
 def test_get_throttle_result(client):
     raw_crash = {"ProductName": "Firefox", "ReleaseChannel": "nightly"}
 
-    bsp = BreakpadSubmitterResource(config=EMPTY_CONFIG, crashmover=FakeCrashMover())
+    bsp = BreakpadSubmitterResource(
+        config=EMPTY_CONFIG,
+        crashmover=FakeCrashMover(),
+        max_decompressed_body_size=400 * 1024 * 1024,
+    )
     assert bsp.get_throttle_result(raw_crash) == (ACCEPT, "is_nightly", 100)
 
 

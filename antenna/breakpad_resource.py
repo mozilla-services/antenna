@@ -92,11 +92,12 @@ class BreakpadSubmitterResource:
             default="", doc=("Stage submitter bearer auth token.")
         )
 
-    def __init__(self, config, crashmover):
+    def __init__(self, config, crashmover, max_decompressed_body_size):
         self.config = config.with_options(self)
         self.crashmover = crashmover
         self.throttler = Throttler(config.with_namespace("throttler"))
 
+        self.max_decompressed_body_size = max_decompressed_body_size
         self._multipart_parse_options = MultipartParseOptions()
         # Setting this to 0 means "infinity"
         self._multipart_parse_options.max_body_part_count = 0
@@ -164,10 +165,9 @@ class BreakpadSubmitterResource:
             gzip_header = 16 + zlib.MAX_WBITS
             start_time = time.perf_counter()
             try:
-                MAX_DECOMPRESSED_SIZE = 400 * 1024 * 1024
                 decompressor = zlib.decompressobj(gzip_header)
                 data = decompressor.decompress(
-                    req.stream.read(content_length), MAX_DECOMPRESSED_SIZE
+                    req.stream.read(content_length), self.max_decompressed_body_size
                 )
 
                 if decompressor.unconsumed_tail:
