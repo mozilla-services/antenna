@@ -84,20 +84,21 @@ class BreakpadSubmitterResource:
     """
 
     class Config:
-        dump_field = Option(
-            default="upload_file_minidump",
-            doc="The name of the field in the POST data for dumps.",
-        )
         stage_submitter_bearer_token = Option(
             default="", doc=("Stage submitter bearer auth token.")
         )
+        breakpad_max_body_size = Option(
+            default=str(400 * 1024 * 1024),
+            parser=int,
+            doc="The max body decompression size limit",
+        )
 
-    def __init__(self, config, crashmover, max_decompressed_body_size):
+    def __init__(self, config, crashmover):
         self.config = config.with_options(self)
         self.crashmover = crashmover
         self.throttler = Throttler(config.with_namespace("throttler"))
 
-        self.max_decompressed_body_size = max_decompressed_body_size
+        self.max_body_size = self.config("breakpad_max_body_size")
         self._multipart_parse_options = MultipartParseOptions()
         # Setting this to 0 means "infinity"
         self._multipart_parse_options.max_body_part_count = 0
@@ -167,7 +168,7 @@ class BreakpadSubmitterResource:
             try:
                 decompressor = zlib.decompressobj(gzip_header)
                 data = decompressor.decompress(
-                    req.stream.read(content_length), self.max_decompressed_body_size
+                    req.stream.read(content_length), self.max_body_size
                 )
 
                 if decompressor.unconsumed_tail:
