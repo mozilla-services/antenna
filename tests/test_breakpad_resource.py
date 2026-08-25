@@ -431,7 +431,7 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=ConfigManager.from_dict({"breakpad_max_body_size": "5"}),
+            config=ConfigManager.from_dict({"max_body_size": "5"}),
             crashmover=FakeCrashMover(),
         )
         with pytest.raises(MalformedCrashReport, match="decompressed_gzip_too_large"):

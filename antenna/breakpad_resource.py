@@ -84,13 +84,13 @@ class BreakpadSubmitterResource:
     """
 
     class Config:
-        stage_submitter_bearer_token = Option(
-            default="", doc=("Stage submitter bearer auth token.")
-        )
-        breakpad_max_body_size = Option(
+        max_body_size = Option(
             default=str(400 * 1024 * 1024),
             parser=int,
             doc="The max body decompression size limit",
+        )
+        stage_submitter_bearer_token = Option(
+            default="", doc=("Stage submitter bearer auth token.")
         )
 
     def __init__(self, config, crashmover):
@@ -98,7 +98,7 @@ class BreakpadSubmitterResource:
         self.crashmover = crashmover
         self.throttler = Throttler(config.with_namespace("throttler"))
 
-        self.max_body_size = self.config("breakpad_max_body_size")
+        self.max_body_size = self.config("max_body_size")
         self._multipart_parse_options = MultipartParseOptions()
         # Setting this to 0 means "infinity"
         self._multipart_parse_options.max_body_part_count = 0
