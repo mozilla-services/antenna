@@ -44,8 +44,7 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG,
-            crashmover=FakeCrashMover(),
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
         )
         crash_report = CrashReport(
             annotations={
@@ -87,8 +86,7 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG,
-            crashmover=FakeCrashMover(),
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
         )
         crash_report = bsp.extract_payload(req)
 
@@ -113,8 +111,7 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG,
-            crashmover=FakeCrashMover(),
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
         )
         crash_report = CrashReport(
             annotations={
@@ -146,8 +143,7 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG,
-            crashmover=FakeCrashMover(),
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
         )
         crash_report = CrashReport(
             annotations={
@@ -171,8 +167,7 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG,
-            crashmover=FakeCrashMover(),
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
         )
         with pytest.raises(MalformedCrashReport, match="wrong_content_type"):
             bsp.extract_payload(req)
@@ -185,8 +180,7 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG,
-            crashmover=FakeCrashMover(),
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
         )
         with pytest.raises(MalformedCrashReport, match="no_annotations"):
             bsp.extract_payload(req)
@@ -215,8 +209,7 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG,
-            crashmover=FakeCrashMover(),
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
         )
         crash_report = CrashReport(
             annotations={
@@ -257,8 +250,7 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG,
-            crashmover=FakeCrashMover(),
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
         )
         crash_report = CrashReport(
             annotations={"Version": "100"},
@@ -281,8 +273,7 @@ class TestBreakpadSubmitterResourceExtract:
             method="POST", path="/submit", headers=headers, body=data
         )
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG,
-            crashmover=FakeCrashMover(),
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
         )
         with pytest.raises(MalformedCrashReport, match="invalid_dump_name"):
             bsp.extract_payload(req)
@@ -304,8 +295,7 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG,
-            crashmover=FakeCrashMover(),
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
         )
         crash_report = CrashReport(
             annotations={
@@ -331,8 +321,7 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG,
-            crashmover=FakeCrashMover(),
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
         )
         crash_report = CrashReport(
             annotations={
@@ -355,8 +344,7 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG,
-            crashmover=FakeCrashMover(),
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
         )
         with pytest.raises(MalformedCrashReport, match="invalid_json"):
             bsp.extract_payload(req)
@@ -370,8 +358,7 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG,
-            crashmover=FakeCrashMover(),
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
         )
         with pytest.raises(MalformedCrashReport, match="invalid_json_value"):
             bsp.extract_payload(req)
@@ -392,8 +379,7 @@ class TestBreakpadSubmitterResourceExtract:
         )
 
         bsp = BreakpadSubmitterResource(
-            config=EMPTY_CONFIG,
-            crashmover=FakeCrashMover(),
+            config=EMPTY_CONFIG, crashmover=FakeCrashMover()
         )
         crash_report = CrashReport(
             annotations={
