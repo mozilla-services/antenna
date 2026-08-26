@@ -447,10 +447,7 @@ class TestBreakpadSubmitterResourceExtract:
     ],
 )
 def test_cleanup_crash_report(raw_crash, expected):
-    bsp = BreakpadSubmitterResource(
-        config=EMPTY_CONFIG,
-        crashmover=FakeCrashMover(),
-    )
+    bsp = BreakpadSubmitterResource(config=EMPTY_CONFIG, crashmover=FakeCrashMover())
     bsp.cleanup_crash_report(raw_crash)
     assert raw_crash == expected
 
@@ -458,10 +455,7 @@ def test_cleanup_crash_report(raw_crash, expected):
 def test_get_throttle_result(client):
     raw_crash = {"ProductName": "Firefox", "ReleaseChannel": "nightly"}
 
-    bsp = BreakpadSubmitterResource(
-        config=EMPTY_CONFIG,
-        crashmover=FakeCrashMover(),
-    )
+    bsp = BreakpadSubmitterResource(config=EMPTY_CONFIG, crashmover=FakeCrashMover())
     assert bsp.get_throttle_result(raw_crash) == (ACCEPT, "is_nightly", 100)
 
 
