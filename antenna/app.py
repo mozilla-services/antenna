@@ -155,8 +155,7 @@ class AntennaApp(falcon.App):
         # This is the breakpad resource that handles incoming crash reports POSTed to
         # /submit
         self.breakpad = BreakpadSubmitterResource(
-            config=config_manager.with_namespace("breakpad"),
-            crashmover=self.crashmover,
+            config=config_manager.with_namespace("breakpad"), crashmover=self.crashmover
         )
 
     def uncaught_error_handler(self, req, resp, ex, params):
