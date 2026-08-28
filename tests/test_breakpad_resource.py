@@ -396,6 +396,33 @@ class TestBreakpadSubmitterResourceExtract:
         )
         assert bsp.extract_payload(req) == crash_report
 
+    def test_extract_payload_decompressed_gzip_too_large(self, request_generator):
+        # This test ensures that a large compressed payload that exceeds
+        # max_body_size is rejected.
+        data, headers = multipart_encode(
+            {
+                "extra": '{"ProductName":"Firefox","Version":"1.0"}',
+                "upload_file_minidump": (
+                    "fakecrash.dump",
+                    io.BytesIO(b"abcd1234"),
+                ),
+            }
+        )
+
+        data = compress(data)
+        headers["Content-Encoding"] = "gzip"
+
+        req = request_generator(
+            method="POST", path="/submit", headers=headers, body=data
+        )
+
+        bsp = BreakpadSubmitterResource(
+            config=ConfigManager.from_dict({"max_body_size": "5"}),
+            crashmover=FakeCrashMover(),
+        )
+        with pytest.raises(MalformedCrashReport, match="decompressed_gzip_too_large"):
+            bsp.extract_payload(req)
+
 
 @pytest.mark.parametrize(
     "raw_crash, expected",
