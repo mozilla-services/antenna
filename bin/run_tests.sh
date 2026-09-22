@@ -22,6 +22,10 @@ echo ">>> pytest"
 export PYTHONPATH=/app/:${PYTHONPATH:-}
 PYTEST="$(which pytest)"
 
+# The cloud function has its own dependencies, so run its tests against those
+# rather than Antenna's.
+uv run --directory crash_ping_submitter --locked pytest tests
+
 # Wait for services to be ready (both have the same endpoint url)
 urlwait "http://${PUBSUB_EMULATOR_HOST}" 10
 urlwait "${STORAGE_EMULATOR_HOST}/storage/v1/b" 10

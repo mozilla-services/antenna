@@ -3,7 +3,9 @@ version: 2
 updates:
   - package-ecosystem: "uv"
     versioning-strategy: "lockfile-only"
-    directory: "/"
+    directories:
+      - "/"
+      - "/crash_ping_submitter"
     schedule:
       interval: "monthly"
     rebase-strategy: "disabled"

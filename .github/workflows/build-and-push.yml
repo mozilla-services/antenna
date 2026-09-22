@@ -75,3 +75,41 @@ jobs:
           image_tags: ${{ env.TARGET_IMAGE }}
           workload_identity_pool_project_number: ${{ secrets.WORKLOAD_IDENTITY_POOL_PROJECT_NUMBER }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+  upload-crash-ping-submitter:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install uv
+        # Keep this in step with the uv in the base image that docker/Dockerfile
+        # uses.
+        uses: astral-sh/setup-uv@v10
+        with:
+          version: "0.9.30"
+      - name: Build the crash ping submitter source zip
+        run: ./bin/build_crash_ping_submitter_zip.sh
+      - name: Get the source tree sha
+        run: |
+          echo "SOURCE_SHA=$(git rev-parse --short=12 HEAD:crash_ping_submitter)" >> "$GITHUB_ENV"
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: projects/${{ secrets.WORKLOAD_IDENTITY_POOL_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-actions/providers/github-actions
+          service_account: artifact-writer@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com
+      - name: Install gcloud
+        uses: google-github-actions/setup-gcloud@v3
+      - name: Upload the source zip unless that version is already there
+        run: |
+          object="gs://${{ secrets.CLOUD_FUNCTION_SOURCE_BUCKET_STAGE }}/crash-ping-submitter/${SOURCE_SHA}.zip"
+          if gcloud storage objects describe "${object}" > /dev/null 2>&1; then
+            echo "Unchanged; ${object} already exists."
+          else
+            gcloud storage cp \
+              --custom-metadata="commit=${GITHUB_SHA},run=${GITHUB_RUN_ID}" \
+              dist/crash-ping-submitter.zip "${object}"
+          fi

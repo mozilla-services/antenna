@@ -1,5 +1,8 @@
 # NOTE(smarnach): To upgrade Python to a new minor or major version, see
 # https://antenna.readthedocs.io/en/latest/dev.html#upgrading-to-a-new-python-version
+#
+# NOTE: This image includes uv. The installed version and the version pinned for
+# astral-sh/setup-uv in CI need to match.
 FROM --platform=linux/amd64 ghcr.io/astral-sh/uv:python3.11-bookworm-slim@sha256:4f5d923c9dcea037f57bda425dd209f3ec643da2f0b74227f68d09dab0b3bb36
 
 # Set up user and group

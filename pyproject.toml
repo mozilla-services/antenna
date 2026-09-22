@@ -68,6 +68,7 @@ docstring-quotes = "double"
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S101"]
 "systemtest/*" = ["S101"]
+"crash_ping_submitter/tests/*" = ["S101"]
 
 
 [tool.pytest.ini_options]

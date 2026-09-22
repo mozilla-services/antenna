@@ -16,6 +16,10 @@ _env:
 build *args='deploy-base fakesentry gcs-emulator statsd nginx': _env
     docker compose --progress plain build {{args}}
 
+# Build the crash ping submitter cloud function source zip.
+build-crash-ping-submitter-zip:
+    docker compose run --rm --no-deps base shell ./bin/build_crash_ping_submitter_zip.sh
+
 # Set up services.
 setup: _env
     docker compose run --rm web shell ./bin/run_setup.sh
