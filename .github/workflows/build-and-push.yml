@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - cringe-440
     tags:
       - v20[0-9][0-9].[01][0-9].[0-3][0-9]  # e.g. v2023.12.04
       - v20[0-9][0-9].[01][0-9].[0-3][0-9]-[0-9]  # e.g. v2023.12.04-2
@@ -79,7 +78,7 @@ jobs:
 
   upload-crash-ping-submitter:
     needs: build
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/cringe-440'
+    if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
       id-token: write
