@@ -42,6 +42,14 @@ To build the source zip::
 
     just build-crash-ping-submitter-zip
 
+To test it locally::
+
+    just run-crash-ping-submitter
+
+Then you can send requests from your host machine::
+
+    curl -X POST localhost:8080 -H 'Content-Type: application/json' --data @crash_ping_submitter/tests/data/pubsub_push_request.json
+
 
 Deployment
 ==========

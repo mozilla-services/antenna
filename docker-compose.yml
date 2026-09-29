@@ -122,6 +122,24 @@ services:
       timeout: 3s
       retries: 5
 
+  # Runs the crash ping submitter cloud function the way GCP runs it, so a
+  # Pub/Sub push request can be sent to it locally. Its dependencies are a
+  # separate uv project, so it runs through "uv run" rather than the venv on
+  # PATH.
+  crash-ping-submitter:
+    image: local/antenna_deploy_base
+    command:
+      - shell
+      - uv
+      - run
+      - --directory
+      - crash_ping_submitter
+      - functions-framework
+      - --target=handle_crash_ping
+      - --port=8000
+    ports:
+      - "${EXPOSE_CRASH_PING_SUBMITTER_PORT:-8080}:8000"
+
   nginx:
     build:
       context: docker/images/nginx

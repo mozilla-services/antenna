@@ -16,3 +16,8 @@ services:
       - .:/app
       - /app/.venv
       - /app/crash_ping_submitter/.venv
+  crash-ping-submitter:
+    volumes:
+      - .:/app
+      - /app/.venv
+      - /app/crash_ping_submitter/.venv

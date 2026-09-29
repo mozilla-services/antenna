@@ -28,6 +28,10 @@ setup: _env
 run *args='--attach=web --attach=nginx --attach=fakesentry web nginx': _env
     docker compose up {{args}}
 
+# Run the crash ping submitter.
+run-crash-ping-submitter *args='--attach=crash-ping-submitter': _env
+    docker compose up {{args}} crash-ping-submitter
+
 # Stop service containers.
 stop *args:
     docker compose stop {{args}}
