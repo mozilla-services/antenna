@@ -1,0 +1,26 @@
+# NOTE: The GCP Python buildpack builds this function from a requirements.txt
+# generated from the lockfile in this project. We don't want to include
+# Antenna's dependencies (including the private cavendish index) when we
+# generate the file. See bin/build_crash_ping_submitter_zip.sh.
+
+[project]
+name = "crash-ping-submitter"
+description = "Cloud function that submits Firefox crash pings to Antenna"
+version = "1.0.0"  # Required, but unused
+requires-python = "==3.11.*"
+dependencies = [
+    "functions-framework",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+# main.py is at the project root, so include that in the path, so we can import
+# it in tests.
+pythonpath = ["."]
