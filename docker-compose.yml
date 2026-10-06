@@ -122,6 +122,19 @@ services:
       timeout: 3s
       retries: 5
 
+  # Runs the crash ping submitter cloud function the way GCP runs it, so a
+  # Pub/Sub push request can be sent to it locally. It has its own image
+  # because its dependencies are a separate uv project from Antenna's.
+  crash-ping-submitter:
+    build:
+      context: crash_ping_submitter
+      args:
+        userid: ${USE_UID:-10001}
+        groupid: ${USE_GID:-10001}
+    image: local/antenna_crash_ping_submitter
+    ports:
+      - "${EXPOSE_CRASH_PING_SUBMITTER_PORT:-8080}:8000"
+
   nginx:
     build:
       context: docker/images/nginx

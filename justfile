@@ -13,8 +13,12 @@ _env:
     fi
 
 # Build docker images.
-build *args='deploy-base fakesentry gcs-emulator statsd nginx': _env
+build *args='deploy-base crash-ping-submitter fakesentry gcs-emulator statsd nginx': _env
     docker compose --progress plain build {{args}}
+
+# Build the crash ping submitter cloud function source zip.
+build-crash-ping-submitter-zip:
+    docker compose run --rm --no-deps base shell ./bin/build_crash_ping_submitter_zip.sh
 
 # Set up services.
 setup: _env
@@ -23,6 +27,25 @@ setup: _env
 # Run the webapp and services.
 run *args='--attach=web --attach=nginx --attach=fakesentry web nginx': _env
     docker compose up {{args}}
+
+# Run the crash ping submitter.
+run-crash-ping-submitter *args='--attach=crash-ping-submitter': _env
+    docker compose up {{args}} crash-ping-submitter
+
+# Run the crash ping submitter tests.
+test-crash-ping-submitter *args='tests':
+    docker compose run --rm --no-deps crash-ping-submitter pytest {{args}}
+
+# Lint the crash ping submitter, or use --fix to reformat and apply auto-fixes.
+lint-crash-ping-submitter *args:
+    #!/usr/bin/env sh
+    if [ "{{args}}" = "--fix" ]; then
+        docker compose run --rm --no-deps crash-ping-submitter \
+            sh -c 'ruff format . && ruff check --fix .'
+    else
+        docker compose run --rm --no-deps crash-ping-submitter \
+            sh -c 'ruff check . && ruff format --check .'
+    fi
 
 # Stop service containers.
 stop *args:

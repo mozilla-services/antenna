@@ -3,7 +3,9 @@ version: 2
 updates:
   - package-ecosystem: "uv"
     versioning-strategy: "lockfile-only"
-    directory: "/"
+    directories:
+      - "/"
+      - "/crash_ping_submitter"
     schedule:
       interval: "monthly"
     rebase-strategy: "disabled"
@@ -14,12 +16,16 @@ updates:
         update-types: ["major", "minor", "patch"]
       development-dependencies:
         dependency-type: "development"
+        # Group updates for the same dependency across both directories into one
+        # pull request, so Antenna and the crash ping submitter stay in sync.
+        group-by: dependency-name
         update-types: ["major", "minor", "patch"]
 
   - package-ecosystem: "docker"
     directories:
       - "/docker"
       - "/docker/images/*"
+      - "/crash_ping_submitter"
     schedule:
       interval: "monthly"
     rebase-strategy: "disabled"
