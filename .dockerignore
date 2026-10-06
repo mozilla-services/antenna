@@ -1,4 +1,5 @@
 .git/
+crash_ping_submitter/
 .ruff_cache/
 .venv/
 __pycache__/

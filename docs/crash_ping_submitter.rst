@@ -29,9 +29,12 @@ it itself.
 Development
 ===========
 
-The tests run as part of the normal test suite::
+The crash ping submitter has its own Docker image, built from
+``crash_ping_submitter/Dockerfile``, with its dependencies installed. So it is
+tested and linted separately from Antenna::
 
-    just test
+    just test-crash-ping-submitter
+    just lint-crash-ping-submitter
 
 To add or change a dependency, edit ``pyproject.toml`` and then update the
 lockfile::
