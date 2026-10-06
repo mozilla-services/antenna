@@ -46,6 +46,12 @@ jobs:
         run: just lint
       - name: Run tests
         run: just test
+      # NOTE: The crash ping submitter has its own image, so it is linted and
+      # tested separately. These will move to their own workflow.
+      - name: Run crash ping submitter lint check
+        run: just lint-crash-ping-submitter
+      - name: Run crash ping submitter tests
+        run: just test-crash-ping-submitter
       - name: Run systemtest
         run: |
           just setup

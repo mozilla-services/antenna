@@ -5,19 +5,15 @@ services:
     volumes:
       - .:/app
       - /app/.venv
-      - /app/crash_ping_submitter/.venv
   web:
     volumes:
       - .:/app
       - /app/.venv
-      - /app/crash_ping_submitter/.venv
   test:
     volumes:
       - .:/app
       - /app/.venv
-      - /app/crash_ping_submitter/.venv
   crash-ping-submitter:
     volumes:
-      - .:/app
+      - ./crash_ping_submitter:/app
       - /app/.venv
-      - /app/crash_ping_submitter/.venv
