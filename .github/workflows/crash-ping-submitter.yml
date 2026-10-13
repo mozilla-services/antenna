@@ -1,0 +1,63 @@
+name: Test and upload the crash ping submitter
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - crash_ping_submitter/**
+  pull_request:
+    branches:
+      - main
+    paths:
+      - crash_ping_submitter/**
+  merge_group:
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    env:
+      # Disable docker compose volume mounts in docker-compose.override.yml
+      COMPOSE_FILE: docker-compose.yml
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install just
+        run: sudo apt-get update && sudo apt-get install -y just
+      - name: Build the Docker image
+        run: just build crash-ping-submitter
+      - name: Run lint check
+        run: just lint-crash-ping-submitter
+      - name: Run tests
+        run: just test-crash-ping-submitter
+
+  upload:
+    needs: test
+    if: github.event_name == 'push'
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install uv
+        # Keep this in step with the uv in the base image that
+        # crash_ping_submitter/Dockerfile uses.
+        uses: astral-sh/setup-uv@v10.2.0
+        with:
+          version: "0.9.30"
+      - name: Build the source zip
+        run: ./crash_ping_submitter/build_zip.sh
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: projects/${{ secrets.WORKLOAD_IDENTITY_POOL_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-actions/providers/github-actions
+          service_account: artifact-writer@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com
+      - name: Install gcloud
+        uses: google-github-actions/setup-gcloud@v3
+      - name: Upload the source zip
+        run: |
+          commit_sha="$(git rev-parse --short=10 "$GITHUB_SHA")"
+          object="gs://${{ secrets.CLOUD_FUNCTION_SOURCE_BUCKET_STAGE }}/crash-ping-submitter/${commit_sha}.zip"
+          gcloud storage cp \
+            --custom-metadata="run=${GITHUB_RUN_ID}" \
+            crash_ping_submitter/dist/crash-ping-submitter.zip "${object}"
