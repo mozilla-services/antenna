@@ -18,7 +18,7 @@ build *args='deploy-base crash-ping-submitter fakesentry gcs-emulator statsd ngi
 
 # Build the crash ping submitter cloud function source zip.
 build-crash-ping-submitter-zip:
-    docker compose run --rm --no-deps base shell ./bin/build_crash_ping_submitter_zip.sh
+    docker compose run --rm --no-deps crash-ping-submitter ./build_zip.sh
 
 # Set up services.
 setup: _env
@@ -68,6 +68,7 @@ clean:
     # python related things
     -rm -rf build/
     -rm -rf dist/
+    -rm -rf crash_ping_submitter/dist/
     -rm -rf .eggs/
     find . -name '*.egg-info' -exec rm -rf {} +
     find . -name '*.egg' -exec rm -f {} +

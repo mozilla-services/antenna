@@ -9,7 +9,7 @@ subscription on the data platform's crash ping topic POSTs one crash ping per
 request to the function.
 
 The source for this function is packaged and uploaded to GCS by CI. See
-``bin/build_crash_ping_submitter_zip.sh`` and
+``crash_ping_submitter/build_zip.sh`` and
 ``.github/workflows/build-and-push.yml``. The resources it is deployed to live
 in webservices-infra/socorro/tf/modules/crash_ping_submitter.
 

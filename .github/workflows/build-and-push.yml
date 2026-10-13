@@ -98,7 +98,7 @@ jobs:
         with:
           version: "0.9.30"
       - name: Build the crash ping submitter source zip
-        run: ./bin/build_crash_ping_submitter_zip.sh
+        run: ./crash_ping_submitter/build_zip.sh
       - name: Get the source tree sha
         run: |
           echo "SOURCE_SHA=$(git rev-parse --short=12 HEAD:crash_ping_submitter)" >> "$GITHUB_ENV"
@@ -117,5 +117,5 @@ jobs:
           else
             gcloud storage cp \
               --custom-metadata="commit=${GITHUB_SHA},run=${GITHUB_RUN_ID}" \
-              dist/crash-ping-submitter.zip "${object}"
+              crash_ping_submitter/dist/crash-ping-submitter.zip "${object}"
           fi

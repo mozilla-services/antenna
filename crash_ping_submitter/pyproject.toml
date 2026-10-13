@@ -1,7 +1,6 @@
 # NOTE: The GCP Python buildpack builds this function from a requirements.txt
 # generated from the lockfile in this project. We don't want to include
-# Antenna's dependencies when we generate the file. See
-# bin/build_crash_ping_submitter_zip.sh.
+# Antenna's dependencies when we generate the file. See build_zip.sh.
 
 [project]
 name = "crash-ping-submitter"
