@@ -10,8 +10,8 @@ request to the function.
 
 The source for this function is packaged and uploaded to GCS by CI. See
 ``crash_ping_submitter/build_zip.sh`` and
-``.github/workflows/build-and-push.yml``. The resources it is deployed to live
-in webservices-infra/socorro/tf/modules/crash_ping_submitter.
+``.github/workflows/crash-ping-submitter.yml``. The resources it is deployed
+to live in webservices-infra/socorro/tf/modules/crash_ping_submitter.
 
 """
 
@@ -50,17 +50,6 @@ def handle_malformed_message(exc):
     return flask.jsonify({"msg": str(exc)}), 400
 
 
-def is_gzipped(data):
-    """Return whether the data is gzip compressed.
-
-    Every gzip stream starts with the same two bytes, 0x1f 0x8b, so use
-    this property to check.
-    See https://datatracker.ietf.org/doc/html/rfc1952 Section 2.3.1.
-
-    """
-    return data[:2] == b"\x1f\x8b"
-
-
 def decode_crash_ping(data):
     """Decode the crash ping in the ``data`` field of a Pub/Sub message.
 
@@ -68,8 +57,8 @@ def decode_crash_ping(data):
 
     :returns: the crash ping as a dict
 
-    :raises MalformedMessage: if the data can't be base64 decoded or
-    isn't gzipped.
+    :raises MalformedMessage: if the data can't be base64 decoded, is
+    gzipped but truncated, is not JSON or has a non-object payload.
 
     """
     try:
@@ -78,7 +67,7 @@ def decode_crash_ping(data):
         # Using the altchars option allows us to handle both scenarios.
         raw = base64.b64decode(data, altchars=b"-_")
     except ValueError as exc:
-        raise MalformedMessage(f"data is not base64: {exc}") from exc
+        raise MalformedMessage(f"Data is not base64: {exc}.") from exc
 
     # The Glean pipeline compresses payloads, unless it hits a compression
     # error.
@@ -88,13 +77,12 @@ def decode_crash_ping(data):
     # to a separate, earlier compression from the client during upload, so
     # we cannot rely on it to check.
     # https://github.com/mozilla/gcp-ingestion/blob/65efa337e606226c01fb2411869c21cb9147bbc1/ingestion-beam/src/main/java/com/mozilla/telemetry/transforms/DecompressPayload.java#L81-L83
-    if is_gzipped(raw):
-        try:
-            raw = gzip.decompress(raw)
-        except (OSError, EOFError) as exc:
-            raise MalformedMessage(f"Data is not gzipped: {exc}.") from exc
-    else:
-        LOGGER.warning("Crash ping data was not compressed.")
+    try:
+        raw = gzip.decompress(raw)
+    except gzip.BadGzipFile as exc:
+        LOGGER.warning("Crash ping data was not gzipped: %s.", exc)
+    except EOFError as exc:
+        raise MalformedMessage(f"Data is gzipped but truncated: {exc}.") from exc
 
     try:
         crash_ping = json.loads(raw)
@@ -126,7 +114,7 @@ def handle_crash_ping(request: flask.Request):
 
     client_info = crash_ping.get("client_info")
     if not isinstance(client_info, dict):
-        raise MalformedMessage("Crash ping has no client_info.")
+        raise MalformedMessage("Crash ping has no client_info, or it is not a dict.")
 
     attributes = message.get("attributes") or {}
     document_id = attributes.get("document_id")

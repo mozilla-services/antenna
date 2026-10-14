@@ -8,10 +8,11 @@ import json
 import logging
 import pathlib
 
-import main
 import pytest
 import werkzeug.test
 import werkzeug.wrappers
+
+import main
 
 DATA_DIR = pathlib.Path(__file__).parent / "data"
 
@@ -80,7 +81,7 @@ def test_accepts_data_that_is_not_compressed(caplog):
 
     assert main.handle_crash_ping(build_push_request(data)) == {"msg": "ok"}
     assert f"glean_client_id={GLEAN_CLIENT_ID}" in caplog.text
-    assert "was not compressed" in caplog.text
+    assert "was not gzipped" in caplog.text
 
 
 def test_acknowledges_a_ping_with_no_client_id(caplog):
@@ -102,7 +103,7 @@ def test_acknowledges_a_ping_with_no_client_id(caplog):
         pytest.param({"message": "nope"}, id="message_is_not_an_object"),
         pytest.param({"message": {}}, id="no_data"),
         pytest.param({"message": {"data": ""}}, id="empty_data"),
-        pytest.param({"message": {"data": "!!! not base64 !!!"}}, id="data_not_base64"),
+        pytest.param({"message": {"data": "not base64"}}, id="data_not_base64"),
     ],
 )
 def test_malformed_envelope(body):
@@ -112,19 +113,37 @@ def test_malformed_envelope(body):
 
 
 @pytest.mark.parametrize(
-    "raw",
+    "raw, expected",
     [
-        pytest.param(gzip.compress(b'{"a": 1}')[:8], id="truncated_gzip"),
-        pytest.param(b"\x1f\x8bnot actually gzip", id="corrupt_gzip"),
-        pytest.param(b"{not json}", id="data_is_not_json"),
-        pytest.param(b"[]", id="crash_ping_is_not_an_object"),
-        pytest.param(b"{}", id="no_client_info"),
-        pytest.param(b'{"client_info": "nope"}', id="client_info_is_not_an_object"),
+        pytest.param(
+            gzip.compress(b'{"a": 1}')[:8],
+            "gzipped but truncated",
+            id="truncated_gzip",
+        ),
+        # Decompressing this raises gzip.BadGzipFile, so it falls through to
+        # being parsed as JSON, which is where it fails.
+        pytest.param(
+            b"\x1f\x8bnot actually gzip", "Data is not JSON", id="corrupt_gzip"
+        ),
+        pytest.param(b"{not json}", "Data is not JSON", id="data_is_not_json"),
+        pytest.param(
+            b"[]", "Crash ping is not a JSON object", id="crash_ping_is_not_an_object"
+        ),
+        pytest.param(
+            b"{}",
+            "Crash ping has no client_info, or it is not a dict.",
+            id="no_client_info",
+        ),
+        pytest.param(
+            b'{"client_info": "nope"}',
+            "Crash ping has no client_info, or it is not a dict.",
+            id="client_info_is_not_an_object",
+        ),
     ],
 )
-def test_malformed_crash_ping(raw):
+def test_malformed_crash_ping(raw, expected):
     """Negative test for errors with the payload inside ``message.data``"""
     data = base64.b64encode(raw).decode()
 
-    with pytest.raises(main.MalformedMessage):
+    with pytest.raises(main.MalformedMessage, match=expected):
         main.handle_crash_ping(build_push_request(data))

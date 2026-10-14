@@ -66,23 +66,17 @@ Deploying takes two steps, in two repositories:
 In other words, uploading alone will not result in the cloud function being
 deployed.
 
-The object is named after the git tree sha of ``crash_ping_submitter/``, so its
-name changes only when the function's source does. That means:
-
-* a commit that doesn't touch the function resolves to an object that is
-  already in the bucket, so nothing is uploaded.
-* reverting the function resolves to the object that version produced the first
-  time, so nothing is uploaded.
-
-Each object records the commit and the CI run that produced it in its custom
-metadata.
+The object is named after the short sha of the commit it was built from, so
+each upload produces a new object. The CI run that uploaded it is recorded in
+the object's custom metadata.
 
 
 Stage
 -----
 
-On every push to the main branch, CI builds the source zip and uploads it to
-the stage bucket.
+``.github/workflows/crash-ping-submitter.yml`` builds the source zip and
+uploads it to the stage bucket on every push to the main branch that touches
+``crash_ping_submitter/``.
 
 
 Prod
