@@ -75,3 +75,4 @@ jobs:
           image_tags: ${{ env.TARGET_IMAGE }}
           workload_identity_pool_project_number: ${{ secrets.WORKLOAD_IDENTITY_POOL_PROJECT_NUMBER }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
+

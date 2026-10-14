@@ -13,3 +13,7 @@ services:
     volumes:
       - .:/app
       - /app/.venv
+  crash-ping-submitter:
+    volumes:
+      - ./crash_ping_submitter:/app
+      - /app/.venv

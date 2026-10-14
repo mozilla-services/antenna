@@ -11,6 +11,7 @@
    configuration
    metrics
    deploy
+   crash_ping_submitter
 
 
 Indices and tables

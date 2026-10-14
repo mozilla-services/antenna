@@ -1,0 +1,266 @@
+{
+  "client_info": {
+    "app_build": "20260924093433",
+    "app_display_version": "1.0.0",
+    "architecture": "aarch64",
+    "build_date": "1970-01-01T00:00:00+00:00",
+    "client_id": "11111111-1111-1111-1111-111111111111",
+    "first_run_date": "2026-04-08-04:00",
+    "os": "Darwin",
+    "os_version": "25.6.0",
+    "telemetry_sdk_build": "70.2.0"
+  },
+  "document_id": "fc1b0253-617f-4ea4-b5f5-c91a9fe6c0f0",
+  "metadata": {
+    "document_namespace": "firefox-crashreporter",
+    "document_type": "crash",
+    "document_version": "1",
+    "geo": {
+      "country": "US",
+      "db_version": "2026-09-24T04:48:29Z",
+      "subdivision1": "TX"
+    },
+    "header": {
+      "x_lb_tags": "TLSv1.3, 1301",
+      "x_telemetry_agent": "Glean/70.2.0 (Rust on Darwin)"
+    },
+    "isp": {
+      "db_version": "2026-09-24T04:48:29Z",
+      "name": "Random Provider",
+      "organization": "Random Provider"
+    },
+    "user_agent": {}
+  },
+  "metrics": {
+    "boolean": {
+      "crash.dom_fission_enabled": true,
+      "crash.startup": false,
+      "environment.headless_mode": false
+    },
+    "datetime": {
+      "crash.time": "2026-09-24T18:22:17+00:00"
+    },
+    "object": {
+      "crash.stack_traces": {
+        "crash_address": "0x0",
+        "crash_thread": 0,
+        "crash_type": "EXC_BAD_ACCESS / KERN_INVALID_ADDRESS",
+        "main_module": 0,
+        "modules": [
+          {
+            "base_address": "0x104c18000",
+            "code_id": "00000000000000000000000000000000",
+            "debug_file": "<Unknown>",
+            "end_address": "0x104c1c000"
+          },
+          {
+            "base_address": "0x12143c000",
+            "code_id": "2fa686946b9f372eb04a222141ff121b",
+            "debug_file": "XUL",
+            "debug_id": "2FA686946B9F372EB04A222141FF121B0",
+            "end_address": "0x12adc4000",
+            "filename": "XUL",
+            "version": "0.1.0.0"
+          },
+          {
+            "base_address": "0x188b30000",
+            "code_id": "74e52480c2bd3c8d812d95fe2b74a096",
+            "debug_file": "dyld",
+            "debug_id": "74E52480C2BD3C8D812D95FE2B74A0960",
+            "end_address": "0x188be3500",
+            "filename": "dyld",
+            "version": "0.0.0.0"
+          }
+        ],
+        "threads": [
+          {
+            "frames": [
+              {
+                "ip": "0x126964fc8",
+                "module_index": 1,
+                "trust": "context"
+              },
+              {
+                "ip": "0x12159dd74",
+                "module_index": 1,
+                "trust": "cfi"
+              },
+              {
+                "ip": "0x1219c41e4",
+                "module_index": 1,
+                "trust": "cfi"
+              },
+              {
+                "ip": "0x1228f7ab0",
+                "module_index": 1,
+                "trust": "cfi"
+              },
+              {
+                "ip": "0x122914d80",
+                "module_index": 1,
+                "trust": "cfi"
+              },
+              {
+                "ip": "0x1228f538c",
+                "module_index": 1,
+                "trust": "cfi"
+              },
+              {
+                "ip": "0x1223d3954",
+                "module_index": 1,
+                "trust": "cfi"
+              },
+              {
+                "ip": "0x122447b70",
+                "module_index": 1,
+                "trust": "cfi"
+              },
+              {
+                "ip": "0x1218e12c0",
+                "module_index": 1,
+                "trust": "cfi"
+              },
+              {
+                "ip": "0x121855044",
+                "module_index": 1,
+                "trust": "cfi"
+              },
+              {
+                "ip": "0x121859398",
+                "module_index": 1,
+                "trust": "cfi"
+              },
+              {
+                "ip": "0x121865158",
+                "module_index": 1,
+                "trust": "cfi"
+              },
+              {
+                "ip": "0x1218e6128",
+                "module_index": 1,
+                "trust": "cfi"
+              },
+              {
+                "ip": "0x1218a34a4",
+                "module_index": 1,
+                "trust": "cfi"
+              },
+              {
+                "ip": "0x12257b338",
+                "module_index": 1,
+                "trust": "cfi"
+              },
+              {
+                "ip": "0x12258c094",
+                "module_index": 1,
+                "trust": "cfi"
+              },
+              {
+                "ip": "0x122a30558",
+                "module_index": 1,
+                "trust": "cfi"
+              },
+              {
+                "ip": "0x1218a34a4",
+                "module_index": 1,
+                "trust": "cfi"
+              },
+              {
+                "ip": "0x122a2fe9c",
+                "module_index": 1,
+                "trust": "cfi"
+              },
+              {
+                "ip": "0x104c1beb8",
+                "module_index": 0,
+                "trust": "cfi"
+              },
+              {
+                "ip": "0x188b504e0",
+                "module_index": 2,
+                "trust": "cfi"
+              }
+            ]
+          }
+        ]
+      },
+      "meta.annotations": {
+        "source": "{\"AvailablePhysicalMemory\":\"2393210880\",\"AvailableSwapMemory\":\"0\",\"BuildID\":\"20260924093433\",\"CPUArchitecture\":\"arm64\",\"CPUInfo\":\"family 0 model 0 stepping 0\",\"CrashEventID\":\"dd2e5c90-739c-4b2c-a9fc-4efaead2ac7c\",\"CrashTime\":\"1790274137\",\"DOMFissionEnabled\":\"1\",\"GPUProcessLaunchCount\":\"1\",\"HeadlessMode\":\"0\",\"InstallTime\":\"1790268027\",\"MainThreadRunnableName\":\"PContent::Msg_LoadURI\",\"MinidumpSha256Hash\":\"d792a544f7049233975b9a2936d5bdd1d47d8327870a9822375eb0d141466771\",\"MozCrashReason\":\"MOZ_CRASH(Crash via about:crashcontent)\",\"NimbusEnrollments\":\"address-autofill-desktop-pref-nightly-rollout:enable-address-autofill,built-in-vpn-beta-rollout-to-countries-with-mozilla-vpn-wave-1:mvp-beta,built-in-vpn-messaging-evergreen:onboarding-cfrs,copilot-chatbot-sunset:control,disable-legacy-spoc-ping-by-default:control,disable-legacy-top-sites-ping-by-default:control,editcontext-desktop-nightly-rollout:control,enable-enrollment-status-telemetry-for-firefox-desktop-via-nimbustelemetry:control,fogtransport-ipc-nightly-ab:test,form-auto-fill-field-detection-improvements-v2:control,fx-accounts-ping-release-rollout-2:control,hnt-wattle-6-widgets-english-rollout-nightly:control,hnt-wattle-picture-of-the-day-rollout-nightly:control,hnt-wattle-world-cup-live-timing-rollout-june-15-nightly:control,new-tab-automated-personalization-rollout-v3:personalized-stories,ohttp-merino-content-recs-rollout-betanightlyesr:enable-ohttp,relay-integration-into-firefox-nightly-for-all-fxa-users:enable-relay-integration,store-new-tab-content-interactions-locally:store-events,suppress-legacy-launch-on-login-infobars:treatment,wind-down-old-contile-metrics:control\",\"OS\":\"Mac OS X\",\"OSVersion\":\"25.6.0 Darwin Kernel Version 25.6.0: Fri Jul 31 19:18:49 PDT 2026; root:xnu-12377.161.14~5/RELEASE_ARM64_T6000\",\"ProcessType\":\"content\",\"ProductID\":\"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}\",\"ProductName\":\"Firefox\",\"PurgeablePhysicalMemory\":\"212451328\",\"ReleaseChannel\":\"nightly\",\"RemoteType\":\"privilegedabout\",\"StackTraces\":\"{\\\"crash_type\\\":\\\"EXC_BAD_ACCESS / KERN_INVALID_ADDRESS\\\",\\\"crash_address\\\":\\\"0x0\\\",\\\"crash_thread\\\":0,\\\"main_module\\\":0,\\\"modules\\\":[{\\\"base_address\\\":\\\"0x104c18000\\\",\\\"end_address\\\":\\\"0x104c1c000\\\",\\\"code_id\\\":\\\"00000000000000000000000000000000\\\",\\\"debug_file\\\":\\\"<Unknown>\\\"},{\\\"base_address\\\":\\\"0x12143c000\\\",\\\"end_address\\\":\\\"0x12adc4000\\\",\\\"filename\\\":\\\"XUL\\\",\\\"code_id\\\":\\\"2fa686946b9f372eb04a222141ff121b\\\",\\\"debug_file\\\":\\\"XUL\\\",\\\"debug_id\\\":\\\"2FA686946B9F372EB04A222141FF121B0\\\",\\\"version\\\":\\\"0.1.0.0\\\"},{\\\"base_address\\\":\\\"0x188b30000\\\",\\\"end_address\\\":\\\"0x188be3500\\\",\\\"filename\\\":\\\"dyld\\\",\\\"code_id\\\":\\\"74e52480c2bd3c8d812d95fe2b74a096\\\",\\\"debug_file\\\":\\\"dyld\\\",\\\"debug_id\\\":\\\"74E52480C2BD3C8D812D95FE2B74A0960\\\",\\\"version\\\":\\\"0.0.0.0\\\"}],\\\"unloaded_modules\\\":[],\\\"threads\\\":[{\\\"frames\\\":[{\\\"ip\\\":\\\"0x126964fc8\\\",\\\"module_index\\\":1,\\\"trust\\\":\\\"context\\\"},{\\\"ip\\\":\\\"0x12159dd74\\\",\\\"module_index\\\":1,\\\"trust\\\":\\\"cfi\\\"},{\\\"ip\\\":\\\"0x1219c41e4\\\",\\\"module_index\\\":1,\\\"trust\\\":\\\"cfi\\\"},{\\\"ip\\\":\\\"0x1228f7ab0\\\",\\\"module_index\\\":1,\\\"trust\\\":\\\"cfi\\\"},{\\\"ip\\\":\\\"0x122914d80\\\",\\\"module_index\\\":1,\\\"trust\\\":\\\"cfi\\\"},{\\\"ip\\\":\\\"0x1228f538c\\\",\\\"module_index\\\":1,\\\"trust\\\":\\\"cfi\\\"},{\\\"ip\\\":\\\"0x1223d3954\\\",\\\"module_index\\\":1,\\\"trust\\\":\\\"cfi\\\"},{\\\"ip\\\":\\\"0x122447b70\\\",\\\"module_index\\\":1,\\\"trust\\\":\\\"cfi\\\"},{\\\"ip\\\":\\\"0x1218e12c0\\\",\\\"module_index\\\":1,\\\"trust\\\":\\\"cfi\\\"},{\\\"ip\\\":\\\"0x121855044\\\",\\\"module_index\\\":1,\\\"trust\\\":\\\"cfi\\\"},{\\\"ip\\\":\\\"0x121859398\\\",\\\"module_index\\\":1,\\\"trust\\\":\\\"cfi\\\"},{\\\"ip\\\":\\\"0x121865158\\\",\\\"module_index\\\":1,\\\"trust\\\":\\\"cfi\\\"},{\\\"ip\\\":\\\"0x1218e6128\\\",\\\"module_index\\\":1,\\\"trust\\\":\\\"cfi\\\"},{\\\"ip\\\":\\\"0x1218a34a4\\\",\\\"module_index\\\":1,\\\"trust\\\":\\\"cfi\\\"},{\\\"ip\\\":\\\"0x12257b338\\\",\\\"module_index\\\":1,\\\"trust\\\":\\\"cfi\\\"},{\\\"ip\\\":\\\"0x12258c094\\\",\\\"module_index\\\":1,\\\"trust\\\":\\\"cfi\\\"},{\\\"ip\\\":\\\"0x122a30558\\\",\\\"module_index\\\":1,\\\"trust\\\":\\\"cfi\\\"},{\\\"ip\\\":\\\"0x1218a34a4\\\",\\\"module_index\\\":1,\\\"trust\\\":\\\"cfi\\\"},{\\\"ip\\\":\\\"0x122a2fe9c\\\",\\\"module_index\\\":1,\\\"trust\\\":\\\"cfi\\\"},{\\\"ip\\\":\\\"0x104c1beb8\\\",\\\"module_index\\\":0,\\\"trust\\\":\\\"cfi\\\"},{\\\"ip\\\":\\\"0x188b504e0\\\",\\\"module_index\\\":2,\\\"trust\\\":\\\"cfi\\\"}]}]}\",\"StartupCrash\":\"0\",\"StartupTime\":\"1790273053\",\"TotalPhysicalMemory\":\"34359738368\",\"UptimeTS\":\"1118.57117516667\",\"useragent_locale\":\"en-US\",\"Version\":\"158.0a1\"}"
+      }
+    },
+    "quantity": {
+      "crash.gpu_process_launch": 1,
+      "memory.available_physical": 2393210880,
+      "memory.available_swap": 0,
+      "memory.purgeable_physical": 212451328,
+      "memory.total_physical": 34359738368
+    },
+    "string": {
+      "crash.app_build": "20260924093433",
+      "crash.app_channel": "nightly",
+      "crash.app_display_version": "158.0a1",
+      "crash.cpu_architecture": "arm64",
+      "crash.cpu_info": "family 0 model 0 stepping 0",
+      "crash.event_id": "dd2e5c90-739c-4b2c-a9fc-4efaead2ac7c",
+      "crash.main_thread_runnable_name": "PContent::Msg_LoadURI",
+      "crash.minidump_sha256_hash": "d792a544f7049233975b9a2936d5bdd1d47d8327870a9822375eb0d141466771",
+      "crash.moz_crash_reason": "MOZ_CRASH(Crash via about:crashcontent)",
+      "crash.os": "Mac OS X",
+      "crash.os_version": "25.6.0 Darwin Kernel Version 25.6.0: Fri Jul 31 19:18:49 PDT 2026; root:xnu-12377.161.14~5/RELEASE_ARM64_T6000",
+      "crash.process_type": "content",
+      "crash.product_id": "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}",
+      "crash.product_name": "Firefox",
+      "crash.remote_type": "privilegedabout",
+      "crash.useragent_locale": "en-US"
+    },
+    "string_list": {
+      "environment.nimbus_enrollments": [
+        "address-autofill-desktop-pref-nightly-rollout:enable-address-autofill",
+        "built-in-vpn-beta-rollout-to-countries-with-mozilla-vpn-wave-1:mvp-beta",
+        "built-in-vpn-messaging-evergreen:onboarding-cfrs",
+        "copilot-chatbot-sunset:control",
+        "disable-legacy-spoc-ping-by-default:control",
+        "disable-legacy-top-sites-ping-by-default:control",
+        "editcontext-desktop-nightly-rollout:control",
+        "enable-enrollment-status-telemetry-for-firefox-desktop-via-nimbustelemetry:control",
+        "fogtransport-ipc-nightly-ab:test",
+        "form-auto-fill-field-detection-improvements-v2:control",
+        "fx-accounts-ping-release-rollout-2:control",
+        "hnt-wattle-6-widgets-english-rollout-nightly:control",
+        "hnt-wattle-picture-of-the-day-rollout-nightly:control",
+        "hnt-wattle-world-cup-live-timing-rollout-june-15-nightly:control",
+        "new-tab-automated-personalization-rollout-v3:personalized-stories",
+        "ohttp-merino-content-recs-rollout-betanightlyesr:enable-ohttp",
+        "relay-integration-into-firefox-nightly-for-all-fxa-users:enable-relay-integration",
+        "store-new-tab-content-interactions-locally:store-events",
+        "suppress-legacy-launch-on-login-infobars:treatment",
+        "wind-down-old-contile-metrics:control"
+      ]
+    },
+    "timespan": {
+      "crash.install_time": {
+        "time_unit": "second",
+        "value": 1790268027
+      },
+      "crash.startup_time": {
+        "time_unit": "second",
+        "value": 1790273053
+      },
+      "environment.uptime": {
+        "time_unit": "millisecond",
+        "value": 1118571
+      }
+    }
+  },
+  "normalized_country_code": "US",
+  "normalized_os": "Mac",
+  "normalized_os_version": "25.6.0",
+  "ping_info": {
+    "end_time": "2026-09-24T14:22:17.094-04:00",
+    "reason": "crash",
+    "seq": 27,
+    "start_time": "2026-09-24T14:04:09.000-04:00"
+  },
+  "sample_id": 15,
+  "submission_timestamp": "2026-09-24T18:22:17.733837Z"
+}
