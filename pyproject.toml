@@ -83,11 +83,8 @@ testpaths = "tests/"
 
 filterwarnings = [
     "error",
-    # Falcon currently uses cgi which is going away in python 3.13
-    "ignore:'cgi' is deprecated and slated for removal in Python 3.13:DeprecationWarning:falcon",
-    # sentry-sdk has a Falcon integration that needs some help and is currently
-    # using a thing in Falcon that kicks up a DeprecatedWarning
-    "ignore:The api_helpers module.*:falcon.util.deprecation.DeprecatedWarning",
+    # Google warns about Python 3.11 reaching end of life.
+    "ignore:You are using a Python version .*which Google will stop supporting in new releases of google\\.:FutureWarning:google\\.api_core\\._python_version_support",
 ]
 
 
