@@ -889,12 +889,12 @@ wheels = [
 
 [[package]]
 name = "ruff"
-version = "0.17.0"
+version = "0.17.3"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/e9/a7/70debb024dfacda67b8e560cc7511f52b34b9348a8cc8c1ec23036dcd51d/ruff-0.17.0.tar.gz", hash = "sha256:5cd03240d8208a557c2a9655a5cb07ebe36aa6bb35065f97d48c1f6adef5a322", size = 5320554, upload-time = "2026-10-09T19:47:29.248Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/59/73/81f140c4edd9cc323de5478e6bbd3bbcfae9a82692df1a258de8cec6a6d2/ruff-0.17.3.tar.gz", hash = "sha256:a57049c8addb3662073859bb55a7ad35aa54f8a7c9ed268911d1333c5aadaaa9", size = 5339444, upload-time = "2026-10-27T00:34:05.914Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2c/3c/4a01195d93420cad1175bedad13a515dc8a56f95a6e39789b92e582682f5/ruff-0.17.0-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:bc73e7c133e82d55b5f15897b2a442d72c0cb4a0c886c46801ce3c247150b60c", size = 10386314, upload-time = "2026-10-09T19:47:03.057Z" },
-    { url = "https://files.pythonhosted.org/packages/2a/fa/955399fd13044cd827862044117d784a59e3196f6cce7424908ac9a7f914/ruff-0.17.0-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:864b6c1acb6b0bccf94b5a3938a1531fd09aaca5e5659a2e7bf0f3cf2a685540", size = 10791761, upload-time = "2026-10-09T19:47:16.931Z" },
+    { url = "https://files.pythonhosted.org/packages/f0/20/fecedea2209f574ab92033b344e01a7f0c2dc76c6d6d19a14c9f8141173f/ruff-0.17.3-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7fa4b0f931cdbcb8a52044f370a3eb429fb42eb88807b0e800fcaa98dd42b24e", size = 10577491, upload-time = "2026-10-27T00:33:48.233Z" },
+    { url = "https://files.pythonhosted.org/packages/af/b2/05c39857c2526fcbebe46ad93a8dc97424656dfef14d3ef933abe1ffd331/ruff-0.17.3-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:692fdb46d0fd9c71e380947dc5fc72f2c3f881073bc1f739e4579376231affbe", size = 10799780, upload-time = "2026-10-27T00:33:58.204Z" },
 ]
 
 [[package]]
